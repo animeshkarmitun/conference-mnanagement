@@ -1,13 +1,7 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ConferenceController;
-use App\Http\Controllers\ParticipantController;
-use App\Http\Controllers\SessionController;
-use App\Http\Controllers\TaskController;
-use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,27 +18,34 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_middleware'),
-    'verified'
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-    
-    // Conference routes
-    Route::resource('conferences', ConferenceController::class);
-    
-    // Participant routes
-    Route::resource('participants', ParticipantController::class);
-    
-    // Session routes
-    Route::resource('sessions', SessionController::class);
-    
-    // Task routes
-    Route::resource('tasks', TaskController::class);
-    
-    // Notification routes
-    Route::resource('notifications', NotificationController::class);
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::resource('conferences', \App\Http\Controllers\ConferenceController::class);
+    Route::resource('participants', \App\Http\Controllers\ParticipantController::class);
+    Route::resource('sessions', \App\Http\Controllers\SessionController::class);
+    Route::resource('tasks', \App\Http\Controllers\TaskController::class);
+    Route::patch('/tasks/{task}/status', [\App\Http\Controllers\TaskController::class, 'updateStatus'])->name('tasks.update-status');
+    Route::resource('notifications', \App\Http\Controllers\NotificationController::class);
+    Route::get('/speakers', [\App\Http\Controllers\SpeakerController::class, 'index'])->name('speakers.index');
+    Route::get('/my-profile', [\App\Http\Controllers\ParticipantController::class, 'profile'])->name('participants.profile');
 });
+
+Route::get('/speaker/register', [\App\Http\Controllers\SpeakerRegistrationController::class, 'showRegistrationForm'])->name('speaker.register');
+Route::post('/speaker/register', [\App\Http\Controllers\SpeakerRegistrationController::class, 'register']);
+Route::get('/speaker/registration/success', [\App\Http\Controllers\SpeakerRegistrationController::class, 'success'])->name('speaker.registration.success');
+
+Route::get('/guide', function () {
+    return view('guide');
+})->name('guide');
+
+// Load authentication routes if present
+if (file_exists(__DIR__.'/auth.php')) {
+    require __DIR__.'/auth.php';
+}
