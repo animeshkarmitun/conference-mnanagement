@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\ParticipantType;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +13,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Participant;
+use App\Models\Conference;
 
 class RegisteredUserController extends Controller
 {
@@ -20,7 +24,8 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        $participantTypes = ParticipantType::all();
+        return view('auth.register', compact('participantTypes'));
     }
 
     /**
@@ -34,12 +39,46 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'participant_type_id' => ['required', 'exists:participant_types,id'],
+            'dietary_needs' => ['nullable', 'string', 'max:255'],
+            'travel_intent' => ['required', 'boolean'],
+            'profile_picture' => ['nullable', 'image', 'max:2048'],
+            'resume' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
         ]);
+
+        // Handle file uploads
+        $profilePicturePath = null;
+        $resumePath = null;
+        if ($request->hasFile('profile_picture')) {
+            $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
+        }
+        if ($request->hasFile('resume')) {
+            $resumePath = $request->file('resume')->store('resumes', 'public');
+        }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'dietary_needs' => $request->dietary_needs,
+            'profile_picture' => $profilePicturePath,
+            'resume' => $resumePath,
+        ]);
+
+        // Automatically create a Participant record for the user
+        $conference = Conference::latest('start_date')->first();
+        Participant::create([
+            'user_id' => $user->id,
+            'conference_id' => $conference ? $conference->id : null,
+            'participant_type_id' => $request->participant_type_id,
+            'visa_status' => 'pending',
+            'travel_form_submitted' => false,
+            'bio' => null,
+            'approved' => false,
+            'organization' => null,
+            'dietary_needs' => $request->dietary_needs,
+            'travel_intent' => $request->travel_intent,
+            'registration_status' => 'pending',
         ]);
 
         event(new Registered($user));

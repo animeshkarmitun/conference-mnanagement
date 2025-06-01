@@ -72,8 +72,27 @@
             @error('dietary_needs')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
         <div class="mb-4">
-            <label for="travel_intent" class="block text-sm font-medium text-gray-700">Travel Intent</label>
-            <input type="checkbox" name="travel_intent" id="travel_intent" value="1">
+            <label for="profile_picture" class="block text-sm font-medium text-gray-700">Profile Picture</label>
+            <input type="file" name="profile_picture" id="profile_picture" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
+            @error('profile_picture')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+        </div>
+        <div class="mb-4">
+            <label for="resume" class="block text-sm font-medium text-gray-700">Resume/CV</label>
+            <input type="file" name="resume" id="resume" accept="application/pdf,.doc,.docx" class="mt-1 block w-full text-sm text-gray-500">
+            @error('resume')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Travel Intent</label>
+            <div class="mt-2 flex items-center space-x-4">
+                <label class="inline-flex items-center">
+                    <input type="radio" name="travel_intent" value="1" class="form-radio text-yellow-600">
+                    <span class="ml-2">Yes</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="radio" name="travel_intent" value="0" class="form-radio text-yellow-600">
+                    <span class="ml-2">No</span>
+                </label>
+            </div>
             @error('travel_intent')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
         <div class="mb-6">

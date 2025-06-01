@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Comment extends Model
 {
     use HasFactory;
+
+    public function participant()
+    {
+        return $this->belongsTo(\App\Models\Participant::class);
+    }
 }

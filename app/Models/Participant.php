@@ -73,4 +73,9 @@ class Participant extends Model
     {
         return $this->hasMany(ParticipantSession::class);
     }
+
+    public function comments()
+    {
+        return $this->hasMany(\App\Models\Comment::class);
+    }
 }

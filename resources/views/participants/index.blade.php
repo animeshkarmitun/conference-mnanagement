@@ -22,7 +22,11 @@
         <tbody class="bg-white divide-y divide-gray-200">
             @forelse($participants ?? [] as $participant)
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:underline font-semibold">
+                            {{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}
+                        </a>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $participant->user->email }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $participant->participantType->name ?? '' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $participant->organization }}</td>

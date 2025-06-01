@@ -3,62 +3,65 @@
 @section('title', 'Participant Details')
 
 @section('content')
-<div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
-    <h2 class="text-2xl font-bold mb-6">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</h2>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Email:</span>
-        <span>{{ $participant->user->email }}</span>
+<div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-6">
+    <h2 class="text-2xl font-bold mb-6 flex items-center">
+        <span>{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</span>
+        <span class="ml-4 text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-700">{{ $participant->participantType->name ?? '' }}</span>
+    </h2>
+
+    <!-- Tab Navigation -->
+    <div class="mb-6 border-b border-gray-200">
+        <nav class="flex space-x-8" aria-label="Tabs">
+            <button class="tab-link py-4 px-1 border-b-2 font-medium text-sm text-gray-600 focus:outline-none" data-tab="info">Personal Info</button>
+            <button class="tab-link py-4 px-1 border-b-2 font-medium text-sm text-gray-600 focus:outline-none" data-tab="sessions">Sessions</button>
+            <button class="tab-link py-4 px-1 border-b-2 font-medium text-sm text-gray-600 focus:outline-none" data-tab="status">Status</button>
+            <button class="tab-link py-4 px-1 border-b-2 font-medium text-sm text-gray-600 focus:outline-none" data-tab="notifications">Notifications</button>
+            <button class="tab-link py-4 px-1 border-b-2 font-medium text-sm text-gray-600 focus:outline-none" data-tab="comments">Comments</button>
+            <button class="tab-link py-4 px-1 border-b-2 font-medium text-sm text-gray-600 focus:outline-none" data-tab="travel">Travel & Accommodation</button>
+        </nav>
     </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Conference:</span>
-        <span>{{ $participant->conference->title ?? '' }}</span>
+
+    <!-- Tabs Content -->
+    <div id="tab-info" class="tab-content">
+        @include('participants.partials.profile-info', ['participant' => $participant])
     </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Type:</span>
-        <span>{{ $participant->participantType->name ?? '' }}</span>
+    <div id="tab-sessions" class="tab-content hidden">
+        @include('participants.partials.profile-sessions', ['sessions' => $sessions ?? []])
     </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Visa Status:</span>
-        <span>{{ ucfirst($participant->visa_status) }}</span>
+    <div id="tab-status" class="tab-content hidden">
+        @include('participants.partials.profile-status', ['participant' => $participant])
     </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Travel Form Submitted:</span>
-        <span>{{ $participant->travel_form_submitted ? 'Yes' : 'No' }}</span>
+    <div id="tab-notifications" class="tab-content hidden">
+        @include('participants.partials.profile-notifications', ['notifications' => $notifications ?? []])
     </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Bio:</span>
-        <span>{{ $participant->bio }}</span>
+    <div id="tab-comments" class="tab-content hidden">
+        @include('participants.partials.profile-comments', ['comments' => $comments ?? [], 'participant' => $participant])
     </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Approved:</span>
-        <span>{{ $participant->approved ? 'Yes' : 'No' }}</span>
+    <div id="tab-travel" class="tab-content hidden">
+        @include('participants.partials.profile-travel', ['participant' => $participant, 'travelDetail' => $travelDetail ?? null, 'hotels' => $hotels ?? []])
     </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Organization:</span>
-        <span>{{ $participant->organization }}</span>
-    </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Dietary Needs:</span>
-        <span>{{ $participant->dietary_needs }}</span>
-    </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Travel Intent:</span>
-        <span>{{ $participant->travel_intent ? 'Yes' : 'No' }}</span>
-    </div>
-    <div class="mb-4">
-        <span class="font-semibold text-gray-700">Registration Status:</span>
-        <span>{{ ucfirst($participant->registration_status) }}</span>
-    </div>
-    <div class="flex justify-end mt-6">
-        <a href="{{ route('participants.edit', $participant) }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold mr-2">Edit</a>
-        <form method="POST" action="{{ route('participants.destroy', $participant) }}" onsubmit="return confirm('Are you sure you want to delete this participant?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">Delete</button>
-        </form>
-    </div>
+
     <div class="mt-4">
         <a href="{{ route('participants.index') }}" class="text-gray-600 hover:text-gray-900">Back to list</a>
     </div>
 </div>
-@endsection 
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function () {
+                tabLinks.forEach(l => l.classList.remove('border-yellow-600', 'text-yellow-600'));
+                tabContents.forEach(c => c.classList.add('hidden'));
+                this.classList.add('border-yellow-600', 'text-yellow-600');
+                document.getElementById('tab-' + this.dataset.tab).classList.remove('hidden');
+            });
+        });
+        // Activate first tab by default
+        tabLinks[0].classList.add('border-yellow-600', 'text-yellow-600');
+        tabContents[0].classList.remove('hidden');
+    });
+</script>
+@endpush 
