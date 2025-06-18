@@ -20,13 +20,12 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
             @forelse($conferences ?? [] as $conference)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $conference->name }}</td>
+                <tr class="hover:bg-yellow-50 transition cursor-pointer" onclick="window.location='{{ route('conferences.show', $conference) }}'">
+                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-yellow-700">{{ $conference->name }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $conference->start_date }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $conference->end_date }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $conference->venue->name ?? '' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                        <a href="{{ route('conferences.show', $conference) }}" class="text-yellow-600 hover:underline">View</a>
                         <a href="{{ route('conferences.edit', $conference) }}" class="text-blue-600 hover:underline">Edit</a>
                         <form action="{{ route('conferences.destroy', $conference) }}" method="POST" class="inline" onsubmit="return confirm('Delete this conference?');">
                             @csrf

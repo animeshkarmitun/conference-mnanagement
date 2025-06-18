@@ -11,24 +11,43 @@
     <table class="min-w-full divide-y divide-gray-200">
         <thead>
             <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial No.</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nationality</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profession</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th class="px-6 py-3"></th>
             </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-            @forelse($participants ?? [] as $participant)
+            @forelse($participants ?? [] as $i => $participant)
+                @php
+                    $user = $participant->user;
+                    $serial = $participant->serial_number ?? (sprintf('CONF%04d-%03d', $participant->conference_id ?? 0, $i+1));
+                    $dob = $user->date_of_birth ?? null;
+                    $age = $dob ? \Carbon\Carbon::parse($dob)->age : '';
+                    $category = $participant->category ?? ($participant->participantType->name === 'Delegate' ? 'Delegate' : '');
+                @endphp
                 <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $serial }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:underline font-semibold">
-                            {{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}
+                            {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
                         </a>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $participant->user->email }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->gender ?? '-' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->nationality ?? '-' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->profession ?? '-' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $age }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $participant->participantType->name ?? '' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $category }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $participant->organization }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $participant->registration_status == 'approved' ? 'bg-green-100 text-green-700' : ($participant->registration_status == 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700') }}">
@@ -47,7 +66,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">No participants found.</td>
+                    <td colspan="12" class="px-6 py-4 text-center text-gray-500">No participants found.</td>
                 </tr>
             @endforelse
         </tbody>

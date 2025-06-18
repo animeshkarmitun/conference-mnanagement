@@ -21,6 +21,8 @@ class Participant extends Model
         'dietary_needs',
         'travel_intent',
         'registration_status',
+        'serial_number',
+        'category',
     ];
 
     // Relationships
