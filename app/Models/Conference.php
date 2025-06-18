@@ -15,6 +15,7 @@ class Conference extends Model
         'end_date',
         'location',
         'status',
+        'venue_id',
     ];
 
     // Relationships
@@ -61,5 +62,10 @@ class Conference extends Model
     public function conferenceKits()
     {
         return $this->hasMany(ConferenceKit::class);
+    }
+
+    public function venue()
+    {
+        return $this->belongsTo(\App\Models\Venue::class);
     }
 }

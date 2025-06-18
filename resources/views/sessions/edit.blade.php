@@ -13,7 +13,7 @@
             <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                 <option value="">Select Conference</option>
                 @foreach($conferences as $conference)
-                    <option value="{{ $conference->id }}" {{ old('conference_id', $session->conference_id) == $conference->id ? 'selected' : '' }}>{{ $conference->title }}</option>
+                    <option value="{{ $conference->id }}" {{ old('conference_id', $session->conference_id) == $conference->id ? 'selected' : '' }}>{{ $conference->name }}</option>
                 @endforeach
             </select>
             @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -34,13 +34,13 @@
         <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
                 <label for="start_time" class="block text-sm font-medium text-gray-700">Start Time</label>
-                <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time', $session->start_time->format('Y-m-d\TH:i')) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time', \Carbon\Carbon::parse($session->start_time)->format('Y-m-d\TH:i')) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                 @error('start_time')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
 
             <div>
                 <label for="end_time" class="block text-sm font-medium text-gray-700">End Time</label>
-                <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time', $session->end_time->format('Y-m-d\TH:i')) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time', \Carbon\Carbon::parse($session->end_time)->format('Y-m-d\TH:i')) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                 @error('end_time')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
         </div>
@@ -77,4 +77,23 @@
         </div>
     </form>
 </div>
+
+<script>
+    const conferenceVenues = @json($conferenceVenues);
+    const conferenceDates = @json($conferenceDates);
+    document.getElementById('conference_id').addEventListener('change', function() {
+        const confId = this.value;
+        const venueId = conferenceVenues[confId];
+        if (venueId) {
+            document.getElementById('venue_id').value = venueId;
+        }
+        if (conferenceDates[confId]) {
+            // Format as 'YYYY-MM-DDTHH:MM' for datetime-local input
+            const start = conferenceDates[confId].start_date + 'T09:00';
+            const end = conferenceDates[confId].end_date + 'T17:00';
+            document.getElementById('start_time').value = start;
+            document.getElementById('end_time').value = end;
+        }
+    });
+</script>
 @endsection 

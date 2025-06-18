@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Conference;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
@@ -17,7 +18,8 @@ class TaskController extends Controller
     public function create()
     {
         $users = User::all();
-        return view('tasks.create', compact('users'));
+        $conferences = Conference::all();
+        return view('tasks.create', compact('users', 'conferences'));
     }
 
     public function store(Request $request)
@@ -29,10 +31,12 @@ class TaskController extends Controller
             'priority' => 'required|in:low,medium,high',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'assigned_to' => 'required|exists:users,id',
+            'conference_id' => 'required|exists:conferences,id',
         ]);
 
         $validated['created_by'] = auth()->id();
         $validated['assigned_to'] = $request->assigned_to;
+        $validated['conference_id'] = $request->conference_id;
 
         $task = Task::create($validated);
 
@@ -49,7 +53,8 @@ class TaskController extends Controller
     public function edit(Task $task)
     {
         $users = User::all();
-        return view('tasks.edit', compact('task', 'users'));
+        $conferences = Conference::all();
+        return view('tasks.edit', compact('task', 'users', 'conferences'));
     }
 
     public function update(Request $request, Task $task)
@@ -61,9 +66,11 @@ class TaskController extends Controller
             'priority' => 'required|in:low,medium,high',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'assigned_to' => 'required|exists:users,id',
+            'conference_id' => 'required|exists:conferences,id',
         ]);
 
         $validated['assigned_to'] = $request->assigned_to;
+        $validated['conference_id'] = $request->conference_id;
 
         $task->update($validated);
 

@@ -50,13 +50,24 @@
             </div>
 
             <div>
+                <label for="conference_id" class="block text-sm font-medium text-gray-700">Conference</label>
+                <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <option value="">Select Conference</option>
+                    @foreach($conferences as $conference)
+                        <option value="{{ $conference->id }}" {{ old('conference_id') == $conference->id ? 'selected' : '' }}>{{ $conference->name }}</option>
+                    @endforeach
+                </select>
+                @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
                 <label for="assigned_to" class="block text-sm font-medium text-gray-700">Assign To</label>
                 <select name="assigned_to" id="assigned_to" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     <option value="">Select User</option>
                     @foreach($users as $user)
-                        <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
-                            {{ $user->name }}
-                        </option>
+                        <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }} ({{ $user->email }})</option>
                     @endforeach
                 </select>
                 @error('assigned_to')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror

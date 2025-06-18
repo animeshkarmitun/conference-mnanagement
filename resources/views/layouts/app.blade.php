@@ -11,8 +11,14 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
+        <!-- Scripts and Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
+        <!-- Fallback for production -->
+        @if (app()->environment('production'))
+            <link rel="stylesheet" href="{{ asset('build/assets/app.css') }}">
+            <script src="{{ asset('build/assets/app.js') }}" defer></script>
+        @endif
     </head>
     <body class="bg-gray-100 font-sans antialiased">
         <div class="min-h-screen flex">

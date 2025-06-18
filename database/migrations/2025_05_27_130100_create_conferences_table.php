@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->string('location');
+            $table->foreignId('venue_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['planned', 'ongoing', 'completed', 'cancelled'])->default('planned');
             $table->timestamps();
         });

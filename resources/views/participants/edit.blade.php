@@ -23,7 +23,7 @@
             <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                 <option value="">Select Conference</option>
                 @foreach($conferences as $conference)
-                    <option value="{{ $conference->id }}" {{ old('conference_id', $participant->conference_id) == $conference->id ? 'selected' : '' }}>{{ $conference->title }}</option>
+                    <option value="{{ $conference->id }}" {{ old('conference_id', $participant->conference_id) == $conference->id ? 'selected' : '' }}>{{ $conference->name }}</option>
                 @endforeach
             </select>
             @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror

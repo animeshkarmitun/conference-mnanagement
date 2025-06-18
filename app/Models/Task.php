@@ -28,4 +28,14 @@ class Task extends Model
     {
         return $this->belongsToMany(User::class, 'task_user')->withPivot('status', 'notes');
     }
+
+    public function assignedTo()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'assigned_to');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 }

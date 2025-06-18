@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Session;
 use App\Models\Conference;
 use App\Models\Participant;
+use App\Models\Venue;
 use Illuminate\Http\Request;
 
 class SessionController extends Controller
@@ -19,13 +20,22 @@ class SessionController extends Controller
     {
         $conferences = Conference::all();
         $participants = Participant::with('user')->get();
-        return view('sessions.create', compact('conferences', 'participants'));
+        $conferenceVenues = Conference::pluck('venue_id', 'id');
+        $venues = Venue::all();
+        $conferenceDates = Conference::all()->mapWithKeys(function($conf) {
+            return [$conf->id => [
+                'start_date' => $conf->start_date,
+                'end_date' => $conf->end_date,
+            ]];
+        });
+        return view('sessions.create', compact('conferences', 'participants', 'conferenceVenues', 'venues', 'conferenceDates'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'conference_id' => 'required|exists:conferences,id',
+            'venue_id' => 'required|exists:venues,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'start_time' => 'required|date',
@@ -56,13 +66,22 @@ class SessionController extends Controller
     {
         $conferences = Conference::all();
         $participants = Participant::with('user')->get();
-        return view('sessions.edit', compact('session', 'conferences', 'participants'));
+        $conferenceVenues = Conference::pluck('venue_id', 'id');
+        $venues = Venue::all();
+        $conferenceDates = Conference::all()->mapWithKeys(function($conf) {
+            return [$conf->id => [
+                'start_date' => $conf->start_date,
+                'end_date' => $conf->end_date,
+            ]];
+        });
+        return view('sessions.edit', compact('session', 'conferences', 'participants', 'conferenceVenues', 'venues', 'conferenceDates'));
     }
 
     public function update(Request $request, Session $session)
     {
         $validated = $request->validate([
             'conference_id' => 'required|exists:conferences,id',
+            'venue_id' => 'required|exists:venues,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'start_time' => 'required|date',

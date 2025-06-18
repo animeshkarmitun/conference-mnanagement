@@ -23,10 +23,11 @@ class ConferenceController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'venue_id' => 'required|exists:venues,id',
+            'location' => 'required|string|max:255',
         ]);
         Conference::create($validated);
         return redirect()->route('conferences.index')->with('success', 'Conference created successfully.');
@@ -47,7 +48,7 @@ class ConferenceController extends Controller
     public function update(Request $request, Conference $conference)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'venue_id' => 'required|exists:venues,id',

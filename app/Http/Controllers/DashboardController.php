@@ -11,8 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $conferences = Conference::all();
+        $selectedConferenceId = $request->get('conference_id') ?? ($conferences->first()?->id);
+        $selectedConference = $conferences->where('id', $selectedConferenceId)->first();
+
         // Get total counts
         $totalConferences = Conference::count();
         $totalParticipants = Participant::count();
@@ -42,6 +46,9 @@ class DashboardController extends Controller
             ->get();
 
         return view('dashboard', compact(
+            'conferences',
+            'selectedConferenceId',
+            'selectedConference',
             'totalConferences',
             'totalParticipants',
             'upcomingSessions',

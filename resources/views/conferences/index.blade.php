@@ -21,7 +21,7 @@
         <tbody class="bg-white divide-y divide-gray-200">
             @forelse($conferences ?? [] as $conference)
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $conference->title }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $conference->name }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $conference->start_date }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $conference->end_date }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $conference->venue->name ?? '' }}</td>

@@ -24,8 +24,20 @@
             @forelse($tasks as $task)
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $task->title }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $task->assignedTo->name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $task->due_date->format('M d, Y') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @if($task->assignedTo)
+                            {{ $task->assignedTo->first_name ?? $task->assignedTo->name }} {{ $task->assignedTo->last_name ?? '' }} ({{ $task->assignedTo->email }})
+                        @else
+                            <span class="text-gray-400">Unassigned</span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @if($task->due_date)
+                            {{ is_object($task->due_date) ? $task->due_date->format('M d, Y') : \Carbon\Carbon::parse($task->due_date)->format('M d, Y') }}
+                        @else
+                            <span class="text-gray-400">N/A</span>
+                        @endif
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold
                             {{ $task->priority === 'high' ? 'bg-red-100 text-red-700' : 

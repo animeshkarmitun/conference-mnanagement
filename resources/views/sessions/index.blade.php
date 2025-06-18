@@ -26,8 +26,8 @@
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $session->title }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $session->conference->title }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $session->start_time->format('M d, Y H:i') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $session->end_time->format('M d, Y H:i') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($session->start_time)->format('M d, Y H:i') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($session->end_time)->format('M d, Y H:i') }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $session->room }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $session->capacity }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">

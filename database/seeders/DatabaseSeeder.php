@@ -12,7 +12,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(SuperAdminSeeder::class);
+        $this->call([
+            VenueSeeder::class,
+            ConferenceSeeder::class,
+            SessionSeeder::class,
+            ParticipantTypeSeeder::class,
+            ParticipantSeeder::class,
+        ]);
         // \App\Models\User::factory(10)->create();
 
         // \App\Models\User::factory()->create([
