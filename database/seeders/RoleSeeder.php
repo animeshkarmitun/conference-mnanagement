@@ -61,6 +61,14 @@ class RoleSeeder extends Seeder
                     'notifications.view'
                 ]),
             ],
+            [
+                'name' => 'tasker',
+                'permissions' => json_encode([
+                    'tasks.view',
+                    'tasks.update',
+                    'notifications.view'
+                ]),
+            ],
         ];
 
         foreach ($roles as $roleData) {

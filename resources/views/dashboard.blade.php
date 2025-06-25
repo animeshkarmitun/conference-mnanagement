@@ -1,8 +1,18 @@
-
 @extends('layouts.app')
 @section('title', 'Dashboard')
 
 @section('content')
+<!-- Professional Dashboard Header -->
+<div class="rounded-2xl bg-gradient-to-r from-yellow-100 via-yellow-50 to-white shadow flex items-center px-8 py-6 mb-10 border border-yellow-200">
+    <div class="flex items-center justify-center w-16 h-16 bg-yellow-200 rounded-full mr-6 shadow">
+        <svg class="w-8 h-8 text-yellow-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5V6a2 2 0 012-2h14a2 2 0 012 2v7.5M3 13.5l9 6 9-6M3 13.5l9-6 9 6"/></svg>
+    </div>
+    <div>
+        <h1 class="text-3xl font-extrabold text-yellow-800 tracking-tight mb-1">Dashboard</h1>
+        <div class="text-gray-600 text-lg font-medium">Conference Management Overview</div>
+    </div>
+</div>
+<hr class="mb-8 border-yellow-200">
 @php
     // Dummy conferences and their data
     $dummyConferences = [

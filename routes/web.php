@@ -23,6 +23,10 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/dashboard-tasker', function () {
+    return view('dashboard-tasker');
+})->middleware(['auth', 'verified'])->name('dashboard.tasker');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -53,18 +57,21 @@ Route::get('/guide', function () {
     return view('guide');
 })->name('guide');
 
+Route::get('/users', function () {
+    return view('users.index');
+})->middleware(['auth', 'verified'])->name('users.index');
+
+Route::get('/roles', function () {
+    return view('roles.index');
+})->middleware(['auth', 'verified'])->name('roles.index');
+
 // Load authentication routes if present
 if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
 }
 
 // --- Cache clear route for environments without console access ---
-Route::get('/clear-cache', function () {
-    \Artisan::call('config:cache');
-    \Artisan::call('view:clear');
-    \Artisan::call('route:clear');
-    return 'Caches cleared!';
-});
+Route::get('/clear-cache', [\App\Http\Controllers\CacheController::class, 'clearAll'])->name('cache.clear');
 
 // --- DB connection check route ---
 Route::get('/db-check', function () {

@@ -3,11 +3,22 @@
 @section('title', 'Participants')
 
 @section('content')
+<!-- Professional Page Header -->
+<div class="rounded-2xl bg-gradient-to-r from-yellow-100 via-yellow-50 to-white shadow flex items-center px-8 py-6 mb-10 border border-yellow-200">
+    <div class="flex items-center justify-center w-16 h-16 bg-yellow-200 rounded-full mr-6 shadow">
+        <svg class="w-8 h-8 text-yellow-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </div>
+    <div>
+        <h1 class="text-3xl font-extrabold text-yellow-800 tracking-tight mb-1">Participants</h1>
+        <div class="text-gray-600 text-lg font-medium">Manage and view all event participants</div>
+    </div>
+</div>
+<hr class="mb-8 border-yellow-200">
 <div class="flex justify-between items-center mb-6">
     <h2 class="text-2xl font-bold">Participants</h2>
     <a href="{{ route('participants.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Add Participant</a>
 </div>
-<div class="bg-white rounded-xl shadow p-6">
+<div class="bg-white rounded-xl shadow p-6 mt-8">
     <table class="min-w-full divide-y divide-gray-200">
         <thead>
             <tr>

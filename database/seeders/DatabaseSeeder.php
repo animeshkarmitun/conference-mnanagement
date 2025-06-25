@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SessionSeeder::class,
             ParticipantTypeSeeder::class,
             ParticipantSeeder::class,
+            TaskerSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
 
