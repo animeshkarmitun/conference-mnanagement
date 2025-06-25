@@ -15,7 +15,15 @@ class Task extends Model
         'description',
         'theme',
         'status',
+        'priority',
+        'due_date',
+        'assigned_to',
+        'created_by',
         'notes',
+    ];
+
+    protected $casts = [
+        'due_date' => 'date',
     ];
 
     // Relationships

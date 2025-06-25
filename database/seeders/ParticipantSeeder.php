@@ -14,31 +14,40 @@ class ParticipantSeeder extends Seeder
         $attendeeTypeId = DB::table('participant_types')->where('name', 'attendee')->value('id');
         $speakerTypeId = DB::table('participant_types')->where('name', 'speaker')->value('id');
 
-        $user = User::create([
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'email' => 'john@example.com',
-            'password' => bcrypt('password'),
-        ]);
-        Participant::create([
-            'user_id' => $user->id,
-            'conference_id' => 1,
-            'participant_type_id' => $attendeeTypeId,
-            'dietary_needs' => 'vegetarian',
-            'travel_intent' => true,
-        ]);
-        $user = User::create([
-            'first_name' => 'Jane',
-            'last_name' => 'Smith',
-            'email' => 'jane@example.com',
-            'password' => bcrypt('password'),
-        ]);
-        Participant::create([
-            'user_id' => $user->id,
-            'conference_id' => 1,
-            'participant_type_id' => $speakerTypeId,
-            'dietary_needs' => 'none',
-            'travel_intent' => false,
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => 'john@example.com'],
+            [
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'password' => bcrypt('password'),
+            ]
+        );
+        
+        Participant::firstOrCreate(
+            ['user_id' => $user->id, 'conference_id' => 1],
+            [
+                'participant_type_id' => $attendeeTypeId,
+                'dietary_needs' => 'vegetarian',
+                'travel_intent' => true,
+            ]
+        );
+        
+        $user = User::firstOrCreate(
+            ['email' => 'jane@example.com'],
+            [
+                'first_name' => 'Jane',
+                'last_name' => 'Smith',
+                'password' => bcrypt('password'),
+            ]
+        );
+        
+        Participant::firstOrCreate(
+            ['user_id' => $user->id, 'conference_id' => 1],
+            [
+                'participant_type_id' => $speakerTypeId,
+                'dietary_needs' => 'none',
+                'travel_intent' => false,
+            ]
+        );
     }
 } 

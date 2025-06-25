@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\ParticipantType;
 
 class ParticipantTypeSeeder extends Seeder
 {
@@ -13,10 +13,10 @@ class ParticipantTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('participant_types')->insert([
-            ['name' => 'attendee'],
-            ['name' => 'speaker'],
-            ['name' => 'organizer'],
-        ]);
+        $types = ['attendee', 'speaker', 'organizer'];
+        
+        foreach ($types as $type) {
+            ParticipantType::firstOrCreate(['name' => $type]);
+        }
     }
 }

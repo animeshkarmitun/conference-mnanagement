@@ -17,7 +17,11 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('theme')->nullable();
-            $table->enum('status', ['assigned', 'in_progress', 'completed', 'cancelled'])->default('assigned');
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
+            $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
+            $table->date('due_date');
+            $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
