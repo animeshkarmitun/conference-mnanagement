@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\GoogleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,6 +65,14 @@ Route::get('/users', function () {
 Route::get('/roles', function () {
     return view('roles.index');
 })->middleware(['auth', 'verified'])->name('roles.index');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
+    Route::get('/google-callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
+    Route::get('/gmail', [GoogleController::class, 'showGmailThreads'])->name('gmail.index');
+});
+
+Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');
 
 // Load authentication routes if present
 if (file_exists(__DIR__.'/auth.php')) {

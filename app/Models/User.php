@@ -30,6 +30,7 @@ class User extends Authenticatable
         'profile_picture',
         'resume',
         'dietary_needs',
+        'google_token',
     ];
 
     /**

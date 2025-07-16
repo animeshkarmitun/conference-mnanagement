@@ -37,12 +37,14 @@
                         <a href="{{ route('sessions.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Sessions</a>
                         <a href="{{ route('tasks.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Tasks</a>
                         <a href="{{ route('notifications.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Notifications</a>
+                        <a href="{{ route('gmail.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Gmail Conversations</a>
                         <a href="{{ route('speaker.register') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Speaker Registration</a>
                         <a href="{{ route('guide') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">How to Use</a>
                     @elseif(auth()->user()->hasRole('tasker'))
                         <a href="{{ route('dashboard.tasker') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Tasker Dashboard</a>
                         <a href="{{ route('tasks.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Tasks</a>
                         <a href="{{ route('notifications.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Notifications</a>
+                        <a href="{{ route('gmail.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Gmail Conversations</a>
                     @else
                         <a href="{{ route('dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Dashboard</a>
                         <a href="{{ route('conferences.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Conferences</a>
@@ -50,6 +52,7 @@
                         <a href="{{ route('sessions.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Sessions</a>
                         <a href="{{ route('tasks.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Tasks</a>
                         <a href="{{ route('notifications.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Notifications</a>
+                        <a href="{{ route('gmail.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Gmail Conversations</a>
                         <a href="{{ route('speaker.register') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Speaker Registration</a>
                         <a href="{{ route('guide') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">How to Use</a>
                     @endif
