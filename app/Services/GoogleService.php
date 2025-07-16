@@ -35,12 +35,15 @@ class GoogleService
         $this->client->setAccessToken($token);
     }
 
-    public function listThreads($userId = 'me', $maxResults = 10, $pageToken = null)
+    public function listThreads($userId = 'me', $maxResults = 10, $pageToken = null, $query = null)
     {
         $service = new Gmail($this->client);
         $params = ['maxResults' => $maxResults];
         if ($pageToken) {
             $params['pageToken'] = $pageToken;
+        }
+        if ($query) {
+            $params['q'] = $query;
         }
         $results = $service->users_threads->listUsersThreads($userId, $params);
         $threads = [];

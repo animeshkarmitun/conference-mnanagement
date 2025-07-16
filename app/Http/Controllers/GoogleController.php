@@ -61,14 +61,16 @@ class GoogleController extends Controller
             }
 
             $this->googleService->setAccessToken(json_decode($user->google_token, true));
-            $maxResults = $request->input('maxResults', 10);
+            $maxResults = $request->input('maxResults', 30); // Increased default
             $pageToken = $request->input('pageToken');
-            $result = $this->googleService->listThreads('me', $maxResults, $pageToken);
+            $query = $request->input('q');
+            $result = $this->googleService->listThreads('me', $maxResults, $pageToken, $query);
 
             return view('gmail.index', [
                 'threads' => $result['threads'],
                 'nextPageToken' => $result['nextPageToken'],
                 'maxResults' => $maxResults,
+                'searchQuery' => $query,
             ]);
         } catch (\Exception $e) {
             return redirect()->route('dashboard')->with('error', 'Failed to load Gmail threads: ' . $e->getMessage());

@@ -38,7 +38,7 @@
                         <i class="fas fa-circle text-xs mr-2"></i>
                         Connected to Gmail
                     </span>
-                    <button onclick="refreshConversations()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button onclick="window.location.href='{{ route('gmail.index') }}'" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <i class="fas fa-sync-alt mr-2"></i>
                         Refresh
                     </button>
@@ -74,6 +74,25 @@
                 </div>
             </div>
         @endif
+
+        <!-- Gmail API cache note -->
+        <div class="mb-4 text-sm text-yellow-700 bg-yellow-100 border border-yellow-200 rounded p-3 flex items-center">
+            <i class="fas fa-info-circle mr-2"></i>
+            Gmail may cache results for up to a minute. If you don't see new emails immediately, please wait and try again.
+        </div>
+
+        <!-- Search/filter form -->
+        <form method="GET" action="{{ route('gmail.index') }}" class="mb-6 flex flex-col sm:flex-row items-center gap-3">
+            <input type="text" name="q" value="{{ $searchQuery ?? '' }}" placeholder="Search (e.g. from:someone, after:2024/07/01)" class="w-full sm:w-80 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+            <input type="hidden" name="maxResults" value="{{ $maxResults }}">
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-search mr-2"></i>
+                Search
+            </button>
+            @if (!empty($searchQuery))
+                <a href="{{ route('gmail.index') }}" class="text-sm text-gray-500 hover:underline ml-2">Clear</a>
+            @endif
+        </form>
 
         <!-- Conversations List -->
         @if (isset($threads) && count($threads))
