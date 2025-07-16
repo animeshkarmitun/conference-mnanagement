@@ -53,6 +53,54 @@
             <span class="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold">{{ $selectedConference['name'] }}</span>
         </div>
     </form>
+    <!-- Summary Stats Section -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
+        <!-- Invited -->
+        <div class="bg-white rounded-2xl shadow flex flex-col items-center p-5 border-t-4 border-blue-400">
+            <span class="inline-flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full mb-2">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </span>
+            <div class="text-2xl font-bold text-blue-700">250</div>
+            <div class="text-sm text-gray-500">Invited</div>
+        </div>
+        <!-- Accepted -->
+        <div class="bg-white rounded-2xl shadow flex flex-col items-center p-5 border-t-4 border-green-400">
+            <span class="inline-flex items-center justify-center w-10 h-10 bg-green-100 rounded-full mb-2">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </span>
+            <div class="text-2xl font-bold text-green-700">180</div>
+            <div class="text-sm text-gray-500">Accepted</div>
+        </div>
+        <!-- Flying -->
+        <div class="bg-white rounded-2xl shadow flex flex-col items-center p-5 border-t-4 border-yellow-400">
+            <span class="inline-flex items-center justify-center w-10 h-10 bg-yellow-100 rounded-full mb-2">
+                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a5 5 0 00-10 0v2a5 5 0 00-2 4v5a2 2 0 002 2h10a2 2 0 002-2v-5a5 5 0 00-2-4z"/></svg>
+            </span>
+            <div class="text-2xl font-bold text-yellow-700">120</div>
+            <div class="text-sm text-gray-500">Flying</div>
+        </div>
+        <!-- Status Breakdown -->
+        <div class="bg-white rounded-2xl shadow flex flex-col items-center p-5 border-t-4 border-pink-400">
+            <span class="inline-flex items-center justify-center w-10 h-10 bg-pink-100 rounded-full mb-2">
+                <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+            </span>
+            <div class="flex flex-col items-center">
+                <div class="text-xs text-gray-500">Pending: <span class="font-bold text-pink-700">40</span></div>
+                <div class="text-xs text-gray-500">Approved: <span class="font-bold text-green-700">130</span></div>
+                <div class="text-xs text-gray-500">Declined: <span class="font-bold text-red-700">10</span></div>
+            </div>
+            <div class="text-sm text-gray-500 mt-1">Status</div>
+        </div>
+        <!-- Speakers -->
+        <div class="bg-white rounded-2xl shadow flex flex-col items-center p-5 border-t-4 border-purple-400">
+            <span class="inline-flex items-center justify-center w-10 h-10 bg-purple-100 rounded-full mb-2">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a3 3 0 11-6 0 3 3 0 016 0zM17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+            </span>
+            <div class="text-2xl font-bold text-purple-700">{{ $selectedConference['speakersCount'] }}</div>
+            <div class="text-sm text-gray-500">Speakers</div>
+        </div>
+    </div>
+    <!-- End Summary Stats Section -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <!-- Speakers Card -->
         <div class="bg-white rounded-2xl shadow-lg p-6" aria-label="Speakers chart">
