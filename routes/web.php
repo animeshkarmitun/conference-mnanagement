@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');
 
+Route::get('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'show'])->name('bulk.email');
+
 // Load authentication routes if present
 if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
