@@ -70,6 +70,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
     Route::get('/google-callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
     Route::get('/gmail', [GoogleController::class, 'showGmailThreads'])->name('gmail.index');
+    Route::get('/gmail/{threadId}/reply', [GoogleController::class, 'showReplyForm'])->name('gmail.reply');
+    Route::post('/gmail/{threadId}/reply', [GoogleController::class, 'sendReply'])->name('gmail.send-reply');
 });
 
 Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');

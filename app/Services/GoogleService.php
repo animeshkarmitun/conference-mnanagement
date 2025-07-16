@@ -35,10 +35,14 @@ class GoogleService
         $this->client->setAccessToken($token);
     }
 
-    public function listThreads($userId = 'me')
+    public function listThreads($userId = 'me', $maxResults = 10, $pageToken = null)
     {
         $service = new Gmail($this->client);
-        $results = $service->users_threads->listUsersThreads($userId, ['maxResults' => 10]);
+        $params = ['maxResults' => $maxResults];
+        if ($pageToken) {
+            $params['pageToken'] = $pageToken;
+        }
+        $results = $service->users_threads->listUsersThreads($userId, $params);
         $threads = [];
 
         if ($results->getThreads()) {
@@ -52,7 +56,10 @@ class GoogleService
             }
         }
 
-        return $threads;
+        return [
+            'threads' => $threads,
+            'nextPageToken' => $results->getNextPageToken() ?? null,
+        ];
     }
 
     // Helper to extract header value
@@ -65,5 +72,68 @@ class GoogleService
             }
         }
         return '';
+    }
+
+    // Send email
+    public function sendEmail($to, $subject, $body, $threadId = null)
+    {
+        $service = new Gmail($this->client);
+        
+        // Create email message
+        $message = $this->createMessage($to, $subject, $body, $threadId);
+        
+        // Send the message
+        $sentMessage = $service->users_messages->send('me', $message);
+        
+        return $sentMessage;
+    }
+
+    // Create email message
+    private function createMessage($to, $subject, $body, $threadId = null)
+    {
+        $message = new \Google\Service\Gmail\Message();
+        
+        // Create email headers
+        $headers = [
+            'To' => $to,
+            'Subject' => $subject,
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'MIME-Version' => '1.0'
+        ];
+
+        // If replying to a thread, add thread ID
+        if ($threadId) {
+            $headers['In-Reply-To'] = $threadId;
+            $headers['References'] = $threadId;
+        }
+
+        // Create email content
+        $emailContent = '';
+        foreach ($headers as $key => $value) {
+            $emailContent .= "$key: $value\r\n";
+        }
+        $emailContent .= "\r\n" . $body;
+
+        // Encode the message
+        $encodedMessage = base64_encode($emailContent);
+        $message->setRaw($encodedMessage);
+
+        return $message;
+    }
+
+    // Get thread details for reply
+    public function getThread($threadId, $userId = 'me')
+    {
+        $service = new Gmail($this->client);
+        return $service->users_threads->get($userId, $threadId);
+    }
+
+    // Extract email address from "Name <email>" format
+    public function extractEmailAddress($fromString)
+    {
+        if (preg_match('/<(.+?)>/', $fromString, $matches)) {
+            return $matches[1];
+        }
+        return $fromString;
     }
 } 

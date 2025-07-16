@@ -5,7 +5,7 @@ return [
     'client_id' => env('GOOGLE_CLIENT_ID'),
     'client_secret' => env('GOOGLE_CLIENT_SECRET'),
     'redirect_uri' => env('GOOGLE_REDIRECT_URI'),
-    'scopes' => [\Google\Service\Gmail::GMAIL_READONLY],
+    'scopes' => [\Google\Service\Gmail::GMAIL_READONLY, \Google\Service\Gmail::GMAIL_SEND],
     'access_type' => 'offline',
     'approval_prompt' => 'force',
 ]; 

@@ -150,10 +150,11 @@
                                 </span>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <a href="{{ route('gmail.reply', $thread['id']) }}" 
+                                   class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     <i class="fas fa-reply mr-1"></i>
                                     Reply
-                                </button>
+                                </a>
                                 <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     <i class="fas fa-archive mr-1"></i>
                                     Archive
@@ -165,12 +166,18 @@
             </div>
 
             <!-- Pagination or Load More -->
+            @if (!empty($nextPageToken))
             <div class="mt-8 text-center">
-                <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <i class="fas fa-plus mr-2"></i>
-                    Load More Conversations
-                </button>
+                <form method="GET" action="{{ route('gmail.index') }}">
+                    <input type="hidden" name="pageToken" value="{{ $nextPageToken }}">
+                    <input type="hidden" name="maxResults" value="{{ $maxResults }}">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-plus mr-2"></i>
+                        Load More Conversations
+                    </button>
+                </form>
             </div>
+            @endif
         @else
             <!-- Empty State -->
             <div class="text-center py-12">
