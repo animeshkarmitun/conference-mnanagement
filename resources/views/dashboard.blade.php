@@ -14,6 +14,74 @@
     </div>
 </div>
 <hr class="mb-8 border-yellow-200">
+<!-- Conference Progress Section -->
+<div class="max-w-4xl mx-auto mb-8">
+    <div class="bg-white rounded-2xl shadow flex flex-col md:flex-row items-center justify-between p-6 border-l-4 border-yellow-400">
+        <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full">
+                    <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </span>
+                <div>
+                    <div class="text-lg font-bold text-yellow-700">Conference Progress</div>
+                    <div class="text-sm text-gray-500">Annual Tech Summit</div>
+                </div>
+            </div>
+            <div class="flex flex-col md:ml-8">
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
+                    <span>June 10–14, 2024</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 018 0v2m-4-4V7a4 4 0 10-8 0v6m0 4h8"/></svg>
+                    <span>Sessions Completed: <span class="font-semibold text-green-700">8</span> / 12</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-[180px]">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm text-gray-500">Progress:</span>
+                <span class="text-lg font-bold text-yellow-700">67%</span>
+            </div>
+            <div class="w-40 h-3 bg-gray-200 rounded-full overflow-hidden mb-1">
+                <div class="h-3 bg-yellow-400 rounded-full" style="width: 67%"></div>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-500">
+                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg>
+                <span>2 days remaining</span>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Conference Progress Section -->
+<!-- Task Progress Section -->
+<div class="max-w-4xl mx-auto mb-8">
+    <div class="bg-white rounded-2xl shadow flex flex-col md:flex-row items-center justify-between p-6 border-l-4 border-green-400">
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full">
+                <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2l4-4M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </span>
+            <div>
+                <div class="text-lg font-bold text-green-700">Task Progress</div>
+                <div class="text-sm text-gray-500">Completed Tasks</div>
+            </div>
+        </div>
+        <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-[180px]">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm text-gray-500">15 / 20</span>
+                <span class="text-lg font-bold text-green-700">75%</span>
+            </div>
+            <div class="w-40 h-3 bg-gray-200 rounded-full overflow-hidden mb-1">
+                <div class="h-3 bg-green-400 rounded-full" style="width: 75%"></div>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-500">
+                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2l4-4"/></svg>
+                <span>5 tasks remaining</span>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Task Progress Section -->
 @php
     // Dummy conferences and their data
     $dummyConferences = [
