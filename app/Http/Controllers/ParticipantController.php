@@ -43,7 +43,8 @@ class ParticipantController extends Controller
             'user_id' => 'required|exists:users,id',
             'conference_id' => 'required|exists:conferences,id',
             'participant_type_id' => 'required|exists:participant_types,id',
-            'visa_status' => 'required',
+            'visa_status' => 'required|in:required,not_required,pending,approved,issue',
+            'visa_issue_description' => 'nullable|string|max:1000',
             'travel_form_submitted' => 'boolean',
             'bio' => 'nullable|string',
             'approved' => 'boolean',
@@ -54,6 +55,11 @@ class ParticipantController extends Controller
             'profile_picture' => 'nullable|image|max:2048',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
+
+        // If visa status is not 'issue', clear the description
+        if ($validated['visa_status'] !== 'issue') {
+            $validated['visa_issue_description'] = null;
+        }
 
         // Handle file uploads and update user
         $user = User::findOrFail($request->user_id);
@@ -101,20 +107,33 @@ class ParticipantController extends Controller
     public function update(Request $request, Participant $participant)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'conference_id' => 'required|exists:conferences,id',
-            'participant_type_id' => 'required|exists:participant_types,id',
-            'visa_status' => 'required',
-            'travel_form_submitted' => 'boolean',
+            'user_id' => 'sometimes|required|exists:users,id',
+            'conference_id' => 'sometimes|required|exists:conferences,id',
+            'participant_type_id' => 'sometimes|required|exists:participant_types,id',
+            'visa_status' => 'required|in:required,not_required,pending,approved,issue',
+            'visa_issue_description' => 'nullable|string|max:1000',
+            'travel_form_submitted' => 'sometimes|boolean',
             'bio' => 'nullable|string',
-            'approved' => 'boolean',
+            'approved' => 'sometimes|boolean',
             'organization' => 'nullable|string',
             'dietary_needs' => 'nullable|string',
-            'travel_intent' => 'boolean',
-            'registration_status' => 'required',
+            'travel_intent' => 'sometimes|boolean',
+            'registration_status' => 'sometimes|required',
         ]);
+
+        // If visa status is not 'issue', clear the description
+        if ($validated['visa_status'] !== 'issue') {
+            $validated['visa_issue_description'] = null;
+        }
+
         $participant->update($validated);
-        return redirect()->route('participants.index')->with('success', 'Participant updated successfully.');
+        
+        // Redirect based on who is updating (admin vs participant)
+        if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('super_admin')) {
+            return redirect()->route('participants.index')->with('success', 'Participant updated successfully.');
+        } else {
+            return redirect()->back()->with('success', 'Profile updated successfully.');
+        }
     }
 
     // Delete participant

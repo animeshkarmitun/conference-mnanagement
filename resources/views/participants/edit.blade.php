@@ -44,8 +44,15 @@
                 <option value="required" {{ old('visa_status', $participant->visa_status) == 'required' ? 'selected' : '' }}>Required</option>
                 <option value="not_required" {{ old('visa_status', $participant->visa_status) == 'not_required' ? 'selected' : '' }}>Not Required</option>
                 <option value="pending" {{ old('visa_status', $participant->visa_status) == 'pending' ? 'selected' : '' }}>Pending</option>
+                <option value="approved" {{ old('visa_status', $participant->visa_status) == 'approved' ? 'selected' : '' }}>Approved</option>
+                <option value="issue" {{ old('visa_status', $participant->visa_status) == 'issue' ? 'selected' : '' }}>Issue (Problem)</option>
             </select>
             @error('visa_status')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+        </div>
+        <div class="mb-4" id="visa-issue-description" style="display: {{ old('visa_status', $participant->visa_status) == 'issue' ? 'block' : 'none' }};">
+            <label for="visa_issue_description" class="block text-sm font-medium text-gray-700">Visa Issue Description</label>
+            <textarea name="visa_issue_description" id="visa_issue_description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Please describe the visa issue or problem...">{{ old('visa_issue_description', $participant->visa_issue_description) }}</textarea>
+            @error('visa_issue_description')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
         <div class="mb-4">
             <label for="travel_form_submitted" class="block text-sm font-medium text-gray-700">Travel Form Submitted</label>
@@ -92,4 +99,25 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const visaStatusSelect = document.getElementById('visa_status');
+    const visaIssueDescription = document.getElementById('visa-issue-description');
+    
+    function toggleVisaIssueDescription() {
+        if (visaStatusSelect.value === 'issue') {
+            visaIssueDescription.style.display = 'block';
+        } else {
+            visaIssueDescription.style.display = 'none';
+        }
+    }
+    
+    // Initial state
+    toggleVisaIssueDescription();
+    
+    // Listen for changes
+    visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
+});
+</script>
 @endsection 
