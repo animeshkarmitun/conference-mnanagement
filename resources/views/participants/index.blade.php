@@ -25,56 +25,12 @@
 </div>
 
 <hr class="mb-8 border-yellow-200">
-<<<<<<< HEAD
-
-@if(session('success'))
-    <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-        <span class="block sm:inline">{{ session('success') }}</span>
-    </div>
-@endif
-
-@if(session('error'))
-    <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <span class="block sm:inline">{{ session('error') }}</span>
-    </div>
-@endif
-
-<div class="bg-white rounded-xl shadow p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">All Participants</h2>
-        <div class="flex items-center space-x-4">
-            <div class="text-sm text-gray-500">{{ $participants->total() ?? 0 }} participants</div>
-            <div class="flex items-center space-x-2">
-                <select id="format-select" class="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
-                    <option value="pdf">PDF</option>
-                    <option value="zip">ZIP</option>
-                </select>
-                <button id="download-biographies-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Download Biographies (<span id="selected-count">0</span>)
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="mb-4">
-        <label class="flex items-center">
-            <input type="checkbox" id="select-all" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-            <span class="ml-2 text-sm font-medium text-gray-700">Select All</span>
-        </label>
-    </div>
-    
-    <table class="min-w-full divide-y divide-gray-200">
-=======
 <div class="flex justify-between items-center mb-6">
     <h2 class="text-2xl font-bold">Participants</h2>
     <a href="{{ route('participants.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Add Participant</a>
 </div>
 <div class="bg-white rounded-xl shadow p-6 mt-8">
     <table class="min-w-full divide-y divide-gray-200" id="myTable">
->>>>>>> ddfd3d6f748e51d42b503b4114f72d3e6244ac8e
         <thead>
             <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
