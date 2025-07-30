@@ -72,14 +72,15 @@
         <div class="mb-6">
             <label for="participants" class="block text-sm font-medium text-gray-700">Participants</label>
             <select name="participants[]" id="participants" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                @foreach($participants as $participant)
-                    <option value="{{ $participant->id }}" {{ in_array($participant->id, old('participants', [])) ? 'selected' : '' }}>
-                        {{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }} ({{ $participant->user->email }})
-                    </option>
-                @endforeach
+            @foreach($participants as $participant)
+                <option value="{{ $participant->id }}" {{ in_array($participant->id, old('participants', [])) ? 'selected' : '' }}>
+                {{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }} ({{ $participant->user->email }})
+                </option>
+            @endforeach
             </select>
             @error('participants')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
+        
 
         <div class="flex justify-end">
             <a href="{{ route('sessions.index') }}" class="mr-4 text-gray-600 hover:text-gray-900">Cancel</a>
@@ -106,4 +107,19 @@
         }
     });
 </script>
+<!-- Choices.js for multi-select with search -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+            new Choices('#participants', {
+                removeItemButton: true,
+                searchEnabled: true,
+                placeholderValue: 'Select participants',
+                searchPlaceholderValue: 'Search participants'
+            });
+            });
+        </script>
+<!-- Multiple select code end -->        
+
 @endsection 

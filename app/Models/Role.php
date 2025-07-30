@@ -15,6 +15,10 @@ class Role extends Model
         'created_by',
     ];
 
+    protected $casts = [
+        'permissions' => 'array',
+    ];
+
     // Relationships
     public function users()
     {

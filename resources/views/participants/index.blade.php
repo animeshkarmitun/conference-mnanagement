@@ -25,6 +25,7 @@
 </div>
 
 <hr class="mb-8 border-yellow-200">
+<<<<<<< HEAD
 
 @if(session('success'))
     <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
@@ -66,6 +67,14 @@
     </div>
     
     <table class="min-w-full divide-y divide-gray-200">
+=======
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold">Participants</h2>
+    <a href="{{ route('participants.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Add Participant</a>
+</div>
+<div class="bg-white rounded-xl shadow p-6 mt-8">
+    <table class="min-w-full divide-y divide-gray-200" id="myTable">
+>>>>>>> ddfd3d6f748e51d42b503b4114f72d3e6244ac8e
         <thead>
             <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

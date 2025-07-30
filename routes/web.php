@@ -49,6 +49,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/room-allocations/{participant}', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('admin.room-allocations.update');
     Route::post('/admin/participants/download-biographies', [\App\Http\Controllers\ParticipantController::class, 'downloadBiographies'])->name('admin.participants.download-biographies');
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
+    
+    // Event Coordinator Routes
+    Route::prefix('event-coordinator')->name('event-coordinator.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\EventCoordinatorController::class, 'dashboard'])->name('dashboard');
+        Route::get('/travel-manifests', [\App\Http\Controllers\EventCoordinatorController::class, 'travelManifests'])->name('travel-manifests');
+        Route::get('/export-manifest', [\App\Http\Controllers\EventCoordinatorController::class, 'exportManifest'])->name('export-manifest');
+    });
 });
 
 Route::get('/speaker/register', [\App\Http\Controllers\SpeakerRegistrationController::class, 'showRegistrationForm'])->name('speaker.register');
