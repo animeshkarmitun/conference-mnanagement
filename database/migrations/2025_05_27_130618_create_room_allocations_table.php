@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('room_allocations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('hotel_id')->constrained()->onDelete('cascade');
+            $table->foreignId('participant_id')->constrained()->onDelete('cascade');
+            $table->string('room_number')->nullable();
+            $table->dateTime('check_in');
+            $table->dateTime('check_out');
             $table->timestamps();
         });
     }

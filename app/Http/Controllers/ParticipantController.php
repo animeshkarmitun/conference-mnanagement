@@ -11,6 +11,7 @@ use App\Models\Hotel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ParticipantController extends Controller
 {
@@ -43,7 +44,8 @@ class ParticipantController extends Controller
             'user_id' => 'required|exists:users,id',
             'conference_id' => 'required|exists:conferences,id',
             'participant_type_id' => 'required|exists:participant_types,id',
-            'visa_status' => 'required',
+            'visa_status' => 'required|in:required,not_required,pending,approved,issue',
+            'visa_issue_description' => 'nullable|string|max:1000',
             'travel_form_submitted' => 'boolean',
             'bio' => 'nullable|string',
             'approved' => 'boolean',
@@ -54,6 +56,11 @@ class ParticipantController extends Controller
             'profile_picture' => 'nullable|image|max:2048',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
+
+        // If visa status is not 'issue', clear the description
+        if ($validated['visa_status'] !== 'issue') {
+            $validated['visa_issue_description'] = null;
+        }
 
         // Handle file uploads and update user
         $user = User::findOrFail($request->user_id);
@@ -101,20 +108,33 @@ class ParticipantController extends Controller
     public function update(Request $request, Participant $participant)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'conference_id' => 'required|exists:conferences,id',
-            'participant_type_id' => 'required|exists:participant_types,id',
-            'visa_status' => 'required',
-            'travel_form_submitted' => 'boolean',
+            'user_id' => 'sometimes|required|exists:users,id',
+            'conference_id' => 'sometimes|required|exists:conferences,id',
+            'participant_type_id' => 'sometimes|required|exists:participant_types,id',
+            'visa_status' => 'required|in:required,not_required,pending,approved,issue',
+            'visa_issue_description' => 'nullable|string|max:1000',
+            'travel_form_submitted' => 'sometimes|boolean',
             'bio' => 'nullable|string',
-            'approved' => 'boolean',
+            'approved' => 'sometimes|boolean',
             'organization' => 'nullable|string',
             'dietary_needs' => 'nullable|string',
-            'travel_intent' => 'boolean',
-            'registration_status' => 'required',
+            'travel_intent' => 'sometimes|boolean',
+            'registration_status' => 'sometimes|required',
         ]);
+
+        // If visa status is not 'issue', clear the description
+        if ($validated['visa_status'] !== 'issue') {
+            $validated['visa_issue_description'] = null;
+        }
+
         $participant->update($validated);
-        return redirect()->route('participants.index')->with('success', 'Participant updated successfully.');
+        
+        // Redirect based on who is updating (admin vs participant)
+        if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('super_admin')) {
+            return redirect()->route('participants.index')->with('success', 'Participant updated successfully.');
+        } else {
+            return redirect()->back()->with('success', 'Profile updated successfully.');
+        }
     }
 
     // Delete participant
@@ -161,5 +181,77 @@ class ParticipantController extends Controller
         $travelDetail->save();
 
         return redirect()->back()->with('success', 'Travel details updated successfully.');
+    }
+
+    /**
+     * Download participant biographies as PDF or ZIP
+     */
+    public function downloadBiographies(Request $request)
+    {
+        // Check if user is admin (simple check for now)
+        if (!auth()->user() || !auth()->user()->hasRole('admin')) {
+            return redirect()->back()->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        // Validate request
+        $validated = $request->validate([
+            'participant_ids' => 'required|array|min:1',
+            'participant_ids.*' => 'exists:participants,id',
+            'format' => 'required|in:pdf,zip'
+        ]);
+
+        // Get selected participants with their user data
+        $participants = Participant::with(['user', 'participantType'])
+            ->whereIn('id', $validated['participant_ids'])
+            ->get();
+
+        if ($participants->isEmpty()) {
+            return redirect()->back()->with('error', 'No valid participants selected.');
+        }
+
+        // Filter participants who have biographies
+        $participantsWithBios = $participants->filter(function ($participant) {
+            return !empty(trim($participant->bio));
+        });
+
+        if ($participantsWithBios->isEmpty()) {
+            return redirect()->back()->with('error', 'None of the selected participants have biographies.');
+        }
+
+        // Generate filename
+        $filename = 'participant_biographies_' . date('Y-m-d_H-i-s');
+
+        if ($validated['format'] === 'pdf') {
+            // Generate PDF
+            $pdf = PDF::loadView('participants.biographies-pdf', [
+                'participants' => $participantsWithBios
+            ]);
+            
+            // Set PDF options
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOption('isHtml5ParserEnabled', true);
+            $pdf->setOption('isRemoteEnabled', true);
+            
+            return $pdf->download($filename . '.pdf');
+        } else {
+            // For ZIP format, return text file for now (will be implemented in Phase 3)
+            $content = "PARTICIPANT BIOGRAPHIES\n";
+            $content .= "Generated on: " . date('Y-m-d H:i:s') . "\n";
+            $content .= "Total participants: " . $participantsWithBios->count() . "\n\n";
+            $content .= str_repeat("=", 50) . "\n\n";
+
+            foreach ($participantsWithBios as $participant) {
+                $content .= "NAME: " . ($participant->user->first_name ?? $participant->user->name) . " " . ($participant->user->last_name ?? '') . "\n";
+                $content .= "EMAIL: " . $participant->user->email . "\n";
+                $content .= "ORGANIZATION: " . ($participant->organization ?? 'N/A') . "\n";
+                $content .= "TYPE: " . ($participant->participantType->name ?? 'N/A') . "\n";
+                $content .= "BIOGRAPHY:\n" . $participant->bio . "\n";
+                $content .= str_repeat("-", 30) . "\n\n";
+            }
+
+            return response($content)
+                ->header('Content-Type', 'text/plain')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '.txt"');
+        }
     }
 } 

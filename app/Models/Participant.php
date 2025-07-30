@@ -14,6 +14,7 @@ class Participant extends Model
         'conference_id',
         'participant_type_id',
         'visa_status',
+        'visa_issue_description',
         'travel_form_submitted',
         'bio',
         'approved',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Participant;
 use App\Models\Hotel;
 use App\Models\TravelDetail;
+use App\Models\RoomAllocation;
 use Illuminate\Http\Request;
 
 class TravelController extends Controller
@@ -12,7 +13,7 @@ class TravelController extends Controller
     // Admin view for room allocations
     public function roomAllocations()
     {
-        $participants = Participant::with(['user', 'travelDetails', 'travelDetails.hotel'])->get();
+        $participants = Participant::with(['user', 'travelDetails', 'travelDetails.hotel', 'roomAllocations'])->get();
         $hotels = Hotel::with('travelDetails')->get();
         return view('admin.travel.room-allocations', compact('participants', 'hotels'));
     }
@@ -84,12 +85,19 @@ class TravelController extends Controller
         $validated = $request->validate([
             'hotel_id' => 'nullable|exists:hotels,id',
             'room_number' => 'nullable|string|max:50',
+            'check_in' => 'nullable|date',
+            'check_out' => 'nullable|date|after_or_equal:check_in',
         ]);
-        $travelDetail = $participant->travelDetails ?: $participant->travelDetails()->make();
-        $travelDetail->hotel_id = $validated['hotel_id'] ?? null;
-        $travelDetail->room_number = $validated['room_number'] ?? null;
-        $travelDetail->participant_id = $participant->id;
-        $travelDetail->save();
+
+        // Update or create room allocation
+        $roomAllocation = $participant->roomAllocations()->first() ?: new RoomAllocation();
+        $roomAllocation->hotel_id = $validated['hotel_id'] ?? null;
+        $roomAllocation->participant_id = $participant->id;
+        $roomAllocation->room_number = $validated['room_number'] ?? null;
+        $roomAllocation->check_in = $validated['check_in'] ?? null;
+        $roomAllocation->check_out = $validated['check_out'] ?? null;
+        $roomAllocation->save();
+
         return redirect()->back()->with('success', 'Room allocation updated.');
     }
 } 
