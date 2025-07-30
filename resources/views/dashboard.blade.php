@@ -15,6 +15,46 @@
 </div>
 <hr class="mb-8 border-yellow-200">
 <!-- Conference Progress Section -->
+@php
+    // Dummy conferences and their data
+    $dummyConferences = [
+        1 => [
+            'name' => 'Annual Tech Summit',
+            'speakersCount' => 12,
+            'speakersGender' => [7, 4, 1],
+            'participantsGender' => [120, 95, 5],
+            'participantsAge' => [40, 80, 70, 30],
+            'participantsNationality' => [60, 40, 50, 30, 40],
+            'participantsProfession' => [50, 60, 80, 20, 10],
+        ],
+        2 => [
+            'name' => 'Business Innovation Forum',
+            'speakersCount' => 8,
+            'speakersGender' => [4, 3, 1],
+            'participantsGender' => [60, 38, 2],
+            'participantsAge' => [15, 25, 20, 10],
+            'participantsNationality' => [20, 10, 15, 10, 5],
+            'participantsProfession' => [10, 15, 20, 5, 3],
+        ],
+    ];
+    $selectedConferenceId = request('conference_id', 1);
+    $selectedConference = $dummyConferences[$selectedConferenceId] ?? $dummyConferences[1];
+@endphp
+<div class="max-w-4xl mx-auto mb-8">
+    <form method="GET" action="" class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="w-full md:w-1/2">
+            <label for="conference_id" class="block text-sm font-medium text-gray-700 mb-1">Select Conference</label>
+            <select name="conference_id" id="conference_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" onchange="this.form.submit()">
+                @foreach($dummyConferences as $id => $conf)
+                    <option value="{{ $id }}" {{ $selectedConferenceId == $id ? 'selected' : '' }}>{{ $conf['name'] }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="w-full md:w-1/2 text-right">
+            <span class="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold">{{ $selectedConference['name'] }}</span>
+        </div>
+    </form>
+</div>
 <div class="max-w-4xl mx-auto mb-8">
     <div class="bg-white rounded-2xl shadow flex flex-col md:flex-row items-center justify-between p-6 border-l-4 border-yellow-400">
         <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
@@ -82,45 +122,9 @@
     </div>
 </div>
 <!-- End Task Progress Section -->
-@php
-    // Dummy conferences and their data
-    $dummyConferences = [
-        1 => [
-            'name' => 'Annual Tech Summit',
-            'speakersCount' => 12,
-            'speakersGender' => [7, 4, 1],
-            'participantsGender' => [120, 95, 5],
-            'participantsAge' => [40, 80, 70, 30],
-            'participantsNationality' => [60, 40, 50, 30, 40],
-            'participantsProfession' => [50, 60, 80, 20, 10],
-        ],
-        2 => [
-            'name' => 'Business Innovation Forum',
-            'speakersCount' => 8,
-            'speakersGender' => [4, 3, 1],
-            'participantsGender' => [60, 38, 2],
-            'participantsAge' => [15, 25, 20, 10],
-            'participantsNationality' => [20, 10, 15, 10, 5],
-            'participantsProfession' => [10, 15, 20, 5, 3],
-        ],
-    ];
-    $selectedConferenceId = request('conference_id', 1);
-    $selectedConference = $dummyConferences[$selectedConferenceId] ?? $dummyConferences[1];
-@endphp
+
 <div class="max-w-4xl mx-auto">
-    <form method="GET" action="" class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="w-full md:w-1/2">
-            <label for="conference_id" class="block text-sm font-medium text-gray-700 mb-1">Select Conference</label>
-            <select name="conference_id" id="conference_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" onchange="this.form.submit()">
-                @foreach($dummyConferences as $id => $conf)
-                    <option value="{{ $id }}" {{ $selectedConferenceId == $id ? 'selected' : '' }}>{{ $conf['name'] }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="w-full md:w-1/2 text-right">
-            <span class="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold">{{ $selectedConference['name'] }}</span>
-        </div>
-    </form>
+    
     <!-- Summary Stats Section -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
         <!-- Invited -->
