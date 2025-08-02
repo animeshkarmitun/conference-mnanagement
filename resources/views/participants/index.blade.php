@@ -73,7 +73,7 @@
         <div class="flex flex-wrap gap-2">
             <!-- Visa Status Filter -->
             <div class="relative group">
-                <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 border border-blue-200">
                     Visa Status
                     <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -103,7 +103,7 @@
             
             <!-- Participant Type Filter -->
             <div class="relative group">
-                <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                <button class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 border border-purple-200">
                     Participant Type
                     <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -152,17 +152,17 @@
         <div class="flex items-center space-x-4">
             <div class="text-sm text-gray-500">{{ $participants->total() ?? 0 }} participants</div>
             <div class="flex items-center space-x-2">
-                <select id="format-select" class="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                <select id="format-select" class="rounded-md border-2 border-gray-400 bg-white text-gray-700 focus:border-blue-500 focus:ring-blue-500 text-sm font-medium shadow-sm">
                     <option value="pdf">PDF</option>
                     <option value="zip">ZIP</option>
                 </select>
-                <button id="download-biographies-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <button id="download-biographies-btn" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-blue-700">
                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    Download Biographies (<span id="selected-count">0</span>)
+                    Download Resumes (<span id="selected-count">0</span>)
                 </button>
-                <button id="export-csv-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105">
+                <button id="export-csv-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105 border-2 border-green-700">
                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
@@ -257,7 +257,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
                         <a href="{{ route('participants.show', $participant) }}" 
-                           class="inline-flex items-center p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                           class="inline-flex items-center p-2 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-lg transition-colors duration-200 border border-blue-200"
                            title="View Participant Details"
                            aria-label="View participant details">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,7 +267,7 @@
                         </a>
                         
                         <a href="{{ route('participants.edit', $participant) }}" 
-                           class="inline-flex items-center p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-lg transition-colors duration-200"
+                           class="inline-flex items-center p-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800 rounded-lg transition-colors duration-200 border border-yellow-200"
                            title="Edit Participant"
                            aria-label="Edit participant">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,7 +279,7 @@
                             @csrf
                             @method('DELETE')
                             <button type="submit" 
-                                    class="inline-flex items-center p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                    class="inline-flex items-center p-2 bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 rounded-lg transition-colors duration-200 border border-red-200"
                                     title="Delete Participant"
                                     aria-label="Delete participant">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -391,9 +391,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedIds = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
             .map(checkbox => checkbox.value);
         
+        // If no participants are selected, download all participants
         if (selectedIds.length === 0) {
-            alert('Please select at least one participant to download biographies.');
-            return;
+            if (confirm('No participants selected. Download resumes for all participants?')) {
+                selectedIds = []; // Empty array means download all
+            } else {
+                return;
+            }
         }
         
         const selectedFormat = formatSelect.value;

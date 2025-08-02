@@ -383,71 +383,77 @@ class ParticipantController extends Controller
      */
     public function downloadBiographies(Request $request)
     {
-        // Check if user is admin (simple check for now)
-        if (!auth()->user() || !auth()->user()->hasRole('admin')) {
+        // Check permissions - allow admin, super_admin, and superadmin roles
+        $user = auth()->user();
+        if (!$user) {
+            return redirect()->back()->with('error', 'Access denied. Please log in.');
+        }
+        
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || 
+                        in_array('super_admin', $userRoles) || 
+                        in_array('superadmin', $userRoles);
+        
+        if (!$hasPermission) {
             return redirect()->back()->with('error', 'Access denied. Admin privileges required.');
         }
 
         // Validate request
         $validated = $request->validate([
-            'participant_ids' => 'required|array|min:1',
+            'participant_ids' => 'array',
             'participant_ids.*' => 'exists:participants,id',
             'format' => 'required|in:pdf,zip'
         ]);
 
-        // Get selected participants with their user data
-        $participants = Participant::with(['user', 'participantType'])
-            ->whereIn('id', $validated['participant_ids'])
-            ->get();
+        // Get participants - if no IDs provided, get all participants
+        $query = Participant::with(['user', 'participantType']);
+        if (!empty($validated['participant_ids'])) {
+            $query->whereIn('id', $validated['participant_ids']);
+        }
+        $participants = $query->get();
 
         if ($participants->isEmpty()) {
-            return redirect()->back()->with('error', 'No valid participants selected.');
+            return redirect()->back()->with('error', 'No participants found.');
         }
 
-        // Filter participants who have biographies
-        $participantsWithBios = $participants->filter(function ($participant) {
-            return !empty(trim($participant->bio));
+        // Filter participants who have resumes
+        $participantsWithResumes = $participants->filter(function ($participant) {
+            return $participant->user->resume && Storage::disk('public')->exists($participant->user->resume);
         });
 
-        if ($participantsWithBios->isEmpty()) {
-            return redirect()->back()->with('error', 'None of the selected participants have biographies.');
+        if ($participantsWithResumes->isEmpty()) {
+            return redirect()->back()->with('error', 'None of the selected participants have resume files uploaded.');
         }
 
         // Generate filename
-        $filename = 'participant_biographies_' . date('Y-m-d_H-i-s');
+        $filename = 'participant_resumes_' . date('Y-m-d_H-i-s');
 
-        if ($validated['format'] === 'pdf') {
-            // Generate PDF
-            $pdf = PDF::loadView('participants.biographies-pdf', [
-                'participants' => $participantsWithBios
-            ]);
-            
-            // Set PDF options
-            $pdf->setPaper('A4', 'portrait');
-            $pdf->setOption('isHtml5ParserEnabled', true);
-            $pdf->setOption('isRemoteEnabled', true);
-            
-            return $pdf->download($filename . '.pdf');
-        } else {
-            // For ZIP format, return text file for now (will be implemented in Phase 3)
-            $content = "PARTICIPANT BIOGRAPHIES\n";
-            $content .= "Generated on: " . date('Y-m-d H:i:s') . "\n";
-            $content .= "Total participants: " . $participantsWithBios->count() . "\n\n";
-            $content .= str_repeat("=", 50) . "\n\n";
-
-            foreach ($participantsWithBios as $participant) {
-                $content .= "NAME: " . ($participant->user->first_name ?? $participant->user->name) . " " . ($participant->user->last_name ?? '') . "\n";
-                $content .= "EMAIL: " . $participant->user->email . "\n";
-                $content .= "ORGANIZATION: " . ($participant->organization ?? 'N/A') . "\n";
-                $content .= "TYPE: " . ($participant->participantType->name ?? 'N/A') . "\n";
-                $content .= "BIOGRAPHY:\n" . $participant->bio . "\n";
-                $content .= str_repeat("-", 30) . "\n\n";
-            }
-
-            return response($content)
-                ->header('Content-Type', 'text/plain')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '.txt"');
+        // Create ZIP file with resume files
+        $zip = new \ZipArchive();
+        $zipPath = storage_path('app/temp/' . $filename . '.zip');
+        
+        // Ensure temp directory exists
+        if (!file_exists(dirname($zipPath))) {
+            mkdir(dirname($zipPath), 0755, true);
         }
+        
+        if ($zip->open($zipPath, \ZipArchive::CREATE) !== TRUE) {
+            return redirect()->back()->with('error', 'Could not create ZIP file.');
+        }
+        
+        foreach ($participantsWithResumes as $participant) {
+            $resumePath = Storage::disk('public')->path($participant->user->resume);
+            $originalFileName = basename($participant->user->resume);
+            $participantName = ($participant->user->first_name ?? '') . '_' . ($participant->user->last_name ?? '');
+            $participantName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $participantName); // Sanitize filename
+            $newFileName = $participantName . '_resume.' . pathinfo($originalFileName, PATHINFO_EXTENSION);
+            
+            $zip->addFile($resumePath, $newFileName);
+        }
+        
+        $zip->close();
+        
+        return response()->download($zipPath)->deleteFileAfterSend();
     }
 
     /**
