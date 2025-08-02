@@ -8,10 +8,50 @@ use Illuminate\Http\Request;
 
 class ConferenceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $conferences = Conference::with('venue')->latest()->paginate(20);
-        return view('conferences.index', compact('conferences'));
+        $status = $request->get('status', 'upcoming'); // Default to upcoming conferences
+        $now = now();
+        
+        $query = Conference::with('venue');
+        
+        // Filter conferences based on status
+        switch ($status) {
+            case 'active':
+                $query->where('start_date', '<=', $now)
+                      ->where('end_date', '>=', $now)
+                      ->orderBy('end_date', 'asc'); // Ending soonest first
+                break;
+                
+            case 'upcoming':
+                $query->where('start_date', '>', $now)
+                      ->orderBy('start_date', 'asc'); // Starting soonest first
+                break;
+                
+            case 'finished':
+                $query->where('end_date', '<', $now)
+                      ->orderBy('end_date', 'desc'); // Most recent first
+                break;
+                
+            case 'all':
+            default:
+                $query->orderBy('start_date', 'asc'); // Default ordering
+                break;
+        }
+        
+        $conferences = $query->paginate(10);
+        
+        // Get conference counts for each category
+        $conferenceCounts = [
+            'active' => Conference::where('start_date', '<=', $now)
+                                  ->where('end_date', '>=', $now)
+                                  ->count(),
+            'upcoming' => Conference::where('start_date', '>', $now)->count(),
+            'finished' => Conference::where('end_date', '<', $now)->count(),
+            'all' => Conference::count(),
+        ];
+        
+        return view('conferences.index', compact('conferences', 'conferenceCounts', 'status'));
     }
 
     public function create()
