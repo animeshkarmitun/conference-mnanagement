@@ -68,9 +68,9 @@ Route::get('/guide', function () {
 
 Route::resource('users', \App\Http\Controllers\UserController::class)->middleware(['auth', 'verified']);
 
-Route::get('/roles', function () {
-    return view('roles.index');
-})->middleware(['auth', 'verified'])->name('roles.index');
+Route::resource('roles', \App\Http\Controllers\RoleController::class)->middleware(['auth', 'verified']);
+Route::get('/roles/{role}/assign-users', [\App\Http\Controllers\RoleController::class, 'assignUsers'])->name('roles.assign-users');
+Route::post('/roles/{role}/assign-users', [\App\Http\Controllers\RoleController::class, 'updateUserAssignments'])->name('roles.update-user-assignments');
 
 Route::middleware('auth')->group(function () {
     Route::get('/google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
