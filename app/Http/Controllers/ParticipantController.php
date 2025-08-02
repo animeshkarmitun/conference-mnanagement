@@ -120,7 +120,7 @@ class ParticipantController extends Controller
     // Show participant details
     public function show(Participant $participant)
     {
-        $participant->load(['user', 'conference', 'participantType', 'sessions']);
+        $participant->load(['user', 'conference', 'participantType']);
         $sessions = $participant->sessions()->withPivot('role')->get();
         $notifications = $participant->user->notifications()->latest()->get();
         $comments = $participant->comments()->with('user')->latest()->get();
@@ -227,7 +227,19 @@ class ParticipantController extends Controller
         $participant = Participant::with(['conference', 'participantType', 'sessions'])
             ->where('user_id', Auth::id())
             ->latest()->first();
-        return view('participants.profile', compact('participant'));
+        
+        if (!$participant) {
+            return redirect()->back()->with('error', 'No profile found for your account.');
+        }
+        
+        $sessions = $participant->sessions()->withPivot('role')->get();
+        \Log::info('Sessions loaded for participant ' . $participant->id . ': ' . $sessions->count());
+        $notifications = $participant->user->notifications()->latest()->get();
+        $comments = $participant->comments()->with('user')->latest()->get();
+        $travelDetail = $participant->travelDetails;
+        $hotels = Hotel::all();
+        
+        return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels'));
     }
 
     public function updateTravel(Request $request, Participant $participant)
@@ -380,11 +392,20 @@ class ParticipantController extends Controller
      */
     public function assignSession(Request $request, Participant $participant)
     {
-        // Check permissions
-        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin')) {
+        \Log::info('Session assignment attempt - User: ' . Auth::id() . ', Participant: ' . $participant->id);
+        
+        // Check permissions - allow if user is admin, super_admin, or is assigning to themselves
+        $user = Auth::user();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || in_array('super_admin', $userRoles) || in_array('superadmin', $userRoles) || $user->id === $participant->user_id;
+        
+        if (!$hasPermission) {
+            \Log::warning('Permission denied for session assignment - User: ' . $user->id . ', Roles: ' . $user->roles->pluck('name')->implode(', '));
             return redirect()->back()->with('error', 'Unauthorized access');
         }
 
+        \Log::info('Session assignment request data: ' . json_encode($request->all()));
+        
         $validated = $request->validate([
             'session_id' => 'required|exists:sessions,id',
             'role' => 'required|in:participant,speaker,moderator,panelist,organizer',
@@ -408,6 +429,8 @@ class ParticipantController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            
+            \Log::info('Session assigned: Participant ' . $participant->id . ' assigned to Session ' . $validated['session_id'] . ' with role ' . $validated['role']);
 
             // Verify the assignment was successful
             $assignedSession = $participant->sessions()->where('session_id', $validated['session_id'])->first();

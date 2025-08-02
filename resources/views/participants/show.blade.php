@@ -26,6 +26,10 @@
                 Personal Info
                 <span class="tab-indicator absolute -bottom-0.5 left-0 w-0 h-0.5 bg-green-500 transition-all duration-200"></span>
             </button>
+            <button class="tab-link py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-600 hover:text-gray-800 focus:outline-none transition-all duration-200 relative" data-tab="travel">
+                Travel & Accommodation
+                <span class="tab-indicator absolute -bottom-0.5 left-0 w-0 h-0.5 bg-green-500 transition-all duration-200"></span>
+            </button>
             <button class="tab-link py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-600 hover:text-gray-800 focus:outline-none transition-all duration-200 relative" data-tab="sessions">
                 Sessions
                 <span class="tab-indicator absolute -bottom-0.5 left-0 w-0 h-0.5 bg-green-500 transition-all duration-200"></span>
@@ -42,10 +46,6 @@
                 Comments
                 <span class="tab-indicator absolute -bottom-0.5 left-0 w-0 h-0.5 bg-green-500 transition-all duration-200"></span>
             </button>
-            <button class="tab-link py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-600 hover:text-gray-800 focus:outline-none transition-all duration-200 relative" data-tab="travel">
-                Travel & Accommodation
-                <span class="tab-indicator absolute -bottom-0.5 left-0 w-0 h-0.5 bg-green-500 transition-all duration-200"></span>
-            </button>
         </nav>
     </div>
 
@@ -53,8 +53,11 @@
     <div id="tab-info" class="tab-content">
         @include('participants.partials.profile-info', ['participant' => $participant])
     </div>
+    <div id="tab-travel" class="tab-content hidden">
+        @include('participants.partials.profile-travel', ['participant' => $participant, 'travelDetail' => $travelDetail ?? null, 'hotels' => $hotels ?? []])
+    </div>
     <div id="tab-sessions" class="tab-content hidden">
-        @include('participants.partials.profile-sessions', ['sessions' => $sessions ?? []])
+        @include('participants.partials.profile-sessions', ['sessions' => $sessions ?? [], 'participant' => $participant])
     </div>
     <div id="tab-status" class="tab-content hidden">
         @include('participants.partials.profile-status', ['participant' => $participant])
@@ -64,9 +67,6 @@
     </div>
     <div id="tab-comments" class="tab-content hidden">
         @include('participants.partials.profile-comments', ['comments' => $comments ?? [], 'participant' => $participant])
-    </div>
-    <div id="tab-travel" class="tab-content hidden">
-        @include('participants.partials.profile-travel', ['participant' => $participant, 'travelDetail' => $travelDetail ?? null, 'hotels' => $hotels ?? []])
     </div>
 
     <div class="mt-4">
@@ -124,18 +124,39 @@
                 const tabName = link.dataset.tab;
                 const content = document.getElementById(`tab-${tabName}`);
                 const requiredFields = content.querySelectorAll('[required], .required-field');
-                const filledFields = Array.from(requiredFields).filter(field => {
-                    if (field.type === 'file') return field.files.length > 0;
-                    return field.value.trim() !== '';
-                });
                 
-                // Add completion indicator
-                if (requiredFields.length > 0) {
-                    const completion = (filledFields.length / requiredFields.length) * 100;
-                    if (completion === 100) {
+                // Special handling for travel tab
+                if (tabName === 'travel') {
+                    const arrivalDate = content.querySelector('input[name="arrival_date"]');
+                    const departureDate = content.querySelector('input[name="departure_date"]');
+                    const flightInfo = content.querySelector('textarea[name="flight_info"]');
+                    const hotelSelect = content.querySelector('select[name="hotel_id"]');
+                    
+                    const isComplete = arrivalDate && arrivalDate.value.trim() !== '' &&
+                                     departureDate && departureDate.value.trim() !== '' &&
+                                     flightInfo && flightInfo.value.trim() !== '' &&
+                                     hotelSelect && hotelSelect.value !== '';
+                    
+                    if (isComplete) {
                         link.classList.add('tab-complete');
                     } else {
                         link.classList.remove('tab-complete');
+                    }
+                } else {
+                    // Default completion logic for other tabs
+                    const filledFields = Array.from(requiredFields).filter(field => {
+                        if (field.type === 'file') return field.files.length > 0;
+                        return field.value.trim() !== '';
+                    });
+                    
+                    // Add completion indicator
+                    if (requiredFields.length > 0) {
+                        const completion = (filledFields.length / requiredFields.length) * 100;
+                        if (completion === 100) {
+                            link.classList.add('tab-complete');
+                        } else {
+                            link.classList.remove('tab-complete');
+                        }
                     }
                 }
             });

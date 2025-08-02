@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/room-allocations/{participant}', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('admin.room-allocations.update');
     Route::post('/admin/participants/download-biographies', [\App\Http\Controllers\ParticipantController::class, 'downloadBiographies'])->name('admin.participants.download-biographies');
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
+    Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');
     
     // Event Coordinator Routes
     Route::prefix('event-coordinator')->name('event-coordinator.')->group(function () {

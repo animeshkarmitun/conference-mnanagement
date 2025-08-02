@@ -11,7 +11,11 @@
         </button>
     </div>
 
-    @if(count($sessions))
+    @php
+        $sessionCount = count($sessions ?? []);
+        echo "<script>console.log('Sessions count: $sessionCount');</script>";
+    @endphp
+    @if($sessionCount)
         <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <ul class="divide-y divide-gray-200">
                 @foreach($sessions as $session)
@@ -83,7 +87,13 @@
                 </button>
             </div>
             
-            <form id="sessionAssignmentForm" method="POST" action="{{ route('participants.assign-session', $participant) }}">
+            @php
+                $assignUrl = route('participants.assign-session', $participant);
+                echo "<script>console.log('Assign session URL: $assignUrl');</script>";
+                echo "<script>console.log('Participant ID: " . $participant->id . "');</script>";
+                echo "<script>console.log('Participant user ID: " . $participant->user_id . "');</script>";
+            @endphp
+            <form id="sessionAssignmentForm" method="POST" action="{{ $assignUrl }}" onsubmit="console.log('Form submitting...'); console.log('Form action: ' + this.action); return true;">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Select Session</label>
@@ -110,7 +120,7 @@
                     <button type="button" onclick="closeSessionModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                    <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700" onclick="console.log('Submit button clicked...');">
                         Assign Session
                     </button>
                 </div>
@@ -121,6 +131,7 @@
 
 <script>
 function openSessionModal() {
+    console.log('Opening session modal...');
     document.getElementById('sessionModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 }
