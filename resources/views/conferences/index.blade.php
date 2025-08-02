@@ -40,14 +40,49 @@
 </div>
 
 <div class="bg-white rounded-xl shadow p-6">
-    <table class="min-w-full divide-y divide-gray-200">
+    <table class="min-w-full divide-y divide-gray-200" id="conferencesTable">
         <thead>
             <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Venue</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="status">
+                    <div class="flex items-center space-x-1">
+                        <span>Status</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="title">
+                    <div class="flex items-center space-x-1">
+                        <span>Title</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="schedule">
+                    <div class="flex items-center space-x-1">
+                        <span>Schedule</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="duration">
+                    <div class="flex items-center space-x-1">
+                        <span>Duration</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="venue">
+                    <div class="flex items-center space-x-1">
+                        <span>Venue</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
                 <th class="px-6 py-3"></th>
             </tr>
         </thead>
@@ -71,24 +106,24 @@
                 @endphp
                 
                 <tr class="hover:bg-gray-50 transition-colors duration-200">
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $statusText }}" data-sort-priority="{{ $conferenceData['is_active'] ? 1 : ($conferenceData['is_today'] ? 2 : ($conferenceData['is_upcoming'] ? 3 : 4)) }}">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border {{ $statusClass }}">
                             {{ $statusText }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $conference->name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900" data-sort-value="{{ strtolower($conference->name) }}">{{ $conference->name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $conference->start_date }}">
                         <div class="text-sm text-gray-900 font-medium">{{ $conferenceData['schedule_string'] }}</div>
                         <div class="text-xs text-gray-500 mt-1">
                             {{ $conferenceData['start_date_formatted'] }} - {{ $conferenceData['end_date_formatted'] }}
                         </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $conferenceData['duration_days'] }}">
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $durationClass }}">
                             {{ $conferenceData['duration'] }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $conference->venue->name ?? 'N/A' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500" data-sort-value="{{ strtolower($conference->venue->name ?? 'N/A') }}">{{ $conference->venue->name ?? 'N/A' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
                         <a href="{{ route('conferences.show', $conference) }}" 
                            class="inline-flex items-center p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
@@ -154,5 +189,147 @@
 .tab-link:hover {
     transform: translateY(-1px);
 }
+
+.sortable-header {
+    user-select: none;
+}
+
+.sortable-header:hover {
+    background-color: #f9fafb;
+}
+
+.sort-icon {
+    transition: all 0.2s ease-in-out;
+}
+
+.sort-icon.active {
+    color: #3b82f6;
+}
+
+.sort-icon.asc {
+    transform: rotate(0deg);
+}
+
+.sort-icon.desc {
+    transform: rotate(180deg);
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('conferencesTable');
+    const tbody = table.querySelector('tbody');
+    const headers = table.querySelectorAll('.sortable-header');
+    
+    let currentSort = {
+        column: null,
+        direction: 'asc'
+    };
+    
+    // Add click event listeners to all sortable headers
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.getAttribute('data-sort');
+            console.log('Sorting by column:', column);
+            sortTable(column);
+        });
+    });
+    
+    console.log('Found', headers.length, 'sortable headers');
+    console.log('Found', tbody.querySelectorAll('tr').length, 'table rows');
+    
+    function sortTable(column) {
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Filter out empty rows (like the "no conferences" message)
+        const dataRows = rows.filter(row => row.cells.length > 1);
+        
+        if (dataRows.length === 0) return;
+        
+        // Determine sort direction
+        let direction = 'asc';
+        if (currentSort.column === column) {
+            direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        
+        // Update current sort state
+        currentSort.column = column;
+        currentSort.direction = direction;
+        
+        // Update visual indicators
+        updateSortIndicators(column, direction);
+        
+        // Sort the rows
+        dataRows.sort((a, b) => {
+            const aValue = getCellValue(a, column);
+            const bValue = getCellValue(b, column);
+            
+            let comparison = 0;
+            
+            if (column === 'status') {
+                // Sort by status priority (Active=1, Today=2, Upcoming=3, Completed=4)
+                const aPriority = parseInt(a.cells[0].getAttribute('data-sort-priority'));
+                const bPriority = parseInt(b.cells[0].getAttribute('data-sort-priority'));
+                comparison = aPriority - bPriority;
+            } else if (column === 'duration') {
+                // Sort by duration days (numeric)
+                comparison = parseInt(aValue) - parseInt(bValue);
+            } else if (column === 'schedule') {
+                // Sort by start date
+                comparison = new Date(aValue) - new Date(bValue);
+            } else {
+                // Sort alphabetically for title and venue
+                comparison = aValue.localeCompare(bValue);
+            }
+            
+            return direction === 'asc' ? comparison : -comparison;
+        });
+        
+        // Re-append sorted rows
+        dataRows.forEach(row => tbody.appendChild(row));
+    }
+    
+    function getCellValue(row, column) {
+        // Get the cell in the specific column (0-indexed)
+        const columnIndex = getColumnIndex(column);
+        const cell = row.cells[columnIndex];
+        
+        if (!cell) return '';
+        
+        if (column === 'status') {
+            return parseInt(cell.getAttribute('data-sort-priority'));
+        }
+        
+        return cell.getAttribute('data-sort-value');
+    }
+    
+    function getColumnIndex(column) {
+        const columnMap = {
+            'status': 0,
+            'title': 1,
+            'schedule': 2,
+            'duration': 3,
+            'venue': 4
+        };
+        return columnMap[column] || 0;
+    }
+    
+    function updateSortIndicators(activeColumn, direction) {
+        // Reset all sort icons
+        headers.forEach(header => {
+            const icon = header.querySelector('.sort-icon');
+            icon.classList.remove('active', 'asc', 'desc');
+            icon.style.color = '#9ca3af'; // gray-400
+        });
+        
+        // Update active column icon
+        const activeHeader = table.querySelector(`[data-sort="${activeColumn}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('.sort-icon');
+            icon.classList.add('active', direction);
+            icon.style.color = '#3b82f6'; // blue-500
+        }
+    }
+});
+</script>
 @endsection 
