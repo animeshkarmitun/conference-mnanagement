@@ -41,13 +41,13 @@
 
 <div class="bg-white rounded-xl shadow p-6">
     <table class="min-w-full divide-y divide-gray-200" id="myTable">
-        <thead>
+                <thead>
             <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conference</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
                 <th class="px-6 py-3"></th>
@@ -56,35 +56,36 @@
         <tbody class="bg-white divide-y divide-gray-200">
             @forelse($sessions as $session)
                 @php
-                    $now = now();
-                    $startTime = \Carbon\Carbon::parse($session->start_time);
-                    $endTime = \Carbon\Carbon::parse($session->end_time);
+                    $timeData = \App\Helpers\DateHelper::formatSessionTime($session->start_time, $session->end_time);
+                    $statusClass = \App\Helpers\DateHelper::getStatusColorClass($timeData['is_active'], $timeData['is_past'], $timeData['is_today']);
+                    $durationClass = \App\Helpers\DateHelper::getDurationColorClass($timeData['duration_minutes']);
                     
-                    if ($startTime <= $now && $endTime >= $now) {
-                        $status = 'active';
-                        $statusClass = 'bg-green-100 text-green-800';
+                    if ($timeData['is_active']) {
                         $statusText = 'Active';
-                    } elseif ($startTime > $now) {
-                        $status = 'upcoming';
-                        $statusClass = 'bg-blue-100 text-blue-800';
-                        $statusText = 'Upcoming';
-                    } else {
-                        $status = 'finished';
-                        $statusClass = 'bg-red-100 text-red-800';
+                    } elseif ($timeData['is_past']) {
                         $statusText = 'Finished';
+                    } else {
+                        $statusText = 'Upcoming';
                     }
                 @endphp
                 
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border {{ $statusClass }}">
                             {{ $statusText }}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $session->title }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $session->conference->name ?? 'N/A' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $startTime->format('M d, Y H:i') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $endTime->format('M d, Y H:i') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 font-medium">{{ $timeData['time_string'] }}</div>
+                        <div class="text-xs text-gray-500 mt-1">{{ $timeData['status_info'] }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $durationClass }}">
+                            {{ $timeData['duration'] }}
+                        </span>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $session->room ?? 'N/A' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $session->capacity ?? 'N/A' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
