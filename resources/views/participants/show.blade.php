@@ -142,6 +142,16 @@
                     } else {
                         link.classList.remove('tab-complete');
                     }
+                } else if (tabName === 'sessions') {
+                    // Special handling for sessions tab
+                    const sessionItems = content.querySelectorAll('ul li');
+                    const hasSessions = sessionItems.length > 0;
+                    
+                    if (hasSessions) {
+                        link.classList.add('tab-complete');
+                    } else {
+                        link.classList.remove('tab-complete');
+                    }
                 } else {
                     // Default completion logic for other tabs
                     const filledFields = Array.from(requiredFields).filter(field => {

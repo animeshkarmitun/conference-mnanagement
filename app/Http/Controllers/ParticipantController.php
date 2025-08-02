@@ -464,4 +464,43 @@ class ParticipantController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Session removed successfully']);
     }
+
+    /**
+     * Update participant status
+     */
+    public function updateStatus(Request $request, Participant $participant)
+    {
+        // Check permissions
+        $user = Auth::user();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || in_array('super_admin', $userRoles) || in_array('superadmin', $userRoles);
+        
+        if (!$hasPermission) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
+        }
+
+        $validated = $request->validate([
+            'registration_status' => 'required|in:pending,approved,rejected',
+            'approved' => 'required|boolean',
+        ]);
+
+        try {
+            $participant->update([
+                'registration_status' => $validated['registration_status'],
+                'approved' => $validated['approved'],
+            ]);
+
+            $statusText = ucfirst($validated['registration_status']);
+            return response()->json([
+                'success' => true, 
+                'message' => "Participant status updated to {$statusText} successfully"
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Status update failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false, 
+                'message' => 'Failed to update status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 } 

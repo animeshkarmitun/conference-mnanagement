@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/participants/{participant}/download-resume', [\App\Http\Controllers\ParticipantController::class, 'downloadResume'])->name('participants.download-resume');
     Route::get('/participants/{participant}/profile-picture', [\App\Http\Controllers\ParticipantController::class, 'showProfilePicture'])->name('participants.profile-picture');
     Route::post('/participants/{participant}/assign-session', [\App\Http\Controllers\ParticipantController::class, 'assignSession'])->name('participants.assign-session');
+    Route::post('/participants/{participant}/update-status', [\App\Http\Controllers\ParticipantController::class, 'updateStatus'])->name('participants.update-status');
     Route::post('/participants/{participant}/remove-session', [\App\Http\Controllers\ParticipantController::class, 'removeSession'])->name('participants.remove-session');
     Route::get('/admin/room-allocations', [\App\Http\Controllers\TravelController::class, 'roomAllocations'])->name('admin.room-allocations');
     Route::get('/admin/travel-manifests', [\App\Http\Controllers\TravelController::class, 'travelManifests'])->name('admin.travel-manifests');
