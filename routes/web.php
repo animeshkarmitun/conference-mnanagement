@@ -66,9 +66,7 @@ Route::get('/guide', function () {
     return view('guide');
 })->name('guide');
 
-Route::get('/users', function () {
-    return view('users.index');
-})->middleware(['auth', 'verified'])->name('users.index');
+Route::resource('users', \App\Http\Controllers\UserController::class)->middleware(['auth', 'verified']);
 
 Route::get('/roles', function () {
     return view('roles.index');
