@@ -161,4 +161,134 @@ class DateHelper
             return 'bg-blue-100 text-blue-800 border-blue-200';
         }
     }
+
+    /**
+     * Format conference dates in a human-readable way
+     */
+    public static function formatConferenceDates($startDate, $endDate)
+    {
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        $now = Carbon::now();
+        
+        // Calculate conference duration
+        $durationDays = $start->diffInDays($end) + 1; // Include both start and end day
+        $durationText = self::formatConferenceDuration($durationDays);
+        
+        // Determine conference status
+        $isActive = $start->isPast() && $end->isFuture();
+        $isPast = $end->isPast();
+        $isToday = $start->isToday() || $end->isToday();
+        $isUpcoming = $start->isFuture();
+        
+        // Format the schedule string
+        $scheduleString = self::getConferenceScheduleString($start, $end, $now);
+        
+        return [
+            'schedule_string' => $scheduleString,
+            'duration' => $durationText,
+            'duration_days' => $durationDays,
+            'is_active' => $isActive,
+            'is_past' => $isPast,
+            'is_today' => $isToday,
+            'is_upcoming' => $isUpcoming,
+            'start_date_formatted' => $start->format('l, M jS, Y'),
+            'end_date_formatted' => $end->format('l, M jS, Y'),
+        ];
+    }
+    
+    /**
+     * Get conference schedule string based on relative position
+     */
+    private static function getConferenceScheduleString($start, $end, $now)
+    {
+        if ($start->isToday() && $end->isToday()) {
+            return 'Today';
+        } elseif ($start->isToday() && $end->isFuture()) {
+            return 'Today - ' . $end->format('M jS');
+        } elseif ($start->isTomorrow() && $end->isTomorrow()) {
+            return 'Tomorrow';
+        } elseif ($start->isTomorrow() && $end->isFuture()) {
+            return 'Tomorrow - ' . $end->format('M jS');
+        } elseif ($start->diffInDays($now) <= 7) {
+            return $start->format('l') . ' - ' . $end->format('M jS');
+        } else {
+            return $start->format('M jS') . ' - ' . $end->format('M jS, Y');
+        }
+    }
+    
+    /**
+     * Format conference duration in human-readable way
+     */
+    private static function formatConferenceDuration($days)
+    {
+        if ($days == 1) {
+            return '1 day';
+        } elseif ($days < 7) {
+            return $days . ' days';
+        } elseif ($days == 7) {
+            return '1 week';
+        } else {
+            $weeks = floor($days / 7);
+            $remainingDays = $days % 7;
+            
+            if ($remainingDays == 0) {
+                return $weeks . ' week' . ($weeks != 1 ? 's' : '');
+            } else {
+                $text = $weeks . ' week' . ($weeks != 1 ? 's' : '');
+                $text .= ' ' . $remainingDays . ' day' . ($remainingDays != 1 ? 's' : '');
+                return $text;
+            }
+        }
+    }
+    
+    /**
+     * Get conference status text
+     */
+    public static function getConferenceStatusText($isActive, $isPast, $isToday, $isUpcoming)
+    {
+        if ($isActive) {
+            return 'Active';
+        } elseif ($isPast) {
+            return 'Completed';
+        } elseif ($isToday) {
+            return 'Today';
+        } elseif ($isUpcoming) {
+            return 'Upcoming';
+        } else {
+            return 'Scheduled';
+        }
+    }
+    
+    /**
+     * Get conference status color class
+     */
+    public static function getConferenceStatusColorClass($isActive, $isPast, $isToday, $isUpcoming)
+    {
+        if ($isActive) {
+            return 'bg-green-100 text-green-800 border-green-200';
+        } elseif ($isPast) {
+            return 'bg-gray-100 text-gray-600 border-gray-200';
+        } elseif ($isToday) {
+            return 'bg-blue-100 text-blue-800 border-blue-200';
+        } elseif ($isUpcoming) {
+            return 'bg-blue-100 text-blue-800 border-blue-200';
+        } else {
+            return 'bg-gray-100 text-gray-600 border-gray-200';
+        }
+    }
+    
+    /**
+     * Get conference duration color class
+     */
+    public static function getConferenceDurationColorClass($days)
+    {
+        if ($days <= 2) {
+            return 'bg-green-100 text-green-800'; // Short conferences
+        } elseif ($days <= 5) {
+            return 'bg-blue-100 text-blue-800'; // Medium conferences
+        } else {
+            return 'bg-orange-100 text-orange-800'; // Long conferences
+        }
+    }
 } 
