@@ -33,15 +33,30 @@ class ParticipantController extends Controller
     {
         $conferences = Conference::all();
         $participantTypes = ParticipantType::all();
-        $users = User::all();
-        return view('participants.create', compact('conferences', 'participantTypes', 'users'));
+        return view('participants.create', compact('conferences', 'participantTypes'));
     }
 
     // Store new participant
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+        // Validate user creation data
+        $userValidated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'gender' => 'nullable|string|max:20',
+            'nationality' => 'nullable|string|max:100',
+            'profession' => 'nullable|string|max:100',
+            'date_of_birth' => 'nullable|date',
+            'organization' => 'nullable|string|max:255',
+            'dietary_needs' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|max:2048',
+            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+        ]);
+
+        // Validate participant data
+        $participantValidated = $request->validate([
             'conference_id' => 'required|exists:conferences,id',
             'participant_type_id' => 'required|exists:participant_types,id',
             'visa_status' => 'required|in:required,not_required,pending,approved,issue',
@@ -49,21 +64,26 @@ class ParticipantController extends Controller
             'travel_form_submitted' => 'boolean',
             'bio' => 'nullable|string',
             'approved' => 'boolean',
-            'organization' => 'nullable|string',
-            'dietary_needs' => 'nullable|string',
             'travel_intent' => 'required',
             'registration_status' => 'required',
-            'profile_picture' => 'nullable|image|max:2048',
-            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'category' => 'nullable|string|max:50',
         ]);
 
-        // If visa status is not 'issue', clear the description
-        if ($validated['visa_status'] !== 'issue') {
-            $validated['visa_issue_description'] = null;
-        }
+        // Create the user first
+        $user = User::create([
+            'first_name' => $userValidated['first_name'],
+            'last_name' => $userValidated['last_name'],
+            'email' => $userValidated['email'],
+            'password' => bcrypt($userValidated['password']),
+            'gender' => $userValidated['gender'],
+            'nationality' => $userValidated['nationality'],
+            'profession' => $userValidated['profession'],
+            'date_of_birth' => $userValidated['date_of_birth'],
+            'organization' => $userValidated['organization'],
+            'dietary_needs' => $userValidated['dietary_needs'],
+        ]);
 
-        // Handle file uploads and update user
-        $user = User::findOrFail($request->user_id);
+        // Handle file uploads for the user
         if ($request->hasFile('profile_picture')) {
             $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
             $user->profile_picture = $profilePicturePath;
@@ -72,14 +92,27 @@ class ParticipantController extends Controller
             $resumePath = $request->file('resume')->store('resumes', 'public');
             $user->resume = $resumePath;
         }
-        if ($request->filled('dietary_needs')) {
-            $user->dietary_needs = $request->dietary_needs;
-        }
         $user->save();
 
-        $validated['travel_intent'] = $request->travel_intent == '1' ? true : false;
+        // If visa status is not 'issue', clear the description
+        if ($participantValidated['visa_status'] !== 'issue') {
+            $participantValidated['visa_issue_description'] = null;
+        }
 
-        Participant::create($validated);
+        // Generate serial number
+        $year = date('Y');
+        $lastParticipant = Participant::whereYear('created_at', $year)->orderBy('id', 'desc')->first();
+        $sequence = $lastParticipant ? intval(substr($lastParticipant->serial_number, -3)) + 1 : 1;
+        $serialNumber = "CONF{$year}-" . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+
+        // Add user_id and serial_number to participant data
+        $participantValidated['user_id'] = $user->id;
+        $participantValidated['serial_number'] = $serialNumber;
+        $participantValidated['travel_intent'] = $request->travel_intent == '1' ? true : false;
+
+        // Create the participant
+        Participant::create($participantValidated);
+        
         return redirect()->route('participants.index')->with('success', 'Participant created successfully.');
     }
 
