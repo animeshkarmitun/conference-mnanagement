@@ -197,19 +197,68 @@
         </div>
     </div>
     
-    <table class="min-w-full divide-y divide-gray-200">
+    <table class="min-w-full divide-y divide-gray-200" id="participantsTable">
         <thead>
             <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <input type="checkbox" id="select-all-header" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial No.</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visa Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="serial">
+                    <div class="flex items-center space-x-1">
+                        <span>Serial No.</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="name">
+                    <div class="flex items-center space-x-1">
+                        <span>Name</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="email">
+                    <div class="flex items-center space-x-1">
+                        <span>Email</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="type">
+                    <div class="flex items-center space-x-1">
+                        <span>Type</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="organization">
+                    <div class="flex items-center space-x-1">
+                        <span>Organization</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="status">
+                    <div class="flex items-center space-x-1">
+                        <span>Status</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="visa_status">
+                    <div class="flex items-center space-x-1">
+                        <span>Visa Status</span>
+                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                </th>
                 <th class="px-6 py-3"></th>
             </tr>
         </thead>
@@ -221,26 +270,36 @@
                     $dob = $user->date_of_birth ?? null;
                     $age = $dob ? \Carbon\Carbon::parse($dob)->age : '';
                     $category = $participant->category ?? ($participant->participantType->name === 'Delegate' ? 'Delegate' : '');
+                    
+                    // Extract numeric parts for serial number sorting
+                    $serialParts = explode('-', $serial);
+                    $conferenceNum = isset($serialParts[0]) ? intval(substr($serialParts[0], 4)) : 0;
+                    $participantNum = isset($serialParts[1]) ? intval($serialParts[1]) : 0;
+                    $serialSortValue = sprintf('%04d-%03d', $conferenceNum, $participantNum);
+                    
+                    // Status priorities
+                    $statusPriority = $participant->registration_status === 'approved' ? 1 : ($participant->registration_status === 'pending' ? 2 : 3);
+                    $visaPriority = $participant->visa_status === 'approved' ? 1 : ($participant->visa_status === 'pending' ? 2 : ($participant->visa_status === 'required' ? 3 : 4));
                 @endphp
                 <tr class="hover:bg-gray-50 transition-colors duration-200">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <input type="checkbox" class="participant-checkbox" value="{{ $participant->id }}">
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $serial }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $serialSortValue }}">{{ $serial }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower(($user->first_name ?? $user->name) . ' ' . ($user->last_name ?? '')) }}">
                         <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:underline font-semibold">
                             {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
                         </a>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $participant->participantType->name ?? '' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $participant->organization }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($user->email) }}">{{ $user->email }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->participantType->name ?? '') }}">{{ $participant->participantType->name ?? '' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->organization ?? 'zzz') }}">{{ $participant->organization }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst($participant->registration_status) }}" data-sort-priority="{{ $statusPriority }}">
                         <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $participant->registration_status == 'approved' ? 'bg-green-100 text-green-700' : ($participant->registration_status == 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700') }}">
                             {{ ucfirst($participant->registration_status) }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst(str_replace('_', ' ', $participant->visa_status)) }}" data-sort-priority="{{ $visaPriority }}">
                         <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold 
                             {{ $participant->visa_status == 'approved' ? 'bg-green-100 text-green-700' : 
                                ($participant->visa_status == 'pending' ? 'bg-yellow-100 text-yellow-700' : 
@@ -320,16 +379,155 @@
 .tab-link:hover {
     transform: translateY(-1px);
 }
+
+.sortable-header {
+    user-select: none;
+}
+
+.sortable-header:hover {
+    background-color: #f9fafb;
+}
+
+.sort-icon {
+    transition: all 0.2s ease-in-out;
+}
+
+.sort-icon.active {
+    color: #3b82f6;
+}
+
+.sort-icon.asc {
+    transform: rotate(0deg);
+}
+
+.sort-icon.desc {
+    transform: rotate(180deg);
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Existing participant functionality
     const selectAllCheckbox = document.getElementById('select-all');
     const selectAllHeaderCheckbox = document.getElementById('select-all-header');
     const participantCheckboxes = document.querySelectorAll('.participant-checkbox');
     const downloadBtn = document.getElementById('download-biographies-btn');
     const selectedCountSpan = document.getElementById('selected-count');
     const formatSelect = document.getElementById('format-select');
+    
+    // Sorting functionality
+    const table = document.getElementById('participantsTable');
+    const tbody = table.querySelector('tbody');
+    const headers = table.querySelectorAll('.sortable-header');
+    
+    let currentSort = {
+        column: null,
+        direction: 'asc'
+    };
+    
+    // Add click event listeners to all sortable headers
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.getAttribute('data-sort');
+            console.log('Sorting participants by column:', column);
+            sortTable(column);
+        });
+    });
+    
+    console.log('Found', headers.length, 'sortable headers for participants');
+    console.log('Found', tbody.querySelectorAll('tr').length, 'participant table rows');
+    
+    function sortTable(column) {
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Filter out empty rows (like the "no participants" message)
+        const dataRows = rows.filter(row => row.cells.length > 1);
+        
+        if (dataRows.length === 0) return;
+        
+        // Determine sort direction
+        let direction = 'asc';
+        if (currentSort.column === column) {
+            direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        
+        // Update current sort state
+        currentSort.column = column;
+        currentSort.direction = direction;
+        
+        // Update visual indicators
+        updateSortIndicators(column, direction);
+        
+        // Sort the rows
+        dataRows.sort((a, b) => {
+            const aValue = getCellValue(a, column);
+            const bValue = getCellValue(b, column);
+            
+            let comparison = 0;
+            
+            if (column === 'status' || column === 'visa_status') {
+                // Sort by status priority
+                const aPriority = parseInt(a.cells[getColumnIndex(column)].getAttribute('data-sort-priority'));
+                const bPriority = parseInt(b.cells[getColumnIndex(column)].getAttribute('data-sort-priority'));
+                comparison = aPriority - bPriority;
+            } else if (column === 'serial') {
+                // Sort by serial number (numeric parts)
+                comparison = aValue.localeCompare(bValue);
+            } else {
+                // Sort alphabetically for other columns
+                comparison = aValue.localeCompare(bValue);
+            }
+            
+            return direction === 'asc' ? comparison : -comparison;
+        });
+        
+        // Re-append sorted rows
+        dataRows.forEach(row => tbody.appendChild(row));
+    }
+    
+    function getCellValue(row, column) {
+        // Get the cell in the specific column (0-indexed)
+        const columnIndex = getColumnIndex(column);
+        const cell = row.cells[columnIndex];
+        
+        if (!cell) return '';
+        
+        if (column === 'status' || column === 'visa_status') {
+            return parseInt(cell.getAttribute('data-sort-priority'));
+        }
+        
+        return cell.getAttribute('data-sort-value');
+    }
+    
+    function getColumnIndex(column) {
+        const columnMap = {
+            'serial': 1,      // Skip checkbox column (0)
+            'name': 2,
+            'email': 3,
+            'type': 4,
+            'organization': 5,
+            'status': 6,
+            'visa_status': 7
+        };
+        return columnMap[column] || 0;
+    }
+    
+    function updateSortIndicators(activeColumn, direction) {
+        // Reset all sort icons
+        headers.forEach(header => {
+            const icon = header.querySelector('.sort-icon');
+            icon.classList.remove('active', 'asc', 'desc');
+            icon.style.color = '#9ca3af'; // gray-400
+        });
+        
+        // Update active column icon
+        const activeHeader = table.querySelector(`[data-sort="${activeColumn}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('.sort-icon');
+            icon.classList.add('active', direction);
+            icon.style.color = '#3b82f6'; // blue-500
+        }
+    }
     
     // Function to update selected count and button state
     function updateSelectionState() {
@@ -388,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Download biographies button event listener
     downloadBtn.addEventListener('click', function() {
-        const selectedIds = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
+        let selectedIds = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
             .map(checkbox => checkbox.value);
         
         // If no participants are selected, download all participants
