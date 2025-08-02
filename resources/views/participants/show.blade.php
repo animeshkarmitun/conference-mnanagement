@@ -221,11 +221,57 @@
         border-radius: 9999px;
         font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.2s;
+        transition: all 0.2s ease;
+        margin-right: 8px;
     }
     
     input[type="file"]::-webkit-file-upload-button:hover {
         background: #f59e0b;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    input[type="file"]::-webkit-file-upload-button:active {
+        transform: translateY(0);
+    }
+    
+    /* Firefox file input styling */
+    input[type="file"]::file-selector-button {
+        background: #fbbf24;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 9999px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-right: 8px;
+    }
+    
+    input[type="file"]::file-selector-button:hover {
+        background: #f59e0b;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* File input container styling */
+    .file-input-container {
+        position: relative;
+        border: 2px dashed #d1d5db;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    
+    .file-input-container:hover {
+        border-color: #fbbf24;
+        background-color: #fef3c7;
+    }
+    
+    .file-input-container.dragover {
+        border-color: #f59e0b;
+        background-color: #fde68a;
     }
     
     /* Responsive improvements */

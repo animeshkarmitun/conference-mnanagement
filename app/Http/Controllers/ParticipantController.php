@@ -8,6 +8,7 @@ use App\Models\ParticipantType;
 use App\Models\User;
 use App\Models\TravelDetail;
 use App\Models\Hotel;
+use App\Models\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -120,7 +121,7 @@ class ParticipantController extends Controller
     public function show(Participant $participant)
     {
         $participant->load(['user', 'conference', 'participantType', 'sessions']);
-        $sessions = $participant->sessions;
+        $sessions = $participant->sessions()->withPivot('role')->get();
         $notifications = $participant->user->notifications()->latest()->get();
         $comments = $participant->comments()->with('user')->latest()->get();
         $travelDetail = $participant->travelDetails;
@@ -329,5 +330,115 @@ class ParticipantController extends Controller
                 ->header('Content-Type', 'text/plain')
                 ->header('Content-Disposition', 'attachment; filename="' . $filename . '.txt"');
         }
+    }
+
+    /**
+     * Download participant resume
+     */
+    public function downloadResume(Participant $participant)
+    {
+        // Check if user has permission to download this resume
+        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin') && Auth::id() !== $participant->user_id) {
+            abort(403, 'Unauthorized access');
+        }
+
+        // Check if resume exists
+        if (!$participant->user->resume || !Storage::disk('public')->exists($participant->user->resume)) {
+            abort(404, 'Resume not found');
+        }
+
+        // Get file path and name
+        $filePath = Storage::disk('public')->path($participant->user->resume);
+        $fileName = basename($participant->user->resume);
+
+        // Return file download response
+        return response()->download($filePath, $fileName);
+    }
+
+    /**
+     * Display profile picture
+     */
+    public function showProfilePicture(Participant $participant)
+    {
+        // Check if user has permission to view this profile picture
+        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin') && Auth::id() !== $participant->user_id) {
+            abort(403, 'Unauthorized access');
+        }
+
+        // Check if profile picture exists
+        if (!$participant->user->profile_picture || !Storage::disk('public')->exists($participant->user->profile_picture)) {
+            abort(404, 'Profile picture not found');
+        }
+
+        // Return the image file
+        $filePath = Storage::disk('public')->path($participant->user->profile_picture);
+        return response()->file($filePath);
+    }
+
+    /**
+     * Assign session to participant
+     */
+    public function assignSession(Request $request, Participant $participant)
+    {
+        // Check permissions
+        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin')) {
+            return redirect()->back()->with('error', 'Unauthorized access');
+        }
+
+        $validated = $request->validate([
+            'session_id' => 'required|exists:sessions,id',
+            'role' => 'required|in:participant,speaker,moderator,panelist,organizer',
+        ]);
+
+        // Check if session belongs to the same conference
+        $session = Session::find($validated['session_id']);
+        if ($session->conference_id !== $participant->conference_id) {
+            return redirect()->back()->with('error', 'Session does not belong to the same conference');
+        }
+
+        // Check if participant is already assigned to this session
+        if ($participant->sessions()->where('session_id', $validated['session_id'])->exists()) {
+            return redirect()->back()->with('error', 'Participant is already assigned to this session');
+        }
+
+        try {
+            // Assign session to participant
+            $participant->sessions()->attach($validated['session_id'], [
+                'role' => $validated['role'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Verify the assignment was successful
+            $assignedSession = $participant->sessions()->where('session_id', $validated['session_id'])->first();
+            if (!$assignedSession) {
+                return redirect()->back()->with('error', 'Failed to assign session. Please try again.');
+            }
+
+            return redirect()->back()->with('success', 'Session assigned successfully');
+        } catch (\Exception $e) {
+            \Log::error('Session assignment failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to assign session: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove session from participant
+     */
+    public function removeSession(Request $request, Participant $participant)
+    {
+        // Check permissions
+        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
+        }
+
+        $validated = $request->validate([
+            'session_id' => 'required|exists:sessions,id',
+        ]);
+
+        // Remove session from participant
+        $participant->sessions()->detach($validated['session_id']);
+
+        return response()->json(['success' => true, 'message' => 'Session removed successfully']);
     }
 } 

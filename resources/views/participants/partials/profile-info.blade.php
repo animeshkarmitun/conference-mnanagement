@@ -176,10 +176,16 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
                 <div class="mt-1 flex items-center space-x-4">
                     <div class="flex-shrink-0">
-                        @if($participant->user->profile_picture)
-                            <img src="{{ asset('storage/' . $participant->user->profile_picture) }}" 
+                        @if($participant->user->profile_picture && Storage::disk('public')->exists($participant->user->profile_picture))
+                            <img src="{{ route('participants.profile-picture', $participant) }}" 
                                  alt="Profile Picture" 
-                                 class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
+                                 class="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center" style="display: none;">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
                         @else
                             <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
                                 <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -192,8 +198,11 @@
                         <input type="file" 
                                name="profile_picture" 
                                accept="image/*"
-                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100 transition-colors duration-200">
                         <p class="mt-1 text-xs text-gray-500">JPG, PNG, GIF up to 2MB</p>
+                        <div id="profile-picture-preview" class="mt-2 hidden">
+                            <p class="text-xs text-green-600">✓ File selected</p>
+                        </div>
                     </div>
                 </div>
                 @error('profile_picture')
@@ -204,23 +213,25 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Resume/CV</label>
                 <div class="mt-1">
-                    @if($participant->user->resume)
+                    @if($participant->user->resume && Storage::disk('public')->exists($participant->user->resume))
                         <div class="mb-2">
-                            <a href="{{ asset('storage/' . $participant->user->resume) }}" 
-                               target="_blank" 
+                            <a href="{{ route('participants.download-resume', $participant) }}" 
                                class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                View Current Resume
+                                Download Current Resume
                             </a>
                         </div>
                     @endif
-                    <input type="file" 
-                           name="resume" 
-                           accept=".pdf,.doc,.docx"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
-                    <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX up to 5MB</p>
+                                            <input type="file" 
+                               name="resume" 
+                               accept=".pdf,.doc,.docx"
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100 transition-colors duration-200">
+                        <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX up to 5MB</p>
+                        <div id="resume-preview" class="mt-2 hidden">
+                            <p class="text-xs text-green-600">✓ File selected</p>
+                        </div>
                 </div>
                 @error('resume')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -317,9 +328,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBioCharCount(); // Initial count
     }
     
-    // File upload validation
+    // File upload validation and preview
     const profilePictureInput = document.querySelector('input[name="profile_picture"]');
     const resumeInput = document.querySelector('input[name="resume"]');
+    const profilePicturePreview = document.getElementById('profile-picture-preview');
+    const resumePreview = document.getElementById('resume-preview');
     
     function validateFileSize(file, maxSizeMB) {
         const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -330,21 +343,31 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
+    function showFilePreview(input, previewElement, maxSizeMB) {
+        const file = input.files[0];
+        if (file) {
+            if (validateFileSize(file, maxSizeMB)) {
+                previewElement.classList.remove('hidden');
+                previewElement.querySelector('p').textContent = `✓ ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`;
+                previewElement.querySelector('p').className = 'text-xs text-green-600';
+            } else {
+                input.value = '';
+                previewElement.classList.add('hidden');
+            }
+        } else {
+            previewElement.classList.add('hidden');
+        }
+    }
+    
     if (profilePictureInput) {
         profilePictureInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file && !validateFileSize(file, 2)) {
-                this.value = '';
-            }
+            showFilePreview(this, profilePicturePreview, 2);
         });
     }
     
     if (resumeInput) {
         resumeInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file && !validateFileSize(file, 5)) {
-                this.value = '';
-            }
+            showFilePreview(this, resumePreview, 5);
         });
     }
     
