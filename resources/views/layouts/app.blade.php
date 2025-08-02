@@ -41,11 +41,31 @@
                         <a href="{{ route('gmail.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Gmail Conversations</a>
                         <a href="{{ route('speaker.register') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Speaker Registration</a>
                         <a href="{{ route('guide') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">How to Use</a>
+                        <!-- Travel Management Section -->
+                        <div class="border-t border-gray-200 my-2"></div>
+                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Travel Management</div>
+                        <a href="{{ route('admin.travel-manifests') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Travel Manifests</a>
+                        <a href="{{ route('admin.room-allocations') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Room Allocations</a>
+                        <a href="{{ route('admin.travel-conflicts') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Travel Conflicts</a>
+                        <a href="{{ route('admin.export-manifest') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Export Manifest</a>
                     @elseif(auth()->user()->hasRole('tasker'))
                         <a href="{{ route('dashboard.tasker') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Tasker Dashboard</a>
                         <a href="{{ route('tasks.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Tasks</a>
                         <a href="{{ route('notifications.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Notifications</a>
                         <a href="{{ route('gmail.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Gmail Conversations</a>
+                    @elseif(auth()->user()->hasRole('event_coordinator'))
+                        <a href="{{ route('event-coordinator.dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Event Coordinator Dashboard</a>
+                        <a href="{{ route('conferences.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Conferences</a>
+                        <a href="{{ route('participants.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Participants</a>
+                        <a href="{{ route('sessions.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Sessions</a>
+                        <a href="{{ route('tasks.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Tasks</a>
+                        <a href="{{ route('notifications.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Notifications</a>
+                        <a href="{{ route('gmail.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Gmail Conversations</a>
+                        <!-- Travel Management Section -->
+                        <div class="border-t border-gray-200 my-2"></div>
+                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Travel Management</div>
+                        <a href="{{ route('event-coordinator.travel-manifests') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Travel Manifests</a>
+                        <a href="{{ route('event-coordinator.export-manifest') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Export Manifest</a>
                     @else
                         <a href="{{ route('dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Dashboard</a>
                         <a href="{{ route('conferences.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Conferences</a>
@@ -56,6 +76,11 @@
                         <a href="{{ route('gmail.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Gmail Conversations</a>
                         <a href="{{ route('speaker.register') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Speaker Registration</a>
                         <a href="{{ route('guide') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">How to Use</a>
+                        <!-- Travel Management Section -->
+                        <div class="border-t border-gray-200 my-2"></div>
+                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Travel Management</div>
+                        <a href="{{ route('admin.travel-manifests') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Travel Manifests</a>
+                        <a href="{{ route('admin.export-manifest') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Export Manifest</a>
                     @endif
                 </nav>
                 <div class="border-t p-4">

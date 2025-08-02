@@ -21,7 +21,7 @@ class TravelController extends Controller
     // Admin view for travel manifests
     public function travelManifests()
     {
-        $travelDetails = TravelDetail::with(['participant.user', 'hotel'])->get();
+        $travelDetails = TravelDetail::with(['participant.user', 'hotel', 'participant.conference'])->get();
         return view('admin.travel.travel-manifests', compact('travelDetails'));
     }
 
@@ -99,5 +99,56 @@ class TravelController extends Controller
         $roomAllocation->save();
 
         return redirect()->back()->with('success', 'Room allocation updated.');
+    }
+
+    /**
+     * Export Travel Manifest as CSV
+     */
+    public function exportManifest()
+    {
+        $travelDetails = TravelDetail::with(['participant.user', 'hotel', 'participant.conference'])->get();
+
+        $filename = 'travel_manifest_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($travelDetails) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV Headers
+            fputcsv($file, [
+                'Participant Name',
+                'Email',
+                'Conference',
+                'Hotel',
+                'Arrival Date',
+                'Departure Date',
+                'Flight Info',
+                'Extra Nights',
+                'Organization'
+            ]);
+
+            // CSV Data
+            foreach ($travelDetails as $detail) {
+                fputcsv($file, [
+                    ($detail->participant->user->first_name ?? $detail->participant->user->name) . ' ' . ($detail->participant->user->last_name ?? ''),
+                    $detail->participant->user->email,
+                    $detail->participant->conference->name ?? 'N/A',
+                    $detail->hotel->name ?? 'N/A',
+                    $detail->arrival_date ? date('Y-m-d H:i', strtotime($detail->arrival_date)) : 'N/A',
+                    $detail->departure_date ? date('Y-m-d H:i', strtotime($detail->departure_date)) : 'N/A',
+                    $detail->flight_info ?? 'N/A',
+                    $detail->extra_nights ?? 0,
+                    $detail->participant->organization ?? 'N/A'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 } 

@@ -140,27 +140,70 @@ class ParticipantController extends Controller
     // Update participant
     public function update(Request $request, Participant $participant)
     {
-        $validated = $request->validate([
-            'user_id' => 'sometimes|required|exists:users,id',
-            'conference_id' => 'sometimes|required|exists:conferences,id',
-            'participant_type_id' => 'sometimes|required|exists:participant_types,id',
+        // Validate participant data
+        $participantValidated = $request->validate([
             'visa_status' => 'required|in:required,not_required,pending,approved,issue',
             'visa_issue_description' => 'nullable|string|max:1000',
-            'travel_form_submitted' => 'sometimes|boolean',
-            'bio' => 'nullable|string',
-            'approved' => 'sometimes|boolean',
-            'organization' => 'nullable|string',
-            'dietary_needs' => 'nullable|string',
-            'travel_intent' => 'sometimes|boolean',
-            'registration_status' => 'sometimes|required',
+            'bio' => 'nullable|string|max:500',
+            'organization' => 'nullable|string|max:100',
+            'dietary_needs' => 'nullable|string|max:50',
+            'dietary_needs_other' => 'nullable|string|max:100',
         ]);
 
-        // If visa status is not 'issue', clear the description
-        if ($validated['visa_status'] !== 'issue') {
-            $validated['visa_issue_description'] = null;
+        // Validate user data
+        $userValidated = $request->validate([
+            'first_name' => 'required|string|max:50',
+            'last_name' => 'required|string|max:50',
+            'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
+        ]);
+
+        // Validate file uploads
+        $request->validate([
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+        ]);
+
+        // Update user data
+        $user = $participant->user;
+        $user->update([
+            'first_name' => $userValidated['first_name'],
+            'last_name' => $userValidated['last_name'],
+            'email' => $userValidated['email'],
+        ]);
+
+        // Handle file uploads
+        if ($request->hasFile('profile_picture')) {
+            // Delete old profile picture if exists
+            if ($user->profile_picture) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+            $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $user->profile_picture = $profilePicturePath;
+            $user->save();
         }
 
-        $participant->update($validated);
+        if ($request->hasFile('resume')) {
+            // Delete old resume if exists
+            if ($user->resume) {
+                Storage::disk('public')->delete($user->resume);
+            }
+            $resumePath = $request->file('resume')->store('resumes', 'public');
+            $user->resume = $resumePath;
+            $user->save();
+        }
+
+        // Handle dietary needs
+        if ($participantValidated['dietary_needs'] === 'other' && $request->filled('dietary_needs_other')) {
+            $participantValidated['dietary_needs'] = $request->dietary_needs_other;
+        }
+
+        // If visa status is not 'issue', clear the description
+        if ($participantValidated['visa_status'] !== 'issue') {
+            $participantValidated['visa_issue_description'] = null;
+        }
+
+        // Update participant data
+        $participant->update($participantValidated);
         
         // Redirect based on who is updating (admin vs participant)
         if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('super_admin')) {
