@@ -20,13 +20,119 @@ class ParticipantController extends Controller
     public function index(Request $request)
     {
         $query = Participant::with(['user', 'conference', 'participantType']);
+        
+        // Status filtering
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('registration_status', $request->status);
+        }
+        
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($userQuery) use ($search) {
+                    $userQuery->where('first_name', 'like', "%{$search}%")
+                              ->orWhere('last_name', 'like', "%{$search}%")
+                              ->orWhere('email', 'like', "%{$search}%")
+                              ->orWhere('organization', 'like', "%{$search}%");
+                })
+                ->orWhere('serial_number', 'like', "%{$search}%")
+                ->orWhere('organization', 'like', "%{$search}%");
+            });
+        }
+        
+        // Visa status filtering
+        if ($request->has('visa_filter')) {
+            $query->where('visa_status', $request->visa_filter);
+        }
+        
+        // Type filtering (keep existing functionality)
         if ($request->has('type')) {
             $query->whereHas('participantType', function($q) use ($request) {
                 $q->where('name', $request->type);
             });
         }
+        
+        // Get counts for tabs
+        $counts = [
+            'approved' => Participant::where('registration_status', 'approved')->count(),
+            'pending' => Participant::where('registration_status', 'pending')->count(),
+            'rejected' => Participant::where('registration_status', 'rejected')->count(),
+            'all' => Participant::count(),
+        ];
+        
+        // Get visa status counts
+        $visaCounts = [
+            'required' => Participant::where('visa_status', 'required')->count(),
+            'approved' => Participant::where('visa_status', 'approved')->count(),
+            'pending' => Participant::where('visa_status', 'pending')->count(),
+            'issue' => Participant::where('visa_status', 'issue')->count(),
+            'not_required' => Participant::where('visa_status', 'not_required')->count(),
+        ];
+        
+        // Get participant type counts
+        $typeCounts = [];
+        $participantTypes = ParticipantType::all();
+        foreach ($participantTypes as $type) {
+            $typeCounts[$type->name] = Participant::where('participant_type_id', $type->id)->count();
+        }
+        
+        // Handle CSV export
+        if ($request->has('export') && $request->export === 'csv') {
+            $participants = $query->latest()->get();
+            
+            $filename = 'participants_' . date('Y-m-d_H-i-s') . '.csv';
+            
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ];
+            
+            $callback = function() use ($participants) {
+                $file = fopen('php://output', 'w');
+                
+                // CSV headers
+                fputcsv($file, [
+                    'Serial Number', 'First Name', 'Last Name', 'Email', 'Gender', 
+                    'Nationality', 'Profession', 'Age', 'Participant Type', 'Category',
+                    'Organization', 'Registration Status', 'Visa Status', 'Conference'
+                ]);
+                
+                // CSV data
+                foreach ($participants as $participant) {
+                    $user = $participant->user;
+                    $dob = $user->date_of_birth ?? null;
+                    $age = $dob ? \Carbon\Carbon::parse($dob)->age : '';
+                    
+                    fputcsv($file, [
+                        $participant->serial_number ?? '',
+                        $user->first_name ?? '',
+                        $user->last_name ?? '',
+                        $user->email ?? '',
+                        $user->gender ?? '',
+                        $user->nationality ?? '',
+                        $user->profession ?? '',
+                        $age,
+                        $participant->participantType->name ?? '',
+                        $participant->category ?? '',
+                        $participant->organization ?? '',
+                        $participant->registration_status ?? '',
+                        $participant->visa_status ?? '',
+                        $participant->conference->name ?? '',
+                    ]);
+                }
+                
+                fclose($file);
+            };
+            
+            return response()->stream($callback, 200, $headers);
+        }
+        
         $participants = $query->latest()->paginate(20);
-        return view('participants.index', compact('participants'));
+        $status = $request->get('status', 'all');
+        $search = $request->get('search', '');
+        
+        return view('participants.index', compact('participants', 'counts', 'visaCounts', 'typeCounts', 'participantTypes', 'status', 'search'));
     }
 
     // Show create form
@@ -501,6 +607,41 @@ class ParticipantController extends Controller
                 'success' => false, 
                 'message' => 'Failed to update status: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Bulk update participant status
+     */
+    public function bulkUpdate(Request $request)
+    {
+        // Check permissions
+        $user = Auth::user();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || in_array('super_admin', $userRoles) || in_array('superadmin', $userRoles);
+        
+        if (!$hasPermission) {
+            return redirect()->back()->with('error', 'Unauthorized access');
+        }
+
+        $validated = $request->validate([
+            'participant_ids' => 'required|array|min:1',
+            'participant_ids.*' => 'exists:participants,id',
+            'status' => 'required|in:pending,approved,rejected',
+        ]);
+
+        try {
+            $updatedCount = Participant::whereIn('id', $validated['participant_ids'])
+                ->update([
+                    'registration_status' => $validated['status'],
+                    'approved' => $validated['status'] === 'approved',
+                ]);
+
+            $statusText = ucfirst($validated['status']);
+            return redirect()->back()->with('success', "Successfully updated {$updatedCount} participant(s) to {$statusText} status");
+        } catch (\Exception $e) {
+            \Log::error('Bulk update failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update participants: ' . $e->getMessage());
         }
     }
 } 
