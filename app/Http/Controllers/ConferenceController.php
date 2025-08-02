@@ -22,15 +22,51 @@ class ConferenceController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Validate basic conference data
+        $conferenceValidated = $request->validate([
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'venue_id' => 'required|exists:venues,id',
             'location' => 'required|string|max:255',
+            'venue_type' => 'required|in:existing,new',
         ]);
-        Conference::create($validated);
-        return redirect()->route('conferences.index')->with('success', 'Conference created successfully.');
+
+        // Validate venue data based on type
+        if ($request->venue_type === 'existing') {
+            $request->validate([
+                'venue_id' => 'required|exists:venues,id',
+            ]);
+        } else {
+            $request->validate([
+                'venue_name' => 'required|string|max:255',
+                'venue_address' => 'required|string|max:500',
+                'venue_capacity' => 'required|integer|min:1',
+            ]);
+        }
+
+        // Use database transaction to ensure data consistency
+        return \DB::transaction(function () use ($request, $conferenceValidated) {
+            $venueId = null;
+
+            if ($request->venue_type === 'existing') {
+                // Use existing venue
+                $venueId = $request->venue_id;
+            } else {
+                // Create new venue
+                $venue = Venue::create([
+                    'name' => $request->venue_name,
+                    'address' => $request->venue_address,
+                    'capacity' => $request->venue_capacity,
+                ]);
+                $venueId = $venue->id;
+            }
+
+            // Create conference with the venue ID
+            $conferenceData = array_merge($conferenceValidated, ['venue_id' => $venueId]);
+            Conference::create($conferenceData);
+
+            return redirect()->route('conferences.index')->with('success', 'Conference created successfully.');
+        });
     }
 
     public function show(Conference $conference)
@@ -47,14 +83,51 @@ class ConferenceController extends Controller
 
     public function update(Request $request, Conference $conference)
     {
-        $validated = $request->validate([
+        // Validate basic conference data
+        $conferenceValidated = $request->validate([
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'venue_id' => 'required|exists:venues,id',
+            'location' => 'required|string|max:255',
+            'venue_type' => 'required|in:existing,new',
         ]);
-        $conference->update($validated);
-        return redirect()->route('conferences.index')->with('success', 'Conference updated successfully.');
+
+        // Validate venue data based on type
+        if ($request->venue_type === 'existing') {
+            $request->validate([
+                'venue_id' => 'required|exists:venues,id',
+            ]);
+        } else {
+            $request->validate([
+                'venue_name' => 'required|string|max:255',
+                'venue_address' => 'required|string|max:500',
+                'venue_capacity' => 'required|integer|min:1',
+            ]);
+        }
+
+        // Use database transaction to ensure data consistency
+        return \DB::transaction(function () use ($request, $conferenceValidated, $conference) {
+            $venueId = null;
+
+            if ($request->venue_type === 'existing') {
+                // Use existing venue
+                $venueId = $request->venue_id;
+            } else {
+                // Create new venue
+                $venue = Venue::create([
+                    'name' => $request->venue_name,
+                    'address' => $request->venue_address,
+                    'capacity' => $request->venue_capacity,
+                ]);
+                $venueId = $venue->id;
+            }
+
+            // Update conference with the venue ID
+            $conferenceData = array_merge($conferenceValidated, ['venue_id' => $venueId]);
+            $conference->update($conferenceData);
+
+            return redirect()->route('conferences.index')->with('success', 'Conference updated successfully.');
+        });
     }
 
     public function destroy(Conference $conference)

@@ -10,16 +10,15 @@ class Venue extends Model
     use HasFactory;
 
     protected $fillable = [
-        'conference_id',
         'name',
         'address',
         'capacity',
     ];
 
     // Relationships
-    public function conference()
+    public function conferences()
     {
-        return $this->belongsTo(Conference::class);
+        return $this->hasMany(Conference::class);
     }
 
     public function sessions()
