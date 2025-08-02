@@ -15,7 +15,7 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="conference_id" class="block text-sm font-medium text-gray-700">Conference</label>
+                    <label for="conference_id" class="block text-sm font-medium text-gray-700">Conference *</label>
                     <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Conference</option>
                         @foreach($conferences as $conference)
@@ -26,38 +26,38 @@
                 </div>
 
                 <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <label for="title" class="block text-sm font-medium text-gray-700">Title *</label>
                     <input type="text" name="title" id="title" value="{{ old('title', $session->title) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     @error('title')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label for="start_time" class="block text-sm font-medium text-gray-700">Start Time</label>
+                    <label for="start_time" class="block text-sm font-medium text-gray-700">Start Time *</label>
                     <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time', \Carbon\Carbon::parse($session->start_time)->format('Y-m-d\TH:i')) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     @error('start_time')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label for="end_time" class="block text-sm font-medium text-gray-700">End Time</label>
+                    <label for="end_time" class="block text-sm font-medium text-gray-700">End Time *</label>
                     <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time', \Carbon\Carbon::parse($session->end_time)->format('Y-m-d\TH:i')) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     @error('end_time')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label for="room" class="block text-sm font-medium text-gray-700">Room</label>
-                    <input type="text" name="room" id="room" value="{{ old('room', $session->room) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="room" class="block text-sm font-medium text-gray-700">Room (Optional)</label>
+                    <input type="text" name="room" id="room" value="{{ old('room', $session->room) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     @error('room')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label for="capacity" class="block text-sm font-medium text-gray-700">Capacity</label>
-                    <input type="number" name="capacity" id="capacity" value="{{ old('capacity', $session->capacity) }}" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="capacity" class="block text-sm font-medium text-gray-700">Capacity (Optional)</label>
+                    <input type="number" name="capacity" id="capacity" value="{{ old('capacity', $session->capacity) }}" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     @error('capacity')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
             </div>
 
             <div class="mt-4">
-                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <label for="description" class="block text-sm font-medium text-gray-700">Description *</label>
                 <textarea name="description" id="description" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">{{ old('description', $session->description) }}</textarea>
                 @error('description')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
@@ -65,7 +65,8 @@
 
         <!-- Enhanced Participant Selection -->
         <div class="bg-blue-50 p-6 rounded-lg mb-6">
-            <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Participant Management</h3>
+            <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Participant Management (Optional)</h3>
+            <p class="text-sm text-gray-600 mb-4">Use the search and filter tools below to easily manage hundreds of participants for this session.</p>
             
             <!-- Search and Filter Bar -->
             <div class="mb-6">

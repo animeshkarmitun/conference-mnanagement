@@ -8,10 +8,42 @@
     <a href="{{ route('sessions.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Add Session</a>
 </div>
 
+<!-- Session Status Tabs -->
+<div class="bg-white rounded-xl shadow mb-6">
+    <div class="border-b border-gray-200">
+        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+            <a href="{{ route('sessions.index', ['status' => 'active']) }}" 
+               class="tab-link py-4 px-1 border-b-2 font-medium text-sm {{ $status === 'active' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                Active Sessions
+                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $sessionCounts['active'] }}</span>
+            </a>
+            
+            <a href="{{ route('sessions.index', ['status' => 'upcoming']) }}" 
+               class="tab-link py-4 px-1 border-b-2 font-medium text-sm {{ $status === 'upcoming' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                Upcoming Sessions
+                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $sessionCounts['upcoming'] }}</span>
+            </a>
+            
+            <a href="{{ route('sessions.index', ['status' => 'finished']) }}" 
+               class="tab-link py-4 px-1 border-b-2 font-medium text-sm {{ $status === 'finished' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                Finished Sessions
+                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $sessionCounts['finished'] }}</span>
+            </a>
+            
+            <a href="{{ route('sessions.index', ['status' => 'all']) }}" 
+               class="tab-link py-4 px-1 border-b-2 font-medium text-sm {{ $status === 'all' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                All Sessions
+                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $sessionCounts['all'] }}</span>
+            </a>
+        </nav>
+    </div>
+</div>
+
 <div class="bg-white rounded-xl shadow p-6">
     <table class="min-w-full divide-y divide-gray-200" id="myTable">
         <thead>
             <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conference</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
@@ -23,33 +55,102 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
             @forelse($sessions as $session)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $session->title }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $session->conference->title }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($session->start_time)->format('M d, Y H:i') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($session->end_time)->format('M d, Y H:i') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $session->room }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $session->capacity }}</td>
+                @php
+                    $now = now();
+                    $startTime = \Carbon\Carbon::parse($session->start_time);
+                    $endTime = \Carbon\Carbon::parse($session->end_time);
+                    
+                    if ($startTime <= $now && $endTime >= $now) {
+                        $status = 'active';
+                        $statusClass = 'bg-green-100 text-green-800';
+                        $statusText = 'Active';
+                    } elseif ($startTime > $now) {
+                        $status = 'upcoming';
+                        $statusClass = 'bg-blue-100 text-blue-800';
+                        $statusText = 'Upcoming';
+                    } else {
+                        $status = 'finished';
+                        $statusClass = 'bg-red-100 text-red-800';
+                        $statusText = 'Finished';
+                    }
+                @endphp
+                
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">
+                            {{ $statusText }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $session->title }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $session->conference->name ?? 'N/A' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $startTime->format('M d, Y H:i') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $endTime->format('M d, Y H:i') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $session->room ?? 'N/A' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $session->capacity ?? 'N/A' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                        <a href="{{ route('sessions.show', $session) }}" class="text-yellow-600 hover:underline">View</a>
-                        <a href="{{ route('sessions.edit', $session) }}" class="text-blue-600 hover:underline">Edit</a>
-                        <form action="{{ route('sessions.destroy', $session) }}" method="POST" class="inline" onsubmit="return confirm('Delete this session?');">
+                        <a href="{{ route('sessions.show', $session) }}" 
+                           class="inline-flex items-center p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                           title="View Session Details"
+                           aria-label="View session details">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </a>
+                        
+                        <a href="{{ route('sessions.edit', $session) }}" 
+                           class="inline-flex items-center p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-lg transition-colors duration-200"
+                           title="Edit Session"
+                           aria-label="Edit session">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </a>
+                        
+                        <form action="{{ route('sessions.destroy', $session) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this session?');">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:underline">Delete</button>
+                            <button type="submit" 
+                                    class="inline-flex items-center p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                    title="Delete Session"
+                                    aria-label="Delete session">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
                         </form>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">No sessions found.</td>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                        @if($status === 'active')
+                            No active sessions at the moment.
+                        @elseif($status === 'upcoming')
+                            No upcoming sessions scheduled.
+                        @elseif($status === 'finished')
+                            No finished sessions found.
+                        @else
+                            No sessions found.
+                        @endif
+                    </td>
                 </tr>
             @endforelse
         </tbody>
     </table>
     
     <div class="mt-4">
-        {{ $sessions->links() }}
+        {{ $sessions->appends(['status' => $status])->links() }}
     </div>
 </div>
+
+<style>
+.tab-link {
+    transition: all 0.2s ease-in-out;
+}
+
+.tab-link:hover {
+    transform: translateY(-1px);
+}
+</style>
 @endsection 

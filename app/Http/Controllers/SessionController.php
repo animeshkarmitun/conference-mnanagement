@@ -10,10 +10,50 @@ use Illuminate\Http\Request;
 
 class SessionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sessions = Session::with(['conference', 'participants'])->latest()->paginate(10);
-        return view('sessions.index', compact('sessions'));
+        $status = $request->get('status', 'upcoming'); // Default to upcoming sessions
+        $now = now();
+        
+        $query = Session::with(['conference', 'participants']);
+        
+        // Filter sessions based on status
+        switch ($status) {
+            case 'active':
+                $query->where('start_time', '<=', $now)
+                      ->where('end_time', '>=', $now)
+                      ->orderBy('end_time', 'asc'); // Ending soonest first
+                break;
+                
+            case 'upcoming':
+                $query->where('start_time', '>', $now)
+                      ->orderBy('start_time', 'asc'); // Starting soonest first
+                break;
+                
+            case 'finished':
+                $query->where('end_time', '<', $now)
+                      ->orderBy('end_time', 'desc'); // Most recent first
+                break;
+                
+            case 'all':
+            default:
+                $query->orderBy('start_time', 'asc'); // Default ordering
+                break;
+        }
+        
+        $sessions = $query->paginate(10);
+        
+        // Get session counts for each category
+        $sessionCounts = [
+            'active' => Session::where('start_time', '<=', $now)
+                              ->where('end_time', '>=', $now)
+                              ->count(),
+            'upcoming' => Session::where('start_time', '>', $now)->count(),
+            'finished' => Session::where('end_time', '<', $now)->count(),
+            'all' => Session::count(),
+        ];
+        
+        return view('sessions.index', compact('sessions', 'sessionCounts', 'status'));
     }
 
     public function create()
@@ -60,8 +100,8 @@ class SessionController extends Controller
             'description' => 'required|string',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
-            'room' => 'required|string|max:255',
-            'capacity' => 'required|integer|min:1',
+            'room' => 'nullable|string|max:255',
+            'capacity' => 'nullable|integer|min:1',
             'participants' => 'nullable|string', // JSON string from enhanced interface
         ]);
 
@@ -130,8 +170,8 @@ class SessionController extends Controller
             'description' => 'required|string',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
-            'room' => 'required|string|max:255',
-            'capacity' => 'required|integer|min:1',
+            'room' => 'nullable|string|max:255',
+            'capacity' => 'nullable|integer|min:1',
             'participants' => 'nullable|string', // JSON string from enhanced interface
         ]);
 
