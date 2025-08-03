@@ -80,6 +80,34 @@
     .animate-delay-2 { animation-delay: 0.2s; }
     .animate-delay-3 { animation-delay: 0.3s; }
     .animate-delay-4 { animation-delay: 0.4s; }
+    
+    .sortable-header {
+        user-select: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .sortable-header:hover {
+        background-color: #fefce8;
+        color: #f59e0b;
+    }
+    
+    .sort-icon {
+        transition: all 0.2s ease-in-out;
+        margin-left: 4px;
+    }
+    
+    .sort-icon.active {
+        color: #f59e0b;
+    }
+    
+    .sort-icon.asc {
+        transform: rotate(0deg);
+    }
+    
+    .sort-icon.desc {
+        transform: rotate(180deg);
+    }
 </style>
 @endpush
 
@@ -168,13 +196,33 @@
 <!-- Enhanced User Table -->
 <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-fade-in-up animate-delay-2">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+        <table class="min-w-full divide-y divide-gray-200" id="usersTable">
             <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roles</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="name">
+                        User
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="email">
+                        Email
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="roles">
+                        Roles
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">
+                        Status
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
                     <th class="px-6 py-3"></th>
                 </tr>
             </thead>
@@ -188,7 +236,7 @@
                     @endphp
                     
                     <tr class="table-row-hover hover:bg-yellow-50 transition-all duration-200 border-b border-gray-100">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $user->first_name }} {{ $user->last_name }}">
                             <div class="flex items-center">
                                 @if($user->profile_picture)
                                     <img class="w-10 h-10 rounded-full shadow-lg mr-3" src="{{ asset('storage/' . $user->profile_picture) }}" alt="{{ $user->first_name }}">
@@ -210,7 +258,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-sort-value="{{ $user->email }}">
                             <div class="flex items-center">
                                 <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
@@ -218,7 +266,7 @@
                                 {{ $user->email }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $user->roles->first() ? $user->roles->first()->name : 'No Role' }}">
                             <div class="flex flex-wrap gap-1">
                                 @forelse($user->roles as $role)
                                     @php
@@ -247,7 +295,9 @@
                                 @endforelse
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap" 
+                            data-sort-value="{{ $statusText }}" 
+                            data-sort-priority="{{ $isActive ? 1 : 2 }}">
                             <div class="flex flex-col">
                                 <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $statusClass }}">
                                     @if($isActive)
@@ -345,4 +395,115 @@
         {{ $users->appends(['status' => $status])->links() }}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('usersTable');
+    const tbody = table.querySelector('tbody');
+    const headers = table.querySelectorAll('.sortable-header');
+    
+    let currentSort = {
+        column: null,
+        direction: 'asc'
+    };
+    
+    // Add click event listeners to all sortable headers
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.getAttribute('data-sort');
+            console.log('Sorting users by column:', column);
+            sortTable(column);
+        });
+    });
+    
+    console.log('Found', headers.length, 'sortable headers for users');
+    console.log('Found', tbody.querySelectorAll('tr').length, 'user table rows');
+    
+    function sortTable(column) {
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Filter out empty rows (like the "no users" message)
+        const dataRows = rows.filter(row => row.cells.length > 1);
+        
+        if (dataRows.length === 0) return;
+        
+        // Determine sort direction
+        let direction = 'asc';
+        if (currentSort.column === column) {
+            direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        
+        // Update current sort state
+        currentSort.column = column;
+        currentSort.direction = direction;
+        
+        // Update visual indicators
+        updateSortIndicators(column, direction);
+        
+        // Sort the rows
+        dataRows.sort((a, b) => {
+            const aValue = getCellValue(a, column);
+            const bValue = getCellValue(b, column);
+            
+            let comparison = 0;
+            
+            if (column === 'status') {
+                // Sort by status priority (Active=1, Inactive=2)
+                const aPriority = parseInt(a.cells[3].getAttribute('data-sort-priority'));
+                const bPriority = parseInt(b.cells[3].getAttribute('data-sort-priority'));
+                comparison = aPriority - bPriority;
+            } else {
+                // Sort alphabetically for name, email, and roles
+                comparison = aValue.localeCompare(bValue);
+            }
+            
+            return direction === 'asc' ? comparison : -comparison;
+        });
+        
+        // Re-append sorted rows
+        dataRows.forEach(row => tbody.appendChild(row));
+    }
+    
+    function getCellValue(row, column) {
+        // Get the cell in the specific column (0-indexed)
+        const columnIndex = getColumnIndex(column);
+        const cell = row.cells[columnIndex];
+        
+        if (!cell) return '';
+        
+        if (column === 'status') {
+            return parseInt(cell.getAttribute('data-sort-priority'));
+        }
+        
+        return cell.getAttribute('data-sort-value');
+    }
+    
+    function getColumnIndex(column) {
+        const columnMap = {
+            'name': 0,
+            'email': 1,
+            'roles': 2,
+            'status': 3
+        };
+        return columnMap[column] || 0;
+    }
+    
+    function updateSortIndicators(activeColumn, direction) {
+        // Reset all sort icons
+        headers.forEach(header => {
+            const icon = header.querySelector('.sort-icon');
+            icon.classList.remove('active', 'asc', 'desc');
+            icon.style.color = '#9ca3af'; // gray-400
+        });
+        
+        // Update active column icon
+        const activeHeader = table.querySelector(`[data-sort="${activeColumn}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('.sort-icon');
+            icon.classList.add('active', direction);
+            icon.style.color = '#f59e0b'; // yellow-500
+        }
+    }
+});
+</script>
 @endsection 

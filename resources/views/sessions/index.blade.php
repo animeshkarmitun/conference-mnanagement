@@ -92,6 +92,34 @@
     .animate-delay-2 { animation-delay: 0.2s; }
     .animate-delay-3 { animation-delay: 0.3s; }
     .animate-delay-4 { animation-delay: 0.4s; }
+    
+    .sortable-header {
+        user-select: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .sortable-header:hover {
+        background-color: #fefce8;
+        color: #f59e0b;
+    }
+    
+    .sort-icon {
+        transition: all 0.2s ease-in-out;
+        margin-left: 4px;
+    }
+    
+    .sort-icon.active {
+        color: #f59e0b;
+    }
+    
+    .sort-icon.asc {
+        transform: rotate(0deg);
+    }
+    
+    .sort-icon.desc {
+        transform: rotate(180deg);
+    }
 </style>
 @endpush
 
@@ -188,16 +216,51 @@
 <!-- Enhanced Session Table -->
 <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-fade-in-up animate-delay-3">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+        <table class="min-w-full divide-y divide-gray-200" id="sessionsTable">
             <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conference</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">
+                        Status
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="title">
+                        Title
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="conference">
+                        Conference
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="schedule">
+                        Schedule
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="duration">
+                        Duration
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="room">
+                        Room
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="capacity">
+                        Capacity
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
                     <th class="px-6 py-3"></th>
                 </tr>
             </thead>
@@ -218,7 +281,9 @@
                     @endphp
                     
                     <tr class="table-row-hover hover:bg-yellow-50 transition-all duration-200 border-b border-gray-100">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap" 
+                            data-sort-value="{{ $statusText }}" 
+                            data-sort-priority="{{ $timeData['is_active'] ? 1 : ($timeData['is_today'] ? 2 : ($timeData['is_past'] ? 3 : 4)) }}">
                             <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $statusClass }}">
                                 @if($timeData['is_active'])
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -240,7 +305,7 @@
                                 {{ $statusText }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $session->title }}">
                             <div class="flex items-center">
                                 <div class="w-10 h-10 session-icon rounded-full flex items-center justify-center mr-3 shadow-lg">
                                     <span class="text-sm font-bold">
@@ -255,7 +320,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500" data-sort-value="{{ $session->conference->name ?? 'N/A' }}">
                             <div class="flex items-center">
                                 <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
@@ -263,7 +328,7 @@
                                 <span>{{ $session->conference->name ?? 'N/A' }}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $session->start_time }}">
                             <div class="flex items-center">
                                 <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -274,7 +339,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $timeData['duration_minutes'] }}">
                             <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $durationClass }}">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -282,7 +347,7 @@
                                 {{ $timeData['duration'] }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500" data-sort-value="{{ $session->room ?? 'N/A' }}">
                             <div class="flex items-center">
                                 <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
@@ -290,7 +355,7 @@
                                 <span>{{ $session->room ?? 'N/A' }}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500" data-sort-value="{{ $session->capacity ?? 0 }}">
                             <div class="flex items-center">
                                 <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -365,4 +430,127 @@
         {{ $sessions->appends(['status' => $status])->links() }}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('sessionsTable');
+    const tbody = table.querySelector('tbody');
+    const headers = table.querySelectorAll('.sortable-header');
+    
+    let currentSort = {
+        column: null,
+        direction: 'asc'
+    };
+    
+    // Add click event listeners to all sortable headers
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.getAttribute('data-sort');
+            console.log('Sorting sessions by column:', column);
+            sortTable(column);
+        });
+    });
+    
+    console.log('Found', headers.length, 'sortable headers for sessions');
+    console.log('Found', tbody.querySelectorAll('tr').length, 'session table rows');
+    
+    function sortTable(column) {
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Filter out empty rows (like the "no sessions" message)
+        const dataRows = rows.filter(row => row.cells.length > 1);
+        
+        if (dataRows.length === 0) return;
+        
+        // Determine sort direction
+        let direction = 'asc';
+        if (currentSort.column === column) {
+            direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        
+        // Update current sort state
+        currentSort.column = column;
+        currentSort.direction = direction;
+        
+        // Update visual indicators
+        updateSortIndicators(column, direction);
+        
+        // Sort the rows
+        dataRows.sort((a, b) => {
+            const aValue = getCellValue(a, column);
+            const bValue = getCellValue(b, column);
+            
+            let comparison = 0;
+            
+            if (column === 'status') {
+                // Sort by status priority (Active=1, Today=2, Upcoming=3, Finished=4)
+                const aPriority = parseInt(a.cells[0].getAttribute('data-sort-priority'));
+                const bPriority = parseInt(b.cells[0].getAttribute('data-sort-priority'));
+                comparison = aPriority - bPriority;
+            } else if (column === 'duration') {
+                // Sort by duration minutes (numeric)
+                comparison = parseInt(aValue) - parseInt(bValue);
+            } else if (column === 'capacity') {
+                // Sort by capacity (numeric)
+                comparison = parseInt(aValue) - parseInt(bValue);
+            } else if (column === 'schedule') {
+                // Sort by start date
+                comparison = new Date(aValue) - new Date(bValue);
+            } else {
+                // Sort alphabetically for title, conference, and room
+                comparison = aValue.localeCompare(bValue);
+            }
+            
+            return direction === 'asc' ? comparison : -comparison;
+        });
+        
+        // Re-append sorted rows
+        dataRows.forEach(row => tbody.appendChild(row));
+    }
+    
+    function getCellValue(row, column) {
+        // Get the cell in the specific column (0-indexed)
+        const columnIndex = getColumnIndex(column);
+        const cell = row.cells[columnIndex];
+        
+        if (!cell) return '';
+        
+        if (column === 'status') {
+            return parseInt(cell.getAttribute('data-sort-priority'));
+        }
+        
+        return cell.getAttribute('data-sort-value');
+    }
+    
+    function getColumnIndex(column) {
+        const columnMap = {
+            'status': 0,
+            'title': 1,
+            'conference': 2,
+            'schedule': 3,
+            'duration': 4,
+            'room': 5,
+            'capacity': 6
+        };
+        return columnMap[column] || 0;
+    }
+    
+    function updateSortIndicators(activeColumn, direction) {
+        // Reset all sort icons
+        headers.forEach(header => {
+            const icon = header.querySelector('.sort-icon');
+            icon.classList.remove('active', 'asc', 'desc');
+            icon.style.color = '#9ca3af'; // gray-400
+        });
+        
+        // Update active column icon
+        const activeHeader = table.querySelector(`[data-sort="${activeColumn}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('.sort-icon');
+            icon.classList.add('active', direction);
+            icon.style.color = '#f59e0b'; // yellow-500
+        }
+    }
+});
+</script>
 @endsection 
