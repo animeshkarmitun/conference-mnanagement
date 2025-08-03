@@ -50,6 +50,10 @@
                 width: 16rem;
             }
 
+            .w-16 {
+                width: 4rem;
+            }
+
             .bg-white {
                 background-color: #ffffff;
             }
@@ -186,31 +190,183 @@
                 -webkit-font-smoothing: antialiased;
                 -moz-osx-font-smoothing: grayscale;
             }
+
+            /* Additional styles for collapsible sidebar */
+            .transition-all {
+                transition-property: all;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 300ms;
+            }
+
+            .transition-opacity {
+                transition-property: opacity;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 300ms;
+            }
+
+            .transition-transform {
+                transition-property: transform;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 300ms;
+            }
+
+            .transition-colors {
+                transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 150ms;
+            }
+
+            .duration-300 {
+                transition-duration: 300ms;
+            }
+
+            .duration-150 {
+                transition-duration: 150ms;
+            }
+
+            .opacity-0 {
+                opacity: 0;
+            }
+
+            .opacity-100 {
+                opacity: 1;
+            }
+
+            .rotate-180 {
+                transform: rotate(180deg);
+            }
+
+            .flex-shrink-0 {
+                flex-shrink: 0;
+            }
+
+            .mr-3 {
+                margin-right: 0.75rem;
+            }
+
+            .group {
+                position: relative;
+            }
+
+            /* Tooltip styles for collapsed sidebar */
+            .sidebar-collapsed [title]:hover::after {
+                content: attr(title);
+                position: absolute;
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                background: #1f2937;
+                color: white;
+                padding: 0.5rem 0.75rem;
+                border-radius: 0.375rem;
+                font-size: 0.875rem;
+                white-space: nowrap;
+                z-index: 50;
+                margin-left: 0.5rem;
+                opacity: 1;
+                pointer-events: none;
+            }
+            
+            .sidebar-collapsed [title]:hover::before {
+                content: '';
+                position: absolute;
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                border: 4px solid transparent;
+                border-right-color: #1f2937;
+                margin-left: -0.25rem;
+                z-index: 50;
+                opacity: 1;
+                pointer-events: none;
+            }
+            
+            /* Ensure toggle button is always visible */
+            .sidebar-toggle-btn {
+                position: relative;
+                z-index: 10;
+                min-width: 2rem;
+                min-height: 2rem;
+            }
+            
+            /* When collapsed, center the button */
+            .sidebar-collapsed .sidebar-toggle-btn {
+                position: absolute;
+                right: 0.5rem;
+                top: 50%;
+                transform: translateY(-50%);
+            }
         </style>
     </head>
-    <body class="antialiased">
+    <body class="antialiased" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 768 }" x-init="$watch('sidebarCollapsed', value => localStorage.setItem('sidebarCollapsed', value))" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
         <div class="min-h-screen flex">
             <!-- Sidebar -->
-            <aside class="w-64 bg-white shadow-lg flex flex-col">
-                <div class="h-16 flex items-center justify-center border-b">
-                    <span class="text-2xl font-bold text-yellow-700">CGS Events</span>
+            <aside class="bg-white shadow-lg flex flex-col transition-all duration-300" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
+                <div class="h-16 flex items-center justify-between border-b px-4">
+                    <span class="text-2xl font-bold text-yellow-700 transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">CGS Events</span>
+                    <button @click="sidebarCollapsed = !sidebarCollapsed" class="p-2 rounded-lg hover:bg-yellow-50 transition-colors duration-150 sidebar-toggle-btn" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+                        <svg class="w-5 h-5 text-gray-600 transition-transform duration-300" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
                 </div>
                 <nav class="flex-1 px-4 py-6 space-y-2">
-                    <a href="{{ route('dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Dashboard</a>
-                    <a href="{{ route('conferences.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Conferences</a>
-                    <a href="{{ route('participants.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Participants</a>
-                    <a href="{{ route('sessions.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Sessions</a>
-                    <a href="{{ route('tasks.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Tasks</a>
-                    <a href="{{ route('notifications.index') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Notifications</a>
-                    <a href="{{ route('speaker.register') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">Speaker Registration</a>
-                    <a href="{{ route('guide') }}" class="block px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800">How to Use</a>
+                    <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'Dashboard' : ''">
+                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"/>
+                        </svg>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Dashboard</span>
+                    </a>
+                    <a href="{{ route('conferences.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'Conferences' : ''">
+                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Conferences</span>
+                    </a>
+                    <a href="{{ route('participants.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'Participants' : ''">
+                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Participants</span>
+                    </a>
+                    <a href="{{ route('sessions.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'Sessions' : ''">
+                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Sessions</span>
+                    </a>
+                    <a href="{{ route('tasks.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'Tasks' : ''">
+                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Tasks</span>
+                    </a>
+                    <a href="{{ route('notifications.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'Notifications' : ''">
+                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notifications</span>
+                    </a>
+                    <a href="{{ route('speaker.register') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'Speaker Registration' : ''">
+                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                        </svg>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Speaker Registration</span>
+                    </a>
+                    <a href="{{ route('guide') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'How to Use' : ''">
+                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
+                    </a>
                 </nav>
                 <div class="border-t p-4">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-700 font-bold">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-700 font-bold flex-shrink-0">
                             {{ strtoupper(substr(auth()->user()->first_name,0,1)) }}
                         </div>
-                        <div>
+                        <div class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">
                             <div class="font-semibold text-gray-800">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -234,5 +390,7 @@
                 </main>
             </div>
         </div>
+        <!-- Alpine.js for sidebar functionality -->
+        <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     </body>
 </html> 
