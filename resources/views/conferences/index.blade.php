@@ -64,17 +64,15 @@
     }
     
     .sortable-header:hover {
-        background: #fefce8;
-        color: #d97706;
+        background: #f8fafc;
+        color: #6366f1;
     }
     
     .sortable-header.active {
-        background: #fefce8;
-        color: #d97706;
-        border-bottom: 2px solid #f59e0b;
+        background: #f8fafc;
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
     }
-    
-
     
     .sort-icon {
         opacity: 0.8;
@@ -85,11 +83,11 @@
     
     .sortable-header:hover .sort-icon {
         opacity: 1;
-        color: #d97706;
+        color: #6366f1;
     }
     
     .sort-icon.active {
-        color: #d97706;
+        color: #6366f1;
         opacity: 1;
     }
     
@@ -99,21 +97,6 @@
     
     .sort-icon.desc {
         transform: rotate(180deg);
-    }
-    
-    .table-row-hover {
-        transition: all 0.2s ease;
-    }
-    
-    .table-row-hover:hover {
-        background-color: #fefce8;
-        transform: scale(1.01);
-    }
-    
-    .conference-icon {
-        background: linear-gradient(135deg, #f59e0b, #fbbf24);
-        color: white;
-        font-weight: bold;
     }
     
     @keyframes fadeInUp {
@@ -134,64 +117,118 @@
     .animate-delay-1 { animation-delay: 0.1s; }
     .animate-delay-2 { animation-delay: 0.2s; }
     .animate-delay-3 { animation-delay: 0.3s; }
+    .animate-delay-4 { animation-delay: 0.4s; }
     
-    /* Enhanced table container */
-    .table-container {
-        border-radius: 1rem;
-        overflow: hidden;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e5e7eb;
+    /* Modern color scheme overrides */
+    .modern-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
     }
     
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .sortable-header {
-            padding: 0.75rem 1rem;
-            font-size: 0.75rem;
-        }
-        
-        .header-text {
-            font-size: 0.75rem;
-        }
-        
-        .sort-icon {
-            width: 1rem;
-            height: 1rem;
-        }
+    .modern-primary:hover {
+        background: linear-gradient(135deg, #5855eb, #7c3aed);
+    }
+    
+    .modern-secondary {
+        background: linear-gradient(135deg, #64748b, #475569);
+        color: white;
+    }
+    
+    .modern-secondary:hover {
+        background: linear-gradient(135deg, #475569, #334155);
+    }
+    
+    .modern-success {
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+    }
+    
+    .modern-success:hover {
+        background: linear-gradient(135deg, #047857, #065f46);
+    }
+    
+    .modern-warning {
+        background: linear-gradient(135deg, #e11d48, #be123c);
+        color: white;
+    }
+    
+    .modern-warning:hover {
+        background: linear-gradient(135deg, #be123c, #9f1239);
+    }
+    
+    .modern-info {
+        background: linear-gradient(135deg, #0891b2, #0e7490);
+        color: white;
+    }
+    
+    .modern-info:hover {
+        background: linear-gradient(135deg, #0e7490, #155e75);
+    }
+    
+    .modern-admin {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        color: white;
+    }
+    
+    .modern-admin:hover {
+        background: linear-gradient(135deg, #6d28d9, #5b21b6);
+    }
+    
+    .conference-icon {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+        font-weight: bold;
+    }
+    
+    .table-row-hover {
+        transition: all 0.2s ease;
+    }
+    
+    .table-row-hover:hover {
+        background-color: #fefce8;
+        transform: scale(1.01);
     }
 </style>
 @endpush
 
 @section('content')
-<!-- Enhanced Header with Quick Actions -->
-<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100 animate-fade-in-up">
-    <div class="flex justify-between items-center">
-        <div>
-            <h2 class="text-3xl font-bold text-gray-800">Conferences</h2>
-            <p class="text-gray-600 mt-1">Manage and organize conference events</p>
+<!-- Enhanced Header Section -->
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100 animate-fade-in-up">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div class="mb-4 lg:mb-0">
+            <h2 class="text-3xl font-bold text-slate-800">Conferences</h2>
+            <p class="text-slate-600 mt-1">Manage conference events and schedules</p>
         </div>
-        <div class="flex items-center space-x-4">
-            <!-- Quick Actions -->
-            <div class="flex space-x-3">
-                <button class="quick-action-btn bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Import Conferences">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
-                    </svg>
-                </button>
-                <button class="quick-action-btn bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2m-4-4V7a4 4 0 10-8 0v6m0 4h8"></path>
-                    </svg>
-                </button>
-                <button class="quick-action-btn bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Export Data">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </button>
-            </div>
-            <a href="{{ route('conferences.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        
+        <!-- Quick Action Buttons -->
+        <div class="flex flex-wrap gap-3">
+            <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Import Conferences">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+            </button>
+            
+            <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </button>
+            
+            <button class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Export Data">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </button>
+            
+            <button class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Bulk Operations">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </button>
+            
+            <a href="{{ route('conferences.create') }}" class="modern-primary px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
                 Add Conference
             </a>

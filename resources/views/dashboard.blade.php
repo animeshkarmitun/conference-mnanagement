@@ -136,7 +136,9 @@
 <!-- Enhanced Dashboard Header -->
 <div class="rounded-2xl bg-gradient-to-r from-indigo-100 via-indigo-50 to-white shadow-lg flex items-center px-8 py-6 mb-10 border border-indigo-200 animate-fade-in-up">
     <div class="flex items-center justify-center w-16 h-16 bg-indigo-200 rounded-full mr-6 shadow-lg">
-        <svg class="w-8 h-8 text-indigo-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5V6a2 2 0 012-2h14a2 2 0 012 2v7.5M3 13.5l9 6 9-6M3 13.5l9-6 9 6"/></svg>
+        <svg class="w-8 h-8 text-indigo-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+        </svg>
     </div>
     <div class="flex-1">
         <h1 class="text-3xl font-extrabold text-indigo-800 tracking-tight mb-1">Dashboard</h1>
@@ -146,18 +148,18 @@
     <!-- Quick Actions -->
     <div class="flex space-x-3">
         <button class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
         </button>
         <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Add Participant">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
             </svg>
         </button>
         <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Create Session">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
         </button>
     </div>
@@ -289,55 +291,63 @@
         <div class="max-w-7xl mx-auto mb-10">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 <!-- Invited -->
-                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-blue-400 stat-card card-hover animate-fade-in-up animate-delay-1">
-                    <span class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-3 shadow-lg">
-                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    </span>
-                    <div class="text-3xl font-bold text-blue-700 mb-1">{{ $dashboardData['summary_stats']['invited'] }}</div>
-                    <div class="text-sm text-gray-500 font-medium">Invited</div>
-                </div>
-                
-                <!-- Accepted -->
-                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-green-400 stat-card card-hover animate-fade-in-up animate-delay-2">
-                    <span class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3 shadow-lg">
-                        <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    </span>
-                    <div class="text-3xl font-bold text-green-700 mb-1">{{ $dashboardData['summary_stats']['accepted'] }}</div>
-                    <div class="text-sm text-gray-500 font-medium">Accepted</div>
-                </div>
-                
-                <!-- Flying -->
-                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-yellow-400 stat-card card-hover animate-fade-in-up animate-delay-3">
-                    <span class="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-3 shadow-lg">
-                        <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a5 5 0 00-10 0v2a5 5 0 00-2 4v5a2 2 0 002 2h10a2 2 0 002-2v-5a5 5 0 00-2-4z"/></svg>
-                    </span>
-                    <div class="text-3xl font-bold text-yellow-700 mb-1">{{ $dashboardData['summary_stats']['flying'] }}</div>
-                    <div class="text-sm text-gray-500 font-medium">Flying</div>
-                </div>
-                
-                <!-- Status Breakdown -->
-                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-pink-400 stat-card card-hover animate-fade-in-up animate-delay-4">
-                    <span class="inline-flex items-center justify-center w-12 h-12 bg-pink-100 rounded-full mb-3 shadow-lg">
-                        <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
-                    </span>
-                    <div class="flex flex-col items-center mb-1">
-                        <div class="text-xs text-gray-500">Pending: <span class="font-bold text-pink-700">{{ $dashboardData['summary_stats']['status_breakdown']['pending'] }}</span></div>
-                        <div class="text-xs text-gray-500">Approved: <span class="font-bold text-green-700">{{ $dashboardData['summary_stats']['status_breakdown']['approved'] }}</span></div>
-                        <div class="text-xs text-gray-500">Declined: <span class="font-bold text-red-700">{{ $dashboardData['summary_stats']['status_breakdown']['declined'] }}</span></div>
-                    </div>
-                    <div class="text-sm text-gray-500 font-medium">Status</div>
-                </div>
-                
-                <!-- Speakers -->
-                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-purple-400 stat-card card-hover animate-fade-in-up animate-delay-5">
-                    <span class="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mb-3 shadow-lg">
-                        <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a3 3 0 11-6 0 3 3 0 016 0zM17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
-                    </span>
-                    <div class="text-3xl font-bold text-purple-700 mb-1">{{ $dashboardData['speaker_statistics']['total_speakers'] }}</div>
-                    <div class="text-sm text-gray-500 font-medium">Speakers</div>
-                </div>
+                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-indigo-400 stat-card card-hover animate-fade-in-up animate-delay-1">
+                    <span class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-3 shadow-lg">
+                        <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </span>
+                <div class="text-3xl font-bold text-indigo-700 mb-1">{{ $dashboardData['summary_stats']['invited'] }}</div>
+                <div class="text-sm text-slate-500 font-medium">Invited</div>
             </div>
+            
+            <!-- Accepted -->
+            <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-emerald-400 stat-card card-hover animate-fade-in-up animate-delay-2">
+                <span class="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full mb-3 shadow-lg">
+                    <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </span>
+            <div class="text-3xl font-bold text-emerald-700 mb-1">{{ $dashboardData['summary_stats']['accepted'] }}</div>
+            <div class="text-sm text-slate-500 font-medium">Accepted</div>
         </div>
+        
+        <!-- Flying -->
+        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-amber-400 stat-card card-hover animate-fade-in-up animate-delay-3">
+            <span class="inline-flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full mb-3 shadow-lg">
+                <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+            </span>
+            <div class="text-3xl font-bold text-amber-700 mb-1">{{ $dashboardData['summary_stats']['flying'] }}</div>
+            <div class="text-sm text-slate-500 font-medium">Flying</div>
+        </div>
+        
+        <!-- Status Breakdown -->
+        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-rose-400 stat-card card-hover animate-fade-in-up animate-delay-4">
+            <span class="inline-flex items-center justify-center w-12 h-12 bg-rose-100 rounded-full mb-3 shadow-lg">
+                <svg class="w-7 h-7 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </span>
+            <div class="flex flex-col items-center mb-1">
+                <div class="text-xs text-slate-500">Pending: <span class="font-bold text-rose-700">{{ $dashboardData['summary_stats']['status_breakdown']['pending'] }}</span></div>
+                <div class="text-xs text-slate-500">Approved: <span class="font-bold text-emerald-700">{{ $dashboardData['summary_stats']['status_breakdown']['approved'] }}</span></div>
+                <div class="text-xs text-slate-500">Declined: <span class="font-bold text-rose-700">{{ $dashboardData['summary_stats']['status_breakdown']['declined'] }}</span></div>
+            </div>
+            <div class="text-sm text-slate-500 font-medium">Status</div>
+        </div>
+        
+        <!-- Speakers -->
+        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-violet-400 stat-card card-hover animate-fade-in-up animate-delay-5">
+            <span class="inline-flex items-center justify-center w-12 h-12 bg-violet-100 rounded-full mb-3 shadow-lg">
+                <svg class="w-7 h-7 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
+                </svg>
+            </span>
+            <div class="text-3xl font-bold text-violet-700 mb-1">{{ $dashboardData['speaker_statistics']['total_speakers'] }}</div>
+            <div class="text-sm text-slate-500 font-medium">Speakers</div>
+        </div>
+    </div>
+</div>
 
         <!-- Enhanced Activity Feed Section -->
         <div class="max-w-7xl mx-auto mb-10 animate-fade-in-up animate-delay-5">
