@@ -6,58 +6,179 @@ use App\Models\Conference;
 use App\Models\Participant;
 use App\Models\Session;
 use App\Models\Task;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    protected $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
+
     public function index(Request $request)
     {
-        $conferences = Conference::all();
+        // Get all conferences for dropdown
+        $conferences = Conference::orderBy('start_date', 'desc')->get();
+        
+        // Get selected conference (default to first if none selected)
         $selectedConferenceId = $request->get('conference_id') ?? ($conferences->first()?->id);
-        $selectedConference = $conferences->where('id', $selectedConferenceId)->first();
+        
+        if (!$selectedConferenceId) {
+            // No conferences exist, return empty dashboard
+            return view('dashboard', [
+                'conferences' => collect(),
+                'selectedConferenceId' => null,
+                'dashboardData' => null,
+                'noConferences' => true,
+            ]);
+        }
 
-        // Get total counts
-        $totalConferences = Conference::count();
-        $totalParticipants = Participant::count();
-        $upcomingSessions = Session::where('start_time', '>', now())->count();
-        $pendingTasks = Task::where('status', '!=', 'completed')->count();
+        // Get all dashboard data for the selected conference
+        $dashboardData = $this->dashboardService->getAllDashboardData($selectedConferenceId);
 
-        // Get recent activities (last 5)
-        $recentActivities = DB::table('activity_log')
-            ->latest()
-            ->take(5)
-            ->get()
-            ->map(function ($activity) {
-                return (object) [
-                    'description' => $activity->description,
-                    'created_at' => $activity->created_at,
-                    'type_color' => $this->getActivityTypeColor($activity->type),
-                    'icon_color' => $this->getActivityIconColor($activity->type),
-                    'icon' => $this->getActivityIcon($activity->type),
-                ];
-            });
-
-        // Get upcoming events (next 5)
-        $upcomingEvents = Session::with('venue')
-            ->where('start_time', '>', now())
-            ->orderBy('start_time')
-            ->take(5)
-            ->get();
+        // Get global statistics (across all conferences)
+        $globalStats = $this->getGlobalStatistics();
 
         return view('dashboard', compact(
             'conferences',
             'selectedConferenceId',
-            'selectedConference',
-            'totalConferences',
-            'totalParticipants',
-            'upcomingSessions',
-            'pendingTasks',
-            'recentActivities',
-            'upcomingEvents'
+            'dashboardData',
+            'globalStats'
         ));
     }
 
+    /**
+     * Get global statistics across all conferences
+     */
+    private function getGlobalStatistics()
+    {
+        return [
+            'total_conferences' => Conference::count(),
+            'total_participants' => Participant::count(),
+            'upcoming_sessions' => Session::where('start_time', '>', now())->count(),
+            'pending_tasks' => Task::where('status', '!=', 'completed')->count(),
+        ];
+    }
+
+    /**
+     * AJAX endpoint for getting dashboard data
+     */
+    public function getDashboardData(Request $request)
+    {
+        $conferenceId = $request->get('conference_id');
+        
+        if (!$conferenceId) {
+            return response()->json(['error' => 'Conference ID is required'], 400);
+        }
+
+        try {
+            $dashboardData = $this->dashboardService->getAllDashboardData($conferenceId);
+            return response()->json($dashboardData);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load dashboard data'], 500);
+        }
+    }
+
+    /**
+     * Get conference progress data only
+     */
+    public function getConferenceProgress(Request $request)
+    {
+        $conferenceId = $request->get('conference_id');
+        
+        if (!$conferenceId) {
+            return response()->json(['error' => 'Conference ID is required'], 400);
+        }
+
+        try {
+            $progressData = $this->dashboardService->getConferenceProgress($conferenceId);
+            return response()->json($progressData);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load conference progress'], 500);
+        }
+    }
+
+    /**
+     * Get task progress data only
+     */
+    public function getTaskProgress(Request $request)
+    {
+        $conferenceId = $request->get('conference_id');
+        
+        if (!$conferenceId) {
+            return response()->json(['error' => 'Conference ID is required'], 400);
+        }
+
+        try {
+            $taskData = $this->dashboardService->getTaskProgress($conferenceId);
+            return response()->json($taskData);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load task progress'], 500);
+        }
+    }
+
+    /**
+     * Get participant statistics
+     */
+    public function getParticipantStats(Request $request)
+    {
+        $conferenceId = $request->get('conference_id');
+        
+        if (!$conferenceId) {
+            return response()->json(['error' => 'Conference ID is required'], 400);
+        }
+
+        try {
+            $participantData = $this->dashboardService->getParticipantStatistics($conferenceId);
+            return response()->json($participantData);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load participant statistics'], 500);
+        }
+    }
+
+    /**
+     * Get speaker statistics
+     */
+    public function getSpeakerStats(Request $request)
+    {
+        $conferenceId = $request->get('conference_id');
+        
+        if (!$conferenceId) {
+            return response()->json(['error' => 'Conference ID is required'], 400);
+        }
+
+        try {
+            $speakerData = $this->dashboardService->getSpeakerStatistics($conferenceId);
+            return response()->json($speakerData);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load speaker statistics'], 500);
+        }
+    }
+
+    /**
+     * Get summary statistics
+     */
+    public function getSummaryStats(Request $request)
+    {
+        $conferenceId = $request->get('conference_id');
+        
+        if (!$conferenceId) {
+            return response()->json(['error' => 'Conference ID is required'], 400);
+        }
+
+        try {
+            $summaryData = $this->dashboardService->getSummaryStats($conferenceId);
+            return response()->json($summaryData);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load summary statistics'], 500);
+        }
+    }
+
+    // Legacy methods for backward compatibility
     private function getActivityTypeColor($type)
     {
         return match ($type) {

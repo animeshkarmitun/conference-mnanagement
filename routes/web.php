@@ -20,9 +20,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+
+// Dashboard AJAX endpoints
+Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/data', [\App\Http\Controllers\DashboardController::class, 'getDashboardData'])->name('data');
+    Route::get('/conference-progress', [\App\Http\Controllers\DashboardController::class, 'getConferenceProgress'])->name('conference-progress');
+    Route::get('/task-progress', [\App\Http\Controllers\DashboardController::class, 'getTaskProgress'])->name('task-progress');
+    Route::get('/participant-stats', [\App\Http\Controllers\DashboardController::class, 'getParticipantStats'])->name('participant-stats');
+    Route::get('/speaker-stats', [\App\Http\Controllers\DashboardController::class, 'getSpeakerStats'])->name('speaker-stats');
+    Route::get('/summary-stats', [\App\Http\Controllers\DashboardController::class, 'getSummaryStats'])->name('summary-stats');
+});
 
 Route::get('/dashboard-tasker', function () {
     return view('dashboard-tasker');
@@ -88,7 +96,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/gmail/{threadId}/reply', [GoogleController::class, 'sendReply'])->name('gmail.send-reply');
 });
 
-Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');
+// Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');
 
 Route::get('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'show'])->name('bulk.email');
 
