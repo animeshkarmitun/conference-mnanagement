@@ -108,42 +108,97 @@
     .sort-icon.desc {
         transform: rotate(180deg);
     }
+
+    /* Modern color scheme overrides */
+    .modern-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+    
+    .modern-primary:hover {
+        background: linear-gradient(135deg, #5855eb, #7c3aed);
+    }
+    
+    .modern-secondary {
+        background: linear-gradient(135deg, #64748b, #475569);
+        color: white;
+    }
+    
+    .modern-secondary:hover {
+        background: linear-gradient(135deg, #475569, #334155);
+    }
+    
+    .modern-success {
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+    }
+    
+    .modern-success:hover {
+        background: linear-gradient(135deg, #047857, #065f46);
+    }
+    
+    .modern-warning {
+        background: linear-gradient(135deg, #e11d48, #be123c);
+        color: white;
+    }
+    
+    .modern-warning:hover {
+        background: linear-gradient(135deg, #be123c, #9f1239);
+    }
+    
+    .modern-info {
+        background: linear-gradient(135deg, #0891b2, #0e7490);
+        color: white;
+    }
+    
+    .modern-info:hover {
+        background: linear-gradient(135deg, #0e7490, #155e75);
+    }
+    
+    .modern-admin {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        color: white;
+    }
+    
+    .modern-admin:hover {
+        background: linear-gradient(135deg, #6d28d9, #5b21b6);
+    }
 </style>
 @endpush
 
 @section('content')
 <!-- Enhanced Header with Quick Actions -->
-<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100 animate-fade-in-up">
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100 animate-fade-in-up">
     <div class="flex justify-between items-center">
         <div>
-            <h2 class="text-3xl font-bold text-gray-800">Users</h2>
-            <p class="text-gray-600 mt-1">Manage all users and their roles</p>
+            <h2 class="text-3xl font-bold text-slate-800">Users</h2>
+            <p class="text-slate-600 mt-1">Manage all users and their roles</p>
         </div>
         <div class="flex items-center space-x-4">
             <!-- Quick Actions -->
             <div class="flex space-x-3">
-                <button onclick="showImportModal()" class="quick-action-btn bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Import Users">
+                <button onclick="showImportModal()" class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Import Users">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
                     </svg>
                 </button>
-                <button onclick="generateUserReport()" class="quick-action-btn bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
+                <button onclick="generateUserReport()" class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2m-4-4V7a4 4 0 10-8 0v6m0 4h8"></path>
                     </svg>
                 </button>
-                <button onclick="exportUserData()" class="quick-action-btn bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Export Data">
+                <button onclick="exportUserData()" class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Export Data">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                 </button>
-                <button onclick="showBulkRoleModal()" class="quick-action-btn bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Bulk Role Assignment">
+                <button onclick="showBulkRoleModal()" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Bulk Role Assignment">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                 </button>
             </div>
-            <a href="{{ route('users.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
+            <a href="{{ route('users.create') }}" class="modern-primary hover:modern-primary px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
@@ -154,39 +209,39 @@
 </div>
 
 <!-- Enhanced User Status Tabs -->
-<div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-1">
-    <div class="border-b border-gray-200">
+<div class="bg-white rounded-2xl shadow-lg mb-6 border border-slate-100 animate-fade-in-up animate-delay-1">
+    <div class="border-b border-slate-200">
         <nav class="flex space-x-8 px-6" aria-label="Tabs">
             <a href="{{ route('users.index', ['status' => 'active']) }}" 
-               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'active' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'active' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50' }}">
                 <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                     </svg>
                     Active Users
-                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['active'] }}</span>
+                    <span class="ml-2 bg-indigo-100 text-indigo-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['active'] }}</span>
                 </div>
             </a>
             
             <a href="{{ route('users.index', ['status' => 'inactive']) }}" 
-               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'inactive' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'inactive' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50' }}">
                 <div class="flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
                     </svg>
                     Inactive Users
-                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['inactive'] }}</span>
+                    <span class="ml-2 bg-indigo-100 text-indigo-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['inactive'] }}</span>
                 </div>
             </a>
             
             <a href="{{ route('users.index', ['status' => 'all']) }}" 
-               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'all' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'all' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50' }}">
                 <div class="flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                     </svg>
                     All Users
-                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['all'] }}</span>
+                    <span class="ml-2 bg-indigo-100 text-indigo-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['all'] }}</span>
                 </div>
             </a>
         </nav>
@@ -194,48 +249,58 @@
 </div>
 
 <!-- Enhanced User Table -->
-<div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-fade-in-up animate-delay-2">
+<div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100 animate-fade-in-up animate-delay-2">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200" id="usersTable">
+        <table class="min-w-full divide-y divide-slate-200" id="usersTable">
             <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="name">
-                        User
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="name">
+                        <div class="flex items-center">
+                            User
+                            <svg class="w-4 h-4 ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="email">
-                        Email
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="email">
+                        <div class="flex items-center">
+                            Email
+                            <svg class="w-4 h-4 ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="roles">
-                        Roles
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="roles">
+                        <div class="flex items-center">
+                            Roles
+                            <svg class="w-4 h-4 ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">
-                        Status
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="status">
+                        <div class="flex items-center">
+                            Status
+                            <svg class="w-4 h-4 ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
                     </th>
-                    <th class="px-6 py-3"></th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Actions
+                    </th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-white divide-y divide-slate-200">
                 @forelse($users as $user)
                     @php
                         $isActive = $user->email_verified_at;
-                        $statusClass = $isActive ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200';
                         $statusText = $isActive ? 'Active' : 'Inactive';
                         $lastLogin = $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->diffForHumans() : 'Never';
+                        $statusClass = $isActive ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200';
                     @endphp
                     
-                    <tr class="table-row-hover hover:bg-yellow-50 transition-all duration-200 border-b border-gray-100">
+                    <tr class="table-row-hover hover:bg-slate-50 transition-all duration-200 border-b border-slate-100">
                         <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $user->first_name }} {{ $user->last_name }}">
                             <div class="flex items-center">
                                 @if($user->profile_picture)
@@ -248,8 +313,8 @@
                                     </div>
                                 @endif
                                 <div>
-                                    <div class="font-medium text-gray-900">{{ $user->first_name }} {{ $user->last_name }}</div>
-                                    <div class="text-sm text-gray-500 flex items-center">
+                                    <div class="font-medium text-slate-900">{{ $user->first_name }} {{ $user->last_name }}</div>
+                                    <div class="text-sm text-slate-500 flex items-center">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                         </svg>
@@ -258,9 +323,9 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-sort-value="{{ $user->email }}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900" data-sort-value="{{ $user->email }}">
                             <div class="flex items-center">
-                                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                 </svg>
                                 {{ $user->email }}
@@ -271,13 +336,13 @@
                                 @forelse($user->roles as $role)
                                     @php
                                         $roleColors = [
-                                            'superadmin' => 'bg-red-100 text-red-800 border-red-200',
-                                            'admin' => 'bg-orange-100 text-orange-800 border-orange-200',
-                                            'event coordinator' => 'bg-blue-100 text-blue-800 border-blue-200',
-                                            'tasker' => 'bg-green-100 text-green-800 border-green-200',
-                                            'user' => 'bg-gray-100 text-gray-800 border-gray-200'
+                                            'superadmin' => 'bg-rose-100 text-rose-800 border-rose-200',
+                                            'admin' => 'bg-violet-100 text-violet-800 border-violet-200',
+                                            'event coordinator' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                                            'tasker' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                            'user' => 'bg-slate-100 text-slate-800 border-slate-200'
                                         ];
-                                        $roleColor = $roleColors[strtolower($role->name)] ?? 'bg-gray-100 text-gray-800 border-gray-200';
+                                        $roleColor = $roleColors[strtolower($role->name)] ?? 'bg-slate-100 text-slate-800 border-slate-200';
                                     @endphp
                                     <span class="role-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $roleColor }}">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,7 +351,7 @@
                                         {{ $role->name }}
                                     </span>
                                 @empty
-                                    <span class="role-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border bg-gray-100 text-gray-800 border-gray-200">
+                                    <span class="role-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border bg-slate-100 text-slate-800 border-slate-200">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
                                         </svg>
@@ -311,7 +376,7 @@
                                     @endif
                                     {{ $statusText }}
                                 </span>
-                                <span class="text-xs text-gray-500 mt-1 flex items-center">
+                                <span class="text-xs text-slate-500 mt-1 flex items-center">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
@@ -322,7 +387,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <div class="flex items-center justify-end space-x-2">
                                 <a href="{{ route('users.show', $user) }}" 
-                                   class="quick-action-btn inline-flex items-center p-2 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-lg transition-all duration-200 border border-blue-200 shadow-sm"
+                                   class="quick-action-btn inline-flex items-center p-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:text-indigo-800 rounded-lg transition-all duration-200 border border-indigo-200 shadow-sm"
                                    title="View User Details"
                                    aria-label="View user details">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,7 +397,7 @@
                                 </a>
                                 
                                 <a href="{{ route('users.edit', $user) }}" 
-                                   class="quick-action-btn inline-flex items-center p-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800 rounded-lg transition-all duration-200 border border-yellow-200 shadow-sm"
+                                   class="quick-action-btn inline-flex items-center p-2 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-800 rounded-lg transition-all duration-200 border border-slate-200 shadow-sm"
                                    title="Edit User"
                                    aria-label="Edit user">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -341,7 +406,7 @@
                                 </a>
                                 
                                 <a href="{{ route('users.edit', $user) }}#roles" 
-                                   class="quick-action-btn inline-flex items-center p-2 bg-purple-100 text-purple-700 hover:bg-purple-200 hover:text-purple-800 rounded-lg transition-all duration-200 border border-purple-200 shadow-sm"
+                                   class="quick-action-btn inline-flex items-center p-2 bg-violet-100 text-violet-700 hover:bg-violet-200 hover:text-violet-800 rounded-lg transition-all duration-200 border border-violet-200 shadow-sm"
                                    title="Manage User Roles"
                                    aria-label="Manage user roles">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,7 +419,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 
-                                                class="quick-action-btn inline-flex items-center p-2 bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 rounded-lg transition-all duration-200 border border-red-200 shadow-sm"
+                                                class="quick-action-btn inline-flex items-center p-2 bg-rose-100 text-rose-700 hover:bg-rose-200 hover:text-rose-800 rounded-lg transition-all duration-200 border border-rose-200 shadow-sm"
                                                 title="Delete User"
                                                 aria-label="Delete user">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,12 +433,12 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-8 text-center">
+                        <td colspan="6" class="px-6 py-8 text-center">
                             <div class="flex flex-col items-center">
-                                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-12 h-12 text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                                 </svg>
-                                <p class="text-gray-500 mb-2">
+                                <p class="text-slate-500 mb-2">
                                     @if($status === 'active')
                                         No active users found.
                                     @elseif($status === 'inactive')
@@ -382,7 +447,7 @@
                                         No users found.
                                     @endif
                                 </p>
-                                <a href="{{ route('users.create') }}" class="text-yellow-600 hover:text-yellow-700 font-medium">Create your first user</a>
+                                <a href="{{ route('users.create') }}" class="text-indigo-600 hover:text-indigo-700 font-medium">Create your first user</a>
                             </div>
                         </td>
                     </tr>

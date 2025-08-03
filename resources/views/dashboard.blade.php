@@ -22,7 +22,7 @@
     }
     
     .activity-item:hover {
-        background-color: #fefce8;
+        background-color: #f8fafc;
         transform: translateX(4px);
     }
     
@@ -74,35 +74,90 @@
     .animate-delay-3 { animation-delay: 0.3s; }
     .animate-delay-4 { animation-delay: 0.4s; }
     .animate-delay-5 { animation-delay: 0.5s; }
+    
+    /* Modern color scheme overrides */
+    .modern-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+    
+    .modern-primary:hover {
+        background: linear-gradient(135deg, #5855eb, #7c3aed);
+    }
+    
+    .modern-secondary {
+        background: linear-gradient(135deg, #64748b, #475569);
+        color: white;
+    }
+    
+    .modern-secondary:hover {
+        background: linear-gradient(135deg, #475569, #334155);
+    }
+    
+    .modern-success {
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+    }
+    
+    .modern-success:hover {
+        background: linear-gradient(135deg, #047857, #065f46);
+    }
+    
+    .modern-warning {
+        background: linear-gradient(135deg, #e11d48, #be123c);
+        color: white;
+    }
+    
+    .modern-warning:hover {
+        background: linear-gradient(135deg, #be123c, #9f1239);
+    }
+    
+    .modern-info {
+        background: linear-gradient(135deg, #0891b2, #0e7490);
+        color: white;
+    }
+    
+    .modern-info:hover {
+        background: linear-gradient(135deg, #0e7490, #155e75);
+    }
+    
+    .modern-admin {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        color: white;
+    }
+    
+    .modern-admin:hover {
+        background: linear-gradient(135deg, #6d28d9, #5b21b6);
+    }
 </style>
 @endpush
 
 @section('content')
 <!-- Enhanced Dashboard Header -->
-<div class="rounded-2xl bg-gradient-to-r from-yellow-100 via-yellow-50 to-white shadow-lg flex items-center px-8 py-6 mb-10 border border-yellow-200 animate-fade-in-up">
-    <div class="flex items-center justify-center w-16 h-16 bg-yellow-200 rounded-full mr-6 shadow-lg">
-        <svg class="w-8 h-8 text-yellow-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5V6a2 2 0 012-2h14a2 2 0 012 2v7.5M3 13.5l9 6 9-6M3 13.5l9-6 9 6"/></svg>
+<div class="rounded-2xl bg-gradient-to-r from-indigo-100 via-indigo-50 to-white shadow-lg flex items-center px-8 py-6 mb-10 border border-indigo-200 animate-fade-in-up">
+    <div class="flex items-center justify-center w-16 h-16 bg-indigo-200 rounded-full mr-6 shadow-lg">
+        <svg class="w-8 h-8 text-indigo-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5V6a2 2 0 012-2h14a2 2 0 012 2v7.5M3 13.5l9 6 9-6M3 13.5l9-6 9 6"/></svg>
     </div>
     <div class="flex-1">
-        <h1 class="text-3xl font-extrabold text-yellow-800 tracking-tight mb-1">Dashboard</h1>
-        <div class="text-gray-600 text-lg font-medium">Conference Management Overview</div>
+        <h1 class="text-3xl font-extrabold text-indigo-800 tracking-tight mb-1">Dashboard</h1>
+        <div class="text-slate-600 text-lg font-medium">Conference Management Overview</div>
     </div>
     
     <!-- Quick Actions -->
     <div class="flex space-x-3">
-        <button class="quick-action-btn bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
+        <button class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
         </button>
-        <button class="quick-action-btn bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Add Participant">
+        <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Add Participant">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
             </svg>
         </button>
-        <button class="quick-action-btn bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Create Session">
+        <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Create Session">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
         </button>
     </div>

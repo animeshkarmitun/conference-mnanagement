@@ -138,11 +138,11 @@ class DateHelper
     public static function getDurationColorClass($minutes)
     {
         if ($minutes < 60) {
-            return 'bg-green-100 text-green-800'; // Short sessions
+            return 'bg-emerald-100 text-emerald-800'; // Short sessions
         } elseif ($minutes <= 180) {
-            return 'bg-blue-100 text-blue-800'; // Medium sessions (1-3 hours)
+            return 'bg-indigo-100 text-indigo-800'; // Medium sessions (1-3 hours)
         } else {
-            return 'bg-orange-100 text-orange-800'; // Long sessions (>3 hours)
+            return 'bg-rose-100 text-rose-800'; // Long sessions (>3 hours)
         }
     }
     
@@ -152,13 +152,13 @@ class DateHelper
     public static function getStatusColorClass($isActive, $isPast, $isToday)
     {
         if ($isActive) {
-            return 'bg-green-100 text-green-800 border-green-200';
+            return 'bg-emerald-100 text-emerald-800 border-emerald-200';
         } elseif ($isPast) {
-            return 'bg-gray-100 text-gray-600 border-gray-200';
+            return 'bg-slate-100 text-slate-600 border-slate-200';
         } elseif ($isToday) {
-            return 'bg-blue-100 text-blue-800 border-blue-200';
+            return 'bg-indigo-100 text-indigo-800 border-indigo-200';
         } else {
-            return 'bg-blue-100 text-blue-800 border-blue-200';
+            return 'bg-indigo-100 text-indigo-800 border-indigo-200';
         }
     }
 
@@ -266,15 +266,15 @@ class DateHelper
     public static function getConferenceStatusColorClass($isActive, $isPast, $isToday, $isUpcoming)
     {
         if ($isActive) {
-            return 'bg-green-100 text-green-800 border-green-200';
+            return 'bg-emerald-100 text-emerald-800 border-emerald-200';
         } elseif ($isPast) {
-            return 'bg-gray-100 text-gray-600 border-gray-200';
+            return 'bg-slate-100 text-slate-600 border-slate-200';
         } elseif ($isToday) {
-            return 'bg-blue-100 text-blue-800 border-blue-200';
+            return 'bg-indigo-100 text-indigo-800 border-indigo-200';
         } elseif ($isUpcoming) {
-            return 'bg-blue-100 text-blue-800 border-blue-200';
+            return 'bg-indigo-100 text-indigo-800 border-indigo-200';
         } else {
-            return 'bg-gray-100 text-gray-600 border-gray-200';
+            return 'bg-slate-100 text-slate-600 border-slate-200';
         }
     }
     
@@ -284,11 +284,11 @@ class DateHelper
     public static function getConferenceDurationColorClass($days)
     {
         if ($days <= 2) {
-            return 'bg-green-100 text-green-800'; // Short conferences
+            return 'bg-emerald-100 text-emerald-800'; // Short conferences
         } elseif ($days <= 5) {
-            return 'bg-blue-100 text-blue-800'; // Medium conferences
+            return 'bg-indigo-100 text-indigo-800'; // Medium conferences
         } else {
-            return 'bg-orange-100 text-orange-800'; // Long conferences
+            return 'bg-rose-100 text-rose-800'; // Long conferences
         }
     }
 } 
