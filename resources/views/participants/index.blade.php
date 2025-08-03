@@ -181,7 +181,7 @@
 
 <!-- Enhanced Search and Secondary Filters -->
 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
-    <div class="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+    <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
         <!-- Enhanced Search Bar -->
         <div class="flex-1 max-w-md">
             <form method="GET" action="{{ route('participants.index') }}" class="flex">
@@ -216,7 +216,7 @@
         </div>
         
         <!-- Enhanced Secondary Filter Tabs -->
-        <div class="flex flex-wrap gap-3">
+        <div class="flex gap-3 flex-shrink-0">
             <!-- Visa Status Filter -->
             <div class="relative group">
                 <button class="filter-dropdown bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm">

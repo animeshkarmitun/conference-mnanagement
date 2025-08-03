@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -43,6 +44,38 @@ class UserController extends Controller
         ];
         
         return view('users.index', compact('users', 'userCounts', 'status'));
+    }
+
+    public function create()
+    {
+        $roles = Role::all();
+        return view('users.create', compact('roles'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'roles' => 'array',
+        ]);
+
+        $user = User::create([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'email_verified_at' => now(), // Auto-verify for admin-created users
+        ]);
+
+        // Assign roles if provided
+        if (isset($validated['roles'])) {
+            $user->roles()->attach($validated['roles']);
+        }
+
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
     public function show(User $user)

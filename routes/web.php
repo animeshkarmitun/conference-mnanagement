@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/bulk-update', [\App\Http\Controllers\ParticipantController::class, 'bulkUpdate'])->name('participants.bulk-update');
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
     Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');
+    Route::resource('users', \App\Http\Controllers\UserController::class);
     
     // Event Coordinator Routes
     Route::prefix('event-coordinator')->name('event-coordinator.')->group(function () {
@@ -81,8 +82,6 @@ Route::get('/speaker/registration/success', [\App\Http\Controllers\SpeakerRegist
 Route::get('/guide', function () {
     return view('guide');
 })->name('guide');
-
-Route::resource('users', \App\Http\Controllers\UserController::class)->middleware(['auth', 'verified']);
 
 Route::resource('roles', \App\Http\Controllers\RoleController::class)->middleware(['auth', 'verified']);
 Route::get('/roles/{role}/assign-users', [\App\Http\Controllers\RoleController::class, 'assignUsers'])->name('roles.assign-users');
