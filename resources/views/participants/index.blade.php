@@ -2,47 +2,187 @@
 
 @section('title', 'Participants')
 
+@push('styles')
+<style>
+    .participant-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .participant-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .filter-dropdown {
+        transition: all 0.2s ease;
+    }
+    
+    .filter-dropdown:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-badge {
+        transition: all 0.2s ease;
+    }
+    
+    .status-badge:hover {
+        transform: scale(1.05);
+    }
+    
+    .avatar {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+        font-weight: bold;
+    }
+    
+    .quick-action-btn {
+        transition: all 0.2s ease;
+    }
+    
+    .quick-action-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .bulk-action-panel {
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .search-highlight {
+        background-color: #fef3c7;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+    
+    .table-row-hover {
+        transition: all 0.2s ease;
+    }
+    
+    .table-row-hover:hover {
+        background-color: #fefce8;
+        transform: scale(1.01);
+    }
+    
+    .sortable-header {
+        transition: all 0.2s ease;
+    }
+    
+    .sortable-header:hover {
+        background-color: #fefce8;
+        color: #f59e0b;
+    }
+    
+    .sort-icon.active {
+        color: #f59e0b;
+        transform: rotate(180deg);
+    }
+</style>
+@endpush
+
 @section('content')
-<div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold">Participants</h2>
-    <a href="{{ route('participants.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Add Participant</a>
+<!-- Enhanced Header with Quick Actions -->
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800">Participants</h2>
+            <p class="text-gray-600 mt-1">Manage conference participants and registrations</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Quick Actions -->
+            <div class="flex space-x-3">
+                <button class="quick-action-btn bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Import Participants">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                    </svg>
+                </button>
+                <button class="quick-action-btn bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Send Bulk Email">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </button>
+                <button class="quick-action-btn bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2m-4-4V7a4 4 0 10-8 0v6m0 4h8"></path>
+                    </svg>
+                </button>
+            </div>
+            <a href="{{ route('participants.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add Participant
+            </a>
+        </div>
+    </div>
 </div>
 
-<!-- Participant Status Tabs -->
-<div class="bg-white rounded-xl shadow mb-6">
+<!-- Enhanced Participant Status Tabs -->
+<div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100">
     <div class="border-b border-gray-200">
         <nav class="flex space-x-8 px-6" aria-label="Tabs">
             <a href="{{ route('participants.index', ['status' => 'approved']) }}" 
-               class="tab-link py-4 px-1 border-b-2 font-medium text-sm {{ $status === 'approved' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                Approved Participants
-                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['approved'] }}</span>
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'approved' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Approved Participants
+                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['approved'] }}</span>
+                </div>
             </a>
             
             <a href="{{ route('participants.index', ['status' => 'pending']) }}" 
-               class="tab-link py-4 px-1 border-b-2 font-medium text-sm {{ $status === 'pending' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                Pending Participants
-                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['pending'] }}</span>
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'pending' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Pending Participants
+                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['pending'] }}</span>
+                </div>
             </a>
             
             <a href="{{ route('participants.index', ['status' => 'rejected']) }}" 
-               class="tab-link py-4 px-1 border-b-2 font-medium text-sm {{ $status === 'rejected' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                Rejected Participants
-                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['rejected'] }}</span>
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'rejected' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Rejected Participants
+                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['rejected'] }}</span>
+                </div>
             </a>
             
             <a href="{{ route('participants.index', ['status' => 'all']) }}" 
-               class="tab-link py-4 px-1 border-b-2 font-medium text-sm {{ $status === 'all' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                All Participants
-                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['all'] }}</span>
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'all' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    All Participants
+                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['all'] }}</span>
+                </div>
             </a>
         </nav>
     </div>
 </div>
 
-<!-- Search and Secondary Filters -->
-<div class="bg-white rounded-xl shadow p-6 mb-6">
-    <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        <!-- Search Bar -->
+<!-- Enhanced Search and Secondary Filters -->
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+    <div class="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+        <!-- Enhanced Search Bar -->
         <div class="flex-1 max-w-md">
             <form method="GET" action="{{ route('participants.index') }}" class="flex">
                 <input type="hidden" name="status" value="{{ $status }}">
@@ -51,70 +191,103 @@
                            name="search" 
                            value="{{ $search }}" 
                            placeholder="Search participants by name, email, organization, or serial number..."
-                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                           class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
                 </div>
-                <button type="submit" class="ml-2 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">
+                <button type="submit" class="ml-3 bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                     Search
                 </button>
                 @if($search)
-                    <a href="{{ route('participants.index', ['status' => $status]) }}" class="ml-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold">
+                    <a href="{{ route('participants.index', ['status' => $status]) }}" class="ml-3 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                         Clear
                     </a>
                 @endif
             </form>
         </div>
         
-        <!-- Secondary Filter Tabs -->
-        <div class="flex flex-wrap gap-2">
+        <!-- Enhanced Secondary Filter Tabs -->
+        <div class="flex flex-wrap gap-3">
             <!-- Visa Status Filter -->
             <div class="relative group">
-                <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 border border-blue-200">
-                    Visa Status
-                    <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
+                <button class="filter-dropdown bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Visa Status
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
                 </button>
-                <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                     <div class="py-2">
+                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Visa Status</div>
                         <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'required'])) }}" 
-                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            Required ({{ $visaCounts['required'] }})
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>Required</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['required'] }}</span>
+                            </div>
                         </a>
                         <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'approved'])) }}" 
-                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            Approved ({{ $visaCounts['approved'] }})
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-green-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>Approved</span>
+                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['approved'] }}</span>
+                            </div>
                         </a>
                         <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'pending'])) }}" 
-                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            Pending ({{ $visaCounts['pending'] }})
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-yellow-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>Pending</span>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['pending'] }}</span>
+                            </div>
                         </a>
                         <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'issue'])) }}" 
-                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            Issues ({{ $visaCounts['issue'] }})
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-red-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>Issues</span>
+                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['issue'] }}</span>
+                            </div>
                         </a>
                     </div>
                 </div>
             </div>
             
-            <!-- Participant Type Filter -->
+            <!-- Enhanced Participant Type Filter -->
             <div class="relative group">
-                <button class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 border border-purple-200">
-                    Participant Type
-                    <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
+                <button class="filter-dropdown bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-200 shadow-sm">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Participant Type
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
                 </button>
-                <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                     <div class="py-2">
+                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Type</div>
                         @foreach($participantTypes as $type)
                             <a href="{{ route('participants.index', array_merge(request()->query(), ['type' => $type->name])) }}" 
-                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                {{ $type->name }} ({{ $typeCounts[$type->name] ?? 0 }})
+                               class="block px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 transition-colors duration-200">
+                                <div class="flex items-center justify-between">
+                                    <span>{{ $type->name }}</span>
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">{{ $typeCounts[$type->name] ?? 0 }}</span>
+                                </div>
                             </a>
                         @endforeach
                     </div>
@@ -281,71 +454,118 @@
                     $statusPriority = $participant->registration_status === 'approved' ? 1 : ($participant->registration_status === 'pending' ? 2 : 3);
                     $visaPriority = $participant->visa_status === 'approved' ? 1 : ($participant->visa_status === 'pending' ? 2 : ($participant->visa_status === 'required' ? 3 : 4));
                 @endphp
-                <tr class="hover:bg-gray-50 transition-colors duration-200">
+                <tr class="table-row-hover hover:bg-yellow-50 transition-all duration-200 border-b border-gray-100">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <input type="checkbox" class="participant-checkbox" value="{{ $participant->id }}">
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $serialSortValue }}">{{ $serial }}</td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower(($user->first_name ?? $user->name) . ' ' . ($user->last_name ?? '')) }}">
-                        <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:underline font-semibold">
-                            {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
-                        </a>
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 avatar rounded-full flex items-center justify-center mr-3 shadow-lg">
+                                <span class="text-sm font-bold">
+                                    {{ substr($user->first_name ?? $user->name, 0, 1) }}{{ substr($user->last_name ?? '', 0, 1) }}
+                                </span>
+                            </div>
+                            <div>
+                                <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:text-blue-800 font-semibold transition-colors duration-200">
+                                    {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
+                                </a>
+                                @if($age)
+                                    <div class="text-xs text-gray-500">{{ $age }} years old</div>
+                                @endif
+                            </div>
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($user->email) }}">{{ $user->email }}</td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->participantType->name ?? '') }}">{{ $participant->participantType->name ?? '' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->organization ?? 'zzz') }}">{{ $participant->organization }}</td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst($participant->registration_status) }}" data-sort-priority="{{ $statusPriority }}">
-                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $participant->registration_status == 'approved' ? 'bg-green-100 text-green-700' : ($participant->registration_status == 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700') }}">
+                        <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm {{ $participant->registration_status == 'approved' ? 'bg-green-100 text-green-700 border border-green-200' : ($participant->registration_status == 'pending' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 'bg-red-100 text-red-700 border border-red-200') }}">
+                            @if($participant->registration_status == 'approved')
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            @elseif($participant->registration_status == 'pending')
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                </svg>
+                            @else
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            @endif
                             {{ ucfirst($participant->registration_status) }}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst(str_replace('_', ' ', $participant->visa_status)) }}" data-sort-priority="{{ $visaPriority }}">
-                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold 
-                            {{ $participant->visa_status == 'approved' ? 'bg-green-100 text-green-700' : 
-                               ($participant->visa_status == 'pending' ? 'bg-yellow-100 text-yellow-700' : 
-                               ($participant->visa_status == 'issue' ? 'bg-red-100 text-red-700' : 
-                               ($participant->visa_status == 'required' ? 'bg-blue-100 text-blue-700' : 
-                               'bg-gray-100 text-gray-700'))) }}">
+                        <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm 
+                            {{ $participant->visa_status == 'approved' ? 'bg-green-100 text-green-700 border border-green-200' : 
+                               ($participant->visa_status == 'pending' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 
+                               ($participant->visa_status == 'issue' ? 'bg-red-100 text-red-700 border border-red-200' : 
+                               ($participant->visa_status == 'required' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 
+                               'bg-gray-100 text-gray-700 border border-gray-200'))) }}">
+                            @if($participant->visa_status == 'approved')
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            @elseif($participant->visa_status == 'pending')
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                </svg>
+                            @elseif($participant->visa_status == 'issue')
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                            @elseif($participant->visa_status == 'required')
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                            @endif
                             {{ ucfirst(str_replace('_', ' ', $participant->visa_status)) }}
                         </span>
                         @if($participant->visa_status == 'issue')
-                            <div class="text-xs text-red-600 mt-1" title="{{ $participant->visa_issue_description }}">
-                                ⚠️ Issue reported
+                            <div class="text-xs text-red-600 mt-1 flex items-center" title="{{ $participant->visa_issue_description }}">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                Issue reported
                             </div>
                         @endif
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                        <a href="{{ route('participants.show', $participant) }}" 
-                           class="inline-flex items-center p-2 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-lg transition-colors duration-200 border border-blue-200"
-                           title="View Participant Details"
-                           aria-label="View participant details">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                            </svg>
-                        </a>
-                        
-                        <a href="{{ route('participants.edit', $participant) }}" 
-                           class="inline-flex items-center p-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800 rounded-lg transition-colors duration-200 border border-yellow-200"
-                           title="Edit Participant"
-                           aria-label="Edit participant">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                        </a>
-                        
-                        <form action="{{ route('participants.destroy', $participant) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this participant?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" 
-                                    class="inline-flex items-center p-2 bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 rounded-lg transition-colors duration-200 border border-red-200"
-                                    title="Delete Participant"
-                                    aria-label="Delete participant">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="flex items-center justify-end space-x-2">
+                            <a href="{{ route('participants.show', $participant) }}" 
+                               class="quick-action-btn inline-flex items-center p-2 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-lg transition-all duration-200 border border-blue-200 shadow-sm"
+                               title="View Participant Details"
+                               aria-label="View participant details">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                 </svg>
-                            </button>
-                        </form>
+                            </a>
+                            
+                            <a href="{{ route('participants.edit', $participant) }}" 
+                               class="quick-action-btn inline-flex items-center p-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800 rounded-lg transition-all duration-200 border border-yellow-200 shadow-sm"
+                               title="Edit Participant"
+                               aria-label="Edit participant">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </a>
+                            
+                            <form action="{{ route('participants.destroy', $participant) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this participant?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="quick-action-btn inline-flex items-center p-2 bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 rounded-lg transition-all duration-200 border border-red-200 shadow-sm"
+                                        title="Delete Participant"
+                                        aria-label="Delete participant">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @empty
