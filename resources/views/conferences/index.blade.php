@@ -38,23 +38,59 @@
         transform: translateY(-1px);
     }
     
+    /* Clean Table Header Styles */
+    .table-header {
+        background: #f1f5f9;
+        border-bottom: 2px solid #cbd5e1;
+    }
+    
     .sortable-header {
         user-select: none;
         transition: all 0.2s ease;
+        cursor: pointer;
+        padding: 1.25rem 1.5rem;
+        font-weight: 700;
+        font-size: 0.875rem;
+        color: #1f2937;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-right: 1px solid #e5e7eb;
+        background: transparent;
+        position: relative;
+    }
+    
+    .sortable-header:last-child {
+        border-right: none;
     }
     
     .sortable-header:hover {
-        background-color: #fefce8;
-        color: #f59e0b;
+        background: #fefce8;
+        color: #d97706;
     }
     
+    .sortable-header.active {
+        background: #fefce8;
+        color: #d97706;
+        border-bottom: 2px solid #f59e0b;
+    }
+    
+
+    
     .sort-icon {
-        transition: all 0.2s ease-in-out;
+        opacity: 0.8;
+        color: #4b5563;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+    
+    .sortable-header:hover .sort-icon {
+        opacity: 1;
+        color: #d97706;
     }
     
     .sort-icon.active {
-        color: #f59e0b;
-        transform: rotate(180deg);
+        color: #d97706;
+        opacity: 1;
     }
     
     .sort-icon.asc {
@@ -98,6 +134,31 @@
     .animate-delay-1 { animation-delay: 0.1s; }
     .animate-delay-2 { animation-delay: 0.2s; }
     .animate-delay-3 { animation-delay: 0.3s; }
+    
+    /* Enhanced table container */
+    .table-container {
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .sortable-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        .header-text {
+            font-size: 0.75rem;
+        }
+        
+        .sort-icon {
+            width: 1rem;
+            height: 1rem;
+        }
+    }
 </style>
 @endpush
 
@@ -190,55 +251,47 @@
 </div>
 
 <!-- Enhanced Conference Table -->
-<div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-fade-in-up animate-delay-2">
+<div class="table-container bg-white animate-fade-in-up animate-delay-2">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200" id="conferencesTable">
-            <thead>
+        <table class="min-w-full" id="conferencesTable">
+            <thead class="table-header">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="status">
-                        <div class="flex items-center space-x-1">
-                            <span>Status</span>
-                            <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                            </svg>
-                        </div>
+                    <th class="sortable-header" data-sort="status">
+                        Status
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="title">
-                        <div class="flex items-center space-x-1">
-                            <span>Title</span>
-                            <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                            </svg>
-                        </div>
+                    <th class="sortable-header" data-sort="title">
+                        Title
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="schedule">
-                        <div class="flex items-center space-x-1">
-                            <span>Schedule</span>
-                            <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                            </svg>
-                        </div>
+                    <th class="sortable-header" data-sort="schedule">
+                        Schedule
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="duration">
-                        <div class="flex items-center space-x-1">
-                            <span>Duration</span>
-                            <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                            </svg>
-                        </div>
+                    <th class="sortable-header" data-sort="duration">
+                        Duration
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="venue">
-                        <div class="flex items-center space-x-1">
-                            <span>Venue</span>
-                            <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                            </svg>
-                        </div>
+                    <th class="sortable-header" data-sort="venue">
+                        Venue
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
                     </th>
-                    <th class="px-6 py-3"></th>
+                    <th class="px-6 py-4 text-right bg-gray-50 border-r border-gray-200">
+                        <span class="text-sm font-semibold text-gray-600">Actions</span>
+                    </th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-white">
                 @forelse($conferences ?? [] as $conference)
                     @php
                         $conferenceData = \App\Helpers\DateHelper::formatConferenceDates($conference->start_date, $conference->end_date);
@@ -257,7 +310,7 @@
                         );
                     @endphp
                     
-                    <tr class="table-row-hover hover:bg-yellow-50 transition-all duration-200 border-b border-gray-100">
+                    <tr class="table-row-hover hover:bg-yellow-50 transition-all duration-200 border-b border-gray-200">
                         <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $statusText }}" data-sort-priority="{{ $conferenceData['is_active'] ? 1 : ($conferenceData['is_today'] ? 2 : ($conferenceData['is_upcoming'] ? 3 : 4)) }}">
                             <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $statusClass }}">
                                 @if($conferenceData['is_active'])
@@ -492,19 +545,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateSortIndicators(activeColumn, direction) {
-        // Reset all sort icons
+        // Reset all sort headers and icons
         headers.forEach(header => {
+            header.classList.remove('active');
             const icon = header.querySelector('.sort-icon');
             icon.classList.remove('active', 'asc', 'desc');
-            icon.style.color = '#9ca3af'; // gray-400
         });
         
-        // Update active column icon
+        // Update active column header and icon
         const activeHeader = table.querySelector(`[data-sort="${activeColumn}"]`);
         if (activeHeader) {
+            activeHeader.classList.add('active');
             const icon = activeHeader.querySelector('.sort-icon');
             icon.classList.add('active', direction);
-            icon.style.color = '#f59e0b'; // yellow-500
         }
     }
 });

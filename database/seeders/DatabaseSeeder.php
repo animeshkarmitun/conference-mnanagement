@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             ParticipantSeeder::class,
             TaskerSeeder::class,
             ConferenceTasksSeeder::class,
+            UpcomingConferenceSessionsSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
 

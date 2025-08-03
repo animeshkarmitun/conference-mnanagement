@@ -476,7 +476,11 @@
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($user->email) }}">{{ $user->email }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($user->email) }}">
+                        <button onclick="openEmailModal('{{ $user->email }}', '{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}')" class="text-blue-700 hover:text-blue-800 hover:underline cursor-pointer font-semibold transition-colors duration-200 border-none bg-transparent p-0">
+                            {{ $user->email }}
+                        </button>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->participantType->name ?? '') }}">{{ $participant->participantType->name ?? '' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->organization ?? 'zzz') }}">{{ $participant->organization }}</td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst($participant->registration_status) }}" data-sort-priority="{{ $statusPriority }}">
@@ -947,5 +951,132 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize state
     updateSelectionState();
 });
+
+// Email Modal Functions
+function openEmailModal(email, name) {
+    console.log('openEmailModal called with:', email, name);
+    
+    const modal = document.getElementById('emailModal');
+    const toEmail = document.getElementById('toEmail');
+    const message = document.getElementById('message');
+    
+    if (!modal) {
+        console.error('Modal not found!');
+        return;
+    }
+    
+    // Set the recipient email
+    toEmail.value = email;
+    
+    // Pre-fill message with greeting
+    const greeting = `Dear ${name},\n\n`;
+    const defaultMessage = `Thank you for your participation in our conference. We hope you find the sessions informative and engaging.\n\nBest regards,\nConference Team`;
+    message.value = greeting + defaultMessage;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    console.log('Modal should be visible now');
+}
+
+function closeEmailModal() {
+    const modal = document.getElementById('emailModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto'; // Restore scrolling
+}
+
+// Handle form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const emailForm = document.getElementById('emailForm');
+    const sendButton = document.getElementById('sendButton');
+    
+    if (emailForm) {
+        emailForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const originalText = sendButton.textContent;
+            sendButton.textContent = 'Sending...';
+            sendButton.disabled = true;
+            
+            // Simulate email sending (placeholder for now)
+            setTimeout(() => {
+                // Show success message
+                alert('Email sent successfully! (This is a placeholder - email functionality will be implemented later)');
+                
+                // Reset button
+                sendButton.textContent = originalText;
+                sendButton.disabled = false;
+                
+                // Close modal
+                closeEmailModal();
+            }, 1500);
+        });
+    }
+    
+    // Close modal when clicking outside
+    const modal = document.getElementById('emailModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeEmailModal();
+            }
+        });
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+            closeEmailModal();
+        }
+    });
+});
 </script>
+
+<!-- Email Modal -->
+<div id="emailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/3 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Send Email</h3>
+                <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="emailForm" class="space-y-4">
+                <div>
+                    <label for="fromEmail" class="block text-sm font-medium text-gray-700 mb-1">From</label>
+                    <input type="email" id="fromEmail" name="from" value="admin@conference.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" readonly>
+                </div>
+                
+                <div>
+                    <label for="toEmail" class="block text-sm font-medium text-gray-700 mb-1">To</label>
+                    <input type="email" id="toEmail" name="to" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" readonly>
+                </div>
+                
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <input type="text" id="subject" name="subject" value="Conference Update" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                    <textarea id="message" name="message" rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" placeholder="Type your message here..."></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeEmailModal()" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md font-medium transition-colors duration-200">
+                        Cancel
+                    </button>
+                    <button type="submit" id="sendButton" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md font-medium transition-colors duration-200">
+                        Send Email
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection 
