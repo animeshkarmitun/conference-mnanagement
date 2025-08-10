@@ -12,7 +12,22 @@ class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Task::with(['assignedTo', 'createdBy'])->latest()->paginate(10);
+        $user = auth()->user();
+        
+        // Check if user has tasker role
+        $isTasker = $user->roles()->where('name', 'tasker')->exists();
+        
+        if ($isTasker) {
+            // Taskers only see tasks assigned to them
+            $tasks = Task::with(['assignedTo', 'createdBy'])
+                ->where('assigned_to', $user->id)
+                ->latest()
+                ->get(); // Changed from paginate to get for Kanban view
+        } else {
+            // Admins and other roles see all tasks
+            $tasks = Task::with(['assignedTo', 'createdBy'])->latest()->get(); // Changed from paginate to get
+        }
+        
         return view('tasks.index', compact('tasks'));
     }
 

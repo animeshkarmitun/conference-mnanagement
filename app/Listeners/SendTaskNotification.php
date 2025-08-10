@@ -108,6 +108,9 @@ class SendTaskNotification implements ShouldQueue
             'conference_id' => $event->conferenceId,
             'message' => $event->message,
             'type' => 'TaskUpdate',
+            'related_model' => 'Task',
+            'related_id' => $event->task->id,
+            'action_url' => route('tasks.show', $event->task->id),
             'sent_at' => now(),
             'read_status' => false,
         ]);

@@ -115,6 +115,9 @@ class SendTravelNotification implements ShouldQueue
             'conference_id' => $event->conferenceId,
             'message' => $event->message,
             'type' => 'TravelUpdate',
+            'related_model' => 'Participant',
+            'related_id' => $event->participant->id,
+            'action_url' => route('participants.show', $event->participant->id),
             'sent_at' => now(),
             'read_status' => false,
         ]);

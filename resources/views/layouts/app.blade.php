@@ -435,34 +435,48 @@
                     <div class="flex items-center space-x-6">
                         <!-- Notification Icon with Dropdown -->
                         <div class="relative group" x-data="{ open: false }" @keydown.escape.window="open = false">
+                            @php
+                                $unreadNotifications = \App\Models\Notification::where('user_id', auth()->id())->where('read_status', false)->count();
+                                $recentNotifications = \App\Models\Notification::where('user_id', auth()->id())->latest()->take(5)->get();
+                            @endphp
                             <button class="relative focus:outline-none group" aria-label="Notifications" @click="open = !open">
                                 <svg class="w-7 h-7 text-gray-400 group-hover:text-yellow-600 transition-colors duration-150" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
-                                <!-- Future notification badge -->
-                                <!-- <span class="absolute top-0 right-0 block w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white"></span> -->
+                                @if($unreadNotifications > 0)
+                                    <span class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full border border-white shadow-sm z-10 notification-badge">
+                                        {{ $unreadNotifications > 9 ? '9+' : $unreadNotifications }}
+                                    </span>
+                                @endif
                             </button>
                             <!-- Dropdown -->
                             <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 transition-all duration-150" style="display: none;" x-transition>
                                 <div class="px-4 py-2 font-semibold text-gray-700 border-b">Notifications</div>
-                                <ul class="max-h-72 overflow-y-auto divide-y divide-gray-100">
-                                    <li class="px-4 py-3 hover:bg-yellow-50 cursor-pointer">
-                                        <div class="flex items-center justify-between">
-                                            <span class="font-medium text-gray-800">System Update</span>
-                                            <span class="text-xs text-gray-400">2m ago</span>
-                                        </div>
-                                        <div class="text-sm text-gray-600">The system will be updated tonight at 11:00 PM.</div>
-                                    </li>
-                                    <li class="px-4 py-3 hover:bg-yellow-50 cursor-pointer">
-                                        <div class="flex items-center justify-between">
-                                            <span class="font-medium text-gray-800">New Registration</span>
-                                            <span class="text-xs text-gray-400">10m ago</span>
-                                        </div>
-                                        <div class="text-sm text-gray-600">Jane Smith has registered for Annual Tech Summit.</div>
-                                    </li>
-                                    <!-- Add more dummy notifications here -->
-                                </ul>
-                                <div class="px-4 py-2 text-center text-xs text-gray-400 border-t">No new notifications</div>
+                                @if($recentNotifications->count() > 0)
+                                    <ul class="max-h-72 overflow-y-auto divide-y divide-gray-100">
+                                        @foreach($recentNotifications as $notification)
+                                            <li class="px-4 py-3 hover:bg-yellow-50 cursor-pointer notification-item" 
+                                                data-notification-id="{{ $notification->id }}"
+                                                onclick="markNotificationAsRead({{ $notification->id }}, this)">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="font-medium text-gray-800">{{ $notification->type }}</span>
+                                                    <span class="text-xs text-gray-400">{{ $notification->created_at->diffForHumans() }}</span>
+                                                </div>
+                                                <div class="text-sm text-gray-600">{{ $notification->message }}</div>
+                                                @if(!$notification->read_status)
+                                                    <div class="mt-1 unread-badge" id="unread-badge-{{ $notification->id }}">
+                                                        <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Unread</span>
+                                                    </div>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                    <div class="px-4 py-2 text-center">
+                                        <a href="{{ route('notifications.index') }}" class="text-xs text-blue-600 hover:text-blue-800">View all notifications</a>
+                                    </div>
+                                @else
+                                    <div class="px-4 py-2 text-center text-xs text-gray-400 border-t">No notifications</div>
+                                @endif
                             </div>
                         </div>
                         <!-- User Profile Dropdown -->
@@ -528,5 +542,116 @@
         <!-- Add jQuery and DataTables JS (only load when needed) -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         @stack('datatables')
+        
+        <!-- Notification click functionality -->
+        <script>
+            function markNotificationAsRead(notificationId, element) {
+                console.log('markNotificationAsRead called with ID:', notificationId);
+                
+                // Show loading state
+                element.style.opacity = '0.6';
+                element.style.pointerEvents = 'none';
+                
+                fetch(`/notifications/${notificationId}/mark-read`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Mark read response:', data);
+                    if (data.success) {
+                        // Remove the unread badge
+                        const unreadBadge = document.getElementById(`unread-badge-${notificationId}`);
+                        if (unreadBadge) {
+                            unreadBadge.remove();
+                        }
+                        
+                        // Update the notification count in the bell icon
+                        const notificationBadge = document.querySelector('.notification-badge');
+                        if (notificationBadge) {
+                            if (data.unread_count > 0) {
+                                notificationBadge.textContent = data.unread_count > 9 ? '9+' : data.unread_count;
+                                notificationBadge.style.display = 'inline-flex';
+                            } else {
+                                notificationBadge.style.display = 'none';
+                            }
+                        }
+                        
+                        // Add visual feedback
+                        element.style.backgroundColor = '#fef3c7'; // Light yellow background
+                        setTimeout(() => {
+                            element.style.backgroundColor = '';
+                            element.style.opacity = '1';
+                            element.style.pointerEvents = 'auto';
+                        }, 1000);
+                        
+                        // Get notification data to find related content
+                        console.log('Fetching notification data from:', `/notifications/${notificationId}/data`);
+                        fetch(`/notifications/${notificationId}/data`)
+                            .then(response => {
+                                console.log('Response status:', response.status);
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then(notification => {
+                                console.log('Notification data received:', notification);
+                                
+                                // Navigate based on notification data
+                                if (notification.related_model === 'Task' && notification.related_id) {
+                                    // Navigate to task details
+                                    const taskUrl = `/tasks/${notification.related_id}`;
+                                    console.log('About to navigate to task URL:', taskUrl);
+                                    window.location.href = taskUrl;
+                                } else if (notification.related_model === 'Participant' && notification.related_id) {
+                                    // Navigate to participant details
+                                    const participantUrl = `/participants/${notification.related_id}`;
+                                    console.log('About to navigate to participant URL:', participantUrl);
+                                    window.location.href = participantUrl;
+                                } else if (notification.related_model === 'Session' && notification.related_id) {
+                                    // Navigate to session details
+                                    const sessionUrl = `/sessions/${notification.related_id}`;
+                                    console.log('About to navigate to session URL:', sessionUrl);
+                                    window.location.href = sessionUrl;
+                                } else if (notification.type === 'TaskUpdate') {
+                                    // Fallback for task notifications without related_id
+                                    console.log('TaskUpdate notification clicked - no related_id found, redirecting to tasks index');
+                                    window.location.href = '/tasks';
+                                } else if (notification.type === 'TravelUpdate') {
+                                    // Fallback for travel notifications without related_id
+                                    console.log('TravelUpdate notification clicked - no related_id found, redirecting to participants');
+                                    window.location.href = '/participants';
+                                } else if (notification.type === 'SessionUpdate') {
+                                    // Fallback for session notifications without related_id
+                                    console.log('SessionUpdate notification clicked - no related_id found, redirecting to sessions');
+                                    window.location.href = '/sessions';
+                                } else if (notification.type === 'General') {
+                                    // Handle General notifications - redirect to dashboard
+                                    console.log('General notification clicked - redirecting to dashboard');
+                                    window.location.href = '/dashboard';
+                                } else {
+                                    console.log('No navigation logic for this notification type:', notification.type);
+                                    // Default fallback to dashboard
+                                    window.location.href = '/dashboard';
+                                }
+                            })
+                                                         .catch(error => {
+                                 console.error('Error fetching notification data:', error);
+                             });
+                                         } else {
+                         console.log('Mark read was not successful:', data);
+                     }
+                })
+                                 .catch(error => {
+                     console.error('Error marking notification as read:', error);
+                     element.style.opacity = '1';
+                     element.style.pointerEvents = 'auto';
+                 });
+            }
+        </script>
     </body>
 </html>

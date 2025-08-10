@@ -414,7 +414,9 @@
         </div>
         
         <div class="mt-6">
-            {{ $tasks->links() }}
+            @if(method_exists($tasks, 'links'))
+                {{ $tasks->links() }}
+            @endif
         </div>
     </div>
 </div>

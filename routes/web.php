@@ -32,9 +32,159 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::get('/summary-stats', [\App\Http\Controllers\DashboardController::class, 'getSummaryStats'])->name('summary-stats');
 });
 
-Route::get('/dashboard-tasker', function () {
-    return view('dashboard-tasker');
-})->middleware(['auth', 'verified'])->name('dashboard.tasker');
+Route::get('/dashboard-tasker', [\App\Http\Controllers\TaskerDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard.tasker');
+
+// Debug route for tasker
+Route::get('/debug-tasker', function () {
+    $user = auth()->user();
+    $tasks = \App\Models\Task::where('assigned_to', $user->id)->get();
+    
+    return response()->json([
+        'user_id' => $user->id,
+        'user_email' => $user->email,
+        'tasks_count' => $tasks->count(),
+        'tasks' => $tasks->pluck('title')->toArray()
+    ]);
+})->middleware(['auth', 'verified']);
+
+// Test tasker dashboard route
+Route::get('/test-tasker-dashboard', function () {
+    $user = auth()->user();
+    $assignedTasks = \App\Models\Task::with(['conference', 'createdBy'])
+        ->where('assigned_to', $user->id)
+        ->latest()
+        ->get();
+    
+    $notifications = \App\Models\Notification::where('user_id', $user->id)
+        ->latest()
+        ->take(5)
+        ->get();
+    
+    return response()->json([
+        'user_id' => $user->id,
+        'user_email' => $user->email,
+        'assigned_tasks_count' => $assignedTasks->count(),
+        'assigned_tasks' => $assignedTasks->map(function($task) {
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'status' => $task->status,
+                'priority' => $task->priority,
+                'conference' => $task->conference->name ?? 'No Conference'
+            ];
+        })->toArray(),
+        'notifications_count' => $notifications->count(),
+        'notifications' => $notifications->map(function($notification) {
+            return [
+                'id' => $notification->id,
+                'message' => $notification->message,
+                'type' => $notification->type,
+                'read_status' => $notification->read_status,
+                'created_at' => $notification->created_at
+            ];
+        })->toArray()
+    ]);
+})->middleware(['auth', 'verified']);
+
+// Add route for marking notifications as read
+Route::post('/notifications/{notification}/mark-read', function (\App\Models\Notification $notification) {
+    // Ensure the notification belongs to the authenticated user
+    if ($notification->user_id !== auth()->id()) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    
+    $notification->update(['read_status' => true]);
+    
+    return response()->json([
+        'success' => true,
+        'notification_id' => $notification->id,
+        'unread_count' => \App\Models\Notification::where('user_id', auth()->id())
+            ->where('read_status', false)
+            ->count()
+    ]);
+})->middleware(['auth', 'verified']);
+
+// Debug route to check notifications
+Route::get('/debug-notifications', function () {
+    $user = auth()->user();
+    $notifications = \App\Models\Notification::where('user_id', $user->id)
+        ->latest()
+        ->take(5)
+        ->get();
+    
+    return response()->json([
+        'user_id' => $user->id,
+        'notifications_count' => $notifications->count(),
+        'notifications' => $notifications->map(function($notification) {
+            return [
+                'id' => $notification->id,
+                'message' => $notification->message,
+                'type' => $notification->type,
+                'related_model' => $notification->related_model,
+                'related_id' => $notification->related_id,
+                'action_url' => $notification->action_url,
+                'read_status' => $notification->read_status,
+                'created_at' => $notification->created_at
+            ];
+        })->toArray()
+    ]);
+})->middleware(['auth', 'verified']);
+
+// Route to get single notification data
+Route::get('/notifications/{notification}/data', function (\App\Models\Notification $notification) {
+    // Ensure the notification belongs to the authenticated user
+    if ($notification->user_id !== auth()->id()) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    
+    return response()->json([
+        'id' => $notification->id,
+        'message' => $notification->message,
+        'type' => $notification->type,
+        'related_model' => $notification->related_model,
+        'related_id' => $notification->related_id,
+        'action_url' => $notification->action_url,
+        'read_status' => $notification->read_status,
+        'created_at' => $notification->created_at
+    ]);
+})->middleware(['auth', 'verified']);
+
+// Add route for notification actions (clicking on notifications)
+Route::get('/notifications/{notification}/action', function (\App\Models\Notification $notification) {
+    // Ensure the notification belongs to the authenticated user
+    if ($notification->user_id !== auth()->id()) {
+        abort(403, 'Unauthorized');
+    }
+    
+    // Mark notification as read
+    $notification->update(['read_status' => true]);
+    
+    // Redirect to the action URL if available
+    if ($notification->action_url) {
+        return redirect($notification->action_url);
+    }
+    
+    // Fallback based on notification type
+    switch ($notification->type) {
+        case 'TaskUpdate':
+            if ($notification->related_id) {
+                return redirect()->route('tasks.show', $notification->related_id);
+            }
+            break;
+        case 'TravelUpdate':
+            // Add travel-related redirects when implemented
+            break;
+        case 'SessionUpdate':
+            // Add session-related redirects when implemented
+            break;
+        case 'General':
+            // Redirect to dashboard for general notifications
+            return redirect('/dashboard');
+    }
+    
+    // Default fallback to notifications index
+    return redirect()->route('notifications.index');
+})->middleware(['auth', 'verified'])->name('notifications.action');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

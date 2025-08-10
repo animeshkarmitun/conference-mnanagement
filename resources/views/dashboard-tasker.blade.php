@@ -93,9 +93,24 @@
         @if($notifications->count() > 0)
             <ul class="mt-4 space-y-3">
                 @foreach($notifications as $notification)
-                    <li class="p-3 bg-gray-50 rounded-lg border-l-4 border-green-500">
-                        <div class="text-sm text-gray-900">{{ $notification->message }}</div>
-                        <div class="text-xs text-gray-500 mt-1">{{ $notification->created_at->diffForHumans() }}</div>
+                    <li class="notification-item p-3 bg-gray-50 rounded-lg border-l-4 border-green-500 cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                        onclick="handleNotificationClick({{ $notification->id }}, '{{ route('notifications.action', $notification->id) }}')"
+                        title="Click to view related task"
+                        style="border: 1px solid #e5e7eb;">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-900 font-medium">{{ $notification->message }}</div>
+                                <div class="text-xs text-gray-500 mt-1">{{ $notification->created_at->diffForHumans() }}</div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                @if(!$notification->read_status)
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                @endif
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </div>
+                        </div>
                     </li>
                 @endforeach
             </ul>
@@ -118,11 +133,10 @@
     </div>
     <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-6">
         @php
-            $pendingCount = \App\Models\Task::where('assigned_to', auth()->id())->where('status', 'pending')->count();
-            $inProgressCount = \App\Models\Task::where('assigned_to', auth()->id())->where('status', 'in_progress')->count();
-            $completedCount = \App\Models\Task::where('assigned_to', auth()->id())->where('status', 'completed')->count();
-            $overdueCount = \App\Models\Task::where('assigned_to', auth()->id())
-                ->where('due_date', '<', now())
+            $pendingCount = $assignedTasks->where('status', 'pending')->count();
+            $inProgressCount = $assignedTasks->where('status', 'in_progress')->count();
+            $completedCount = $assignedTasks->where('status', 'completed')->count();
+            $overdueCount = $assignedTasks->where('due_date', '<', now())
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->count();
         @endphp
@@ -144,4 +158,51 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function handleNotificationClick(notificationId, actionUrl) {
+    console.log('Notification clicked:', notificationId, actionUrl);
+    
+    // For now, let's directly navigate to the task details page
+    // We'll get the task ID from the notification data
+    fetch(`/notifications/${notificationId}/data`)
+        .then(response => response.json())
+        .then(notification => {
+            console.log('Notification data:', notification);
+            
+            if (notification.related_model === 'Task' && notification.related_id) {
+                // Navigate directly to the task details page
+                const taskUrl = `/tasks/${notification.related_id}`;
+                console.log('Navigating to task:', taskUrl);
+                window.location.href = taskUrl;
+            } else {
+                // Fallback to the action URL
+                console.log('Using fallback URL:', actionUrl);
+                window.location.href = actionUrl;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching notification:', error);
+            // Fallback to the action URL
+            window.location.href = actionUrl;
+        });
+}
+
+// Add hover effects for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    const notificationItems = document.querySelectorAll('.notification-item');
+    
+    notificationItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(2px)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+});
+</script>
+@endpush
 @endsection 
