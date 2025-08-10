@@ -6,6 +6,7 @@ use App\Models\Participant;
 use App\Models\Hotel;
 use App\Models\TravelDetail;
 use App\Models\RoomAllocation;
+use App\Services\TravelNotificationService;
 use Illuminate\Http\Request;
 
 class TravelController extends Controller
@@ -30,6 +31,7 @@ class TravelController extends Controller
     {
         $conflicts = [];
         $travelDetails = TravelDetail::with(['participant.user', 'hotel'])->get();
+        $travelNotificationService = new TravelNotificationService();
 
         // Detect duplicate room assignments for overlapping dates
         $byHotelRoom = [];
@@ -48,10 +50,20 @@ class TravelController extends Controller
                         $b = $details[$j];
                         if ($a->arrival_date && $a->departure_date && $b->arrival_date && $b->departure_date) {
                             if (!($a->departure_date <= $b->arrival_date || $b->departure_date <= $a->arrival_date)) {
+                                $conflictDetails = "Room {$a->room_number} in hotel {$a->hotel->name} assigned to both {$a->participant->user->name} and {$b->participant->user->name} for overlapping dates.";
+                                
                                 $conflicts[] = [
                                     'type' => 'Room Overlap',
-                                    'details' => "Room {$a->room_number} in hotel {$a->hotel->name} assigned to both {$a->participant->user->name} and {$b->participant->user->name} for overlapping dates."
+                                    'details' => $conflictDetails
                                 ];
+
+                                // Send notifications for room overlap
+                                $travelNotificationService->notifyRoomOverlap(
+                                    $a->participant, 
+                                    $b->participant, 
+                                    $a->hotel->name, 
+                                    $a->room_number
+                                );
                             }
                         }
                     }
@@ -70,10 +82,15 @@ class TravelController extends Controller
         foreach ($hotelCounts as $hotelId => $details) {
             $hotel = $hotels[$hotelId] ?? null;
             if ($hotel && isset($hotel->room_capacity) && count($details) > $hotel->room_capacity) {
+                $conflictDetails = "Hotel {$hotel->name} has more participants assigned (" . count($details) . ") than its capacity ({$hotel->room_capacity}).";
+                
                 $conflicts[] = [
                     'type' => 'Hotel Overbooked',
-                    'details' => "Hotel {$hotel->name} has more participants assigned (" . count($details) . ") than its capacity ({$hotel->room_capacity})."
+                    'details' => $conflictDetails
                 ];
+
+                // Send notification for hotel overbooking
+                $travelNotificationService->notifyHotelOverbooked($hotel->name, count($details), $hotel->room_capacity);
             }
         }
 
@@ -97,6 +114,12 @@ class TravelController extends Controller
         $roomAllocation->check_in = $validated['check_in'] ?? null;
         $roomAllocation->check_out = $validated['check_out'] ?? null;
         $roomAllocation->save();
+
+        // Send room allocation notification
+        if ($roomAllocation->hotel_id) {
+            $travelNotificationService = new TravelNotificationService();
+            $travelNotificationService->notifyRoomAllocated($participant, $roomAllocation);
+        }
 
         return redirect()->back()->with('success', 'Room allocation updated.');
     }

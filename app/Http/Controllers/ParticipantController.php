@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\TravelDetail;
 use App\Models\Hotel;
 use App\Models\Session;
+use App\Services\TravelNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -367,13 +368,25 @@ class ParticipantController extends Controller
         $travelDetail->hotel_id = $validated['hotel_id'] ?? null;
         $travelDetail->extra_nights = $validated['extra_nights'] ?? 0;
 
-        if ($request->hasFile('travel_documents')) {
+        $hasDocuments = $request->hasFile('travel_documents');
+        if ($hasDocuments) {
             $travelDocumentPath = $request->file('travel_documents')->store('travel_documents', 'public');
             $travelDetail->travel_documents = $travelDocumentPath;
         }
 
         $travelDetail->participant_id = $participant->id;
         $travelDetail->save();
+
+        // Send travel notifications
+        $travelNotificationService = new TravelNotificationService();
+        
+        // Notify about travel details update
+        $travelNotificationService->notifyTravelDetailsUpdated($participant, $travelDetail);
+        
+        // If travel documents were uploaded, send additional notification
+        if ($hasDocuments) {
+            $travelNotificationService->notifyTravelDocumentsUploaded($participant);
+        }
 
         return redirect()->back()->with('success', 'Travel details updated successfully.');
     }
