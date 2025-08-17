@@ -137,17 +137,27 @@
                     const arrivalDate = content.querySelector('input[name="arrival_date"]');
                     const departureDate = content.querySelector('input[name="departure_date"]');
                     const flightInfo = content.querySelector('textarea[name="flight_info"]');
-                    const hotelSelect = content.querySelector('select[name="hotel_id"]');
                     
+                    // Debug logging
+                    console.log('Travel tab completion check:');
+                    console.log('Arrival Date:', arrivalDate?.value);
+                    console.log('Departure Date:', departureDate?.value);
+                    console.log('Flight Info:', flightInfo?.value);
+                    
+                    // Check if essential travel fields are filled
+                    // Hotel is optional, so we don't require it for completion
                     const isComplete = arrivalDate && arrivalDate.value.trim() !== '' &&
                                      departureDate && departureDate.value.trim() !== '' &&
-                                     flightInfo && flightInfo.value.trim() !== '' &&
-                                     hotelSelect && hotelSelect.value !== '';
+                                     flightInfo && flightInfo.value.trim() !== '';
+                    
+                    console.log('Is travel complete:', isComplete);
                     
                     if (isComplete) {
                         link.classList.add('tab-complete');
+                        console.log('Added tab-complete class to travel tab');
                     } else {
                         link.classList.remove('tab-complete');
+                        console.log('Removed tab-complete class from travel tab');
                     }
                 } else if (tabName === 'sessions') {
                     // Special handling for sessions tab
@@ -158,6 +168,44 @@
                         link.classList.add('tab-complete');
                     } else {
                         link.classList.remove('tab-complete');
+                    }
+                } else if (tabName === 'info') {
+                    // Special handling for Personal Info tab - require ALL fields to be filled
+                    const firstName = content.querySelector('input[name="first_name"]');
+                    const lastName = content.querySelector('input[name="last_name"]');
+                    const email = content.querySelector('input[name="email"]');
+                    const organization = content.querySelector('input[name="organization"]');
+                    const bio = content.querySelector('textarea[name="bio"]');
+                    const dietaryNeeds = content.querySelector('select[name="dietary_needs"]');
+                    const visaStatus = content.querySelector('select[name="visa_status"]');
+                    
+                    // Debug logging
+                    console.log('Personal Info tab completion check:');
+                    console.log('First Name:', firstName?.value);
+                    console.log('Last Name:', lastName?.value);
+                    console.log('Email:', email?.value);
+                    console.log('Organization:', organization?.value);
+                    console.log('Bio:', bio?.value);
+                    console.log('Dietary Needs:', dietaryNeeds?.value);
+                    console.log('Visa Status:', visaStatus?.value);
+                    
+                    // Check if ALL fields are filled
+                    const isComplete = firstName && firstName.value.trim() !== '' &&
+                                     lastName && lastName.value.trim() !== '' &&
+                                     email && email.value.trim() !== '' &&
+                                     organization && organization.value.trim() !== '' &&
+                                     bio && bio.value.trim() !== '' &&
+                                     dietaryNeeds && dietaryNeeds.value !== '' &&
+                                     visaStatus && visaStatus.value !== '';
+                    
+                    console.log('Is Personal Info complete:', isComplete);
+                    
+                    if (isComplete) {
+                        link.classList.add('tab-complete');
+                        console.log('Added tab-complete class to Personal Info tab');
+                    } else {
+                        link.classList.remove('tab-complete');
+                        console.log('Removed tab-complete class from Personal Info tab');
                     }
                 } else {
                     // Default completion logic for other tabs
@@ -195,6 +243,10 @@
     }
     
     /* Tab completion indicators */
+    .tab-link {
+        position: relative;
+    }
+    
     .tab-complete::after {
         content: '✓';
         position: absolute;
@@ -211,6 +263,7 @@
         justify-content: center;
         margin-top: 2px;
         margin-right: 2px;
+        z-index: 10;
     }
     
     /* Tab indicator animation */

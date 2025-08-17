@@ -115,10 +115,29 @@
                     <label for="participant_type_id" class="block text-sm font-medium text-gray-700">Participant Type *</label>
                     <select name="participant_type_id" id="participant_type_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Type</option>
-                        @foreach($participantTypes as $type)
-                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @php
+                            $groupedTypes = $participantTypes->groupBy('category');
+                            $categories = \App\Models\ParticipantType::getCategories();
+                        @endphp
+                        @foreach($categories as $categoryKey => $categoryName)
+                            @if($groupedTypes->has($categoryKey))
+                                <optgroup label="{{ $categoryName }}">
+                                    @foreach($groupedTypes[$categoryKey] as $type)
+                                        <option value="{{ $type->id }}" 
+                                                data-description="{{ $type->description }}"
+                                                data-requires-approval="{{ $type->requires_approval ? 'true' : 'false' }}"
+                                                data-has-privileges="{{ $type->has_special_privileges ? 'true' : 'false' }}">
+                                            {{ ucwords(str_replace('_', ' ', $type->name)) }}
+                                            @if($type->requires_approval)
+                                                (Requires Approval)
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
                         @endforeach
                     </select>
+                    <div id="participant-type-description" class="mt-1 text-sm text-gray-500 hidden"></div>
                     @error('participant_type_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -216,6 +235,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const visaStatusSelect = document.getElementById('visa_status');
     const visaIssueDescription = document.getElementById('visa-issue-description');
+    const participantTypeSelect = document.getElementById('participant_type_id');
+    const participantTypeDescription = document.getElementById('participant-type-description');
     
     function toggleVisaIssueDescription() {
         if (visaStatusSelect.value === 'issue') {
@@ -224,12 +245,39 @@ document.addEventListener('DOMContentLoaded', function() {
             visaIssueDescription.style.display = 'none';
         }
     }
+
+    function updateParticipantTypeDescription() {
+        const selectedOption = participantTypeSelect.options[participantTypeSelect.selectedIndex];
+        const description = selectedOption.getAttribute('data-description');
+        const requiresApproval = selectedOption.getAttribute('data-requires-approval');
+        const hasPrivileges = selectedOption.getAttribute('data-has-privileges');
+
+        let descriptionText = '';
+        if (description) {
+            descriptionText += description + '<br>';
+        }
+        if (requiresApproval === 'true') {
+            descriptionText += 'Requires Approval: Yes<br>';
+        } else {
+            descriptionText += 'Requires Approval: No<br>';
+        }
+        if (hasPrivileges === 'true') {
+            descriptionText += 'Has Special Privileges: Yes<br>';
+        } else {
+            descriptionText += 'Has Special Privileges: No<br>';
+        }
+
+        participantTypeDescription.innerHTML = descriptionText;
+        participantTypeDescription.style.display = 'block';
+    }
     
     // Initial state
     toggleVisaIssueDescription();
+    updateParticipantTypeDescription(); // Set initial description
     
     // Listen for changes
     visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
+    participantTypeSelect.addEventListener('change', updateParticipantTypeDescription);
 });
 </script>
 @endsection 

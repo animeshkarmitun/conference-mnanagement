@@ -141,7 +141,8 @@ class ParticipantController extends Controller
     public function create()
     {
         $conferences = Conference::all();
-        $participantTypes = ParticipantType::all();
+        $participantTypes = ParticipantType::ordered()->get();
+        
         return view('participants.create', compact('conferences', 'participantTypes'));
     }
 
@@ -234,7 +235,18 @@ class ParticipantController extends Controller
         $comments = $participant->comments()->with('user')->latest()->get();
         $travelDetail = $participant->travelDetails;
         $hotels = Hotel::all();
-        return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels'));
+        
+        // Determine if the current user is an admin/superadmin viewing someone else's profile
+        $isAdminViewing = (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')) && 
+                         auth()->id() !== $participant->user_id;
+        
+        if ($isAdminViewing) {
+            // Use admin layout for admin viewing participant details
+            return view('participants.show-admin', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels'));
+        } else {
+            // Use participant layout for participants viewing their own profile
+            return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels'));
+        }
     }
 
     // Show edit form

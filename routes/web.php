@@ -229,6 +229,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');
     Route::resource('users', \App\Http\Controllers\UserController::class);
     
+    // Participant Types Routes
+    Route::resource('participant-types', \App\Http\Controllers\ParticipantTypeController::class);
+
     // ID Card Routes
     Route::resource('id-cards', \App\Http\Controllers\IdCardController::class);
     Route::post('/id-cards/{idCard}/toggle-status', [\App\Http\Controllers\IdCardController::class, 'toggleStatus'])->name('id-cards.toggle-status');
