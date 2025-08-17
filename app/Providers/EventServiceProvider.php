@@ -14,6 +14,10 @@ use App\Listeners\SendTaskNotification;
 use App\Listeners\SendTaskEmailNotification;
 use App\Events\ProfileEvent;
 use App\Listeners\SendProfileNotification;
+use App\Events\SessionEvent;
+use App\Listeners\SendSessionNotification;
+use App\Events\ConferenceEvent;
+use App\Listeners\SendConferenceNotification;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -36,6 +40,12 @@ class EventServiceProvider extends ServiceProvider
         ],
         ProfileEvent::class => [
             SendProfileNotification::class,
+        ],
+        SessionEvent::class => [
+            SendSessionNotification::class,
+        ],
+        ConferenceEvent::class => [
+            SendConferenceNotification::class,
         ],
     ];
 

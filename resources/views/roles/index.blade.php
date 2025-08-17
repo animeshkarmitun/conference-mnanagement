@@ -221,7 +221,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @php
-                                    $permissions = $role->permissions->pluck('name')->toArray();
+                                    $permissions = $role->permissions ?? [];
                                 @endphp
                                 @if(empty($permissions))
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">

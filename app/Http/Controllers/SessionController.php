@@ -6,6 +6,7 @@ use App\Models\Session;
 use App\Models\Conference;
 use App\Models\Participant;
 use App\Models\Venue;
+use App\Services\SessionNotificationService;
 use Illuminate\Http\Request;
 
 class SessionController extends Controller
@@ -163,6 +164,13 @@ class SessionController extends Controller
 
     public function update(Request $request, Session $session)
     {
+        // Store old data for comparison
+        $oldData = [
+            'start_time' => $session->start_time,
+            'end_time' => $session->end_time,
+            'room' => $session->room,
+        ];
+
         $validated = $request->validate([
             'conference_id' => 'required|exists:conferences,id',
             'venue_id' => 'required|exists:venues,id',
@@ -185,6 +193,19 @@ class SessionController extends Controller
             }
         } else {
             $session->participants()->detach();
+        }
+
+        // Send notifications if dates or venue changed
+        $sessionNotificationService = new SessionNotificationService();
+        
+        // Check for date changes
+        $sessionNotificationService->notifySessionDatesUpdated($session, $oldData, $validated);
+        
+        // Check for venue/room changes
+        if (($oldData['room'] ?? '') !== ($validated['room'] ?? '')) {
+            $oldVenue = $oldData['room'] ?? 'TBD';
+            $newVenue = $validated['room'] ?? 'TBD';
+            $sessionNotificationService->notifySessionVenueUpdated($session, $oldVenue, $newVenue);
         }
 
         return redirect()->route('sessions.index')

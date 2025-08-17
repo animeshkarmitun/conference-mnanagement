@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Conference;
 use App\Models\Venue;
+use App\Services\ConferenceNotificationService;
 use Illuminate\Http\Request;
 
 class ConferenceController extends Controller
@@ -123,6 +124,13 @@ class ConferenceController extends Controller
 
     public function update(Request $request, Conference $conference)
     {
+        // Store old data for comparison
+        $oldData = [
+            'start_date' => $conference->start_date,
+            'end_date' => $conference->end_date,
+            'venue_id' => $conference->venue_id,
+        ];
+
         // Validate basic conference data
         $conferenceValidated = $request->validate([
             'name' => 'required|string|max:255',
@@ -146,7 +154,7 @@ class ConferenceController extends Controller
         }
 
         // Use database transaction to ensure data consistency
-        return \DB::transaction(function () use ($request, $conferenceValidated, $conference) {
+        return \DB::transaction(function () use ($request, $conferenceValidated, $conference, $oldData) {
             $venueId = null;
 
             if ($request->venue_type === 'existing') {
@@ -165,6 +173,19 @@ class ConferenceController extends Controller
             // Update conference with the venue ID
             $conferenceData = array_merge($conferenceValidated, ['venue_id' => $venueId]);
             $conference->update($conferenceData);
+
+            // Send notifications if dates or venue changed
+            $conferenceNotificationService = new ConferenceNotificationService();
+            
+            // Check for date changes
+            $conferenceNotificationService->notifyConferenceDatesUpdated($conference, $oldData, $conferenceData);
+            
+            // Check for venue changes
+            if ($oldData['venue_id'] !== $venueId) {
+                $oldVenue = $conference->venue ? $conference->venue->name : 'TBD';
+                $newVenue = \App\Models\Venue::find($venueId) ? \App\Models\Venue::find($venueId)->name : 'TBD';
+                $conferenceNotificationService->notifyConferenceVenueUpdated($conference, $oldVenue, $newVenue);
+            }
 
             return redirect()->route('conferences.index')->with('success', 'Conference updated successfully.');
         });
