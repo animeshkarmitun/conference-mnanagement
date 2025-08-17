@@ -19,15 +19,15 @@ class SessionNotificationService
         
         // Check for start time changes
         if (($oldData['start_time'] ?? '') !== ($newData['start_time'] ?? '')) {
-            $oldStartTime = $oldData['start_time'] ? Carbon::parse($oldData['start_time'])->format('M d, Y H:i') : 'TBD';
-            $newStartTime = $newData['start_time'] ? Carbon::parse($newData['start_time'])->format('M d, Y H:i') : 'TBD';
+            $oldStartTime = $oldData['start_time'] ? Carbon::parse($oldData['start_time'])->format('l, M j, Y \a\t g:i A') : 'TBD';
+            $newStartTime = $newData['start_time'] ? Carbon::parse($newData['start_time'])->format('l, M j, Y \a\t g:i A') : 'TBD';
             $changes[] = "start time from {$oldStartTime} to {$newStartTime}";
         }
         
         // Check for end time changes
         if (($oldData['end_time'] ?? '') !== ($newData['end_time'] ?? '')) {
-            $oldEndTime = $oldData['end_time'] ? Carbon::parse($oldData['end_time'])->format('M d, Y H:i') : 'TBD';
-            $newEndTime = $newData['end_time'] ? Carbon::parse($newData['end_time'])->format('M d, Y H:i') : 'TBD';
+            $oldEndTime = $oldData['end_time'] ? Carbon::parse($oldData['end_time'])->format('l, M j, Y \a\t g:i A') : 'TBD';
+            $newEndTime = $newData['end_time'] ? Carbon::parse($newData['end_time'])->format('l, M j, Y \a\t g:i A') : 'TBD';
             $changes[] = "end time from {$oldEndTime} to {$newEndTime}";
         }
         
@@ -71,8 +71,8 @@ class SessionNotificationService
      */
     public function notifySessionRescheduled(Session $session, array $oldData, array $newData): void
     {
-        $oldStartTime = $oldData['start_time'] ? Carbon::parse($oldData['start_time'])->format('M d, Y H:i') : 'TBD';
-        $newStartTime = $newData['start_time'] ? Carbon::parse($newData['start_time'])->format('M d, Y H:i') : 'TBD';
+        $oldStartTime = $oldData['start_time'] ? Carbon::parse($oldData['start_time'])->format('l, M j, Y \a\t g:i A') : 'TBD';
+        $newStartTime = $newData['start_time'] ? Carbon::parse($newData['start_time'])->format('l, M j, Y \a\t g:i A') : 'TBD';
         
         $message = "Session '{$session->title}' has been rescheduled from {$oldStartTime} to {$newStartTime}";
         

@@ -18,15 +18,15 @@ class ConferenceNotificationService
         
         // Check for start date changes
         if (($oldData['start_date'] ?? '') !== ($newData['start_date'] ?? '')) {
-            $oldStartDate = $oldData['start_date'] ? Carbon::parse($oldData['start_date'])->format('M d, Y') : 'TBD';
-            $newStartDate = $newData['start_date'] ? Carbon::parse($newData['start_date'])->format('M d, Y') : 'TBD';
+            $oldStartDate = $oldData['start_date'] ? Carbon::parse($oldData['start_date'])->format('l, M j, Y') : 'TBD';
+            $newStartDate = $newData['start_date'] ? Carbon::parse($newData['start_date'])->format('l, M j, Y') : 'TBD';
             $changes[] = "start date from {$oldStartDate} to {$newStartDate}";
         }
         
         // Check for end date changes
         if (($oldData['end_date'] ?? '') !== ($newData['end_date'] ?? '')) {
-            $oldEndDate = $oldData['end_date'] ? Carbon::parse($oldData['end_date'])->format('M d, Y') : 'TBD';
-            $newEndDate = $newData['end_date'] ? Carbon::parse($newData['end_date'])->format('M d, Y') : 'TBD';
+            $oldEndDate = $oldData['end_date'] ? Carbon::parse($oldData['end_date'])->format('l, M j, Y') : 'TBD';
+            $newEndDate = $newData['end_date'] ? Carbon::parse($newData['end_date'])->format('l, M j, Y') : 'TBD';
             $changes[] = "end date from {$oldEndDate} to {$newEndDate}";
         }
         
@@ -70,8 +70,8 @@ class ConferenceNotificationService
      */
     public function notifyConferencePostponed(Conference $conference, array $oldData, array $newData): void
     {
-        $oldStartDate = $oldData['start_date'] ? Carbon::parse($oldData['start_date'])->format('M d, Y') : 'TBD';
-        $newStartDate = $newData['start_date'] ? Carbon::parse($newData['start_date'])->format('M d, Y') : 'TBD';
+        $oldStartDate = $oldData['start_date'] ? Carbon::parse($oldData['start_date'])->format('l, M j, Y') : 'TBD';
+        $newStartDate = $newData['start_date'] ? Carbon::parse($newData['start_date'])->format('l, M j, Y') : 'TBD';
         
         $message = "Conference '{$conference->name}' has been postponed from {$oldStartDate} to {$newStartDate}";
         

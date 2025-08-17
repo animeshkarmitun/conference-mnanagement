@@ -14,7 +14,11 @@
                 title="Click to view related content">
                 <div class="flex-1">
                     <p class="font-medium text-gray-900">{{ $notification->message }}</p>
-                    <p class="text-xs text-gray-500">{{ $notification->created_at->diffForHumans() }}</p>
+                    <p class="text-xs text-gray-500">
+                        {{ $notification->created_at->diffForHumans() }}
+                        <span class="text-gray-400">•</span>
+                        {{ $notification->created_at->format('M j, Y \a\t g:i A') }}
+                    </p>
                 </div>
                 <div class="flex items-center space-x-3">
                     @if(!$notification->read_status)
