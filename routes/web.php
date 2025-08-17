@@ -229,6 +229,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');
     Route::resource('users', \App\Http\Controllers\UserController::class);
     
+    // ID Card Routes
+    Route::resource('id-cards', \App\Http\Controllers\IdCardController::class);
+    Route::post('/id-cards/{idCard}/toggle-status', [\App\Http\Controllers\IdCardController::class, 'toggleStatus'])->name('id-cards.toggle-status');
+    Route::post('/users/{user}/generate-id-card', [\App\Http\Controllers\IdCardController::class, 'generateForUser'])->name('id-cards.generate-for-user');
+    Route::post('/participants/{participant}/generate-id-card', [\App\Http\Controllers\IdCardController::class, 'generateForParticipant'])->name('id-cards.generate-for-participant');
+    Route::post('/conferences/{conference}/generate-id-cards', [\App\Http\Controllers\IdCardController::class, 'generateForConference'])->name('id-cards.generate-for-conference');
+    Route::get('/my-id-card', [\App\Http\Controllers\IdCardController::class, 'generateMyCard'])->name('id-cards.generate-my-card');
+    
     // Event Coordinator Routes
     Route::prefix('event-coordinator')->name('event-coordinator.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\EventCoordinatorController::class, 'dashboard'])->name('dashboard');

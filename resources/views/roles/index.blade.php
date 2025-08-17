@@ -222,6 +222,10 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @php
                                     $permissions = $role->permissions ?? [];
+                                    // Ensure permissions is always an array
+                                    if (!is_array($permissions)) {
+                                        $permissions = [];
+                                    }
                                 @endphp
                                 @if(empty($permissions))
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -249,7 +253,7 @@
                                                 {{ $permission }}
                                             </span>
                                         @endforeach
-                                        @if(count($permissions) > 3)
+                                        @if(is_array($permissions) && count($permissions) > 3)
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
                                                 +{{ count($permissions) - 3 }} more
                                             </span>

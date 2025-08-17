@@ -70,7 +70,7 @@
         @if(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin'))
             <a href="{{ route('sessions.index') }}" class="text-gray-600 hover:text-gray-900">Back to list</a>
         @else
-            <a href="{{ route('participant.dashboard') }}" class="text-gray-600 hover:text-gray-900">Back to Dashboard</a>
+            <a href="{{ route('participant-dashboard') }}" class="text-gray-600 hover:text-gray-900">Back to Dashboard</a>
         @endif
     </div>
 </div>

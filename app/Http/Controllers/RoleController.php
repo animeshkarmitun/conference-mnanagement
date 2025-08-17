@@ -44,6 +44,29 @@ class RoleController extends Controller
         return view('roles.index', compact('roles', 'roleCounts', 'status'));
     }
 
+    public function create()
+    {
+        return view('roles.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'description' => 'nullable|string|max:500',
+            'permissions' => 'array',
+        ]);
+
+        $role = Role::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? '',
+            'permissions' => $validated['permissions'] ?? [],
+            'created_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('roles.index')->with('success', 'Role created successfully.');
+    }
+
     public function show(Role $role)
     {
         $role->load(['users']);

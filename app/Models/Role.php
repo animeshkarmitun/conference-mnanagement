@@ -11,6 +11,7 @@ class Role extends Model
 
     protected $fillable = [
         'name',
+        'description',
         'permissions',
         'created_by',
     ];
@@ -18,6 +19,16 @@ class Role extends Model
     protected $casts = [
         'permissions' => 'array',
     ];
+
+    // Ensure permissions are always an array
+    public function getPermissionsAttribute($value)
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return is_array($value) ? $value : [];
+    }
 
     // Relationships
     public function users()

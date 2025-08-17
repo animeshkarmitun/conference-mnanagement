@@ -25,8 +25,8 @@ class SessionConferenceNotificationTest extends TestCase
         parent::setUp();
         
         // Create roles
-        $superadminRole = Role::create(['name' => 'superadmin', 'permissions' => json_encode(['*'])]);
-        $attendeeRole = Role::create(['name' => 'attendee', 'permissions' => json_encode(['sessions.view'])]);
+        $superadminRole = Role::create(['name' => 'superadmin', 'permissions' => ['*']]);
+        $attendeeRole = Role::create(['name' => 'attendee', 'permissions' => ['sessions.view']]);
         
         // Create participant type
         $participantType = ParticipantType::create(['name' => 'attendee']);
