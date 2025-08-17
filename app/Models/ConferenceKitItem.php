@@ -15,6 +15,10 @@ class ConferenceKitItem extends Model
         'content',
     ];
 
+    protected $casts = [
+        'content' => 'array',
+    ];
+
     // Relationships
     public function conferenceKit()
     {

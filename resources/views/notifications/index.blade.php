@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.participant')
 
 @section('title', 'Notifications')
 
@@ -63,20 +63,20 @@ function handleNotificationClick(notificationId, actionUrl) {
                 console.log('Navigating to session:', sessionUrl);
                 window.location.href = sessionUrl;
             } else if (notification.type === 'TaskUpdate') {
-                console.log('TaskUpdate notification clicked - no related_id found, redirecting to tasks index');
-                window.location.href = '/tasks';
+                console.log('TaskUpdate notification clicked - no related_id found, redirecting to participant dashboard');
+                window.location.href = '/participant-dashboard';
             } else if (notification.type === 'TravelUpdate') {
-                console.log('TravelUpdate notification clicked - no related_id found, redirecting to participants');
-                window.location.href = '/participants';
+                console.log('TravelUpdate notification clicked - no related_id found, redirecting to participant profile');
+                window.location.href = '/my-profile';
             } else if (notification.type === 'SessionUpdate') {
-                console.log('SessionUpdate notification clicked - no related_id found, redirecting to sessions');
-                window.location.href = '/sessions';
+                console.log('SessionUpdate notification clicked - no related_id found, redirecting to participant profile sessions tab');
+                window.location.href = '/my-profile#tab-sessions';
             } else if (notification.type === 'General') {
-                console.log('General notification clicked - redirecting to dashboard');
-                window.location.href = '/dashboard';
+                console.log('General notification clicked - redirecting to participant dashboard');
+                window.location.href = '/participant-dashboard';
             } else {
                 console.log('No navigation logic for this notification type:', notification.type);
-                window.location.href = '/dashboard';
+                window.location.href = '/participant-dashboard';
             }
         })
         .catch(error => {

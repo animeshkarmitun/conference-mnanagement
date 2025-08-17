@@ -15,6 +15,14 @@ class NotificationController extends Controller
         return view('notifications.index', compact('notifications'));
     }
 
+    public function participantIndex()
+    {
+        $notifications = Notification::where('user_id', auth()->id())
+            ->latest()
+            ->paginate(20);
+        return view('notifications.index', compact('notifications'));
+    }
+
     public function create()
     {
         return view('notifications.create');

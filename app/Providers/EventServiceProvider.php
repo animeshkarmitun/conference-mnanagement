@@ -12,6 +12,8 @@ use App\Listeners\SendTravelEmailNotification;
 use App\Events\TaskEvent;
 use App\Listeners\SendTaskNotification;
 use App\Listeners\SendTaskEmailNotification;
+use App\Events\ProfileEvent;
+use App\Listeners\SendProfileNotification;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -31,6 +33,9 @@ class EventServiceProvider extends ServiceProvider
         TaskEvent::class => [
             SendTaskNotification::class,
             SendTaskEmailNotification::class,
+        ],
+        ProfileEvent::class => [
+            SendProfileNotification::class,
         ],
     ];
 

@@ -7,6 +7,7 @@ use App\Models\Participant;
 use App\Models\TravelDetail;
 use App\Models\RoomAllocation;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class TravelNotificationService
 {
@@ -18,10 +19,10 @@ class TravelNotificationService
         $message = "Travel details updated for {$participant->user->first_name} {$participant->user->last_name}";
         
         if ($travelDetail->arrival_date) {
-            $message .= " - Arrival: " . $travelDetail->arrival_date->format('M d, Y H:i');
+            $message .= " - Arrival: " . Carbon::parse($travelDetail->arrival_date)->format('M d, Y H:i');
         }
         if ($travelDetail->departure_date) {
-            $message .= " - Departure: " . $travelDetail->departure_date->format('M d, Y H:i');
+            $message .= " - Departure: " . Carbon::parse($travelDetail->departure_date)->format('M d, Y H:i');
         }
         if ($travelDetail->hotel) {
             $message .= " - Hotel: {$travelDetail->hotel->name}";
@@ -41,10 +42,10 @@ class TravelNotificationService
         $message = "Room allocated for {$participant->user->first_name} {$participant->user->last_name} - Hotel: {$hotelName}, Room: {$roomNumber}";
         
         if ($roomAllocation->check_in) {
-            $message .= " - Check-in: " . $roomAllocation->check_in->format('M d, Y H:i');
+            $message .= " - Check-in: " . Carbon::parse($roomAllocation->check_in)->format('M d, Y H:i');
         }
         if ($roomAllocation->check_out) {
-            $message .= " - Check-out: " . $roomAllocation->check_out->format('M d, Y H:i');
+            $message .= " - Check-out: " . Carbon::parse($roomAllocation->check_out)->format('M d, Y H:i');
         }
 
         $this->triggerTravelEvent($participant, 'room_allocated', $message, null, $roomAllocation);

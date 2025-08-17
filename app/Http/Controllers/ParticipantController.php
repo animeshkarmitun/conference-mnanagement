@@ -10,6 +10,7 @@ use App\Models\TravelDetail;
 use App\Models\Hotel;
 use App\Models\Session;
 use App\Services\TravelNotificationService;
+use App\Services\ProfileNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -271,6 +272,18 @@ class ParticipantController extends Controller
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ]);
 
+        // Store old data for comparison
+        $oldUserData = [
+            'first_name' => $participant->user->first_name,
+            'last_name' => $participant->user->last_name,
+            'email' => $participant->user->email,
+        ];
+        $oldParticipantData = [
+            'visa_status' => $participant->visa_status,
+            'dietary_needs' => $participant->dietary_needs,
+            'organization' => $participant->organization,
+        ];
+
         // Update user data
         $user = $participant->user;
         $user->update([
@@ -312,6 +325,44 @@ class ParticipantController extends Controller
 
         // Update participant data
         $participant->update($participantValidated);
+        
+        // Send notifications if this is a participant updating their own profile
+        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin')) {
+            $profileNotificationService = new ProfileNotificationService();
+            $changes = [];
+            
+            // Check for personal info changes
+            $newUserData = [
+                'first_name' => $userValidated['first_name'],
+                'last_name' => $userValidated['last_name'],
+                'email' => $userValidated['email'],
+            ];
+            $profileNotificationService->notifyPersonalInfoUpdated($participant, $oldUserData, $newUserData);
+            
+            // Check for visa status changes
+            if ($oldParticipantData['visa_status'] !== $participantValidated['visa_status']) {
+                $profileNotificationService->notifyVisaStatusUpdated($participant, $oldParticipantData['visa_status'], $participantValidated['visa_status']);
+            }
+            
+            // Check for dietary needs changes
+            if (($oldParticipantData['dietary_needs'] ?? '') !== ($participantValidated['dietary_needs'] ?? '')) {
+                $profileNotificationService->notifyDietaryNeedsUpdated($participant, $oldParticipantData['dietary_needs'] ?? '', $participantValidated['dietary_needs'] ?? '');
+            }
+            
+            // Check for organization changes
+            if (($oldParticipantData['organization'] ?? '') !== ($participantValidated['organization'] ?? '')) {
+                $profileNotificationService->notifyOrganizationUpdated($participant, $oldParticipantData['organization'] ?? '', $participantValidated['organization'] ?? '');
+            }
+            
+            // Check for document uploads
+            if ($request->hasFile('profile_picture')) {
+                $profileNotificationService->notifyDocumentUploaded($participant, 'Profile Picture');
+            }
+            
+            if ($request->hasFile('resume')) {
+                $profileNotificationService->notifyDocumentUploaded($participant, 'Resume');
+            }
+        }
         
         // Redirect based on who is updating (admin vs participant)
         if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('super_admin')) {

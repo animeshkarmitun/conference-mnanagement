@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             TaskerSpecificSeeder::class,
             TaskerNotificationSeeder::class,
             UpcomingConferenceSessionsSeeder::class,
+            ConferenceKitSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
 

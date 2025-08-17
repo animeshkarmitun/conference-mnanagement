@@ -21,6 +21,27 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
+        // SECURITY: Check if user has admin privileges
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+            // Redirect participants to their profile page
+            if ($user->hasRole('attendee') || $user->hasRole('speaker')) {
+                return redirect()->route('participants.profile')->with('error', 'Access denied. Please use your participant dashboard.');
+            }
+            
+            // For other roles, redirect to appropriate dashboard
+            if ($user->hasRole('tasker')) {
+                return redirect()->route('dashboard.tasker');
+            }
+            
+            if ($user->hasRole('event_coordinator')) {
+                return redirect()->route('event-coordinator.dashboard');
+            }
+            
+            // Default fallback - redirect to profile
+            return redirect()->route('participants.profile')->with('error', 'Access denied. Insufficient privileges.');
+        }
+
         // Get all conferences for dropdown
         $conferences = Conference::orderBy('start_date', 'desc')->get();
         

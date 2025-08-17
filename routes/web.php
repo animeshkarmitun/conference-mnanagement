@@ -20,7 +20,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'role.redirect'])->name('dashboard');
+Route::get('/participant-dashboard', [\App\Http\Controllers\ParticipantDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('participant-dashboard');
 
 // Dashboard AJAX endpoints
 Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])->group(function () {
@@ -206,6 +207,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/{participant}/assign-session', [\App\Http\Controllers\ParticipantController::class, 'assignSession'])->name('participants.assign-session');
     Route::post('/participants/{participant}/update-status', [\App\Http\Controllers\ParticipantController::class, 'updateStatus'])->name('participants.update-status');
     Route::post('/participants/{participant}/remove-session', [\App\Http\Controllers\ParticipantController::class, 'removeSession'])->name('participants.remove-session');
+    
+    // Conference Kit Routes for Participants
+    Route::get('/conference-kit', [\App\Http\Controllers\ConferenceKitController::class, 'index'])->name('conference-kit.index');
+    Route::get('/conference-kit/{conferenceKit}/download', [\App\Http\Controllers\ConferenceKitController::class, 'download'])->name('conference-kit.download');
+    
+    // Participant Notification Routes
+    Route::get('/participant/notifications', [\App\Http\Controllers\NotificationController::class, 'participantIndex'])->name('participant.notifications.index');
+    
+    // Admin Conference Kit Routes
+    Route::resource('conference-kits', \App\Http\Controllers\ConferenceKitController::class);
+    
     Route::get('/admin/room-allocations', [\App\Http\Controllers\TravelController::class, 'roomAllocations'])->name('admin.room-allocations');
     Route::get('/admin/travel-manifests', [\App\Http\Controllers\TravelController::class, 'travelManifests'])->name('admin.travel-manifests');
     Route::get('/admin/travel-conflicts', [\App\Http\Controllers\TravelController::class, 'travelConflicts'])->name('admin.travel-conflicts');
