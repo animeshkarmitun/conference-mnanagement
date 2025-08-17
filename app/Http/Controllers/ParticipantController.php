@@ -327,7 +327,7 @@ class ParticipantController extends Controller
         $participant->update($participantValidated);
         
         // Send notifications if this is a participant updating their own profile
-        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin')) {
+        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('superadmin')) {
             $profileNotificationService = new ProfileNotificationService();
             $changes = [];
             
@@ -365,7 +365,7 @@ class ParticipantController extends Controller
         }
         
         // Redirect based on who is updating (admin vs participant)
-        if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('super_admin')) {
+        if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('superadmin')) {
             return redirect()->route('participants.index')->with('success', 'Participant updated successfully.');
         } else {
             return redirect()->back()->with('success', 'Profile updated successfully.');
