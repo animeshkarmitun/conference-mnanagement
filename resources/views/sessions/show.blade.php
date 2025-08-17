@@ -19,11 +19,11 @@
     <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
             <span class="font-semibold text-gray-700">Start Time:</span>
-            <span>{{ $session->start_time->format('M d, Y H:i') }}</span>
+            <span>{{ \Carbon\Carbon::parse($session->start_time)->format('l, M j, Y \a\t g:i A') }}</span>
         </div>
         <div>
             <span class="font-semibold text-gray-700">End Time:</span>
-            <span>{{ $session->end_time->format('M d, Y H:i') }}</span>
+            <span>{{ \Carbon\Carbon::parse($session->end_time)->format('l, M j, Y \a\t g:i A') }}</span>
         </div>
     </div>
 
