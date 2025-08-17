@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin') ? 'layouts.app' : 'layouts.participant')
 
 @section('title', 'How to Use CGS Events')
 
