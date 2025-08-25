@@ -33,7 +33,10 @@ class TaskController extends Controller
 
     public function create()
     {
-        $users = User::all();
+        // Only users with the 'tasker' role should be assignable
+        $users = User::whereHas('roles', function ($q) {
+            $q->where('name', 'tasker');
+        })->get();
         $conferences = Conference::all();
         return view('tasks.create', compact('users', 'conferences'));
     }
@@ -72,7 +75,10 @@ class TaskController extends Controller
 
     public function edit(Task $task)
     {
-        $users = User::all();
+        // Only users with the 'tasker' role should be assignable
+        $users = User::whereHas('roles', function ($q) {
+            $q->where('name', 'tasker');
+        })->get();
         $conferences = Conference::all();
         return view('tasks.edit', compact('task', 'users', 'conferences'));
     }
