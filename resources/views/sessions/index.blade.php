@@ -220,6 +220,17 @@
 <div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-2">
     <div class="border-b border-gray-200">
         <nav class="flex space-x-8 px-6" aria-label="Tabs">
+            <a href="{{ route('sessions.index', ['status' => 'all']) }}" 
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'all' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    All Sessions
+                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $sessionCounts['all'] }}</span>
+                </div>
+            </a>
+            
             <a href="{{ route('sessions.index', ['status' => 'active']) }}" 
                class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'active' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
                 <div class="flex items-center">
@@ -252,18 +263,66 @@
                     <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $sessionCounts['finished'] }}</span>
                 </div>
             </a>
-            
-            <a href="{{ route('sessions.index', ['status' => 'all']) }}" 
-               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'all' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
-                <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
-                    All Sessions
-                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $sessionCounts['all'] }}</span>
-                </div>
-            </a>
         </nav>
+    </div>
+</div>
+
+<!-- Conference Filter -->
+<div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-3">
+    <div class="p-4 border-b border-gray-200">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    <label for="conference_search" class="text-sm font-medium text-gray-700">Filter by Conference:</label>
+                </div>
+                <div class="relative">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="conference_search" 
+                            placeholder="Search conferences..." 
+                            class="w-64 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-16"
+                            autocomplete="off"
+                        >
+                        <button 
+                            type="button" 
+                            id="clear_conference" 
+                            class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                            title="Clear selection"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <button 
+                            type="button" 
+                            id="dropdown_toggle" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            title="Show all conferences"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="conference_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
+                        <div id="conference_options" class="py-1">
+                            <!-- Options will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>{{ $sessions->total() }} session{{ $sessions->total() !== 1 ? 's' : '' }} found</span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -299,18 +358,6 @@
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="duration">
                         Duration
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="room">
-                        Room
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="capacity">
-                        Capacity
                         <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
@@ -401,22 +448,6 @@
                                 {{ $timeData['duration'] }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500" data-sort-value="{{ $session->room ?? 'N/A' }}">
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                </svg>
-                                <span>{{ $session->room ?? 'N/A' }}</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500" data-sort-value="{{ $session->capacity ?? 0 }}">
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                <span>{{ $session->capacity ?? 'N/A' }}</span>
-                            </div>
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <div class="flex items-center justify-end space-x-2">
                                 <a href="{{ route('sessions.show', $session) }}" 
@@ -455,7 +486,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-8 text-center">
+                        <td colspan="6" class="px-6 py-8 text-center">
                             <div class="flex flex-col items-center">
                                 <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -481,7 +512,7 @@
     </div>
     
     <div class="mt-6">
-        {{ $sessions->appends(['status' => $status])->links() }}
+        {{ $sessions->appends(['status' => $status, 'conference_id' => request('conference_id')])->links() }}
     </div>
 </div>
 
@@ -605,6 +636,186 @@ document.addEventListener('DOMContentLoaded', function() {
             icon.style.color = '#f59e0b'; // yellow-500
         }
     }
+
+    // Conference search functionality
+    const conferences = @json($conferences ?? []);
+    const conferenceSearch = document.getElementById('conference_search');
+    const conferenceDropdown = document.getElementById('conference_dropdown');
+    const conferenceOptions = document.getElementById('conference_options');
+    const conferenceIdInput = document.getElementById('conference_id');
+    const clearConferenceBtn = document.getElementById('clear_conference');
+    const dropdownToggle = document.getElementById('dropdown_toggle');
+    
+    let selectedConference = null;
+    let filteredConferences = [];
+    let isDropdownOpen = false;
+    
+    // Initialize with current selection
+    const currentConferenceId = conferenceIdInput.value;
+    if (currentConferenceId) {
+        const currentConference = conferences.find(c => c.id == currentConferenceId);
+        if (currentConference) {
+            selectedConference = currentConference;
+            conferenceSearch.value = currentConference.name;
+            clearConferenceBtn.classList.remove('hidden');
+        }
+    }
+    
+    function filterConferences(query) {
+        if (!query.trim()) {
+            return conferences;
+        }
+        const lowerQuery = query.toLowerCase();
+        return conferences.filter(conference => 
+            conference.name.toLowerCase().includes(lowerQuery)
+        );
+    }
+    
+    function renderConferenceOptions(conferences) {
+        conferenceOptions.innerHTML = '';
+        
+        if (conferences.length === 0) {
+            conferenceOptions.innerHTML = `
+                <div class="px-4 py-2 text-sm text-gray-500">
+                    No conferences found
+                </div>
+            `;
+            return;
+        }
+        
+        conferences.forEach(conference => {
+            const option = document.createElement('div');
+            option.className = 'px-4 py-2 text-sm cursor-pointer hover:bg-yellow-50 transition-colors duration-150';
+            option.textContent = conference.name;
+            option.dataset.id = conference.id;
+            option.dataset.name = conference.name;
+            
+            option.addEventListener('click', () => {
+                selectConference(conference);
+            });
+            
+            conferenceOptions.appendChild(option);
+        });
+    }
+    
+    function selectConference(conference) {
+        selectedConference = conference;
+        conferenceSearch.value = conference.name;
+        conferenceIdInput.value = conference.id;
+        conferenceDropdown.classList.add('hidden');
+        isDropdownOpen = false;
+        clearConferenceBtn.classList.remove('hidden');
+        
+        // Update URL and reload
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('conference_id', conference.id);
+        
+        // Preserve existing status parameter
+        const statusParam = currentUrl.searchParams.get('status');
+        if (statusParam) {
+            currentUrl.searchParams.set('status', statusParam);
+        }
+        
+        window.location.href = currentUrl.toString();
+    }
+    
+    function clearConferenceSelection() {
+        selectedConference = null;
+        conferenceSearch.value = '';
+        conferenceIdInput.value = '';
+        conferenceDropdown.classList.add('hidden');
+        isDropdownOpen = false;
+        clearConferenceBtn.classList.add('hidden');
+        
+        // Update URL and reload
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.delete('conference_id');
+        
+        // Preserve existing status parameter
+        const statusParam = currentUrl.searchParams.get('status');
+        if (statusParam) {
+            currentUrl.searchParams.set('status', statusParam);
+        }
+        
+        window.location.href = currentUrl.toString();
+    }
+    
+    function toggleDropdown() {
+        if (isDropdownOpen) {
+            conferenceDropdown.classList.add('hidden');
+            isDropdownOpen = false;
+        } else {
+            const query = conferenceSearch.value.trim();
+            if (query) {
+                // Show filtered results
+                filteredConferences = filterConferences(query);
+                renderConferenceOptions(filteredConferences);
+            } else {
+                // Show all conferences
+                renderConferenceOptions(conferences);
+            }
+            conferenceDropdown.classList.remove('hidden');
+            isDropdownOpen = true;
+        }
+    }
+    
+    // Event listeners
+    if (conferenceSearch) {
+        conferenceSearch.addEventListener('input', function() {
+            const query = this.value;
+            filteredConferences = filterConferences(query);
+            
+            if (query.trim() && filteredConferences.length > 0) {
+                renderConferenceOptions(filteredConferences);
+                conferenceDropdown.classList.remove('hidden');
+                isDropdownOpen = true;
+            } else if (query.trim() && filteredConferences.length === 0) {
+                renderConferenceOptions([]);
+                conferenceDropdown.classList.remove('hidden');
+                isDropdownOpen = true;
+            } else {
+                conferenceDropdown.classList.add('hidden');
+                isDropdownOpen = false;
+            }
+        });
+        
+        conferenceSearch.addEventListener('focus', function() {
+            if (this.value.trim()) {
+                filteredConferences = filterConferences(this.value);
+                renderConferenceOptions(filteredConferences);
+                conferenceDropdown.classList.remove('hidden');
+                isDropdownOpen = true;
+            }
+        });
+        
+        conferenceSearch.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                conferenceDropdown.classList.add('hidden');
+                isDropdownOpen = false;
+                this.blur();
+            }
+        });
+    }
+    
+    if (dropdownToggle) {
+        dropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDropdown();
+        });
+    }
+    
+    if (clearConferenceBtn) {
+        clearConferenceBtn.addEventListener('click', clearConferenceSelection);
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#conference_search') && !e.target.closest('#conference_dropdown') && !e.target.closest('#dropdown_toggle')) {
+            conferenceDropdown.classList.add('hidden');
+            isDropdownOpen = false;
+        }
+    });
 });
 </script>
 @endsection 

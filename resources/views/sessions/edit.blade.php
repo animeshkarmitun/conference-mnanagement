@@ -25,6 +25,9 @@
                     @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
+                <!-- Hidden venue field to satisfy validation and capture venue changes -->
+                <input type="hidden" name="venue_id" id="venue_id" value="{{ old('venue_id', $session->venue_id) }}">
+
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700">Title *</label>
                     <input type="text" name="title" id="title" value="{{ old('title', $session->title) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
@@ -57,8 +60,8 @@
             </div>
 
             <div class="mt-4">
-                <label for="description" class="block text-sm font-medium text-gray-700">Description *</label>
-                <textarea name="description" id="description" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">{{ old('description', $session->description) }}</textarea>
+                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <textarea name="description" id="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">{{ old('description', $session->description) }}</textarea>
                 @error('description')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
         </div>
@@ -142,11 +145,7 @@
                                             <div class="text-xs text-gray-400">{{ $participant->user->organization }}</div>
                                         @endif
                                     </div>
-                                    <button type="button" class="add-participant-btn ml-2 text-green-600 hover:text-green-800">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                    </button>
+
                                 </div>
                             @endforeach
                         </div>
@@ -272,11 +271,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 checkbox.checked = true;
                 checkbox.name = 'participants[]';
                 
-                // Update button
-                const btn = clone.querySelector('button');
-                btn.classList.remove('add-participant-btn', 'text-green-600', 'hover:text-green-800');
-                btn.classList.add('remove-participant-btn', 'text-red-600', 'hover:text-red-800');
-                btn.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+                // Add remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.classList.add('remove-participant-btn', 'ml-2', 'text-red-600', 'hover:text-red-800');
+                removeBtn.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+                clone.appendChild(removeBtn);
                 
                 selectedContainer.appendChild(clone);
                 item.style.display = 'none';
@@ -317,8 +317,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Select all visible available participants
     selectAllBtn.addEventListener('click', function() {
-        document.querySelectorAll('.available-item[style="display: block"] input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = true;
+        document.querySelectorAll('.available-item').forEach(item => {
+            const isHidden = item.style.display === 'none';
+            if (!isHidden) {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = true;
+            }
         });
     });
 
@@ -337,18 +341,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add individual participant
-    availableContainer.addEventListener('click', function(e) {
-        if (e.target.classList.contains('add-participant-btn')) {
-            const participantId = e.target.closest('.participant-item').dataset.id;
-            addParticipant(participantId);
-        }
-    });
 
-    // Remove individual participant
+
+    // Remove individual participant (handle clicks on button or inner SVG)
     selectedContainer.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-participant-btn')) {
-            const participantId = e.target.closest('.participant-item').dataset.id;
+        const btn = e.target.closest('.remove-participant-btn');
+        if (btn) {
+            const participantId = btn.closest('.participant-item').dataset.id;
             removeParticipant(participantId);
         }
     });
@@ -356,6 +355,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize
     updateParticipantsInput();
     filterParticipants();
+
+    // Helper: add all currently-checked available participants (same as clicking "Add Selected")
+    function addCheckedAvailableToSelected() {
+        document.querySelectorAll('.available-item input[type="checkbox"]:checked').forEach(checkbox => {
+            const participantId = checkbox.closest('.participant-item')?.dataset.id;
+            if (participantId) {
+                addParticipant(participantId);
+            }
+        });
+        updateParticipantsInput();
+    }
+
+    // Ensure checked selections are applied visually and included in payload on submit
+    const formEl = document.querySelector('form[action*="sessions/"]');
+    if (formEl) {
+        formEl.addEventListener('submit', function() {
+            addCheckedAvailableToSelected();
+        });
+    }
 });
 
 // Conference change handler (existing functionality)

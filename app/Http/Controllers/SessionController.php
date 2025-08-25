@@ -13,10 +13,16 @@ class SessionController extends Controller
 {
     public function index(Request $request)
     {
-        $status = $request->get('status', 'upcoming'); // Default to upcoming sessions
+        $status = $request->get('status', 'all'); // Default to all sessions
+        $conferenceId = $request->get('conference_id');
         $now = now();
         
         $query = Session::with(['conference', 'participants']);
+        
+        // Filter by conference if specified
+        if ($conferenceId) {
+            $query->where('conference_id', $conferenceId);
+        }
         
         // Filter sessions based on status
         switch ($status) {
@@ -44,17 +50,25 @@ class SessionController extends Controller
         
         $sessions = $query->paginate(10);
         
-        // Get session counts for each category
+        // Get session counts for each category (with conference filter if applied)
+        $countQuery = Session::query();
+        if ($conferenceId) {
+            $countQuery->where('conference_id', $conferenceId);
+        }
+        
         $sessionCounts = [
-            'active' => Session::where('start_time', '<=', $now)
+            'active' => (clone $countQuery)->where('start_time', '<=', $now)
                               ->where('end_time', '>=', $now)
                               ->count(),
-            'upcoming' => Session::where('start_time', '>', $now)->count(),
-            'finished' => Session::where('end_time', '<', $now)->count(),
-            'all' => Session::count(),
+            'upcoming' => (clone $countQuery)->where('start_time', '>', $now)->count(),
+            'finished' => (clone $countQuery)->where('end_time', '<', $now)->count(),
+            'all' => $countQuery->count(),
         ];
         
-        return view('sessions.index', compact('sessions', 'sessionCounts', 'status'));
+        // Get all conferences for the filter dropdown
+        $conferences = Conference::orderBy('name')->get();
+        
+        return view('sessions.index', compact('sessions', 'sessionCounts', 'status', 'conferences'));
     }
 
     public function create()
@@ -98,7 +112,7 @@ class SessionController extends Controller
             'conference_id' => 'required|exists:conferences,id',
             'venue_id' => 'required|exists:venues,id',
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
             'room' => 'nullable|string|max:255',
@@ -175,7 +189,7 @@ class SessionController extends Controller
             'conference_id' => 'required|exists:conferences,id',
             'venue_id' => 'required|exists:venues,id',
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
             'room' => 'nullable|string|max:255',
