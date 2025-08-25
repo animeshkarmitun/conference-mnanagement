@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SessionSeeder::class,
             ParticipantTypeSeeder::class,
             ParticipantSeeder::class,
+            AdditionalParticipantsSeeder::class,
             TaskerSeeder::class,
             ConferenceTasksSeeder::class,
             TaskerSpecificSeeder::class,

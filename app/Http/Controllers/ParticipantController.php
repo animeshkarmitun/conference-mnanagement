@@ -246,6 +246,13 @@ class ParticipantController extends Controller
     {
         $participant->load(['user', 'conference', 'participantType']);
         $sessions = $participant->sessions()->withPivot('role')->get();
+        // Preload available sessions for modal (same conference if available)
+        $availableSessions = collect();
+        if ($participant->conference_id) {
+            $availableSessions = \App\Models\Session::where('conference_id', $participant->conference_id)
+                ->orderBy('start_time','asc')
+                ->get(['id','title','start_time','end_time','venue_id']);
+        }
         $notifications = $participant->user->notifications()->latest()->get();
         $comments = $participant->comments()->with('user')->latest()->get();
         $travelDetail = $participant->travelDetails;
@@ -257,10 +264,10 @@ class ParticipantController extends Controller
         
         if ($isAdminViewing) {
             // Use admin layout for admin viewing participant details
-            return view('participants.show-admin', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels'));
+            return view('participants.show-admin', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'availableSessions'));
         } else {
             // Use participant layout for participants viewing their own profile
-            return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels'));
+            return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'availableSessions'));
         }
     }
 
@@ -609,43 +616,58 @@ class ParticipantController extends Controller
 
         \Log::info('Session assignment request data: ' . json_encode($request->all()));
         
+        // Support bulk assignment: session_ids[] and roles map
+        $isBulk = $request->has('session_ids');
+        if ($isBulk) {
+            $data = $request->validate([
+                'session_ids' => 'required|array',
+                'session_ids.*' => 'exists:sessions,id',
+                'roles' => 'nullable|array',
+            ]);
+
+            $sessionIds = $data['session_ids'];
+            $roles = $data['roles'] ?? [];
+
+            foreach ($sessionIds as $sid) {
+                $session = Session::find($sid);
+                if (!$session || $session->conference_id !== $participant->conference_id) {
+                    return response()->json(['success' => false, 'message' => 'Session must belong to participant\'s conference'], 422);
+                }
+            }
+
+            foreach ($sessionIds as $sid) {
+                if (!$participant->sessions()->where('session_id', $sid)->exists()) {
+                    $participant->sessions()->attach($sid, [
+                        'role' => $roles[$sid] ?? 'participant',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            return response()->json(['success' => true]);
+        }
+
+        // Fallback: single assignment (legacy form)
         $validated = $request->validate([
             'session_id' => 'required|exists:sessions,id',
             'role' => 'required|in:participant,speaker,moderator,panelist,organizer',
         ]);
 
-        // Check if session belongs to the same conference
         $session = Session::find($validated['session_id']);
         if ($session->conference_id !== $participant->conference_id) {
             return redirect()->back()->with('error', 'Session does not belong to the same conference');
         }
-
-        // Check if participant is already assigned to this session
         if ($participant->sessions()->where('session_id', $validated['session_id'])->exists()) {
             return redirect()->back()->with('error', 'Participant is already assigned to this session');
         }
 
-        try {
-            // Assign session to participant
-            $participant->sessions()->attach($validated['session_id'], [
-                'role' => $validated['role'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            
-            \Log::info('Session assigned: Participant ' . $participant->id . ' assigned to Session ' . $validated['session_id'] . ' with role ' . $validated['role']);
-
-            // Verify the assignment was successful
-            $assignedSession = $participant->sessions()->where('session_id', $validated['session_id'])->first();
-            if (!$assignedSession) {
-                return redirect()->back()->with('error', 'Failed to assign session. Please try again.');
-            }
-
-            return redirect()->back()->with('success', 'Session assigned successfully');
-        } catch (\Exception $e) {
-            \Log::error('Session assignment failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to assign session: ' . $e->getMessage());
-        }
+        $participant->sessions()->attach($validated['session_id'], [
+            'role' => $validated['role'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        return redirect()->back()->with('success', 'Session assigned successfully');
     }
 
     /**

@@ -75,8 +75,22 @@
                 
                 <div class="mb-4">
                     <label for="dietary_needs" class="block text-sm font-medium text-gray-700">Dietary Needs</label>
-                    <input type="text" name="dietary_needs" id="dietary_needs" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Vegetarian, Gluten-free">
+                    <select name="dietary_needs" id="dietary_needs" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                        <option value="">Select dietary preference</option>
+                        <option value="none" {{ old('dietary_needs') == 'none' ? 'selected' : '' }}>No special requirements</option>
+                        <option value="vegetarian" {{ old('dietary_needs') == 'vegetarian' ? 'selected' : '' }}>Vegetarian</option>
+                        <option value="vegan" {{ old('dietary_needs') == 'vegan' ? 'selected' : '' }}>Vegan</option>
+                        <option value="gluten-free" {{ old('dietary_needs') == 'gluten-free' ? 'selected' : '' }}>Gluten-free</option>
+                        <option value="dairy-free" {{ old('dietary_needs') == 'dairy-free' ? 'selected' : '' }}>Dairy-free</option>
+                        <option value="halal" {{ old('dietary_needs') == 'halal' ? 'selected' : '' }}>Halal</option>
+                        <option value="kosher" {{ old('dietary_needs') == 'kosher' ? 'selected' : '' }}>Kosher</option>
+                        <option value="other" {{ old('dietary_needs') == 'other' ? 'selected' : '' }}>Other (please specify)</option>
+                    </select>
                     @error('dietary_needs')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                </div>
+                <div class="mb-4 {{ old('dietary_needs') == 'other' ? '' : 'hidden' }}" id="dietary-other-wrapper">
+                    <label for="dietary_needs_other" class="block text-sm font-medium text-gray-700">Other dietary needs</label>
+                    <input type="text" name="dietary_needs_other" id="dietary_needs_other" value="{{ old('dietary_needs_other') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Please specify your dietary requirements">
                 </div>
             </div>
             
@@ -105,7 +119,7 @@
                     <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Conference</option>
                         @foreach($conferences as $conference)
-                            <option value="{{ $conference->id }}">{{ $conference->title }}</option>
+                            <option value="{{ $conference->id }}">{{ $conference->name }}</option>
                         @endforeach
                     </select>
                     @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -278,6 +292,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listen for changes
     visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
     participantTypeSelect.addEventListener('change', updateParticipantTypeDescription);
+
+    // Dietary other toggle
+    const dietarySelect = document.getElementById('dietary_needs');
+    const dietaryOtherWrapper = document.getElementById('dietary-other-wrapper');
+    function toggleDietaryOther() {
+        if (dietarySelect.value === 'other') {
+            dietaryOtherWrapper.classList.remove('hidden');
+        } else {
+            dietaryOtherWrapper.classList.add('hidden');
+        }
+    }
+    toggleDietaryOther();
+    dietarySelect.addEventListener('change', toggleDietaryOther);
 });
 </script>
 @endsection 

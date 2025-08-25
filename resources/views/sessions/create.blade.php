@@ -44,12 +44,16 @@
                 <div>
                     <label for="start_time" class="block text-sm font-medium text-gray-700">Start Time *</label>
                     <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time') }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <p id="start_hint" class="text-xs text-gray-500 mt-1"></p>
+                    <p id="start_error" class="text-red-600 text-sm mt-1 hidden"></p>
                     @error('start_time')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
                     <label for="end_time" class="block text-sm font-medium text-gray-700">End Time *</label>
                     <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time') }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <p id="end_hint" class="text-xs text-gray-500 mt-1"></p>
+                    <p id="end_error" class="text-red-600 text-sm mt-1 hidden"></p>
                     @error('end_time')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
@@ -349,18 +353,62 @@ document.addEventListener('DOMContentLoaded', function() {
 // Conference change handler (existing functionality)
 const conferenceVenues = @json($conferenceVenues);
 const conferenceDates = @json($conferenceDates);
-document.getElementById('conference_id').addEventListener('change', function() {
-    const confId = this.value;
+const confSelect = document.getElementById('conference_id');
+const startInput = document.getElementById('start_time');
+const endInput = document.getElementById('end_time');
+const startHint = document.getElementById('start_hint');
+const endHint = document.getElementById('end_hint');
+const startErr = document.getElementById('start_error');
+const endErr = document.getElementById('end_error');
+
+function clearErrors() { [startErr, endErr].forEach(e => { if (!e) return; e.textContent=''; e.classList.add('hidden'); }); }
+
+function applyBounds() {
+    clearErrors();
+    const confId = confSelect.value;
+    if (!confId || !conferenceDates[confId]) {
+        startInput.removeAttribute('min'); startInput.removeAttribute('max');
+        endInput.removeAttribute('min'); endInput.removeAttribute('max');
+        if (startHint) startHint.textContent = '';
+        if (endHint) endHint.textContent = '';
+        return;
+    }
+    const minStr = conferenceDates[confId].start_date + 'T00:00';
+    const maxStr = conferenceDates[confId].end_date + 'T23:59';
+    startInput.min = minStr; startInput.max = maxStr;
+    endInput.min = minStr; endInput.max = maxStr;
+    if (startHint) startHint.textContent = `Allowed: ${minStr} to ${maxStr}`;
+    if (endHint) endHint.textContent = `Allowed: ${minStr} to ${maxStr}`;
+}
+
+function validateRange() {
+    clearErrors();
+    const s = startInput.value ? new Date(startInput.value) : null;
+    const e = endInput.value ? new Date(endInput.value) : null;
+    const confId = confSelect.value;
+    if (!confId || !conferenceDates[confId]) return true;
+    const min = new Date(conferenceDates[confId].start_date + 'T00:00');
+    const max = new Date(conferenceDates[confId].end_date + 'T23:59');
+    let ok = true;
+    if (s && (s < min || s > max)) { if (startErr) { startErr.textContent = 'Start time must be within conference dates.'; startErr.classList.remove('hidden'); } ok = false; }
+    if (e && (e < min || e > max)) { if (endErr) { endErr.textContent = 'End time must be within conference dates.'; endErr.classList.remove('hidden'); } ok = false; }
+    if (s && e && e <= s) { if (endErr) { endErr.textContent = 'End time must be after start time.'; endErr.classList.remove('hidden'); } ok = false; }
+    return ok;
+}
+
+confSelect.addEventListener('change', () => {
+    const confId = confSelect.value;
     const venueId = conferenceVenues[confId];
-    if (venueId) {
-        document.getElementById('venue_id').value = venueId;
-    }
-    if (conferenceDates[confId]) {
-        const start = conferenceDates[confId].start_date + 'T09:00';
-        const end = conferenceDates[confId].end_date + 'T17:00';
-        document.getElementById('start_time').value = start;
-        document.getElementById('end_time').value = end;
-    }
+    if (venueId) document.getElementById('venue_id').value = venueId;
+    applyBounds();
 });
+
+[startInput, endInput].forEach(el => {
+    el.addEventListener('change', validateRange);
+    el.addEventListener('input', validateRange);
+});
+
+// Initial
+applyBounds();
 </script>
 @endsection 
