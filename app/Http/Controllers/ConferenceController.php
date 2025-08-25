@@ -70,6 +70,7 @@ class ConferenceController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'location' => 'required|string|max:255',
             'venue_type' => 'required|in:existing,new',
+            'sessions_json' => 'nullable|string',
         ]);
 
         // Validate venue data based on type
@@ -104,7 +105,74 @@ class ConferenceController extends Controller
 
             // Create conference with the venue ID
             $conferenceData = array_merge($conferenceValidated, ['venue_id' => $venueId]);
-            Conference::create($conferenceData);
+            $conference = Conference::create($conferenceData);
+
+            // Handle sessions creation if provided
+            $sessions = [];
+            if ($request->filled('sessions_json')) {
+                try {
+                    $sessions = json_decode($request->input('sessions_json'), true) ?: [];
+                } catch (\Throwable $e) {
+                    $sessions = [];
+                }
+            }
+
+            if (!empty($sessions)) {
+                // Validate each session entry
+                foreach ($sessions as $idx => $session) {
+                    $validator = \Validator::make($session, [
+                        'title' => 'required|string|max:255',
+                        'description' => 'nullable|string',
+                        'start_time' => 'required|date',
+                        'end_time' => 'required|date|after:start_time',
+                        'venue_id' => 'required|exists:venues,id',
+                        'seating_arrangement' => 'nullable|string',
+                    ], [], [
+                        'title' => "sessions.$idx.title",
+                        'start_time' => "sessions.$idx.start_time",
+                        'end_time' => "sessions.$idx.end_time",
+                        'venue_id' => "sessions.$idx.venue_id",
+                    ]);
+
+                    if ($validator->fails()) {
+                        // Bubble up with old input preserved
+                        return back()
+                            ->withErrors($validator)
+                            ->withInput($request->all());
+                    }
+                }
+
+                // Additional range validation against conference dates
+                $conferenceStart = \Carbon\Carbon::parse($conference->start_date)->startOfDay();
+                $conferenceEnd = \Carbon\Carbon::parse($conference->end_date)->endOfDay();
+
+                foreach ($sessions as $idx => $session) {
+                    $sessionStart = \Carbon\Carbon::parse($session['start_time']);
+                    $sessionEnd = \Carbon\Carbon::parse($session['end_time']);
+
+                    if ($sessionStart->lt($conferenceStart) || $sessionEnd->gt($conferenceEnd)) {
+                        $message = "Session times must be within the conference dates.";
+                        return back()
+                            ->withErrors([
+                                "sessions.$idx.start_time" => $message,
+                                "sessions.$idx.end_time" => $message,
+                            ])
+                            ->withInput($request->all());
+                    }
+                }
+
+                foreach ($sessions as $session) {
+                    \App\Models\Session::create([
+                        'conference_id' => $conference->id,
+                        'title' => $session['title'],
+                        'description' => $session['description'] ?? null,
+                        'start_time' => $session['start_time'],
+                        'end_time' => $session['end_time'],
+                        'venue_id' => $session['venue_id'],
+                        'seating_arrangement' => $session['seating_arrangement'] ?? null,
+                    ]);
+                }
+            }
 
             return redirect()->route('conferences.index')->with('success', 'Conference created successfully.');
         });
