@@ -161,6 +161,30 @@ class ConferenceController extends Controller
                     }
                 }
 
+                // Server-side overlap validation per venue among incoming sessions
+                $byVenue = [];
+                foreach ($sessions as $i => $s) {
+                    $byVenue[$s['venue_id']][] = array_merge($s, ['__index' => $i]);
+                }
+                foreach ($byVenue as $venueId => $list) {
+                    usort($list, function ($a, $b) {
+                        return strtotime($a['start_time']) <=> strtotime($b['start_time']);
+                    });
+                    for ($i = 1; $i < count($list); $i++) {
+                        $prev = $list[$i - 1];
+                        $curr = $list[$i];
+                        if (strtotime($curr['start_time']) < strtotime($prev['end_time'])) {
+                            $msg = 'Session overlaps with another session at the same venue.';
+                            return back()
+                                ->withErrors([
+                                    "sessions.".$curr['__index'].".start_time" => $msg,
+                                    "sessions.".$curr['__index'].".end_time" => $msg,
+                                ])
+                                ->withInput($request->all());
+                        }
+                    }
+                }
+
                 foreach ($sessions as $session) {
                     \App\Models\Session::create([
                         'conference_id' => $conference->id,
@@ -186,6 +210,9 @@ class ConferenceController extends Controller
 
     public function edit(Conference $conference)
     {
+        $conference->load(['sessions' => function ($q) {
+            $q->withCount('participants');
+        }]);
         $venues = Venue::all();
         return view('conferences.edit', compact('conference', 'venues'));
     }
@@ -206,6 +233,7 @@ class ConferenceController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'location' => 'required|string|max:255',
             'venue_type' => 'required|in:existing,new',
+            'sessions_json' => 'nullable|string',
         ]);
 
         // Validate venue data based on type
@@ -241,6 +269,123 @@ class ConferenceController extends Controller
             // Update conference with the venue ID
             $conferenceData = array_merge($conferenceValidated, ['venue_id' => $venueId]);
             $conference->update($conferenceData);
+
+            // Handle sessions changes if provided
+            $incoming = [];
+            if ($request->filled('sessions_json')) {
+                try {
+                    $incoming = json_decode($request->input('sessions_json'), true) ?: [];
+                } catch (\Throwable $e) {
+                    $incoming = [];
+                }
+            }
+
+            if (!empty($incoming)) {
+                // Validate items
+                foreach ($incoming as $idx => $item) {
+                    $action = $item['_action'] ?? 'update';
+                    if (!in_array($action, ['create','update','delete'], true)) {
+                        return back()->withErrors(["sessions.$idx._action" => 'Invalid session action.'])->withInput($request->all());
+                    }
+
+                    if ($action === 'delete') {
+                        // Only id required
+                        $validator = \Validator::make($item, [
+                            'id' => 'required|exists:sessions,id',
+                        ], [], [ 'id' => "sessions.$idx.id" ]);
+                        if ($validator->fails()) {
+                            return back()->withErrors($validator)->withInput($request->all());
+                        }
+                        continue;
+                    }
+
+                    // create/update validations
+                    $validator = \Validator::make($item, [
+                        'title' => 'required|string|max:255',
+                        'description' => 'nullable|string',
+                        'start_time' => 'required|date',
+                        'end_time' => 'required|date|after:start_time',
+                        'venue_id' => 'required|exists:venues,id',
+                        'seating_arrangement' => 'nullable|string',
+                    ], [], [
+                        'title' => "sessions.$idx.title",
+                        'start_time' => "sessions.$idx.start_time",
+                        'end_time' => "sessions.$idx.end_time",
+                        'venue_id' => "sessions.$idx.venue_id",
+                    ]);
+                    if ($validator->fails()) {
+                        return back()->withErrors($validator)->withInput($request->all());
+                    }
+                }
+
+                // Range validation against updated conference dates
+                $conferenceStart = \Carbon\Carbon::parse($conference->start_date)->startOfDay();
+                $conferenceEnd = \Carbon\Carbon::parse($conference->end_date)->endOfDay();
+                foreach ($incoming as $idx => $item) {
+                    if (($item['_action'] ?? 'update') === 'delete') continue;
+                    $sessionStart = \Carbon\Carbon::parse($item['start_time']);
+                    $sessionEnd = \Carbon\Carbon::parse($item['end_time']);
+                    if ($sessionStart->lt($conferenceStart) || $sessionEnd->gt($conferenceEnd)) {
+                        $message = 'Session times must be within the conference dates.';
+                        return back()->withErrors([
+                            "sessions.$idx.start_time" => $message,
+                            "sessions.$idx.end_time" => $message,
+                        ])->withInput($request->all());
+                    }
+                }
+
+                // Per-venue overlap among incoming creates/updates only
+                $sets = [];
+                foreach ($incoming as $i => $it) {
+                    if (($it['_action'] ?? 'update') === 'delete') continue;
+                    $sets[$it['venue_id']][] = array_merge($it, ['__index' => $i]);
+                }
+                foreach ($sets as $venueIdKey => $list) {
+                    usort($list, function ($a, $b) {
+                        return strtotime($a['start_time']) <=> strtotime($b['start_time']);
+                    });
+                    for ($i = 1; $i < count($list); $i++) {
+                        $prev = $list[$i - 1];
+                        $curr = $list[$i];
+                        if (strtotime($curr['start_time']) < strtotime($prev['end_time'])) {
+                            $msg = 'Session overlaps with another session at the same venue.';
+                            return back()->withErrors([
+                                'sessions.'.$curr['__index'].'.start_time' => $msg,
+                                'sessions.'.$curr['__index'].'.end_time' => $msg,
+                            ])->withInput($request->all());
+                        }
+                    }
+                }
+
+                // Apply changes
+                foreach ($incoming as $item) {
+                    $action = $item['_action'] ?? 'update';
+                    if ($action === 'create') {
+                        \App\Models\Session::create([
+                            'conference_id' => $conference->id,
+                            'title' => $item['title'],
+                            'description' => $item['description'] ?? null,
+                            'start_time' => $item['start_time'],
+                            'end_time' => $item['end_time'],
+                            'venue_id' => $item['venue_id'],
+                            'seating_arrangement' => $item['seating_arrangement'] ?? null,
+                        ]);
+                    } elseif ($action === 'update') {
+                        $session = \App\Models\Session::where('conference_id', $conference->id)->findOrFail($item['id']);
+                        $session->update([
+                            'title' => $item['title'],
+                            'description' => $item['description'] ?? null,
+                            'start_time' => $item['start_time'],
+                            'end_time' => $item['end_time'],
+                            'venue_id' => $item['venue_id'],
+                            'seating_arrangement' => $item['seating_arrangement'] ?? null,
+                        ]);
+                    } elseif ($action === 'delete') {
+                        $session = \App\Models\Session::where('conference_id', $conference->id)->findOrFail($item['id']);
+                        $session->delete();
+                    }
+                }
+            }
 
             // Send notifications if dates or venue changed
             $conferenceNotificationService = new ConferenceNotificationService();

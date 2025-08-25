@@ -124,7 +124,7 @@
                 </button>
             </div>
 
-            <p class="text-sm text-purple-900/70 mb-3">Add one or more sessions. You can edit or remove before creating the conference. Sessions must be within the conference start and end dates.</p>
+            <p class="text-sm text-purple-900/70 mb-3">Add one or more sessions. You can edit or remove before creating the conference. Sessions must be within the conference start and end dates. Overlaps are checked per venue.</p>
 
             <!-- Draft list -->
             <div id="sessionDraftsContainer" class="space-y-3" aria-live="polite"></div>
@@ -280,6 +280,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return s >= bounds.start && e <= bounds.end;
     }
 
+    function doIntervalsOverlap(aStart, aEnd, bStart, bEnd) {
+        return aStart < bEnd && bStart < aEnd; // strict overlap; touching endpoints allowed
+    }
+
+    function getOverlapIndices(target, excludeIndex = null) {
+        const overlaps = [];
+        if (!target.start_time || !target.end_time) return overlaps;
+        const tStart = new Date(target.start_time);
+        const tEnd = new Date(target.end_time);
+        sessionDrafts.forEach((s, idx) => {
+            if (excludeIndex !== null && idx === excludeIndex) return;
+            if (!s.start_time || !s.end_time) return;
+            if (String(s.venue_id || '') !== String(target.venue_id || '')) return;
+            const sStart = new Date(s.start_time);
+            const sEnd = new Date(s.end_time);
+            if (doIntervalsOverlap(tStart, tEnd, sStart, sEnd)) overlaps.push(idx);
+        });
+        return overlaps;
+    }
+
     function renderDrafts() {
         draftsContainer.innerHTML = '';
         if (!sessionDrafts.length) {
@@ -296,12 +316,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const item = document.createElement('div');
             item.className = 'border border-purple-200 rounded-lg p-4 bg-white shadow-sm';
             const outOfRange = !isSessionWithinBounds(s, bounds);
+            const conflicts = getOverlapIndices(s, idx);
             item.innerHTML = `
   <div class="flex items-start justify-between">
     <div>
       <div class="flex items-center gap-2">
         <div class="font-medium text-gray-900">${s.title || '(Untitled session)'}</div>
         ${outOfRange ? '<span class="text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-800">Out of range</span>' : ''}
+        ${conflicts.length ? `<span class=\"text-xs px-2 py-0.5 rounded bg-red-100 text-red-800\">Overlaps</span>` : ''}
       </div>
       <div class="text-sm text-gray-600">${s.start_time || ''} → ${s.end_time || ''}</div>
       ${bounds ? `<div class=\"text-xs text-gray-500\">Conference window: ${bounds.text}</div>` : ''}
@@ -383,6 +405,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (s < bounds.start || e > bounds.end) {
                 const err = document.getElementById('err_end');
                 err.textContent = `Session must be within conference dates (${confStartInput.value} 00:00 → ${confEndInput.value} 23:59).`;
+                err.classList.remove('hidden');
+                ok = false;
+            }
+        }
+        // Overlap check
+        if (start && end) {
+            const venueId = document.getElementById('session_venue_id').value;
+            const candidate = { start_time: start, end_time: end, venue_id: venueId };
+            const overlaps = getOverlapIndices(candidate, editingIndex);
+            if (overlaps.length) {
+                const first = sessionDrafts[overlaps[0]];
+                const label = first?.title || `Session ${overlaps[0] + 1}`;
+                const err = document.getElementById('err_end');
+                err.textContent = `Overlaps at the same venue with "${label}" (${first?.start_time || ''} → ${first?.end_time || ''})${overlaps.length > 1 ? ` and ${overlaps.length - 1} more` : ''}.`;
                 err.classList.remove('hidden');
                 ok = false;
             }
