@@ -132,7 +132,18 @@
 <div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100">
     <div class="border-b border-gray-200">
         <nav class="flex space-x-8 px-6" aria-label="Tabs">
-            <a href="{{ route('participants.index', ['status' => 'approved']) }}" 
+            <a href="{{ route('participants.index', array_merge(request()->query(), ['status' => 'all'])) }}" 
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'all' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    All Participants
+                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['all'] }}</span>
+                </div>
+            </a>
+
+            <a href="{{ route('participants.index', ['status' => 'approved'] + request()->except('status')) }}" 
                class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'approved' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
                 <div class="flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,7 +154,7 @@
                 </div>
             </a>
             
-            <a href="{{ route('participants.index', ['status' => 'pending']) }}" 
+            <a href="{{ route('participants.index', ['status' => 'pending'] + request()->except('status')) }}" 
                class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'pending' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
                 <div class="flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +165,7 @@
                 </div>
             </a>
             
-            <a href="{{ route('participants.index', ['status' => 'rejected']) }}" 
+            <a href="{{ route('participants.index', ['status' => 'rejected'] + request()->except('status')) }}" 
                class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'rejected' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
                 <div class="flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,17 +173,6 @@
                     </svg>
                     Rejected Participants
                     <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['rejected'] }}</span>
-                </div>
-            </a>
-            
-            <a href="{{ route('participants.index', ['status' => 'all']) }}" 
-               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'all' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50' }}">
-                <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    All Participants
-                    <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $counts['all'] }}</span>
                 </div>
             </a>
         </nav>
@@ -186,6 +186,9 @@
         <div class="flex-1 max-w-md">
             <form method="GET" action="{{ route('participants.index') }}" class="flex">
                 <input type="hidden" name="status" value="{{ $status }}">
+                @if(request()->has('conference_id'))
+                    <input type="hidden" name="conference_id" value="{{ request('conference_id') }}">
+                @endif
                 <div class="relative flex-1">
                     <input type="text" 
                            name="search" 
@@ -205,7 +208,7 @@
                     Search
                 </button>
                 @if($search)
-                    <a href="{{ route('participants.index', ['status' => $status]) }}" class="ml-3 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                    <a href="{{ route('participants.index', array_merge(request()->except('search'), ['status' => $status])) }}" class="ml-3 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
                         <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -217,6 +220,19 @@
         
         <!-- Enhanced Secondary Filter Tabs -->
         <div class="flex gap-3 flex-shrink-0">
+            <!-- Conference Filter -->
+            <form method="GET" action="{{ route('participants.index') }}" class="flex items-center gap-2">
+                @foreach(request()->except(['conference_id']) as $k => $v)
+                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                @endforeach
+                <label for="conference_id" class="text-sm text-gray-600">Conference</label>
+                <select id="conference_id" name="conference_id" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-yellow-500 focus:border-yellow-500" onchange="this.form.submit()">
+                    <option value="">All Conferences</option>
+                    @foreach(($conferences ?? []) as $conf)
+                        <option value="{{ $conf->id }}" {{ (request('conference_id') == $conf->id) ? 'selected' : '' }}>{{ $conf->name }}</option>
+                    @endforeach
+                </select>
+            </form>
             <!-- Visa Status Filter -->
             <div class="relative group">
                 <button class="filter-dropdown bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm">
@@ -376,14 +392,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <input type="checkbox" id="select-all-header" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="serial">
-                    <div class="flex items-center space-x-1">
-                        <span>Serial No.</span>
-                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
-                    </div>
-                </th>
+                
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="name">
                     <div class="flex items-center space-x-1">
                         <span>Name</span>
@@ -408,9 +417,9 @@
                         </svg>
                     </div>
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="organization">
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="conference">
                     <div class="flex items-center space-x-1">
-                        <span>Organization</span>
+                        <span>Conference</span>
                         <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
@@ -458,22 +467,15 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <input type="checkbox" class="participant-checkbox" value="{{ $participant->id }}">
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $serialSortValue }}">{{ $serial }}</td>
+                    
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower(($user->first_name ?? $user->name) . ' ' . ($user->last_name ?? '')) }}">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 avatar rounded-full flex items-center justify-center mr-3 shadow-lg">
-                                <span class="text-sm font-bold">
-                                    {{ substr($user->first_name ?? $user->name, 0, 1) }}{{ substr($user->last_name ?? '', 0, 1) }}
-                                </span>
-                            </div>
-                            <div>
-                                <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:text-blue-800 font-semibold transition-colors duration-200">
-                                    {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
-                                </a>
-                                @if($age)
-                                    <div class="text-xs text-gray-500">{{ $age }} years old</div>
-                                @endif
-                            </div>
+                        <div>
+                            <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:text-blue-800 font-semibold transition-colors duration-200">
+                                {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
+                            </a>
+                            @if($age)
+                                <div class="text-xs text-gray-500">{{ $age }} years old</div>
+                            @endif
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($user->email) }}">
@@ -482,7 +484,9 @@
                         </button>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->participantType->name ?? '') }}">{{ $participant->participantType->name ?? '' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->organization ?? 'zzz') }}">{{ $participant->organization }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->conference->name ?? 'unassigned') }}">
+                        {{ $participant->conference->name ?? 'Unassigned' }}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst($participant->registration_status) }}" data-sort-priority="{{ $statusPriority }}">
                         <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm {{ $participant->registration_status == 'approved' ? 'bg-green-100 text-green-700 border border-green-200' : ($participant->registration_status == 'pending' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 'bg-red-100 text-red-700 border border-red-200') }}">
                             @if($participant->registration_status == 'approved')

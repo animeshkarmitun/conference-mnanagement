@@ -22,6 +22,14 @@ class ParticipantController extends Controller
     public function index(Request $request)
     {
         $query = Participant::with(['user', 'conference', 'participantType']);
+
+        // Optional conference filter
+        $conferenceId = $request->get('conference_id');
+        if (!empty($conferenceId) && \App\Models\Conference::where('id', $conferenceId)->exists()) {
+            $query->where('conference_id', $conferenceId);
+        } else {
+            $conferenceId = null; // normalize invalid id to null
+        }
         
         // Status filtering
         if ($request->has('status') && $request->status !== 'all') {
@@ -55,28 +63,32 @@ class ParticipantController extends Controller
             });
         }
         
-        // Get counts for tabs
+        // Get counts for tabs (scoped only by conference filter)
+        $countsScope = Participant::query();
+        if ($conferenceId) {
+            $countsScope->where('conference_id', $conferenceId);
+        }
         $counts = [
-            'approved' => Participant::where('registration_status', 'approved')->count(),
-            'pending' => Participant::where('registration_status', 'pending')->count(),
-            'rejected' => Participant::where('registration_status', 'rejected')->count(),
-            'all' => Participant::count(),
+            'approved' => (clone $countsScope)->where('registration_status', 'approved')->count(),
+            'pending' => (clone $countsScope)->where('registration_status', 'pending')->count(),
+            'rejected' => (clone $countsScope)->where('registration_status', 'rejected')->count(),
+            'all' => (clone $countsScope)->count(),
         ];
         
-        // Get visa status counts
+        // Get visa status counts (scoped by conference)
         $visaCounts = [
-            'required' => Participant::where('visa_status', 'required')->count(),
-            'approved' => Participant::where('visa_status', 'approved')->count(),
-            'pending' => Participant::where('visa_status', 'pending')->count(),
-            'issue' => Participant::where('visa_status', 'issue')->count(),
-            'not_required' => Participant::where('visa_status', 'not_required')->count(),
+            'required' => (clone $countsScope)->where('visa_status', 'required')->count(),
+            'approved' => (clone $countsScope)->where('visa_status', 'approved')->count(),
+            'pending' => (clone $countsScope)->where('visa_status', 'pending')->count(),
+            'issue' => (clone $countsScope)->where('visa_status', 'issue')->count(),
+            'not_required' => (clone $countsScope)->where('visa_status', 'not_required')->count(),
         ];
         
         // Get participant type counts
         $typeCounts = [];
         $participantTypes = ParticipantType::all();
         foreach ($participantTypes as $type) {
-            $typeCounts[$type->name] = Participant::where('participant_type_id', $type->id)->count();
+            $typeCounts[$type->name] = (clone $countsScope)->where('participant_type_id', $type->id)->count();
         }
         
         // Handle CSV export
@@ -130,11 +142,14 @@ class ParticipantController extends Controller
             return response()->stream($callback, 200, $headers);
         }
         
-        $participants = $query->latest()->paginate(20);
+        $participants = $query->latest()->paginate(20)->withQueryString();
         $status = $request->get('status', 'all');
         $search = $request->get('search', '');
-        
-        return view('participants.index', compact('participants', 'counts', 'visaCounts', 'typeCounts', 'participantTypes', 'status', 'search'));
+
+        // Conferences list for filter (adjust for permissions if needed)
+        $conferences = Conference::orderBy('start_date', 'desc')->get();
+
+        return view('participants.index', compact('participants', 'counts', 'visaCounts', 'typeCounts', 'participantTypes', 'status', 'search', 'conferences', 'conferenceId'));
     }
 
     // Show create form
