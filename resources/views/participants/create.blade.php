@@ -102,6 +102,10 @@
             </div>
             @error('travel_intent')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
+        <div class="mb-4">
+            <label for="hashtags" class="block text-sm font-medium text-gray-700">Enter Hashtags:</label>
+            <input type="text" id="hashtags" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" name="hashtags_input" placeholder="e.g., #abc, #xyz, #123">
+        </div>
         <div class="mb-6">
             <label for="registration_status" class="block text-sm font-medium text-gray-700">Registration Status</label>
             <select name="registration_status" id="registration_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
@@ -137,5 +141,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listen for changes
     visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
 });
+
+// Hashtag input handling
+document.getElementById('hashtags').addEventListener('change', function() {
+        const rawInput = this.value;
+        const hashtags = Array.from(
+            new Set(
+            rawInput.split(',')
+                .map(tag => {
+                let trimmedTag = tag.trim();
+                if (!trimmedTag.startsWith('#')) {
+                    trimmedTag = '#' + trimmedTag;
+                }
+                return trimmedTag;
+                })
+                .filter(tag => tag !== '#')
+            )
+        );
+        // Show formatted value in input box
+        this.value = hashtags.join(', ');
+
+        console.log("Processed Hashtags:", hashtags);
+        // Further actions with the 'hashtags' array can be performed here.
+    });
 </script>
 @endsection 

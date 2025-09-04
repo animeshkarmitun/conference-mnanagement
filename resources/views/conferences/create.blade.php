@@ -37,8 +37,8 @@
         </div>
         <div>
             <label for="venue_id" class="block text-sm font-medium text-gray-700">Venue</label>
-            <select id="venue_id" name="venue_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                <option value="">Select Venue</option>
+            <select id="venue_id" name="venue_id[]" multiple required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                {{-- <option value="">Select Venue</option> --}}
                 @foreach($venues as $venue)
                     <option value="{{ $venue->id }}" {{ old('venue_id') == $venue->id ? 'selected' : '' }}>{{ $venue->name }}</option>
                 @endforeach
@@ -52,4 +52,21 @@
         </div>
     </form>
 </div>
+
+</script>
+<!-- Choices.js for multi-select with search -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+            new Choices('#venue_id', {
+                removeItemButton: true,
+                searchEnabled: true,
+                placeholderValue: 'Select venue',
+                searchPlaceholderValue: 'Search venue'
+            });
+            });
+        </script>
+<!-- Multiple select code end -->  
+
 @endsection 
