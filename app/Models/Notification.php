@@ -14,6 +14,9 @@ class Notification extends Model
         'conference_id',
         'message',
         'type',
+        'related_model',
+        'related_id',
+        'action_url',
         'sent_at',
         'read_status',
     ];

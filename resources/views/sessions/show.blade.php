@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin') ? 'layouts.app' : 'layouts.participant')
 
 @section('title', 'Session Details')
 
@@ -19,11 +19,11 @@
     <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
             <span class="font-semibold text-gray-700">Start Time:</span>
-            <span>{{ $session->start_time->format('M d, Y H:i') }}</span>
+            <span>{{ \Carbon\Carbon::parse($session->start_time)->format('l, M j, Y \a\t g:i A') }}</span>
         </div>
         <div>
             <span class="font-semibold text-gray-700">End Time:</span>
-            <span>{{ $session->end_time->format('M d, Y H:i') }}</span>
+            <span>{{ \Carbon\Carbon::parse($session->end_time)->format('l, M j, Y \a\t g:i A') }}</span>
         </div>
     </div>
 
@@ -55,17 +55,23 @@
         </ul>
     </div>
 
-    <div class="flex justify-end space-x-4">
-        <a href="{{ route('sessions.edit', $session) }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Edit</a>
-        <form action="{{ route('sessions.destroy', $session) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this session?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">Delete</button>
-        </form>
-    </div>
+    @if(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin'))
+        <div class="flex justify-end space-x-4">
+            <a href="{{ route('sessions.edit', $session) }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Edit</a>
+            <form action="{{ route('sessions.destroy', $session) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this session?');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">Delete</button>
+            </form>
+        </div>
+    @endif
 
     <div class="mt-4">
-        <a href="{{ route('sessions.index') }}" class="text-gray-600 hover:text-gray-900">Back to list</a>
+        @if(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin'))
+            <a href="{{ route('sessions.index') }}" class="text-gray-600 hover:text-gray-900">Back to list</a>
+        @else
+            <a href="{{ route('participant-dashboard') }}" class="text-gray-600 hover:text-gray-900">Back to Dashboard</a>
+        @endif
     </div>
 </div>
 @endsection 

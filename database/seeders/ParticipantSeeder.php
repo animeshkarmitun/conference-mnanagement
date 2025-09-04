@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Participant;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +24,12 @@ class ParticipantSeeder extends Seeder
             ]
         );
         
+        // Assign attendee role
+        $attendeeRole = Role::where('name', 'attendee')->first();
+        if ($attendeeRole && !$user->roles()->where('name', 'attendee')->exists()) {
+            $user->roles()->attach($attendeeRole->id);
+        }
+        
         Participant::firstOrCreate(
             ['user_id' => $user->id, 'conference_id' => 1],
             [
@@ -40,6 +47,12 @@ class ParticipantSeeder extends Seeder
                 'password' => bcrypt('password'),
             ]
         );
+        
+        // Assign speaker role
+        $speakerRole = Role::where('name', 'speaker')->first();
+        if ($speakerRole && !$user->roles()->where('name', 'speaker')->exists()) {
+            $user->roles()->attach($speakerRole->id);
+        }
         
         Participant::firstOrCreate(
             ['user_id' => $user->id, 'conference_id' => 1],

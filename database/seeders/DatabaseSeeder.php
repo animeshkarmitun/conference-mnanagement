@@ -20,7 +20,14 @@ class DatabaseSeeder extends Seeder
             SessionSeeder::class,
             ParticipantTypeSeeder::class,
             ParticipantSeeder::class,
+            AdditionalParticipantsSeeder::class,
             TaskerSeeder::class,
+            ConferenceTasksSeeder::class,
+            TaskerSpecificSeeder::class,
+            TaskerNotificationSeeder::class,
+            UpcomingConferenceSessionsSeeder::class,
+            ConferenceKitSeeder::class,
+            IdCardSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
 

@@ -2,60 +2,615 @@
 
 @section('title', 'Users')
 
+@push('styles')
+<style>
+    .user-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .status-badge {
+        transition: all 0.2s ease;
+    }
+    
+    .status-badge:hover {
+        transform: scale(1.05);
+    }
+    
+    .quick-action-btn {
+        transition: all 0.2s ease;
+    }
+    
+    .quick-action-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .tab-link {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .tab-link:hover {
+        transform: translateY(-1px);
+    }
+    
+    .table-row-hover {
+        transition: all 0.2s ease;
+    }
+    
+    .table-row-hover:hover {
+        background-color: #fefce8;
+        transform: scale(1.01);
+    }
+    
+    .user-icon {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+        font-weight: bold;
+    }
+    
+    .role-badge {
+        transition: all 0.2s ease;
+    }
+    
+    .role-badge:hover {
+        transform: scale(1.05);
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .animate-delay-1 { animation-delay: 0.1s; }
+    .animate-delay-2 { animation-delay: 0.2s; }
+    .animate-delay-3 { animation-delay: 0.3s; }
+    .animate-delay-4 { animation-delay: 0.4s; }
+    
+    .sortable-header {
+        user-select: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .sortable-header:hover {
+        background-color: #fefce8;
+        color: #f59e0b;
+    }
+    
+    .sort-icon {
+        transition: all 0.2s ease-in-out;
+        margin-left: 4px;
+    }
+    
+    .sort-icon.active {
+        color: #f59e0b;
+    }
+    
+    .sort-icon.asc {
+        transform: rotate(0deg);
+    }
+    
+    .sort-icon.desc {
+        transform: rotate(180deg);
+    }
+
+    /* Modern color scheme overrides */
+    .modern-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+    
+    .modern-primary:hover {
+        background: linear-gradient(135deg, #5855eb, #7c3aed);
+    }
+    
+    .modern-secondary {
+        background: linear-gradient(135deg, #64748b, #475569);
+        color: white;
+    }
+    
+    .modern-secondary:hover {
+        background: linear-gradient(135deg, #475569, #334155);
+    }
+    
+    .modern-success {
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+    }
+    
+    .modern-success:hover {
+        background: linear-gradient(135deg, #047857, #065f46);
+    }
+    
+    .modern-warning {
+        background: linear-gradient(135deg, #e11d48, #be123c);
+        color: white;
+    }
+    
+    .modern-warning:hover {
+        background: linear-gradient(135deg, #be123c, #9f1239);
+    }
+    
+    .modern-info {
+        background: linear-gradient(135deg, #0891b2, #0e7490);
+        color: white;
+    }
+    
+    .modern-info:hover {
+        background: linear-gradient(135deg, #0e7490, #155e75);
+    }
+    
+    .modern-admin {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        color: white;
+    }
+    
+    .modern-admin:hover {
+        background: linear-gradient(135deg, #6d28d9, #5b21b6);
+    }
+</style>
+@endpush
+
 @section('content')
-<!-- Professional Page Header -->
-<div class="rounded-2xl bg-gradient-to-r from-yellow-100 via-yellow-50 to-white shadow flex items-center px-8 py-6 mb-10 border border-yellow-200">
-    <div class="flex items-center justify-center w-16 h-16 bg-yellow-200 rounded-full mr-6 shadow">
-        <svg class="w-8 h-8 text-yellow-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-    </div>
-    <div>
-        <h1 class="text-3xl font-extrabold text-yellow-800 tracking-tight mb-1">Users</h1>
-        <div class="text-gray-600 text-lg font-medium">Manage all users and their roles</div>
+<!-- Enhanced Header with Quick Actions -->
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100 animate-fade-in-up">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-bold text-slate-800">Users</h2>
+            <p class="text-slate-600 mt-1">Manage all users and their roles</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Quick Actions -->
+            <div class="flex space-x-3">
+                <button onclick="showImportModal()" class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Import Users">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                    </svg>
+                </button>
+                <button onclick="generateUserReport()" class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2m-4-4V7a4 4 0 10-8 0v6m0 4h8"></path>
+                    </svg>
+                </button>
+                <button onclick="exportUserData()" class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Export Data">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </button>
+                <button onclick="showBulkRoleModal()" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Bulk Role Assignment">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </button>
+            </div>
+            <a href="{{ route('users.create') }}" class="modern-primary hover:modern-primary px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add User
+            </a>
+        </div>
     </div>
 </div>
-<hr class="mb-8 border-yellow-200">
-<div class="bg-white rounded-xl shadow p-6 mt-8">
-    
-    <table class="min-w-full divide-y divide-gray-200" id="myTable">
-        <thead>
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roles</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3"></th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            <!-- Dummy users for static view -->
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap font-semibold">Super Admin</td>
-                <td class="px-6 py-4 whitespace-nowrap">superadmin@example.com</td>
-                <td class="px-6 py-4 whitespace-nowrap"><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">superadmin</span></td>
-                <td class="px-6 py-4 whitespace-nowrap"><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span></td>
-                <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                    <a href="#" class="text-blue-600 hover:underline">View</a>
-                    <a href="#" class="text-yellow-600 hover:underline">Edit</a>
-                    <a href="#" class="text-purple-600 hover:underline">Roles</a>
-                    <a href="#" class="text-red-600 hover:underline">Delete</a>
-                </td>
-            </tr>
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap font-semibold">Tasker User</td>
-                <td class="px-6 py-4 whitespace-nowrap">tasker@example.com</td>
-                <td class="px-6 py-4 whitespace-nowrap"><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">tasker</span></td>
-                <td class="px-6 py-4 whitespace-nowrap"><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span></td>
-                <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                    <a href="#" class="text-blue-600 hover:underline">View</a>
-                    <a href="#" class="text-yellow-600 hover:underline">Edit</a>
-                    <a href="#" class="text-purple-600 hover:underline">Roles</a>
-                    <a href="#" class="text-red-600 hover:underline">Delete</a>
-                </td>
-            </tr>
-            <!-- Add more users as needed -->
-        </tbody>
-    </table>
-    
-   
+
+<!-- Enhanced User Status Tabs -->
+<div class="bg-white rounded-2xl shadow-lg mb-6 border border-slate-100 animate-fade-in-up animate-delay-1">
+    <div class="border-b border-slate-200">
+        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+            <a href="{{ route('users.index', ['status' => 'active']) }}" 
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'active' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    Active Users
+                    <span class="ml-2 bg-indigo-100 text-indigo-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['active'] }}</span>
+                </div>
+            </a>
+            
+            <a href="{{ route('users.index', ['status' => 'inactive']) }}" 
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'inactive' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                    </svg>
+                    Inactive Users
+                    <span class="ml-2 bg-indigo-100 text-indigo-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['inactive'] }}</span>
+                </div>
+            </a>
+            
+            <a href="{{ route('users.index', ['status' => 'all']) }}" 
+               class="tab-link py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 {{ $status === 'all' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50' }}">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    </svg>
+                    All Users
+                    <span class="ml-2 bg-indigo-100 text-indigo-800 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ $userCounts['all'] }}</span>
+                </div>
+            </a>
+        </nav>
+    </div>
 </div>
+
+<!-- Enhanced User Table -->
+<div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100 animate-fade-in-up animate-delay-2">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200" id="usersTable">
+            <thead>
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="name">
+                        <div class="flex items-center">
+                            User
+                            <svg class="w-4 h-4 ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="email">
+                        <div class="flex items-center">
+                            Email
+                            <svg class="w-4 h-4 ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="roles">
+                        <div class="flex items-center">
+                            Roles
+                            <svg class="w-4 h-4 ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="status">
+                        <div class="flex items-center">
+                            Status
+                            <svg class="w-4 h-4 ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-slate-200">
+                @forelse($users as $user)
+                    @php
+                        $isActive = $user->email_verified_at;
+                        $statusText = $isActive ? 'Active' : 'Inactive';
+                        $lastLogin = $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->diffForHumans() : 'Never';
+                        $statusClass = $isActive ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200';
+                    @endphp
+                    
+                    <tr class="table-row-hover hover:bg-slate-50 transition-all duration-200 border-b border-slate-100">
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $user->first_name }} {{ $user->last_name }}">
+                            <div class="flex items-center">
+                                @if($user->profile_picture)
+                                    <img class="w-10 h-10 rounded-full shadow-lg mr-3" src="{{ asset('storage/' . $user->profile_picture) }}" alt="{{ $user->first_name }}">
+                                @else
+                                    <div class="w-10 h-10 user-icon rounded-full flex items-center justify-center mr-3 shadow-lg">
+                                        <span class="text-sm font-bold">
+                                            {{ strtoupper(substr($user->first_name, 0, 1)) }}
+                                        </span>
+                                    </div>
+                                @endif
+                                <div>
+                                    <div class="font-medium text-slate-900">{{ $user->first_name }} {{ $user->last_name }}</div>
+                                    <div class="text-sm text-slate-500 flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        Joined {{ $user->created_at->format('M Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900" data-sort-value="{{ $user->email }}">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                {{ $user->email }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $user->roles->first() ? $user->roles->first()->name : 'No Role' }}">
+                            <div class="flex flex-wrap gap-1">
+                                @forelse($user->roles as $role)
+                                    @php
+                                        $roleColors = [
+                                            'superadmin' => 'bg-rose-100 text-rose-800 border-rose-200',
+                                            'admin' => 'bg-violet-100 text-violet-800 border-violet-200',
+                                            'event coordinator' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                                            'tasker' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                            'user' => 'bg-slate-100 text-slate-800 border-slate-200'
+                                        ];
+                                        $roleColor = $roleColors[strtolower($role->name)] ?? 'bg-slate-100 text-slate-800 border-slate-200';
+                                    @endphp
+                                    <span class="role-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $roleColor }}">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                        </svg>
+                                        {{ $role->name }}
+                                    </span>
+                                @empty
+                                    <span class="role-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border bg-slate-100 text-slate-800 border-slate-200">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                        </svg>
+                                        No Role
+                                    </span>
+                                @endforelse
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap" 
+                            data-sort-value="{{ $statusText }}" 
+                            data-sort-priority="{{ $isActive ? 1 : 2 }}">
+                            <div class="flex flex-col">
+                                <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $statusClass }}">
+                                    @if($isActive)
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    @else
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                        </svg>
+                                    @endif
+                                    {{ $statusText }}
+                                </span>
+                                <span class="text-xs text-slate-500 mt-1 flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Last login: {{ $lastLogin }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="flex items-center justify-end space-x-2">
+                                <a href="{{ route('users.show', $user) }}" 
+                                   class="quick-action-btn inline-flex items-center p-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:text-indigo-800 rounded-lg transition-all duration-200 border border-indigo-200 shadow-sm"
+                                   title="View User Details"
+                                   aria-label="View user details">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </a>
+                                
+                                <a href="{{ route('users.edit', $user) }}" 
+                                   class="quick-action-btn inline-flex items-center p-2 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-800 rounded-lg transition-all duration-200 border border-slate-200 shadow-sm"
+                                   title="Edit User"
+                                   aria-label="Edit user">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </a>
+                                
+                                <a href="{{ route('users.edit', $user) }}#roles" 
+                                   class="quick-action-btn inline-flex items-center p-2 bg-violet-100 text-violet-700 hover:bg-violet-200 hover:text-violet-800 rounded-lg transition-all duration-200 border border-violet-200 shadow-sm"
+                                   title="Manage User Roles"
+                                   aria-label="Manage user roles">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                    </svg>
+                                </a>
+                                
+                                @if($user->id !== auth()->id())
+                                    <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="quick-action-btn inline-flex items-center p-2 bg-rose-100 text-rose-700 hover:bg-rose-200 hover:text-rose-800 rounded-lg transition-all duration-200 border border-rose-200 shadow-sm"
+                                                title="Delete User"
+                                                aria-label="Delete user">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                                <p class="text-slate-500 mb-2">
+                                    @if($status === 'active')
+                                        No active users found.
+                                    @elseif($status === 'inactive')
+                                        No inactive users found.
+                                    @else
+                                        No users found.
+                                    @endif
+                                </p>
+                                <a href="{{ route('users.create') }}" class="text-indigo-600 hover:text-indigo-700 font-medium">Create your first user</a>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-6">
+        {{ $users->appends(['status' => $status])->links() }}
+    </div>
+</div>
+
+<script>
+// Quick Action Functions
+function showImportModal() {
+    alert('Import Users functionality coming soon! This will allow you to import users from CSV files.');
+}
+
+function generateUserReport() {
+    alert('User Report generated! This would create a detailed report of all users and their roles.');
+}
+
+function exportUserData() {
+    // Create a simple CSV export
+    const table = document.getElementById('usersTable');
+    const rows = table.querySelectorAll('tbody tr');
+    let csv = 'Name,Email,Roles,Status\n';
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 3) {
+            const name = cells[0].textContent.trim();
+            const email = cells[1].textContent.trim();
+            const roles = cells[2].textContent.trim();
+            const status = cells[3].textContent.trim();
+            csv += `"${name}","${email}","${roles}","${status}"\n`;
+        }
+    });
+    
+    // Download the CSV file
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users_export.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    alert('User data exported successfully!');
+}
+
+function showBulkRoleModal() {
+    alert('Bulk Role Assignment functionality coming soon! This will allow you to assign roles to multiple users at once.');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('usersTable');
+    const tbody = table.querySelector('tbody');
+    const headers = table.querySelectorAll('.sortable-header');
+    
+    let currentSort = {
+        column: null,
+        direction: 'asc'
+    };
+    
+    // Add click event listeners to all sortable headers
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.getAttribute('data-sort');
+            console.log('Sorting users by column:', column);
+            sortTable(column);
+        });
+    });
+    
+    console.log('Found', headers.length, 'sortable headers for users');
+    console.log('Found', tbody.querySelectorAll('tr').length, 'user table rows');
+    
+    function sortTable(column) {
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Filter out empty rows (like the "no users" message)
+        const dataRows = rows.filter(row => row.cells.length > 1);
+        
+        if (dataRows.length === 0) return;
+        
+        // Determine sort direction
+        let direction = 'asc';
+        if (currentSort.column === column) {
+            direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        
+        // Update current sort state
+        currentSort.column = column;
+        currentSort.direction = direction;
+        
+        // Update visual indicators
+        updateSortIndicators(column, direction);
+        
+        // Sort the rows
+        dataRows.sort((a, b) => {
+            const aValue = getCellValue(a, column);
+            const bValue = getCellValue(b, column);
+            
+            let comparison = 0;
+            
+            if (column === 'status') {
+                // Sort by status priority (Active=1, Inactive=2)
+                const aPriority = parseInt(a.cells[3].getAttribute('data-sort-priority'));
+                const bPriority = parseInt(b.cells[3].getAttribute('data-sort-priority'));
+                comparison = aPriority - bPriority;
+            } else {
+                // Sort alphabetically for name, email, and roles
+                comparison = aValue.localeCompare(bValue);
+            }
+            
+            return direction === 'asc' ? comparison : -comparison;
+        });
+        
+        // Re-append sorted rows
+        dataRows.forEach(row => tbody.appendChild(row));
+    }
+    
+    function getCellValue(row, column) {
+        // Get the cell in the specific column (0-indexed)
+        const columnIndex = getColumnIndex(column);
+        const cell = row.cells[columnIndex];
+        
+        if (!cell) return '';
+        
+        if (column === 'status') {
+            return parseInt(cell.getAttribute('data-sort-priority'));
+        }
+        
+        return cell.getAttribute('data-sort-value');
+    }
+    
+    function getColumnIndex(column) {
+        const columnMap = {
+            'name': 0,
+            'email': 1,
+            'roles': 2,
+            'status': 3
+        };
+        return columnMap[column] || 0;
+    }
+    
+    function updateSortIndicators(activeColumn, direction) {
+        // Reset all sort icons
+        headers.forEach(header => {
+            const icon = header.querySelector('.sort-icon');
+            icon.classList.remove('active', 'asc', 'desc');
+            icon.style.color = '#9ca3af'; // gray-400
+        });
+        
+        // Update active column icon
+        const activeHeader = table.querySelector(`[data-sort="${activeColumn}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('.sort-icon');
+            icon.classList.add('active', direction);
+            icon.style.color = '#f59e0b'; // yellow-500
+        }
+    }
+});
+</script>
 @endsection 

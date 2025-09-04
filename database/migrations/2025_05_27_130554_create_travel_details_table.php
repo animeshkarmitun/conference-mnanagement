@@ -18,7 +18,7 @@ return new class extends Migration
             $table->dateTime('arrival_date')->nullable();
             $table->dateTime('departure_date')->nullable();
             $table->integer('extra_nights')->default(0);
-            $table->foreignId('hotel_id')->constrained()->onDelete('cascade');
+            $table->foreignId('hotel_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('travel_documents')->nullable();
             $table->timestamps();
         });

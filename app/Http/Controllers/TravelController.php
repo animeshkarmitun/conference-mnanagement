@@ -6,6 +6,7 @@ use App\Models\Participant;
 use App\Models\Hotel;
 use App\Models\TravelDetail;
 use App\Models\RoomAllocation;
+use App\Services\TravelNotificationService;
 use Illuminate\Http\Request;
 
 class TravelController extends Controller
@@ -21,7 +22,7 @@ class TravelController extends Controller
     // Admin view for travel manifests
     public function travelManifests()
     {
-        $travelDetails = TravelDetail::with(['participant.user', 'hotel'])->get();
+        $travelDetails = TravelDetail::with(['participant.user', 'hotel', 'participant.conference'])->get();
         return view('admin.travel.travel-manifests', compact('travelDetails'));
     }
 
@@ -30,6 +31,7 @@ class TravelController extends Controller
     {
         $conflicts = [];
         $travelDetails = TravelDetail::with(['participant.user', 'hotel'])->get();
+        $travelNotificationService = new TravelNotificationService();
 
         // Detect duplicate room assignments for overlapping dates
         $byHotelRoom = [];
@@ -48,10 +50,20 @@ class TravelController extends Controller
                         $b = $details[$j];
                         if ($a->arrival_date && $a->departure_date && $b->arrival_date && $b->departure_date) {
                             if (!($a->departure_date <= $b->arrival_date || $b->departure_date <= $a->arrival_date)) {
+                                $conflictDetails = "Room {$a->room_number} in hotel {$a->hotel->name} assigned to both {$a->participant->user->name} and {$b->participant->user->name} for overlapping dates.";
+                                
                                 $conflicts[] = [
                                     'type' => 'Room Overlap',
-                                    'details' => "Room {$a->room_number} in hotel {$a->hotel->name} assigned to both {$a->participant->user->name} and {$b->participant->user->name} for overlapping dates."
+                                    'details' => $conflictDetails
                                 ];
+
+                                // Send notifications for room overlap
+                                $travelNotificationService->notifyRoomOverlap(
+                                    $a->participant, 
+                                    $b->participant, 
+                                    $a->hotel->name, 
+                                    $a->room_number
+                                );
                             }
                         }
                     }
@@ -70,10 +82,15 @@ class TravelController extends Controller
         foreach ($hotelCounts as $hotelId => $details) {
             $hotel = $hotels[$hotelId] ?? null;
             if ($hotel && isset($hotel->room_capacity) && count($details) > $hotel->room_capacity) {
+                $conflictDetails = "Hotel {$hotel->name} has more participants assigned (" . count($details) . ") than its capacity ({$hotel->room_capacity}).";
+                
                 $conflicts[] = [
                     'type' => 'Hotel Overbooked',
-                    'details' => "Hotel {$hotel->name} has more participants assigned (" . count($details) . ") than its capacity ({$hotel->room_capacity})."
+                    'details' => $conflictDetails
                 ];
+
+                // Send notification for hotel overbooking
+                $travelNotificationService->notifyHotelOverbooked($hotel->name, count($details), $hotel->room_capacity);
             }
         }
 
@@ -98,6 +115,63 @@ class TravelController extends Controller
         $roomAllocation->check_out = $validated['check_out'] ?? null;
         $roomAllocation->save();
 
+        // Send room allocation notification
+        if ($roomAllocation->hotel_id) {
+            $travelNotificationService = new TravelNotificationService();
+            $travelNotificationService->notifyRoomAllocated($participant, $roomAllocation);
+        }
+
         return redirect()->back()->with('success', 'Room allocation updated.');
+    }
+
+    /**
+     * Export Travel Manifest as CSV
+     */
+    public function exportManifest()
+    {
+        $travelDetails = TravelDetail::with(['participant.user', 'hotel', 'participant.conference'])->get();
+
+        $filename = 'travel_manifest_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($travelDetails) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV Headers
+            fputcsv($file, [
+                'Participant Name',
+                'Email',
+                'Conference',
+                'Hotel',
+                'Arrival Date',
+                'Departure Date',
+                'Flight Info',
+                'Extra Nights',
+                'Organization'
+            ]);
+
+            // CSV Data
+            foreach ($travelDetails as $detail) {
+                fputcsv($file, [
+                    ($detail->participant->user->first_name ?? $detail->participant->user->name) . ' ' . ($detail->participant->user->last_name ?? ''),
+                    $detail->participant->user->email,
+                    $detail->participant->conference->name ?? 'N/A',
+                    $detail->hotel->name ?? 'N/A',
+                    $detail->arrival_date ? date('Y-m-d H:i', strtotime($detail->arrival_date)) : 'N/A',
+                    $detail->departure_date ? date('Y-m-d H:i', strtotime($detail->departure_date)) : 'N/A',
+                    $detail->flight_info ?? 'N/A',
+                    $detail->extra_nights ?? 0,
+                    $detail->participant->organization ?? 'N/A'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 } 

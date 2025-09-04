@@ -12,7 +12,7 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    @if(Auth::user()->hasRole('admin'))
+                    @if(Auth::user()->hasRole('admin') || Auth::user()->hasRole('superadmin'))
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             {{ __('Admin Dashboard') }}
                         </x-nav-link>
@@ -20,8 +20,16 @@
                         <x-nav-link :href="route('event-coordinator.dashboard')" :active="request()->routeIs('event-coordinator.*')">
                             {{ __('Event Coordinator') }}
                         </x-nav-link>
+                    @elseif(Auth::user()->hasRole('tasker'))
+                        <x-nav-link :href="route('dashboard.tasker')" :active="request()->routeIs('dashboard.tasker')">
+                            {{ __('Tasker Dashboard') }}
+                        </x-nav-link>
+                    @elseif(Auth::user()->hasRole('attendee') || Auth::user()->hasRole('speaker'))
+                        <x-nav-link :href="route('participant-dashboard')" :active="request()->routeIs('participant-dashboard')">
+                            {{ __('My Dashboard') }}
+                        </x-nav-link>
                     @else
-                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                        <x-nav-link :href="route('participant-dashboard')" :active="request()->routeIs('participant-dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
                     @endif
@@ -46,6 +54,10 @@
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
+                        </x-dropdown-link>
+
+                        <x-dropdown-link :href="route('id-cards.generate-my-card')">
+                            {{ __('My ID Card') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -102,6 +114,10 @@
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('id-cards.generate-my-card')">
+                    {{ __('My ID Card') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->

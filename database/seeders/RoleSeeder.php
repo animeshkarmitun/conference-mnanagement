@@ -16,11 +16,11 @@ class RoleSeeder extends Seeder
         $roles = [
             [
                 'name' => 'superadmin',
-                'permissions' => json_encode(['*']),
+                'permissions' => ['*'],
             ],
             [
                 'name' => 'admin',
-                'permissions' => json_encode([
+                'permissions' => [
                     'conferences.*',
                     'participants.*',
                     'sessions.*',
@@ -28,11 +28,11 @@ class RoleSeeder extends Seeder
                     'notifications.*',
                     'users.view',
                     'reports.*'
-                ]),
+                ],
             ],
             [
                 'name' => 'organizer',
-                'permissions' => json_encode([
+                'permissions' => [
                     'conferences.view',
                     'conferences.edit',
                     'participants.*',
@@ -42,32 +42,32 @@ class RoleSeeder extends Seeder
                     'tasks.edit',
                     'notifications.view',
                     'notifications.create'
-                ]),
+                ],
             ],
             [
                 'name' => 'speaker',
-                'permissions' => json_encode([
+                'permissions' => [
                     'sessions.view',
                     'sessions.edit',
                     'participants.view',
                     'notifications.view'
-                ]),
+                ],
             ],
             [
                 'name' => 'attendee',
-                'permissions' => json_encode([
+                'permissions' => [
                     'sessions.view',
                     'participants.view',
                     'notifications.view'
-                ]),
+                ],
             ],
             [
                 'name' => 'tasker',
-                'permissions' => json_encode([
+                'permissions' => [
                     'tasks.view',
                     'tasks.update',
                     'notifications.view'
-                ]),
+                ],
             ],
         ];
 
