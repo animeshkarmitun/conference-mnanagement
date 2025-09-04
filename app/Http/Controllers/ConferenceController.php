@@ -39,8 +39,16 @@ class ConferenceController extends Controller
                 $query->orderBy('start_date', 'asc'); // Default ordering
                 break;
         }
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('location', 'like', "%$search%");
+            });
+        }
         
-        $conferences = $query->paginate(10);
+        $conferences = $query->paginate(10)->withQueryString();
+        $search = $request->get('search', '');
         
         // Get conference counts for each category
         $conferenceCounts = [
@@ -52,7 +60,7 @@ class ConferenceController extends Controller
             'all' => Conference::count(),
         ];
         
-        return view('conferences.index', compact('conferences', 'conferenceCounts', 'status'));
+        return view('conferences.index', compact('conferences', 'conferenceCounts', 'status', 'search',));
     }
 
     public function create()

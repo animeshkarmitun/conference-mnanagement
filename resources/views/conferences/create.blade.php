@@ -73,7 +73,7 @@
             <div id="existing_venue_section" class="venue-section">
                 <div>
                     <label for="venue_id" class="block text-sm font-medium text-gray-700">Select Venue *</label>
-                    <select id="venue_id" name="venue_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <select id="venue_id" name="venue_id" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Venue</option>
                         @foreach($venues as $venue)
                             <option value="{{ $venue->id }}" {{ old('venue_id') == $venue->id ? 'selected' : '' }}>{{ $venue->name }} - {{ $venue->address }}</option>
@@ -129,16 +129,7 @@
             @enderror
         </div>
         <div>
-            <label for="venue_id" class="block text-sm font-medium text-gray-700">Venue</label>
-            <select id="venue_id" name="venue_id[]" multiple required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                {{-- <option value="">Select Venue</option> --}}
-                @foreach($venues as $venue)
-                    <option value="{{ $venue->id }}" {{ old('venue_id') == $venue->id ? 'selected' : '' }}>{{ $venue->name }}</option>
-                @endforeach
-            </select>
-            @error('venue_id')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
+           
 
         <!-- Sessions (Draft and Modal) -->
         <div class="bg-purple-50 p-6 rounded-lg">
