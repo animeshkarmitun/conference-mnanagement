@@ -73,7 +73,7 @@
             <div id="existing_venue_section" class="venue-section">
                 <div>
                     <label for="venue_id" class="block text-sm font-medium text-gray-700">Select Venue *</label>
-                    <select id="venue_id" name="venue_id" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <select id="venue_id" name="venue_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Venue</option>
                         @foreach($venues as $venue)
                             <option value="{{ $venue->id }}" {{ old('venue_id') == $venue->id ? 'selected' : '' }}>{{ $venue->name }} - {{ $venue->address }}</option>
@@ -149,28 +149,25 @@
             <input type="hidden" id="sessions_json" name="sessions_json" value='{{ old('sessions_json', '[]') }}'>
         </div>
 
-        <div class="flex justify-end">
-            <a href="{{ route('conferences.index') }}" class="mr-4 text-gray-600 hover:text-gray-900">Cancel</a>
-            <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold text-lg">Create Conference</button>
+        <div class="flex justify-end space-x-4 mt-4">
+            <a href="{{ route('conferences.index') }}" 
+               class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 font-semibold text-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Cancel
+            </a>
+            <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold text-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Create Conference
+            </button>
         </div>
     </form>
 </div>
 
-</script>
-<!-- Choices.js for multi-select with search -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-        <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            new Choices('#venue_id', {
-                removeItemButton: true,
-                searchEnabled: true,
-                placeholderValue: 'Select venue',
-                searchPlaceholderValue: 'Search venue'
-            });
-            });
-        </script>
-<!-- Multiple select code end -->  
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

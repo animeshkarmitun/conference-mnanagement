@@ -208,15 +208,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/{participant}/update-status', [\App\Http\Controllers\ParticipantController::class, 'updateStatus'])->name('participants.update-status');
     Route::post('/participants/{participant}/remove-session', [\App\Http\Controllers\ParticipantController::class, 'removeSession'])->name('participants.remove-session');
     
-    // Conference Kit Routes for Participants
-    Route::get('/conference-kit', [\App\Http\Controllers\ConferenceKitController::class, 'index'])->name('conference-kit.index');
-    Route::get('/conference-kit/{conferenceKit}/download', [\App\Http\Controllers\ConferenceKitController::class, 'download'])->name('conference-kit.download');
+    // Admin Conference Docs Routes (must come first to avoid conflicts)
+    Route::resource('conference-docs', \App\Http\Controllers\ConferenceDocController::class);
+    Route::post('/conference-docs/{conferenceDoc}/media', [\App\Http\Controllers\ConferenceDocController::class, 'uploadMedia'])->name('conference-docs.media.upload');
+    Route::get('/conference-docs/{conferenceDoc}/media/{docItem}/download', [\App\Http\Controllers\ConferenceDocController::class, 'downloadMedia'])->name('conference-docs.media.download');
+    Route::delete('/conference-docs/{conferenceDoc}/media/{docItem}', [\App\Http\Controllers\ConferenceDocController::class, 'deleteMedia'])->name('conference-docs.media.delete');
+    
+    // Conference Docs Routes for Participants (more specific routes after admin routes)
+    Route::get('/my-conference-docs', [\App\Http\Controllers\ConferenceDocController::class, 'participantIndex'])->name('participant.conference-docs.index');
+    Route::get('/my-conference-docs/{conferenceDoc}/download', [\App\Http\Controllers\ConferenceDocController::class, 'download'])->name('participant.conference-docs.download');
+    Route::get('/my-conference-docs/{conferenceDoc}/media/{docItem}/download', [\App\Http\Controllers\ConferenceDocController::class, 'downloadMedia'])->name('participant.conference-docs.media.download');
     
     // Participant Notification Routes
     Route::get('/participant/notifications', [\App\Http\Controllers\NotificationController::class, 'participantIndex'])->name('participant.notifications.index');
-    
-    // Admin Conference Kit Routes
-    Route::resource('conference-kits', \App\Http\Controllers\ConferenceKitController::class);
     
     Route::get('/admin/room-allocations', [\App\Http\Controllers\TravelController::class, 'roomAllocations'])->name('admin.room-allocations');
     Route::get('/admin/itineraries', [\App\Http\Controllers\TravelController::class, 'itineraries'])->name('admin.itineraries');

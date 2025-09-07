@@ -1,6 +1,6 @@
 @extends('layouts.participant')
 
-@section('title', 'Conference Kit')
+@section('title', 'Conference Docs')
 
 @section('content')
 <div class="max-w-6xl mx-auto">
@@ -8,7 +8,7 @@
     <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-lg p-8 mb-8 text-white">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold mb-2">Conference Kit</h1>
+                <h1 class="text-3xl font-bold mb-2">Conference Docs</h1>
                 <p class="text-blue-100 text-lg">{{ $participant->conference->name ?? 'Conference' }}</p>
                 <p class="text-blue-200">Welcome, {{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }} ({{ $participant->participantType->name ?? '' }})</p>
             </div>
@@ -247,6 +247,71 @@
                         </div>
                     @endif
                 </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Media Files Section -->
+    @if($mediaFiles->count() > 0)
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
+            <div class="flex items-center mb-6">
+                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Media Files & Documents</h2>
+                    <p class="text-gray-600">Download conference materials, presentations, and resources</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($mediaFiles as $mediaFile)
+                    @php $content = json_decode($mediaFile->content, true); @endphp
+                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow duration-200">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center mb-3">
+                                    @if($mediaFile->isImage())
+                                        <svg class="w-8 h-8 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    @elseif($mediaFile->isDocument())
+                                        <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    @elseif($mediaFile->isVideo())
+                                        <svg class="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    @else
+                                        <svg class="w-8 h-8 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                        </svg>
+                                    @endif
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">{{ $mediaFile->file_name }}</h3>
+                                        <p class="text-sm text-gray-600">{{ $mediaFile->getFileSizeFormatted() }}</p>
+                                    </div>
+                                </div>
+                                @if(isset($content['description']) && $content['description'])
+                                    <p class="text-gray-700 text-sm mb-3">{{ $content['description'] }}</p>
+                                @endif
+                                <div class="text-xs text-gray-500">
+                                    Uploaded by {{ $mediaFile->uploader->name ?? 'Admin' }} • {{ $mediaFile->created_at->format('M d, Y') }}
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{{ route('participant.conference-docs.media.download', [$conferenceDoc, $mediaFile]) }}" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 w-full justify-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Download
+                        </a>
+                    </div>
+                @endforeach
             </div>
         </div>
     @endif
