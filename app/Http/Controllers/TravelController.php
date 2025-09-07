@@ -19,11 +19,11 @@ class TravelController extends Controller
         return view('admin.travel.room-allocations', compact('participants', 'hotels'));
     }
 
-    // Admin view for travel manifests
-    public function travelManifests()
+    // Admin view for itineraries
+    public function itineraries()
     {
         $travelDetails = TravelDetail::with(['participant.user', 'hotel', 'participant.conference'])->get();
-        return view('admin.travel.travel-manifests', compact('travelDetails'));
+        return view('admin.travel.itineraries', compact('travelDetails'));
     }
 
     // Admin view for travel conflicts
@@ -125,13 +125,13 @@ class TravelController extends Controller
     }
 
     /**
-     * Export Travel Manifest as CSV
+     * Export Itinerary as CSV
      */
-    public function exportManifest()
+    public function exportItinerary()
     {
         $travelDetails = TravelDetail::with(['participant.user', 'hotel', 'participant.conference'])->get();
 
-        $filename = 'travel_manifest_' . date('Y-m-d_H-i-s') . '.csv';
+        $filename = 'itinerary_' . date('Y-m-d_H-i-s') . '.csv';
         
         $headers = [
             'Content-Type' => 'text/csv',

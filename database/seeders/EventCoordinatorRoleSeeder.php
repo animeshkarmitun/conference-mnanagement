@@ -18,8 +18,8 @@ class EventCoordinatorRoleSeeder extends Seeder
             'name' => 'event_coordinator',
         ], [
             'permissions' => [
-                'view_travel_manifests',
-                'export_travel_manifests',
+                'view_itineraries',
+                'export_itineraries',
                 'view_participants',
                 'view_conferences',
                 'view_sessions'

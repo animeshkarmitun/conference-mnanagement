@@ -51,9 +51,9 @@ class EventCoordinatorController extends Controller
     }
 
     /**
-     * Travel Manifest List
+     * Itinerary List
      */
-    public function travelManifests(Request $request)
+    public function itineraries(Request $request)
     {
         // Check if user is event coordinator
         if (!Auth::user()->hasRole('event_coordinator')) {
@@ -81,16 +81,16 @@ class EventCoordinatorController extends Controller
             });
         }
 
-        $travelManifests = $query->latest()->paginate(20);
+        $itineraries = $query->latest()->paginate(20);
         $conferences = Conference::all();
 
-        return view('event-coordinator.travel-manifests', compact('travelManifests', 'conferences'));
+        return view('event-coordinator.itineraries', compact('itineraries', 'conferences'));
     }
 
     /**
-     * Export Travel Manifest
+     * Export Itinerary
      */
-    public function exportManifest(Request $request)
+    public function exportItinerary(Request $request)
     {
         // Check if user is event coordinator
         if (!Auth::user()->hasRole('event_coordinator')) {
@@ -114,7 +114,7 @@ class EventCoordinatorController extends Controller
 
         // For now, return a simple CSV export
         // In Phase 2, this will be enhanced with PDF/Excel
-        $filename = 'travel_manifest_' . date('Y-m-d_H-i-s') . '.csv';
+        $filename = 'itinerary_' . date('Y-m-d_H-i-s') . '.csv';
         
         $headers = [
             'Content-Type' => 'text/csv',

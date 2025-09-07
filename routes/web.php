@@ -219,9 +219,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('conference-kits', \App\Http\Controllers\ConferenceKitController::class);
     
     Route::get('/admin/room-allocations', [\App\Http\Controllers\TravelController::class, 'roomAllocations'])->name('admin.room-allocations');
-    Route::get('/admin/travel-manifests', [\App\Http\Controllers\TravelController::class, 'travelManifests'])->name('admin.travel-manifests');
+    Route::get('/admin/itineraries', [\App\Http\Controllers\TravelController::class, 'itineraries'])->name('admin.itineraries');
     Route::get('/admin/travel-conflicts', [\App\Http\Controllers\TravelController::class, 'travelConflicts'])->name('admin.travel-conflicts');
-    Route::get('/admin/export-manifest', [\App\Http\Controllers\TravelController::class, 'exportManifest'])->name('admin.export-manifest');
+    Route::get('/admin/export-itinerary', [\App\Http\Controllers\TravelController::class, 'exportItinerary'])->name('admin.export-itinerary');
     Route::post('/admin/room-allocations/{participant}', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('admin.room-allocations.update');
     Route::post('/admin/participants/download-biographies', [\App\Http\Controllers\ParticipantController::class, 'downloadBiographies'])->name('admin.participants.download-biographies');
     Route::post('/participants/bulk-update', [\App\Http\Controllers\ParticipantController::class, 'bulkUpdate'])->name('participants.bulk-update');
@@ -243,8 +243,8 @@ Route::middleware('auth')->group(function () {
     // Event Coordinator Routes
     Route::prefix('event-coordinator')->name('event-coordinator.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\EventCoordinatorController::class, 'dashboard'])->name('dashboard');
-        Route::get('/travel-manifests', [\App\Http\Controllers\EventCoordinatorController::class, 'travelManifests'])->name('travel-manifests');
-        Route::get('/export-manifest', [\App\Http\Controllers\EventCoordinatorController::class, 'exportManifest'])->name('export-manifest');
+        Route::get('/itineraries', [\App\Http\Controllers\EventCoordinatorController::class, 'itineraries'])->name('itineraries');
+        Route::get('/export-itinerary', [\App\Http\Controllers\EventCoordinatorController::class, 'exportItinerary'])->name('export-itinerary');
     });
 });
 

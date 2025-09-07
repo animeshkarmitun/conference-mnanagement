@@ -239,17 +239,17 @@
                         <!-- Travel Management Section -->
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
-                        <a href="{{ route('admin.travel-manifests') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.travel-manifests') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Travel Manifests' : ''">
+                        <a href="{{ route('admin.itineraries') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.itineraries') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Itineraries' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Manifests</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Itineraries</span>
                         </a>
-                        <a href="{{ route('admin.export-manifest') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.export-manifest') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Manifest' : ''">
+                        <a href="{{ route('admin.export-itinerary') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.export-itinerary') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Itinerary' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Manifest</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Itinerary</span>
                         </a>
                     @elseif(auth()->user()->hasRole('tasker'))
                         <a href="{{ route('dashboard.tasker') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard.tasker') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Tasker Dashboard' : ''">
@@ -322,17 +322,17 @@
                         <!-- Travel Management Section -->
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
-                        <a href="{{ route('event-coordinator.travel-manifests') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.travel-manifests') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Travel Manifests' : ''">
+                        <a href="{{ route('event-coordinator.itineraries') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.itineraries') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Itineraries' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Manifests</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Itineraries</span>
                         </a>
-                        <a href="{{ route('event-coordinator.export-manifest') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.export-manifest') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Manifest' : ''">
+                        <a href="{{ route('event-coordinator.export-itinerary') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.export-itinerary') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Itinerary' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Manifest</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Itinerary</span>
                         </a>
                     @else
                         <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
@@ -386,17 +386,17 @@
                         <!-- Travel Management Section -->
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
-                        <a href="{{ route('admin.travel-manifests') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.travel-manifests') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Travel Manifests' : ''">
+                        <a href="{{ route('admin.itineraries') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.itineraries') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Itineraries' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Manifests</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Itineraries</span>
                         </a>
-                        <a href="{{ route('admin.export-manifest') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.export-manifest') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Manifest' : ''">
+                        <a href="{{ route('admin.export-itinerary') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.export-itinerary') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Itinerary' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Manifest</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Itinerary</span>
                         </a>
                     @endif
                 </nav>

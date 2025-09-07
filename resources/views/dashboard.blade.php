@@ -364,12 +364,12 @@
                 
                                  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                     <!-- Manage ID Cards -->
-                    <a href="{{ route('id-cards.index') }}" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200 flex flex-col items-center" title="Manage ID Cards">
+                    <!-- <a href="{{ route('id-cards.index') }}" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200 flex flex-col items-center" title="Manage ID Cards">
                         <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
                         </svg>
                         <span class="text-xs font-medium">ID Cards</span>
-                    </a>
+                    </a> -->
 
                     <!-- Manage Roles -->
                     <a href="{{ route('roles.index') }}" class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200 flex flex-col items-center" title="Manage Roles">
