@@ -9,14 +9,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 use Exception;
+use PDO;
 
 class RestoreService
 {
-    protected $backupService;
-
-    public function __construct(BackupService $backupService)
+    public function __construct()
     {
-        $this->backupService = $backupService;
+        // No dependencies to avoid circular dependency
     }
 
     /**
@@ -44,7 +43,8 @@ class RestoreService
         }
 
         // Verify backup integrity
-        if (!$this->backupService->verifyBackup($backupId)) {
+        $backupService = app(BackupService::class);
+        if (!$backupService->verifyBackup($backupId)) {
             throw new Exception("Backup file is corrupted");
         }
 
@@ -61,22 +61,41 @@ class RestoreService
         try {
             $restoreRecord->update(['status' => 'in_progress']);
 
-            // Create a backup before restore (safety measure)
-            $safetyBackup = $this->backupService->createBackup('emergency', $user);
+            // Create a backup before restore (safety measure) - but make it optional
+            $safetyBackupId = null;
+            try {
+                $backupService = app(BackupService::class);
+                $safetyBackup = $backupService->createBackup('emergency', $user);
+                $safetyBackupId = $safetyBackup->id;
+                Log::info("Safety backup created before restore", ['safety_backup_id' => $safetyBackupId]);
+            } catch (Exception $e) {
+                Log::warning("Failed to create safety backup, proceeding with restore anyway", ['error' => $e->getMessage()]);
+            }
             
             $restoreRecord->update([
                 'metadata' => [
-                    'safety_backup_id' => $safetyBackup->id,
+                    'safety_backup_id' => $safetyBackupId,
                     'restore_reason' => 'Manual restore operation',
                 ]
             ]);
 
             // Perform the restore
+            Log::info("Starting restore operation", [
+                'restore_id' => $restoreRecord->id,
+                'backup_id' => $backupId,
+                'restore_type' => $restoreType
+            ]);
+            
             if ($restoreType === 'full') {
                 $this->performFullRestore($backup);
             } else {
                 $this->performSelectiveRestore($backup, $tables);
             }
+            
+            Log::info("Restore operation completed successfully", [
+                'restore_id' => $restoreRecord->id,
+                'backup_id' => $backupId
+            ]);
 
             // Update restore record
             $restoreRecord->update([
@@ -124,29 +143,177 @@ class RestoreService
 
         $backupFile = $backup->getFullFilePath();
 
-        // Build mysql command for restore
-        $command = sprintf(
-            'mysql --host=%s --port=%s --user=%s --password=%s %s < %s',
-            escapeshellarg($host),
-            escapeshellarg($port),
-            escapeshellarg($username),
-            escapeshellarg($password),
-            escapeshellarg($database),
-            escapeshellarg($backupFile)
-        );
+        // Try multiple restore methods
+        $restoreMethods = [
+            'mysql_command' => $this->tryMysqlCommandRestore($host, $port, $username, $password, $database, $backupFile),
+            'php_pdo' => $this->tryPhpPdoRestore($backupFile),
+        ];
 
-        // Execute restore command
-        $output = [];
-        $returnCode = 0;
-        exec($command, $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            throw new Exception("Database restore failed with return code: {$returnCode}");
+        $lastError = null;
+        foreach ($restoreMethods as $method => $callback) {
+            try {
+                Log::info("Attempting restore using method: {$method}");
+                $callback();
+                Log::info("Restore completed successfully using method: {$method}");
+                
+                // Clear application cache after restore
+                Artisan::call('cache:clear');
+                Artisan::call('config:clear');
+                return;
+                
+            } catch (Exception $e) {
+                $lastError = $e;
+                Log::warning("Restore method {$method} failed: " . $e->getMessage());
+                continue;
+            }
         }
 
-        // Clear application cache after restore
-        Artisan::call('cache:clear');
-        Artisan::call('config:clear');
+        throw new Exception("All restore methods failed. Last error: " . ($lastError ? $lastError->getMessage() : 'Unknown error'));
+    }
+
+    /**
+     * Try mysql command restore method
+     */
+    protected function tryMysqlCommandRestore(string $host, string $port, string $username, string $password, string $database, string $backupFile): callable
+    {
+        return function() use ($host, $port, $username, $password, $database, $backupFile) {
+            // Check if mysql command is available
+            $mysqlPath = $this->findMysqlPath();
+            
+            if (!$mysqlPath) {
+                throw new Exception("mysql command not found in system PATH");
+            }
+
+            // Build mysql command for restore
+            $command = sprintf(
+                '%s --host=%s --port=%s --user=%s %s %s < %s 2>&1',
+                escapeshellarg($mysqlPath),
+                escapeshellarg($host),
+                escapeshellarg($port),
+                escapeshellarg($username),
+                $password ? '--password=' . escapeshellarg($password) : '',
+                escapeshellarg($database),
+                escapeshellarg($backupFile)
+            );
+
+            // Execute restore command
+            $output = [];
+            $returnCode = 0;
+            exec($command, $output, $returnCode);
+
+            if ($returnCode !== 0) {
+                $errorOutput = implode("\n", $output);
+                throw new Exception("mysql restore failed with return code: {$returnCode}. Output: {$errorOutput}");
+            }
+        };
+    }
+
+    /**
+     * Try PHP PDO restore method (fallback)
+     */
+    protected function tryPhpPdoRestore(string $backupFile): callable
+    {
+        return function() use ($backupFile) {
+            Log::info("Starting PHP PDO restore from file: {$backupFile}");
+            
+            if (!file_exists($backupFile)) {
+                throw new Exception("Backup file does not exist: {$backupFile}");
+            }
+            
+            $sqlContent = file_get_contents($backupFile);
+            if ($sqlContent === false) {
+                throw new Exception("Failed to read backup file");
+            }
+            
+            // Split SQL content into individual statements
+            $statements = array_filter(
+                array_map('trim', explode(';', $sqlContent)),
+                function($stmt) {
+                    return !empty($stmt) && !preg_match('/^--/', $stmt);
+                }
+            );
+            
+            $pdo = DB::connection()->getPdo();
+            
+            // Disable foreign key checks temporarily
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+            
+            try {
+                foreach ($statements as $statement) {
+                    $statement = trim($statement);
+                    if (!empty($statement)) {
+                        try {
+                            // Convert INSERT statements to INSERT ... ON DUPLICATE KEY UPDATE
+                            if (preg_match('/^INSERT INTO\s+`?(\w+)`?\s+VALUES\s*\(/i', $statement, $matches)) {
+                                $tableName = $matches[1];
+                                $modifiedStatement = $this->convertInsertToUpsert($statement, $tableName);
+                                Log::debug("Converted INSERT to UPSERT for table: {$tableName}");
+                                $pdo->exec($modifiedStatement);
+                            } else {
+                                Log::debug("Executing SQL statement: " . substr($statement, 0, 100) . "...");
+                                $pdo->exec($statement);
+                            }
+                        } catch (Exception $e) {
+                            // Log the error but continue with other statements
+                            Log::warning("SQL statement failed: " . $e->getMessage());
+                            Log::debug("Failed statement: " . $statement);
+                            
+                            // If it's a "table already exists" error, we can ignore it
+                            if (strpos($e->getMessage(), 'already exists') !== false) {
+                                Log::info("Ignoring 'table already exists' error");
+                                continue;
+                            }
+                            
+                            // If it's a duplicate key error, we can ignore it (data already exists)
+                            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                                Log::info("Ignoring 'duplicate entry' error - data already exists");
+                                continue;
+                            }
+                            
+                            // For other errors, re-throw
+                            throw $e;
+                        }
+                    }
+                }
+                
+                // Re-enable foreign key checks
+                $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+                
+                Log::info("PHP PDO restore completed successfully");
+                
+            } catch (Exception $e) {
+                // Re-enable foreign key checks even if restore fails
+                $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+                throw $e;
+            }
+        };
+    }
+
+    /**
+     * Find mysql executable path
+     */
+    protected function findMysqlPath(): ?string
+    {
+        $possiblePaths = [
+            'mysql',
+            '/usr/bin/mysql',
+            '/usr/local/bin/mysql',
+            '/opt/mysql/bin/mysql',
+            'C:\\xampp\\mysql\\bin\\mysql.exe',
+            'C:\\wamp\\bin\\mysql\\mysql8.0.21\\bin\\mysql.exe',
+            'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe',
+            'C:\\Program Files (x86)\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe',
+        ];
+
+        foreach ($possiblePaths as $path) {
+            $returnCode = 0;
+            exec("which {$path} 2>/dev/null || where {$path} 2>nul", $output, $returnCode);
+            if ($returnCode === 0) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -262,6 +429,51 @@ class RestoreService
         ];
 
         return $fileInfo;
+    }
+
+    /**
+     * Convert INSERT statement to INSERT ... ON DUPLICATE KEY UPDATE
+     */
+    protected function convertInsertToUpsert(string $insertStatement, string $tableName): string
+    {
+        try {
+            // Get table structure to determine columns
+            $pdo = DB::connection()->getPdo();
+            $columns = $pdo->query("SHOW COLUMNS FROM `{$tableName}`")->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($columns)) {
+                Log::warning("Could not get columns for table: {$tableName}, using original statement");
+                return $insertStatement;
+            }
+            
+            // Extract the VALUES part
+            if (preg_match('/^INSERT INTO\s+`?(\w+)`?\s+VALUES\s*(.+)$/i', $insertStatement, $matches)) {
+                $valuesPart = $matches[2];
+                
+                // Build the ON DUPLICATE KEY UPDATE clause
+                $updateClause = [];
+                foreach ($columns as $column) {
+                    $columnName = $column['Field'];
+                    // Skip auto-increment primary keys
+                    if ($column['Extra'] !== 'auto_increment') {
+                        $updateClause[] = "`{$columnName}` = VALUES(`{$columnName}`)";
+                    }
+                }
+                
+                if (!empty($updateClause)) {
+                    $upsertStatement = "INSERT INTO `{$tableName}` VALUES {$valuesPart} ON DUPLICATE KEY UPDATE " . implode(', ', $updateClause);
+                    Log::debug("Converted INSERT to UPSERT: " . substr($upsertStatement, 0, 200) . "...");
+                    return $upsertStatement;
+                }
+            }
+            
+            Log::warning("Could not convert INSERT statement for table: {$tableName}");
+            return $insertStatement;
+            
+        } catch (Exception $e) {
+            Log::warning("Error converting INSERT to UPSERT for table {$tableName}: " . $e->getMessage());
+            return $insertStatement;
+        }
     }
 
     /**

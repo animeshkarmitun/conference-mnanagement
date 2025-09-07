@@ -9,6 +9,7 @@ use App\Models\RestoreRecord;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class BackupController extends Controller
@@ -103,7 +104,7 @@ class BackupController extends Controller
                     'created_at' => $backup->created_at->format('Y-m-d H:i:s'),
                     'completed_at' => $backup->completed_at?->format('Y-m-d H:i:s'),
                     'duration' => $backup->duration,
-                    'creator' => $backup->creator->first_name . ' ' . $backup->creator->last_name,
+                    'creator' => $backup->creator ? $backup->creator->first_name . ' ' . $backup->creator->last_name : 'Unknown',
                     'metadata' => $backup->metadata,
                     'restore_records' => $backup->restoreRecords->map(function ($restore) {
                         return [
@@ -111,7 +112,7 @@ class BackupController extends Controller
                             'type' => $restore->restore_type,
                             'status' => $restore->status,
                             'created_at' => $restore->created_at->format('Y-m-d H:i:s'),
-                            'creator' => $restore->creator->first_name . ' ' . $restore->creator->last_name,
+                            'creator' => $restore->creator ? $restore->creator->first_name . ' ' . $restore->creator->last_name : 'Unknown',
                         ];
                     }),
                 ]
@@ -249,7 +250,7 @@ class BackupController extends Controller
                         'tables_restored' => $restore->tables_restored_list,
                         'created_at' => $restore->created_at->format('Y-m-d H:i:s'),
                         'duration' => $restore->duration,
-                        'creator' => $restore->creator->first_name . ' ' . $restore->creator->last_name,
+                        'creator' => $restore->creator ? $restore->creator->first_name . ' ' . $restore->creator->last_name : 'Unknown',
                     ];
                 }),
                 'stats' => $stats
@@ -455,6 +456,72 @@ class BackupController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Simple backup test failed: ' . $e->getMessage(),
+                'error' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    /**
+     * Fix backup file paths
+     */
+    public function fixBackupPaths(): JsonResponse
+    {
+        try {
+            $fixedCount = $this->backupService->fixBackupPaths();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Fixed {$fixedCount} backup path(s)",
+                'fixed_count' => $fixedCount
+            ]);
+            
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fix backup paths: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test backup details endpoint
+     */
+    public function testBackupDetails(int $id): JsonResponse
+    {
+        try {
+            $backup = $this->backupService->getBackup($id);
+            
+            if (!$backup) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Backup not found',
+                    'backup_id' => $id
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Backup details retrieved successfully',
+                'backup' => [
+                    'id' => $backup->id,
+                    'type' => $backup->backup_type,
+                    'status' => $backup->status,
+                    'file_name' => $backup->file_name,
+                    'file_size' => $backup->formatted_file_size,
+                    'checksum' => $backup->checksum,
+                    'created_at' => $backup->created_at->format('Y-m-d H:i:s'),
+                    'completed_at' => $backup->completed_at ? $backup->completed_at->format('Y-m-d H:i:s') : null,
+                    'duration' => $backup->duration,
+                    'creator' => $backup->creator ? $backup->creator->first_name . ' ' . $backup->creator->last_name : 'Unknown',
+                    'file_path' => $backup->file_path,
+                    'exists' => $backup->exists(),
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get backup details: ' . $e->getMessage(),
                 'error' => $e->getTraceAsString()
             ], 500);
         }

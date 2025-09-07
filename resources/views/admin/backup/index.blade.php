@@ -484,6 +484,13 @@
                                             <span class="d-md-none">Export</span>
                                         </button>
                                     </div>
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
+                                        <button type="button" class="btn btn-outline-warning w-100" onclick="fixBackupPaths()" title="Fix backup file paths">
+                                            <i class="fas fa-wrench me-2"></i>
+                                            <span class="d-none d-md-inline">Fix Paths</span>
+                                            <span class="d-md-none">Fix</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1064,10 +1071,14 @@ function createInstantBackup() {
 function viewBackup(id) {
     showLoading('Loading backup details...');
     
-    fetch(`{{ route("admin.backup.index") }}/${id}`)
-    .then(response => response.json())
+    fetch(`{{ url('admin/backup') }}/${id}`)
+    .then(response => {
+        console.log('View backup response status:', response.status);
+        return response.json();
+    })
     .then(data => {
         hideLoading();
+        console.log('View backup response data:', data);
         if (data.success) {
             displayBackupDetails(data.backup);
             bootstrap.Modal.getInstance(document.getElementById('backupDetailsModal')).show();
@@ -1077,8 +1088,12 @@ function viewBackup(id) {
     })
     .catch(error => {
         hideLoading();
-        showAlert('error', 'An error occurred while loading backup details');
-        console.error('Error:', error);
+        console.error('=== VIEW BACKUP ERROR DETAILS ===');
+        console.error('Error object:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        console.error('==================================');
+        showAlert('error', 'An error occurred while loading backup details. Check console for details.');
     });
 }
 
@@ -1150,39 +1165,128 @@ function displayBackupDetails(backup) {
 
 // Restore backup
 function restoreBackup(id) {
-    document.getElementById('restoreBackupId').value = id;
-    bootstrap.Modal.getInstance(document.getElementById('restoreModal')).show();
+    console.log('Restore button clicked for backup ID:', id);
+    
+    // Check if modal element exists
+    const modal = document.getElementById('restoreModal');
+    if (!modal) {
+        console.error('Restore modal not found');
+        showAlert('error', 'Restore modal not found');
+        return;
+    }
+    
+    // Set the backup ID
+    const backupIdInput = document.getElementById('restoreBackupId');
+    if (!backupIdInput) {
+        console.error('Restore backup ID input not found');
+        showAlert('error', 'Restore form not properly configured');
+        return;
+    }
+    
+    backupIdInput.value = id;
+    console.log('Backup ID set to:', id);
+    
+    // Show the modal
+    try {
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+        console.log('Restore modal shown successfully');
+    } catch (error) {
+        console.error('Error showing restore modal:', error);
+        showAlert('error', 'Failed to show restore dialog');
+    }
 }
 
 // Execute restore
 function executeRestore() {
+    console.log('Execute restore function called');
+    
     const form = document.getElementById('restoreForm');
+    if (!form) {
+        console.error('Restore form not found');
+        showAlert('error', 'Restore form not found');
+        return;
+    }
+    
     const formData = new FormData(form);
+    const backupId = document.getElementById('restoreBackupId').value;
+    
+    console.log('Restore form data:', {
+        backupId: backupId,
+        type: formData.get('type'),
+        tables: formData.get('tables')
+    });
+    
+    if (!backupId) {
+        console.error('No backup ID found');
+        showAlert('error', 'No backup selected');
+        return;
+    }
+    
+    if (!formData.get('type')) {
+        console.error('No restore type selected');
+        showAlert('error', 'Please select a restore type');
+        return;
+    }
     
     showLoading('Starting restore operation...');
     
-    fetch(`{{ route("admin.backup.index") }}/${document.getElementById('restoreBackupId').value}/restore`, {
+    fetch(`{{ url('admin/backup') }}/${document.getElementById('restoreBackupId').value}/restore`, {
         method: 'POST',
         body: formData,
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Restore response status:', response.status);
+        console.log('Restore response headers:', response.headers);
+        return response.json();
+    })
     .then(data => {
         hideLoading();
+        console.log('Restore response data:', data);
+        console.log('Data success:', data.success);
+        console.log('Data message:', data.message);
+        
         if (data.success) {
+            console.log('Restore successful, showing success alert');
             showAlert('success', data.message);
-            bootstrap.Modal.getInstance(document.getElementById('restoreModal')).hide();
-            location.reload();
+            console.log('Hiding restore modal');
+            
+            // Try to get the modal instance and hide it
+            const modalElement = document.getElementById('restoreModal');
+            if (modalElement) {
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                    console.log('Modal hidden successfully');
+                } else {
+                    console.log('No modal instance found, trying to create new one');
+                    const newModalInstance = new bootstrap.Modal(modalElement);
+                    newModalInstance.hide();
+                }
+            } else {
+                console.error('Restore modal element not found');
+            }
+            
+            console.log('Reloading page in 2 seconds...');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
         } else {
+            console.log('Restore failed, showing error alert');
             showAlert('error', data.message);
         }
     })
     .catch(error => {
         hideLoading();
-        showAlert('error', 'An error occurred while restoring backup');
-        console.error('Error:', error);
+        console.error('=== RESTORE ERROR DETAILS ===');
+        console.error('Error object:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        console.error('=============================');
+        showAlert('error', 'An error occurred while restoring backup. Check console for details.');
     });
 }
 
@@ -1531,18 +1635,75 @@ function refreshBackupList() {
 
 // Utility functions
 function showLoading(message) {
-    // You can implement a loading overlay here
-    console.log('Loading:', message);
+    // Create a loading overlay
+    const loadingHtml = `
+        <div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+            <div class="bg-white p-4 rounded shadow text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="text-muted">${message}</div>
+            </div>
+        </div>
+    `;
+    
+    // Remove any existing loading overlay
+    const existing = document.getElementById('loadingOverlay');
+    if (existing) {
+        existing.remove();
+    }
+    
+    // Add new loading overlay
+    document.body.insertAdjacentHTML('beforeend', loadingHtml);
 }
 
 function hideLoading() {
-    // Hide loading overlay
-    console.log('Loading complete');
+    // Remove loading overlay
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.remove();
+    }
 }
 
 function showAlert(type, message) {
-    // You can implement a toast notification system here
-    alert(message);
+    console.log('showAlert called with type:', type, 'message:', message);
+    
+    // Create a proper alert notification
+    const alertClass = type === 'error' ? 'alert-danger' : 
+                      type === 'success' ? 'alert-success' : 
+                      type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    console.log('Alert HTML:', alertHtml);
+    
+    // Insert at the top of the page
+    const container = document.querySelector('.container-fluid');
+    console.log('Container found:', !!container);
+    
+    if (container) {
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+        console.log('Alert inserted into container');
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            const alert = container.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+                console.log('Alert auto-removed');
+            }
+        }, 5000);
+    } else {
+        // Fallback to console and alert
+        console.error('Container not found, using fallback alert');
+        console.error('Alert:', message);
+        alert(message);
+    }
 }
 
 // New UI enhancement functions
@@ -1629,6 +1790,38 @@ function updateStatusIndicator(status) {
             storageStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Warning';
             storageStatus.className = 'badge bg-danger me-2';
             break;
+    }
+}
+
+function fixBackupPaths() {
+    if (confirm('Fix backup file paths? This will attempt to correct any incorrect file paths in the backup records.')) {
+        showLoading('Fixing backup paths...');
+        
+        fetch('{{ route("admin.backup.fix.paths") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                showAlert('success', data.message);
+                // Refresh the page to show updated data
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showAlert('error', data.message);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('error', 'An error occurred while fixing backup paths');
+            console.error('Error:', error);
+        });
     }
 }
 

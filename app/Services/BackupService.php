@@ -303,6 +303,57 @@ class BackupService
     }
 
     /**
+     * Fix backup file paths for existing records
+     */
+    public function fixBackupPaths(): int
+    {
+        $fixedCount = 0;
+        $backups = BackupRecord::all();
+        
+        foreach ($backups as $backup) {
+            $currentPath = $backup->file_path;
+            $fullPath = $backup->getFullFilePath();
+            
+            // Check if the current path is a directory
+            if (is_dir($fullPath)) {
+                Log::warning("Backup path is a directory, attempting to fix", [
+                    'backup_id' => $backup->id,
+                    'current_path' => $currentPath,
+                    'full_path' => $fullPath,
+                ]);
+                
+                // Try to find the actual backup file in the directory
+                $backupDir = $fullPath;
+                $files = glob($backupDir . '/*.sql');
+                
+                if (!empty($files)) {
+                    $actualFile = basename($files[0]);
+                    $newPath = 'backups/' . $actualFile;
+                    
+                    $backup->update([
+                        'file_path' => $newPath,
+                        'file_name' => $actualFile,
+                    ]);
+                    
+                    $fixedCount++;
+                    Log::info("Fixed backup path", [
+                        'backup_id' => $backup->id,
+                        'old_path' => $currentPath,
+                        'new_path' => $newPath,
+                    ]);
+                } else {
+                    Log::warning("No backup files found in directory", [
+                        'backup_id' => $backup->id,
+                        'directory' => $backupDir,
+                    ]);
+                }
+            }
+        }
+        
+        return $fixedCount;
+    }
+
+    /**
      * Get list of all backups
      */
     public function getBackups(int $limit = 50): \Illuminate\Database\Eloquent\Collection
@@ -329,23 +380,55 @@ class BackupService
         $backup = BackupRecord::find($id);
         
         if (!$backup) {
+            Log::warning("Backup not found for deletion", ['backup_id' => $id]);
             return false;
         }
 
-        // Delete physical file
-        if ($backup->exists()) {
-            unlink($backup->getFullFilePath());
+        $fullPath = $backup->getFullFilePath();
+        
+        try {
+            // Delete physical file if it exists
+            if (file_exists($fullPath)) {
+                if (is_file($fullPath)) {
+                    unlink($fullPath);
+                    Log::info("Backup file deleted", [
+                        'backup_id' => $id,
+                        'file_path' => $fullPath,
+                    ]);
+                } else {
+                    Log::warning("Backup path is not a file", [
+                        'backup_id' => $id,
+                        'file_path' => $fullPath,
+                        'is_dir' => is_dir($fullPath),
+                    ]);
+                }
+            } else {
+                Log::info("Backup file does not exist, proceeding with database deletion", [
+                    'backup_id' => $id,
+                    'file_path' => $fullPath,
+                ]);
+            }
+
+            // Delete database record
+            $backup->delete();
+
+            Log::info("Backup record deleted successfully", [
+                'backup_id' => $id,
+                'file_path' => $backup->file_path,
+                'user_id' => auth()->id(),
+            ]);
+
+            return true;
+            
+        } catch (Exception $e) {
+            Log::error("Failed to delete backup", [
+                'backup_id' => $id,
+                'file_path' => $fullPath,
+                'error' => $e->getMessage(),
+            ]);
+            
+            throw $e;
         }
-
-        // Delete database record
-        $backup->delete();
-
-        Log::info("Backup deleted", [
-            'backup_id' => $id,
-            'user_id' => auth()->id(),
-        ]);
-
-        return true;
     }
 
     /**

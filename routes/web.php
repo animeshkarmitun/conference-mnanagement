@@ -261,6 +261,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/cleanup', [\App\Http\Controllers\BackupController::class, 'cleanup'])->name('cleanup');
         Route::get('/test/connection', [\App\Http\Controllers\BackupController::class, 'testConnection'])->name('test.connection');
         Route::get('/test/simple', [\App\Http\Controllers\BackupController::class, 'testSimpleBackup'])->name('test.simple');
+        Route::post('/fix-paths', [\App\Http\Controllers\BackupController::class, 'fixBackupPaths'])->name('fix.paths');
+        Route::get('/test/details/{id}', [\App\Http\Controllers\BackupController::class, 'testBackupDetails'])->name('test.details');
     });
 });
 
