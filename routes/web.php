@@ -246,6 +246,22 @@ Route::middleware('auth')->group(function () {
         Route::get('/itineraries', [\App\Http\Controllers\EventCoordinatorController::class, 'itineraries'])->name('itineraries');
         Route::get('/export-itinerary', [\App\Http\Controllers\EventCoordinatorController::class, 'exportItinerary'])->name('export-itinerary');
     });
+
+    // Backup Management Routes (Admin Only)
+    Route::prefix('admin/backup')->name('admin.backup.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BackupController::class, 'index'])->name('index');
+        Route::post('/create', [\App\Http\Controllers\BackupController::class, 'create'])->name('create');
+        Route::get('/{id}', [\App\Http\Controllers\BackupController::class, 'show'])->name('show');
+        Route::delete('/{id}', [\App\Http\Controllers\BackupController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/restore', [\App\Http\Controllers\BackupController::class, 'restore'])->name('restore');
+        Route::get('/{id}/preview', [\App\Http\Controllers\BackupController::class, 'preview'])->name('preview');
+        Route::get('/restore/history', [\App\Http\Controllers\BackupController::class, 'restoreHistory'])->name('restore.history');
+        Route::get('/tables', [\App\Http\Controllers\BackupController::class, 'getTables'])->name('tables');
+        Route::get('/stats', [\App\Http\Controllers\BackupController::class, 'stats'])->name('stats');
+        Route::post('/cleanup', [\App\Http\Controllers\BackupController::class, 'cleanup'])->name('cleanup');
+        Route::get('/test/connection', [\App\Http\Controllers\BackupController::class, 'testConnection'])->name('test.connection');
+        Route::get('/test/simple', [\App\Http\Controllers\BackupController::class, 'testSimpleBackup'])->name('test.simple');
+    });
 });
 
 Route::get('/speaker/register', [\App\Http\Controllers\SpeakerRegistrationController::class, 'showRegistrationForm'])->name('speaker.register');
