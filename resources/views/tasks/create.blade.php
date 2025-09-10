@@ -61,17 +61,18 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label for="assigned_to" class="block text-sm font-medium text-gray-700">Assign To</label>
-                <select name="assigned_to" id="assigned_to" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    <option value="">Select User</option>
-                    @foreach($users as $user)
-                        <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }} ({{ $user->email }})</option>
-                    @endforeach
-                </select>
-                @error('assigned_to')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-            </div>
+        <div class="mb-4">
+            <label for="assigned_to" class="block text-sm font-medium text-gray-700">Assign To (Multiple Selection)</label>
+            <select name="assigned_to[]" id="assigned_to" multiple required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" size="5">
+                @foreach($users as $user)
+                    <option value="{{ $user->id }}" {{ (collect(old('assigned_to'))->contains($user->id)) ? 'selected' : '' }}>
+                        {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }} ({{ $user->email }})
+                    </option>
+                @endforeach
+            </select>
+            <p class="text-sm text-gray-500 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple users</p>
+            @error('assigned_to')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+            @error('assigned_to.*')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
 
         <div class="flex justify-end">

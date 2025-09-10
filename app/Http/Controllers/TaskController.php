@@ -18,14 +18,16 @@ class TaskController extends Controller
         $isTasker = $user->roles()->where('name', 'tasker')->exists();
         
         if ($isTasker) {
-            // Taskers only see tasks assigned to them
-            $tasks = Task::with(['assignedTo', 'createdBy'])
-                ->where('assigned_to', $user->id)
+            // Taskers only see tasks assigned to them (using many-to-many relationship)
+            $tasks = Task::with(['users', 'createdBy'])
+                ->whereHas('users', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
                 ->latest()
-                ->get(); // Changed from paginate to get for Kanban view
+                ->get();
         } else {
             // Admins and other roles see all tasks
-            $tasks = Task::with(['assignedTo', 'createdBy'])->latest()->get(); // Changed from paginate to get
+            $tasks = Task::with(['users', 'createdBy'])->latest()->get();
         }
         
         return view('tasks.index', compact('tasks'));
@@ -49,22 +51,36 @@ class TaskController extends Controller
             'due_date' => 'required|date',
             'priority' => 'required|in:low,medium,high',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
-            'assigned_to' => 'required|exists:users,id',
+            'assigned_to' => 'required|array|min:1',
+            'assigned_to.*' => 'exists:users,id',
             'conference_id' => 'required|exists:conferences,id',
         ]);
 
         $validated['created_by'] = auth()->id();
-        $validated['assigned_to'] = $request->assigned_to;
         $validated['conference_id'] = $request->conference_id;
+        
+        // Remove assigned_to from validated data as we'll handle it separately
+        $assignedUsers = $validated['assigned_to'];
+        unset($validated['assigned_to']);
 
         $task = Task::create($validated);
 
-        // Send notification to the assigned tasker
+        // Attach multiple users to the task
+        $task->users()->attach($assignedUsers, [
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        // Send notification to all assigned taskers
         $taskNotificationService = new TaskNotificationService();
-        $taskNotificationService->notifyTaskAssigned($task);
+        foreach ($assignedUsers as $userId) {
+            $user = User::find($userId);
+            $taskNotificationService->notifyTaskAssigned($task, $user);
+        }
 
         return redirect()->route('tasks.index')
-            ->with('success', 'Task created successfully.');
+            ->with('success', 'Task created and assigned to ' . count($assignedUsers) . ' user(s) successfully.');
     }
 
     public function show(Task $task)
@@ -91,17 +107,22 @@ class TaskController extends Controller
             'due_date' => 'required|date',
             'priority' => 'required|in:low,medium,high',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
-            'assigned_to' => 'required|exists:users,id',
+            'assigned_to' => 'required|array|min:1',
+            'assigned_to.*' => 'exists:users,id',
             'conference_id' => 'required|exists:conferences,id',
         ]);
 
         $oldStatus = $task->status;
-        $oldAssignedTo = $task->assigned_to;
+        $oldAssignedUsers = $task->users->pluck('id')->toArray();
 
-        $validated['assigned_to'] = $request->assigned_to;
+        $assignedUsers = $validated['assigned_to'];
+        unset($validated['assigned_to']);
         $validated['conference_id'] = $request->conference_id;
 
         $task->update($validated);
+
+        // Update user assignments
+        $task->users()->sync($assignedUsers);
 
         // Send notifications for task updates
         $taskNotificationService = new TaskNotificationService();
@@ -111,16 +132,24 @@ class TaskController extends Controller
             $taskNotificationService->notifyTaskStatusChanged($task, $oldStatus);
         }
         
-        // If assigned to different person, notify about assignment
-        if ($oldAssignedTo !== $task->assigned_to) {
-            $taskNotificationService->notifyTaskAssigned($task);
-        } else {
-            // Otherwise, notify about general update
+        // Check if assignments changed
+        $newAssignedUsers = $assignedUsers;
+        $addedUsers = array_diff($newAssignedUsers, $oldAssignedUsers);
+        $removedUsers = array_diff($oldAssignedUsers, $newAssignedUsers);
+        
+        // Notify newly assigned users
+        foreach ($addedUsers as $userId) {
+            $user = User::find($userId);
+            $taskNotificationService->notifyTaskAssigned($task, $user);
+        }
+        
+        // Notify existing users about updates (if no assignment changes)
+        if (empty($addedUsers) && empty($removedUsers)) {
             $taskNotificationService->notifyTaskUpdated($task);
         }
 
         return redirect()->route('tasks.index')
-            ->with('success', 'Task updated successfully.');
+            ->with('success', 'Task updated and assigned to ' . count($assignedUsers) . ' user(s) successfully.');
     }
 
     public function destroy(Task $task)

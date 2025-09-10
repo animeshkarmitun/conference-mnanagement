@@ -259,24 +259,30 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($task->assignedTo)
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3 shadow-lg">
-                                            <span class="text-sm font-medium text-yellow-700">
-                                                {{ substr($task->assignedTo->first_name ?? $task->assignedTo->name, 0, 1) }}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900">
-                                                {{ $task->assignedTo->first_name ?? $task->assignedTo->name }} {{ $task->assignedTo->last_name ?? '' }}
+                                @if($task->users && $task->users->count() > 0)
+                                    <div class="space-y-2">
+                                        @foreach($task->users->take(3) as $user)
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-2 shadow-sm">
+                                                    <span class="text-xs font-medium text-yellow-700">
+                                                        {{ substr($user->first_name ?? $user->name, 0, 1) }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="text-sm font-medium text-gray-900 truncate">
+                                                        {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
+                                                    </div>
+                                                    <div class="text-xs text-gray-500 truncate">
+                                                        {{ $user->email }}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="text-xs text-gray-500 flex items-center">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                                </svg>
-                                                {{ $task->assignedTo->email }}
+                                        @endforeach
+                                        @if($task->users->count() > 3)
+                                            <div class="text-xs text-gray-500 ml-10">
+                                                +{{ $task->users->count() - 3 }} more
                                             </div>
-                                        </div>
+                                        @endif
                                     </div>
                                 @else
                                     <span class="text-gray-400 flex items-center">
@@ -445,14 +451,22 @@
                                 @endif
                             </div>
                         </div>
-                        @if($task->assignedTo)
-                            <div class="flex items-center mb-2">
-                                <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-2">
-                                    <span class="text-xs font-medium text-yellow-700">
-                                        {{ substr($task->assignedTo->first_name ?? $task->assignedTo->name, 0, 1) }}
-                                    </span>
-                                </div>
-                                <span class="text-xs text-gray-600">{{ $task->assignedTo->first_name ?? $task->assignedTo->name }}</span>
+                        @if($task->users && $task->users->count() > 0)
+                            <div class="flex items-center mb-2 space-x-1">
+                                @foreach($task->users->take(3) as $user)
+                                    <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center" title="{{ $user->first_name ?? $user->name }}">
+                                        <span class="text-xs font-medium text-yellow-700">
+                                            {{ substr($user->first_name ?? $user->name, 0, 1) }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                                @if($task->users->count() > 3)
+                                    <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center" title="+{{ $task->users->count() - 3 }} more">
+                                        <span class="text-xs font-medium text-gray-600">
+                                            +{{ $task->users->count() - 3 }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                         @if($task->due_date)
@@ -489,14 +503,22 @@
                                 @endif
                             </div>
                         </div>
-                        @if($task->assignedTo)
-                            <div class="flex items-center mb-2">
-                                <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-2">
-                                    <span class="text-xs font-medium text-yellow-700">
-                                        {{ substr($task->assignedTo->first_name ?? $task->assignedTo->name, 0, 1) }}
-                                    </span>
-                                </div>
-                                <span class="text-xs text-gray-600">{{ $task->assignedTo->first_name ?? $task->assignedTo->name }}</span>
+                        @if($task->users && $task->users->count() > 0)
+                            <div class="flex items-center mb-2 space-x-1">
+                                @foreach($task->users->take(3) as $user)
+                                    <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center" title="{{ $user->first_name ?? $user->name }}">
+                                        <span class="text-xs font-medium text-yellow-700">
+                                            {{ substr($user->first_name ?? $user->name, 0, 1) }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                                @if($task->users->count() > 3)
+                                    <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center" title="+{{ $task->users->count() - 3 }} more">
+                                        <span class="text-xs font-medium text-gray-600">
+                                            +{{ $task->users->count() - 3 }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                         @if($task->due_date)
@@ -529,14 +551,22 @@
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                             </svg>
                         </div>
-                        @if($task->assignedTo)
-                            <div class="flex items-center mb-2">
-                                <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-2">
-                                    <span class="text-xs font-medium text-yellow-700">
-                                        {{ substr($task->assignedTo->first_name ?? $task->assignedTo->name, 0, 1) }}
-                                    </span>
-                                </div>
-                                <span class="text-xs text-gray-600">{{ $task->assignedTo->first_name ?? $task->assignedTo->name }}</span>
+                        @if($task->users && $task->users->count() > 0)
+                            <div class="flex items-center mb-2 space-x-1">
+                                @foreach($task->users->take(3) as $user)
+                                    <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center" title="{{ $user->first_name ?? $user->name }}">
+                                        <span class="text-xs font-medium text-yellow-700">
+                                            {{ substr($user->first_name ?? $user->name, 0, 1) }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                                @if($task->users->count() > 3)
+                                    <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center" title="+{{ $task->users->count() - 3 }} more">
+                                        <span class="text-xs font-medium text-gray-600">
+                                            +{{ $task->users->count() - 3 }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                         @if($task->due_date)
@@ -569,14 +599,22 @@
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                             </svg>
                         </div>
-                        @if($task->assignedTo)
-                            <div class="flex items-center mb-2">
-                                <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-2">
-                                    <span class="text-xs font-medium text-yellow-700">
-                                        {{ substr($task->assignedTo->first_name ?? $task->assignedTo->name, 0, 1) }}
-                                    </span>
-                                </div>
-                                <span class="text-xs text-gray-600">{{ $task->assignedTo->first_name ?? $task->assignedTo->name }}</span>
+                        @if($task->users && $task->users->count() > 0)
+                            <div class="flex items-center mb-2 space-x-1">
+                                @foreach($task->users->take(3) as $user)
+                                    <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center" title="{{ $user->first_name ?? $user->name }}">
+                                        <span class="text-xs font-medium text-yellow-700">
+                                            {{ substr($user->first_name ?? $user->name, 0, 1) }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                                @if($task->users->count() > 3)
+                                    <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center" title="+{{ $task->users->count() - 3 }} more">
+                                        <span class="text-xs font-medium text-gray-600">
+                                            +{{ $task->users->count() - 3 }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                         @if($task->due_date)
