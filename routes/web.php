@@ -311,3 +311,21 @@ Route::get('/db-check', function () {
         return 'Database connection failed: ' . $e->getMessage();
     }
 });
+
+// Passwordless Login Routes
+Route::prefix('passwordless-login')->name('passwordless-login.')->group(function () {
+    // Public routes for participants
+    Route::get('/verify/{token}', [App\Http\Controllers\PasswordlessLoginController::class, 'showVerification'])->name('verify');
+    Route::post('/verify/{token}', [App\Http\Controllers\PasswordlessLoginController::class, 'verify'])->name('verify.post');
+    
+    // Admin routes (protected by auth middleware - role checking in controller)
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/admin', [App\Http\Controllers\PasswordlessLoginController::class, 'adminIndex'])->name('admin.index');
+        Route::post('/generate', [App\Http\Controllers\PasswordlessLoginController::class, 'generateLink'])->name('generate');
+        Route::post('/generate-bulk', [App\Http\Controllers\PasswordlessLoginController::class, 'generateBulkLinks'])->name('generate.bulk');
+        Route::get('/participants', [App\Http\Controllers\PasswordlessLoginController::class, 'getParticipants'])->name('participants');
+        Route::get('/user/{user}/links', [App\Http\Controllers\PasswordlessLoginController::class, 'getUserLinks'])->name('user.links');
+        Route::delete('/user/{user}/revoke', [App\Http\Controllers\PasswordlessLoginController::class, 'revokeUserLinks'])->name('user.revoke');
+        Route::post('/cleanup', [App\Http\Controllers\PasswordlessLoginController::class, 'cleanupExpired'])->name('cleanup');
+    });
+});

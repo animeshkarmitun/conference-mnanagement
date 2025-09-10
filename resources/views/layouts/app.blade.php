@@ -178,7 +178,7 @@
                     </button>
                 </div>
                 <nav class="flex-1 px-4 py-6 space-y-3 sidebar-nav">
-                    @if(auth()->user()->hasRole('superadmin'))
+                    @if(auth()->check() && auth()->user()->hasRole('superadmin'))
                         <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
@@ -257,6 +257,12 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
                         </a>
+                        <a href="{{ route('passwordless-login.admin.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('passwordless-login.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Passwordless Login' : ''">
+                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
+                            </svg>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Passwordless Login</span>
+                        </a>
                         <!-- Travel Management Section -->
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
@@ -272,7 +278,7 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Itinerary</span>
                         </a>
-                    @elseif(auth()->user()->hasRole('tasker'))
+                    @elseif(auth()->check() && auth()->user()->hasRole('tasker'))
                         <a href="{{ route('dashboard.tasker') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard.tasker') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Tasker Dashboard' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
@@ -297,7 +303,7 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Gmail Conversations</span>
                         </a>
-                    @elseif(auth()->user()->hasRole('event_coordinator'))
+                    @elseif(auth()->check() && auth()->user()->hasRole('event_coordinator'))
                         <a href="{{ route('event-coordinator.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Event Coordinator Dashboard' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
@@ -404,6 +410,12 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
                         </a>
+                        <a href="{{ route('passwordless-login.admin.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('passwordless-login.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Passwordless Login' : ''">
+                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
+                            </svg>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Passwordless Login</span>
+                        </a>
                         <!-- Travel Management Section -->
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
@@ -424,10 +436,10 @@
                 <div class="border-t p-4">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                            {{ strtoupper(substr(auth()->user()->first_name,0,1)) }}
+                            {{ strtoupper(substr(auth()->user()->first_name ?? 'U',0,1)) }}
                         </div>
                         <div class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">
-                            <div class="font-semibold text-slate-200">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
+                            <div class="font-semibold text-slate-200">{{ auth()->user()->first_name ?? 'User' }} {{ auth()->user()->last_name ?? '' }}</div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="text-xs text-slate-400 hover:text-slate-200">Logout</button>
@@ -492,11 +504,11 @@
                         <div class="relative group">
                             <button class="flex items-center space-x-3 focus:outline-none">
                                 <span class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                    {{ strtoupper(substr(auth()->user()->first_name,0,1)) }}
+                                    {{ strtoupper(substr(auth()->user()->first_name ?? 'U',0,1)) }}
                                 </span>
                                 <span class="hidden md:flex flex-col items-start">
-                                    <span class="font-semibold text-slate-200">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</span>
-                                    <span class="text-xs text-slate-400">{{ auth()->user()->email }}</span>
+                                    <span class="font-semibold text-slate-200">{{ auth()->user()->first_name ?? 'User' }} {{ auth()->user()->last_name ?? '' }}</span>
+                                    <span class="text-xs text-slate-400">{{ auth()->user()->email ?? 'user@example.com' }}</span>
                                 </span>
                                 <svg class="w-4 h-4 text-gray-400 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                             </button>
