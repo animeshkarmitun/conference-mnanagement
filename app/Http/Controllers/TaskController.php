@@ -79,8 +79,17 @@ class TaskController extends Controller
             $taskNotificationService->notifyTaskAssigned($task, $user);
         }
 
-        return redirect()->route('tasks.index')
-            ->with('success', 'Task created and assigned to ' . count($assignedUsers) . ' user(s) successfully.');
+        // Determine who gets notified and provide appropriate message
+        $currentUser = auth()->user();
+        $isCurrentUserAdmin = $currentUser->roles()->whereIn('name', ['admin', 'superadmin'])->exists();
+        
+        if ($isCurrentUserAdmin) {
+            $message = 'Task created successfully. Assigned users have been notified.';
+        } else {
+            $message = 'Task created successfully. Admins and superadmins have been notified.';
+        }
+
+        return redirect()->route('tasks.index')->with('success', $message);
     }
 
     public function show(Task $task)
@@ -148,8 +157,17 @@ class TaskController extends Controller
             $taskNotificationService->notifyTaskUpdated($task);
         }
 
-        return redirect()->route('tasks.index')
-            ->with('success', 'Task updated and assigned to ' . count($assignedUsers) . ' user(s) successfully.');
+        // Determine who gets notified and provide appropriate message
+        $currentUser = auth()->user();
+        $isCurrentUserAdmin = $currentUser->roles()->whereIn('name', ['admin', 'superadmin'])->exists();
+        
+        if ($isCurrentUserAdmin) {
+            $message = 'Task updated successfully. Assigned users have been notified.';
+        } else {
+            $message = 'Task updated successfully. Admins and superadmins have been notified.';
+        }
+
+        return redirect()->route('tasks.index')->with('success', $message);
     }
 
     public function destroy(Task $task)
@@ -169,6 +187,14 @@ class TaskController extends Controller
         $oldStatus = $task->status;
         $task->update($validated);
 
+        \Log::info('Task status updated', [
+            'task_id' => $task->id,
+            'task_title' => $task->title,
+            'old_status' => $oldStatus,
+            'new_status' => $task->status,
+            'updated_by' => auth()->user()->email
+        ]);
+
         // Send notification for status change
         $taskNotificationService = new TaskNotificationService();
         $taskNotificationService->notifyTaskStatusChanged($task, $oldStatus);
@@ -178,7 +204,16 @@ class TaskController extends Controller
             $taskNotificationService->notifyTaskCompleted($task);
         }
 
-        return redirect()->back()
-            ->with('success', 'Task status updated successfully.');
+        // Determine who gets notified and provide appropriate message
+        $currentUser = auth()->user();
+        $isCurrentUserAdmin = $currentUser->roles()->whereIn('name', ['admin', 'superadmin'])->exists();
+        
+        if ($isCurrentUserAdmin) {
+            $message = 'Task status updated successfully. Assigned users have been notified.';
+        } else {
+            $message = 'Task status updated successfully. Admins and superadmins have been notified.';
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 } 

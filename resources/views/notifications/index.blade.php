@@ -1,10 +1,18 @@
-@extends(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin') ? 'layouts.app' : 'layouts.participant')
+@extends(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin') || auth()->user()->hasRole('tasker') || auth()->user()->hasRole('event_coordinator') ? 'layouts.app' : 'layouts.participant')
 
 @section('title', 'Notifications')
 
 @section('content')
 <div class="flex justify-between items-center mb-6">
     <h2 class="text-2xl font-bold">Notifications</h2>
+    <div class="flex space-x-2">
+        <button onclick="markAllAsRead()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            Mark All as Read
+        </button>
+        <a href="{{ route('notifications.create') }}" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            Create Notification
+        </a>
+    </div>
 </div>
 <div class="bg-white rounded-xl shadow p-6">
     <ul class="divide-y divide-gray-200">
@@ -49,6 +57,9 @@
 function handleNotificationClick(notificationId, actionUrl) {
     console.log('Notification clicked:', notificationId, actionUrl);
     
+    // Mark notification as read
+    markNotificationAsRead(notificationId);
+    
     fetch(`/notifications/${notificationId}/data`)
         .then(response => response.json())
         .then(notification => {
@@ -66,27 +77,79 @@ function handleNotificationClick(notificationId, actionUrl) {
                 const sessionUrl = `/sessions/${notification.related_id}`;
                 console.log('Navigating to session:', sessionUrl);
                 window.location.href = sessionUrl;
-            } else if (notification.type === 'TaskUpdate') {
-                console.log('TaskUpdate notification clicked - no related_id found, redirecting to participant dashboard');
-                window.location.href = '/participant-dashboard';
-            } else if (notification.type === 'TravelUpdate') {
-                console.log('TravelUpdate notification clicked - no related_id found, redirecting to participant profile');
-                window.location.href = '/my-profile';
-            } else if (notification.type === 'SessionUpdate') {
-                console.log('SessionUpdate notification clicked - no related_id found, redirecting to participant profile sessions tab');
-                window.location.href = '/my-profile#tab-sessions';
-            } else if (notification.type === 'General') {
-                console.log('General notification clicked - redirecting to participant dashboard');
-                window.location.href = '/participant-dashboard';
+            } else if (notification.related_model === 'Conference' && notification.related_id) {
+                const conferenceUrl = `/conferences/${notification.related_id}`;
+                console.log('Navigating to conference:', conferenceUrl);
+                window.location.href = conferenceUrl;
+            } else if (notification.action_url) {
+                console.log('Using action URL:', notification.action_url);
+                window.location.href = notification.action_url;
             } else {
                 console.log('No navigation logic for this notification type:', notification.type);
-                window.location.href = '/participant-dashboard';
+                window.location.href = '/dashboard';
             }
         })
         .catch(error => {
             console.error('Error fetching notification:', error);
             window.location.href = actionUrl;
         });
+}
+
+function markNotificationAsRead(notificationId) {
+    fetch(`/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the UI to show notification as read
+            const notificationElement = document.querySelector(`li[onclick*="${notificationId}"]`);
+            if (notificationElement) {
+                const statusBadge = notificationElement.querySelector('.bg-yellow-100');
+                if (statusBadge) {
+                    statusBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700';
+                    statusBadge.textContent = 'Read';
+                }
+                
+                const unreadDot = notificationElement.querySelector('.bg-blue-500');
+                if (unreadDot) {
+                    unreadDot.remove();
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
+    });
+}
+
+function markAllAsRead() {
+    if (confirm('Are you sure you want to mark all notifications as read?')) {
+        fetch('/notifications/mark-all-read', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload the page to show updated status
+                window.location.reload();
+            } else {
+                alert('Failed to mark all notifications as read');
+            }
+        })
+        .catch(error => {
+            console.error('Error marking all notifications as read:', error);
+            alert('Failed to mark all notifications as read');
+        });
+    }
 }
 
 // Add hover effects for better UX

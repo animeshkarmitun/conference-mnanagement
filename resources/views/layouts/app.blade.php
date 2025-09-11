@@ -573,8 +573,8 @@
                 element.style.opacity = '0.6';
                 element.style.pointerEvents = 'none';
                 
-                fetch(`/notifications/${notificationId}/mark-read`, {
-                    method: 'POST',
+                fetch(`/notifications/${notificationId}/read`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

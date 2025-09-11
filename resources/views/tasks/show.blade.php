@@ -4,6 +4,29 @@
 
 @section('content')
 <div class="max-w-2xl mx-auto bg-white rounded-xl shadow p-6">
+    <!-- Success/Error Messages -->
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                {{ session('success') }}
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                {{ session('error') }}
+            </div>
+        </div>
+    @endif
+
     <h2 class="text-2xl font-bold mb-6">{{ $task->title }}</h2>
     
     <div class="mb-4">
@@ -14,7 +37,7 @@
     <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
             <span class="font-semibold text-gray-700">Due Date:</span>
-            <span>{{ $task->due_date->format('M d, Y') }}</span>
+            <span>{{ $task->due_date ? $task->due_date->format('M d, Y') : 'No due date' }}</span>
         </div>
         <div>
             <span class="font-semibold text-gray-700">Priority:</span>
@@ -40,13 +63,23 @@
         </div>
         <div>
             <span class="font-semibold text-gray-700">Assigned To:</span>
-            <span>{{ $task->assignedTo->name }}</span>
+            @if($task->users->count() > 0)
+                <div class="flex flex-wrap gap-1 mt-1">
+                    @foreach($task->users as $user)
+                        <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                            {{ $user->first_name }} {{ $user->last_name }}
+                        </span>
+                    @endforeach
+                </div>
+            @else
+                <span class="text-gray-500 italic">No one assigned</span>
+            @endif
         </div>
     </div>
 
     <div class="mb-6">
         <span class="font-semibold text-gray-700">Created By:</span>
-        <span>{{ $task->createdBy->name }}</span>
+        <span>{{ $task->createdBy ? $task->createdBy->first_name . ' ' . $task->createdBy->last_name : 'Unknown' }}</span>
     </div>
 
     <div class="mb-6">

@@ -96,21 +96,29 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
             'roles' => 'array',
         ]);
 
-        $user->update([
+        $updateData = [
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
-        ]);
+        ];
+
+        // Only update password if provided
+        if (!empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($updateData);
 
         // Sync roles if provided
         if (isset($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
         }
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        return redirect()->route('users.show', $user)->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)
@@ -122,5 +130,42 @@ class UserController extends Controller
 
         $user->delete();
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+    }
+
+    public function activate(User $user)
+    {
+        \Log::info('Activate method called for user: ' . $user->id);
+        \Log::info('Current email_verified_at: ' . $user->email_verified_at);
+        
+        // Don't allow activating the current user
+        if ($user->id === auth()->id()) {
+            \Log::info('Attempted to activate own account');
+            return redirect()->back()->with('error', 'You cannot activate your own account.');
+        }
+
+        \Log::info('Updating user email_verified_at to: ' . now());
+        
+        // Use direct assignment instead of mass assignment
+        $user->email_verified_at = now();
+        $user->save();
+        
+        \Log::info('User updated. New email_verified_at: ' . $user->fresh()->email_verified_at);
+        \Log::info('User activated successfully');
+        
+        return redirect()->back()->with('success', 'User activated successfully.');
+    }
+
+    public function deactivate(User $user)
+    {
+        // Don't allow deactivating the current user
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'You cannot deactivate your own account.');
+        }
+
+        // Use direct assignment instead of mass assignment
+        $user->email_verified_at = null;
+        $user->save();
+
+        return redirect()->back()->with('success', 'User deactivated successfully.');
     }
 } 

@@ -150,42 +150,68 @@ Route::get('/notifications/{notification}/data', function (\App\Models\Notificat
     ]);
 })->middleware(['auth', 'verified']);
 
-// Add route for notification actions (clicking on notifications)
-Route::get('/notifications/{notification}/action', function (\App\Models\Notification $notification) {
-    // Ensure the notification belongs to the authenticated user
-    if ($notification->user_id !== auth()->id()) {
-        abort(403, 'Unauthorized');
-    }
+// Notification routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/create', [\App\Http\Controllers\NotificationController::class, 'create'])->name('notifications.create');
+    Route::post('/notifications', [\App\Http\Controllers\NotificationController::class, 'store'])->name('notifications.store');
+    Route::get('/notifications/{notification}/data', [\App\Http\Controllers\NotificationController::class, 'getNotificationData'])->name('notifications.data');
+    Route::patch('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::patch('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/recent', [\App\Http\Controllers\NotificationController::class, 'getRecentNotifications'])->name('notifications.recent');
     
-    // Mark notification as read
-    $notification->update(['read_status' => true]);
-    
-    // Redirect to the action URL if available
-    if ($notification->action_url) {
-        return redirect($notification->action_url);
-    }
-    
-    // Fallback based on notification type
-    switch ($notification->type) {
-        case 'TaskUpdate':
-            if ($notification->related_id) {
-                return redirect()->route('tasks.show', $notification->related_id);
-            }
-            break;
-        case 'TravelUpdate':
-            // Add travel-related redirects when implemented
-            break;
-        case 'SessionUpdate':
-            // Add session-related redirects when implemented
-            break;
-        case 'General':
-            // Redirect to dashboard for general notifications
-            return redirect('/dashboard');
-    }
-    
-    // Default fallback to notifications index
-    return redirect()->route('notifications.index');
-})->middleware(['auth', 'verified'])->name('notifications.action');
+    // Add route for notification actions (clicking on notifications)
+    Route::get('/notifications/{notification}/action', function (\App\Models\Notification $notification) {
+        // Ensure the notification belongs to the authenticated user
+        if ($notification->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+        
+        // Mark notification as read
+        $notification->update(['read_status' => true]);
+        
+        // Redirect to the action URL if available
+        if ($notification->action_url) {
+            return redirect($notification->action_url);
+        }
+        
+        // Fallback based on notification type
+        switch ($notification->type) {
+            case 'TaskUpdate':
+                if ($notification->related_id) {
+                    return redirect()->route('tasks.show', $notification->related_id);
+                }
+                break;
+            case 'TravelUpdate':
+                if ($notification->related_id) {
+                    return redirect()->route('participants.show', $notification->related_id);
+                }
+                break;
+            case 'SessionUpdate':
+                if ($notification->related_id) {
+                    return redirect()->route('sessions.show', $notification->related_id);
+                }
+                break;
+            case 'ConferenceUpdate':
+                if ($notification->related_id) {
+                    return redirect()->route('conferences.show', $notification->related_id);
+                }
+                break;
+            case 'ProfileUpdate':
+                if ($notification->related_id) {
+                    return redirect()->route('participants.show', $notification->related_id);
+                }
+                break;
+            case 'General':
+                // Redirect to dashboard for general notifications
+                return redirect('/dashboard');
+        }
+        
+        // Default fallback to notifications index
+        return redirect()->route('notifications.index');
+    })->name('notifications.action');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -232,6 +258,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
     Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');
     Route::resource('users', \App\Http\Controllers\UserController::class);
+    Route::post('/users/{user}/activate', [\App\Http\Controllers\UserController::class, 'activate'])->name('users.activate');
+    Route::post('/users/{user}/deactivate', [\App\Http\Controllers\UserController::class, 'deactivate'])->name('users.deactivate');
     
     // Participant Types Routes
     Route::resource('participant-types', \App\Http\Controllers\ParticipantTypeController::class);
