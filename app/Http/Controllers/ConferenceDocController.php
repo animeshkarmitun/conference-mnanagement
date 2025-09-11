@@ -160,24 +160,84 @@ class ConferenceDocController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        try {
+            // Debug: Log the incoming request data
+            \Log::info('Conference Doc Store Request', [
+                'all_data' => $request->all(),
+                'user_id' => auth()->id(),
+                'user_roles' => auth()->user()->roles->pluck('name')->toArray()
+            ]);
+            
+            // Clean up empty arrays before validation
+            $data = $request->all();
+            
+            // Remove empty session links
+            if (isset($data['session_links'])) {
+                $data['session_links'] = array_filter($data['session_links'], function($link) {
+                    return !empty(array_filter($link, function($value) {
+                        return $value !== null && $value !== '';
+                    }));
+                });
+                if (empty($data['session_links'])) {
+                    unset($data['session_links']);
+                }
+            }
+            
+            // Remove empty contacts
+            if (isset($data['contacts'])) {
+                $data['contacts'] = array_filter($data['contacts'], function($contact) {
+                    return !empty(array_filter($contact, function($value) {
+                        return $value !== null && $value !== '';
+                    }));
+                });
+                if (empty($data['contacts'])) {
+                    unset($data['contacts']);
+                }
+            }
+            
+            // Remove empty city guide
+            if (isset($data['city_guide'])) {
+                $cityGuide = array_filter($data['city_guide'], function($value) {
+                    return $value !== null && $value !== '';
+                });
+                if (empty($cityGuide)) {
+                    unset($data['city_guide']);
+                } else {
+                    $data['city_guide'] = $cityGuide;
+                }
+            }
+            
+            // Preserve files from original request
+            $files = $request->allFiles();
+            
+            \Log::info('Conference Doc Cleaned Data', [
+                'cleaned_data' => $data,
+                'files_count' => count($files)
+            ]);
+            
+            // Create a new request with cleaned data for validation
+            $cleanRequest = new \Illuminate\Http\Request($data);
+            $cleanRequest->setLaravelSession($request->getSession());
+            $cleanRequest->setUserResolver($request->getUserResolver());
+            
+            $validated = $cleanRequest->validate([
             'conference_id' => 'required|exists:conferences,id',
-            'session_links' => 'array',
-            'session_links.*.title' => 'required|string',
-            'session_links.*.time' => 'required|string',
-            'session_links.*.room' => 'required|string',
-            'session_links.*.speaker' => 'required|string',
-            'session_links.*.description' => 'required|string',
+            'session_links' => 'nullable|array',
+            'session_links.*.title' => 'required_with:session_links|string',
+            'session_links.*.time' => 'required_with:session_links|string',
+            'session_links.*.room' => 'required_with:session_links|string',
+            'session_links.*.speaker' => 'required_with:session_links|string',
+            'session_links.*.description' => 'required_with:session_links|string',
             'session_links.*.zoom_link' => 'nullable|url',
-            'contacts' => 'array',
-            'contacts.*.name' => 'required|string',
-            'contacts.*.email' => 'required|email',
+            'contacts' => 'nullable|array',
+            'contacts.*.name' => 'required_with:contacts|string',
+            'contacts.*.email' => 'required_with:contacts|email',
             'contacts.*.phone' => 'nullable|string',
-            'contacts.*.role' => 'required|string',
+            'contacts.*.role' => 'required_with:contacts|string',
             'contacts.*.availability' => 'nullable|string',
-            'city_guide' => 'array',
-            'city_guide.title' => 'required|string',
-            'city_guide.description' => 'required|string',
+            'city_guide' => 'nullable|array',
+            'city_guide.title' => 'nullable|string',
+            'city_guide.description' => 'nullable|string',
             'city_guide.transportation' => 'nullable|string',
             'city_guide.restaurants' => 'nullable|string',
             'city_guide.attractions' => 'nullable|string',
@@ -223,9 +283,9 @@ class ConferenceDocController extends Controller
             ]);
         }
         
-        // Handle file uploads
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
+        // Handle file uploads (use original request to preserve files)
+        if (isset($files['files']) && !empty($files['files'])) {
+            foreach ($files['files'] as $file) {
                 // Generate unique filename
                 $filename = time() . '_' . $file->getClientOriginalName();
                 $path = "conference-docs/{$conferenceDoc->conference_id}/" . $this->getFileTypeFolder($file->getMimeType());
@@ -238,7 +298,7 @@ class ConferenceDocController extends Controller
                     'doc_id' => $conferenceDoc->id,
                     'type' => 'MediaFile',
                     'content' => json_encode([
-                        'description' => $validated['file_description'] ?? '',
+                        'description' => $request->input('file_description') ?? '',
                         'original_name' => $file->getClientOriginalName(),
                     ]),
                     'file_path' => $filePath,
@@ -251,8 +311,27 @@ class ConferenceDocController extends Controller
             }
         }
         
-        return redirect()->route('conference-docs.index')
-            ->with('success', 'Conference doc created successfully.');
+        \Log::info('Conference Doc Created Successfully', [
+            'conference_doc_id' => $conferenceDoc->id,
+            'conference_id' => $conferenceDoc->conference_id,
+            'items_count' => $conferenceDoc->conferenceDocItems()->count()
+        ]);
+        
+            return redirect()->route('conference-docs.index')
+                ->with('success', 'Conference doc created successfully.');
+                
+        } catch (\Exception $e) {
+            \Log::error('Conference Doc Creation Failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'request_data' => $request->all()
+            ]);
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create conference doc: ' . $e->getMessage());
+        }
     }
     
     /**
@@ -286,22 +365,22 @@ class ConferenceDocController extends Controller
     {
         $validated = $request->validate([
             'conference_id' => 'required|exists:conferences,id',
-            'session_links' => 'array',
-            'session_links.*.title' => 'required|string',
-            'session_links.*.time' => 'required|string',
-            'session_links.*.room' => 'required|string',
-            'session_links.*.speaker' => 'required|string',
-            'session_links.*.description' => 'required|string',
+            'session_links' => 'nullable|array',
+            'session_links.*.title' => 'required_with:session_links|string',
+            'session_links.*.time' => 'required_with:session_links|string',
+            'session_links.*.room' => 'required_with:session_links|string',
+            'session_links.*.speaker' => 'required_with:session_links|string',
+            'session_links.*.description' => 'required_with:session_links|string',
             'session_links.*.zoom_link' => 'nullable|url',
-            'contacts' => 'array',
-            'contacts.*.name' => 'required|string',
-            'contacts.*.email' => 'required|email',
+            'contacts' => 'nullable|array',
+            'contacts.*.name' => 'required_with:contacts|string',
+            'contacts.*.email' => 'required_with:contacts|email',
             'contacts.*.phone' => 'nullable|string',
-            'contacts.*.role' => 'required|string',
+            'contacts.*.role' => 'required_with:contacts|string',
             'contacts.*.availability' => 'nullable|string',
-            'city_guide' => 'array',
-            'city_guide.title' => 'required|string',
-            'city_guide.description' => 'required|string',
+            'city_guide' => 'nullable|array',
+            'city_guide.title' => 'nullable|string',
+            'city_guide.description' => 'nullable|string',
             'city_guide.transportation' => 'nullable|string',
             'city_guide.restaurants' => 'nullable|string',
             'city_guide.attractions' => 'nullable|string',
