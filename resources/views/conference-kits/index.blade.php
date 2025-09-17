@@ -1,6 +1,6 @@
 @extends('layouts.participant')
 
-@section('title', 'Conference Kit')
+@section('title', 'Conference Docs')
 
 @section('content')
 <div class="max-w-6xl mx-auto">
@@ -8,7 +8,7 @@
     <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-lg p-8 mb-8 text-white">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold mb-2">Conference Kit</h1>
+                <h1 class="text-3xl font-bold mb-2">Conference Docs</h1>
                 <p class="text-blue-100 text-lg">{{ $participant->conference->name ?? 'Conference' }}</p>
                 <p class="text-blue-200">Welcome, {{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }} ({{ $participant->participantType->name ?? '' }})</p>
             </div>
