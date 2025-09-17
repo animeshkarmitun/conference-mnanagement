@@ -263,7 +263,11 @@ class EmailTrackingService
         }
 
         if ($recipientEmail) {
-            $query->where('recipient_email', 'like', '%' . $recipientEmail . '%');
+            $needle = strtolower(trim($recipientEmail));
+            $query->where(function ($q) use ($needle) {
+                $q->whereRaw('LOWER(recipient_email) LIKE ?', ['%' . $needle . '%'])
+                  ->orWhereRaw('LOWER(recipient_name) LIKE ?', ['%' . $needle . '%']);
+            });
         }
 
         if ($roleName) {

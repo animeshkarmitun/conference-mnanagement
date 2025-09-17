@@ -254,6 +254,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/export-itinerary', [\App\Http\Controllers\TravelController::class, 'exportItinerary'])->name('admin.export-itinerary');
     Route::post('/admin/room-allocations/{participant}', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('admin.room-allocations.update');
     Route::post('/admin/participants/download-biographies', [\App\Http\Controllers\ParticipantController::class, 'downloadBiographies'])->name('admin.participants.download-biographies');
+    
+    // Email Tracking Routes (Admin Only)
+    Route::prefix('admin/email-tracking')->name('admin.email-tracking.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\EmailTrackingController::class, 'index'])->name('index');
+        Route::get('/stats', [App\Http\Controllers\Admin\EmailTrackingController::class, 'stats'])->name('stats');
+        Route::get('/emails', [App\Http\Controllers\Admin\EmailTrackingController::class, 'emails'])->name('emails');
+        Route::get('/{email}', [App\Http\Controllers\Admin\EmailTrackingController::class, 'show'])->name('show');
+        Route::post('/{email}/resend', [App\Http\Controllers\Admin\EmailTrackingController::class, 'resend'])->name('resend');
+        Route::delete('/{email}', [App\Http\Controllers\Admin\EmailTrackingController::class, 'destroy'])->name('destroy');
+        Route::get('/export/csv', [App\Http\Controllers\Admin\EmailTrackingController::class, 'export'])->name('export');
+        Route::post('/cleanup', [App\Http\Controllers\Admin\EmailTrackingController::class, 'cleanup'])->name('cleanup');
+    });
     Route::post('/participants/bulk-update', [\App\Http\Controllers\ParticipantController::class, 'bulkUpdate'])->name('participants.bulk-update');
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
     Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');
@@ -352,6 +364,7 @@ Route::prefix('passwordless-login')->name('passwordless-login.')->group(function
         Route::post('/generate', [App\Http\Controllers\PasswordlessLoginController::class, 'generateLink'])->name('generate');
         Route::post('/generate-bulk', [App\Http\Controllers\PasswordlessLoginController::class, 'generateBulkLinks'])->name('generate.bulk');
         Route::get('/participants', [App\Http\Controllers\PasswordlessLoginController::class, 'getParticipants'])->name('participants');
+        
         Route::get('/user/{user}/links', [App\Http\Controllers\PasswordlessLoginController::class, 'getUserLinks'])->name('user.links');
         Route::delete('/user/{user}/revoke', [App\Http\Controllers\PasswordlessLoginController::class, 'revokeUserLinks'])->name('user.revoke');
         Route::post('/cleanup', [App\Http\Controllers\PasswordlessLoginController::class, 'cleanupExpired'])->name('cleanup');

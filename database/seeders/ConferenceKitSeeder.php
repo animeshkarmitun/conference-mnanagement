@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\ConferenceKit;
-use App\Models\ConferenceKitItem;
+use App\Models\ConferenceDoc;
+use App\Models\ConferenceDocItem;
 use App\Models\Conference;
 
 class ConferenceKitSeeder extends Seeder
@@ -22,8 +22,8 @@ class ConferenceKitSeeder extends Seeder
             return;
         }
 
-        // Create conference kit
-        $conferenceKit = ConferenceKit::firstOrCreate([
+        // Create conference doc
+        $conferenceDoc = ConferenceDoc::firstOrCreate([
             'conference_id' => $conference->id,
         ]);
 
@@ -64,8 +64,8 @@ class ConferenceKitSeeder extends Seeder
         ];
 
         foreach ($sessionLinks as $sessionLink) {
-            ConferenceKitItem::firstOrCreate([
-                'kit_id' => $conferenceKit->id,
+            ConferenceDocItem::firstOrCreate([
+                'doc_id' => $conferenceDoc->id,
                 'type' => 'SessionLink',
                 'content' => json_encode($sessionLink),
             ]);
@@ -97,8 +97,8 @@ class ConferenceKitSeeder extends Seeder
         ];
 
         foreach ($contacts as $contact) {
-            ConferenceKitItem::firstOrCreate([
-                'kit_id' => $conferenceKit->id,
+            ConferenceDocItem::firstOrCreate([
+                'doc_id' => $conferenceDoc->id,
                 'type' => 'Contact',
                 'content' => json_encode($contact),
             ]);
@@ -114,8 +114,8 @@ class ConferenceKitSeeder extends Seeder
             'emergency_contacts' => 'Emergency: 911, Conference Security: +1-555-9999, Local Police: +1-555-8888, Medical Emergency: +1-555-7777'
         ];
 
-        ConferenceKitItem::firstOrCreate([
-            'kit_id' => $conferenceKit->id,
+        ConferenceDocItem::firstOrCreate([
+            'doc_id' => $conferenceDoc->id,
             'type' => 'CityGuide',
             'content' => json_encode($cityGuide),
         ]);

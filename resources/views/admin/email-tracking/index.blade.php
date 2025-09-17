@@ -51,12 +51,8 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label for="user_filter">Sender (User ID):</label>
-                            <input id="user_filter" type="number" class="form-control" value="{{ $userId ?? '' }}" placeholder="User ID" onchange="filterEmails()" />
-                        </div>
-                        <div class="col-md-2">
                             <label for="recipient_filter">Recipient Email:</label>
-                            <input id="recipient_filter" type="text" class="form-control" value="{{ $recipientEmail ?? '' }}" placeholder="e.g. user@example.com" onkeydown="if(event.key==='Enter') filterEmails()" />
+                            <input id="recipient_filter" type="text" class="form-control" value="" placeholder="e.g. user@example.com" onkeydown="if(event.key==='Enter') filterEmails()" autocomplete="off" autocapitalize="off" spellcheck="false" />
                         </div>
                         <div class="col-md-2">
                             <label for="role_filter">User Role:</label>
@@ -67,9 +63,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2 mt-md-0 mt-2">
-                            <label>&nbsp;</label>
-                            <button class="btn btn-primary btn-block" onclick="refreshStats()">
+                        <div class="col-md-2 mt-md-0 mt-2 d-flex align-items-end">
+                            <button class="btn btn-primary mt-4" style="min-width: 130px;" onclick="refreshStats()">
                                 <i class="fas fa-sync"></i> Refresh
                             </button>
                         </div>
@@ -333,7 +328,6 @@ function filterEmails() {
     const conferenceId = document.getElementById('conference_filter').value;
     const days = document.getElementById('days_filter').value;
     const type = document.getElementById('type_filter').value;
-    const userId = document.getElementById('user_filter').value;
     const recipient = document.getElementById('recipient_filter').value;
     const role = document.getElementById('role_filter').value;
     
@@ -341,7 +335,6 @@ function filterEmails() {
     if (conferenceId) params.append('conference_id', conferenceId);
     if (days) params.append('days', days);
     if (type) params.append('type', type);
-    if (userId) params.append('user_id', userId);
     if (recipient) params.append('recipient_email', recipient);
     if (role) params.append('role', role);
     
@@ -349,20 +342,8 @@ function filterEmails() {
 }
 
 function refreshStats() {
-    const conferenceId = document.getElementById('conference_filter').value;
-    const days = document.getElementById('days_filter').value;
-    
-    fetch(`{{ route('admin.email-tracking.stats') }}?conference_id=${conferenceId}&days=${days}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('total-emails').textContent = data.overall.total;
-            document.getElementById('sent-emails').textContent = data.overall.sent;
-            document.getElementById('delivered-emails').textContent = data.overall.delivered;
-            document.getElementById('opened-emails').textContent = data.overall.opened;
-            document.getElementById('bounced-emails').textContent = data.overall.bounced;
-            document.getElementById('failed-emails').textContent = data.overall.failed;
-        })
-        .catch(error => console.error('Error:', error));
+    // Reuse the same navigation logic so the whole dashboard reflects current filters
+    filterEmails();
 }
 
 function resendEmail(emailId) {

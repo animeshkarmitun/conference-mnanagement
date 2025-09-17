@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('notifications', function (Blueprint $table) {
-            $table->string('related_model', 50)->nullable()->after('type');
-            $table->unsignedBigInteger('related_id')->nullable()->after('related_model');
-            $table->string('action_url', 255)->nullable()->after('related_id');
+            if (!Schema::hasColumn('notifications', 'related_model')) {
+                $table->string('related_model', 50)->nullable()->after('type');
+            }
+            if (!Schema::hasColumn('notifications', 'related_id')) {
+                $table->unsignedBigInteger('related_id')->nullable()->after('related_model');
+            }
+            if (!Schema::hasColumn('notifications', 'action_url')) {
+                $table->string('action_url', 255)->nullable()->after('related_id');
+            }
         });
     }
 

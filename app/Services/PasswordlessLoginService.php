@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\PasswordlessLogin;
 use App\Models\Conference;
+use App\Services\EmailTrackingService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -12,6 +13,13 @@ use Illuminate\Http\Request;
 
 class PasswordlessLoginService
 {
+    protected EmailTrackingService $emailTrackingService;
+
+    public function __construct(EmailTrackingService $emailTrackingService)
+    {
+        $this->emailTrackingService = $emailTrackingService;
+    }
+
     /**
      * Generate a login link for a user
      */
@@ -44,17 +52,34 @@ class PasswordlessLoginService
     {
         try {
             $loginUrl = $passwordlessLogin->getLoginUrl();
+            $subject = 'Your Conference Dashboard Access' . ($conference ? ' - ' . $conference->name : '');
             
-            Mail::send('emails.passwordless-login', [
+            // Create email content
+            $emailContent = view('emails.passwordless-login', [
                 'user' => $user,
                 'loginUrl' => $loginUrl,
                 'conference' => $conference,
                 'expiresAt' => $passwordlessLogin->expires_at,
                 'token' => $passwordlessLogin,
-            ], function ($message) use ($user, $conference) {
-                $message->to($user->email, $user->first_name . ' ' . $user->last_name)
-                        ->subject('Your Conference Dashboard Access' . ($conference ? ' - ' . $conference->name : ''));
-            });
+            ])->render();
+            
+            // Send tracked email
+            $this->emailTrackingService->sendTrackedEmail(
+                $user->email,
+                $subject,
+                $emailContent,
+                \App\Models\Email::TYPE_PASSWORDLESS_LOGIN,
+                null, // System sender
+                $conference,
+                'passwordless_login',
+                $passwordlessLogin->id,
+                'passwordless-login',
+                [
+                    'user_id' => $user->id,
+                    'token_id' => $passwordlessLogin->id,
+                    'expires_at' => $passwordlessLogin->expires_at,
+                ]
+            );
 
             Log::info('Passwordless login email sent', [
                 'user_id' => $user->id,

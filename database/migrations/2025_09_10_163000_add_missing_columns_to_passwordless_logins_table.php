@@ -17,7 +17,7 @@ return new class extends Migration
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
             }
             if (!Schema::hasColumn('passwordless_logins', 'token')) {
-                $table->string('token', 255)->unique();
+                $table->string('token', 191)->unique();
             }
             if (!Schema::hasColumn('passwordless_logins', 'expires_at')) {
                 $table->timestamp('expires_at');

@@ -27,7 +27,6 @@ class EmailTrackingController extends Controller
     {
         $conferenceId = $request->get('conference_id');
         $days = $request->get('days', 30);
-        $userId = $request->get('user_id');
         $recipientEmail = $request->get('recipient_email');
         $role = $request->get('role');
         $type = $request->get('type');
@@ -41,7 +40,7 @@ class EmailTrackingController extends Controller
         $statsByType = $this->emailTrackingService->getEmailStatsByType($conferenceId, $days);
 
         // Get recent emails
-        $emails = $this->emailTrackingService->getRecentEmails(20, $conferenceId, $userId, $recipientEmail, $role, $type);
+        $emails = $this->emailTrackingService->getRecentEmails(20, $conferenceId, null, $recipientEmail, $role, $type);
 
         return view('admin.email-tracking.index', compact(
             'conferences',
@@ -52,7 +51,6 @@ class EmailTrackingController extends Controller
             'emails',
             'conferenceId',
             'days',
-            'userId',
             'recipientEmail',
             'role',
             'type'
@@ -83,12 +81,11 @@ class EmailTrackingController extends Controller
     {
         $conferenceId = $request->get('conference_id');
         $perPage = $request->get('per_page', 20);
-        $userId = $request->get('user_id');
         $recipientEmail = $request->get('recipient_email');
         $role = $request->get('role');
         $type = $request->get('type');
         
-        $emails = $this->emailTrackingService->getRecentEmails($perPage, $conferenceId, $userId, $recipientEmail, $role, $type);
+        $emails = $this->emailTrackingService->getRecentEmails($perPage, $conferenceId, null, $recipientEmail, $role, $type);
 
         return response()->json($emails);
     }

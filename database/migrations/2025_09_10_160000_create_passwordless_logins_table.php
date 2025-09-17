@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('passwordless_logins', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('token', 255)->unique();
+            $table->string('token', 191)->unique();
             $table->timestamp('expires_at');
             $table->timestamp('used_at')->nullable();
             $table->string('ip_address', 45)->nullable();

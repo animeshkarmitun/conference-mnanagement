@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\TaskEvent;
 use App\Models\User;
 use App\Models\Role;
+use App\Services\EmailTrackingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -14,12 +15,14 @@ class SendTaskEmailNotification implements ShouldQueue
 {
     use InteractsWithQueue;
 
+    protected EmailTrackingService $emailTrackingService;
+
     /**
      * Create the event listener.
      */
-    public function __construct()
+    public function __construct(EmailTrackingService $emailTrackingService)
     {
-        //
+        $this->emailTrackingService = $emailTrackingService;
     }
 
     /**
@@ -89,23 +92,35 @@ class SendTaskEmailNotification implements ShouldQueue
      */
     private function sendEmailNotification(User $user, TaskEvent $event): void
     {
-        // For now, we'll log the email notification since the email system is not fully implemented
-        // This can be replaced with actual email sending when the email system is ready
-        
-        $emailData = [
-            'to' => $user->email,
-            'subject' => $this->getEmailSubject($event),
-            'message' => $this->getEmailMessage($user, $event),
-            'task_title' => $event->task->title,
-            'event_type' => $event->eventType,
-            'conference_name' => $event->task->conference->name ?? 'Conference'
-        ];
+        try {
+            $subject = $this->getEmailSubject($event);
+            $body = $this->getEmailMessage($user, $event);
+            
+            // Send tracked email
+            $this->emailTrackingService->sendTrackedEmail(
+                $user->email,
+                $subject,
+                $body,
+                \App\Models\Email::TYPE_TASK_NOTIFICATION,
+                auth()->user(), // Sender
+                $event->task->conference,
+                'task',
+                $event->task->id,
+                'task-notification',
+                [
+                    'task_title' => $event->task->title,
+                    'event_type' => $event->eventType,
+                    'conference_name' => $event->task->conference->name ?? 'Conference'
+                ]
+            );
 
-        // Log the email notification for now
-        Log::info('Task email notification would be sent', $emailData);
-
-        // TODO: Uncomment when email system is implemented
-        // Mail::to($user->email)->send(new TaskNotificationMail($emailData));
+        } catch (\Exception $e) {
+            Log::error('Failed to send task email notification', [
+                'user_id' => $user->id,
+                'task_id' => $event->task->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
