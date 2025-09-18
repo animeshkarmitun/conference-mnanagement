@@ -56,6 +56,12 @@ class GoogleController extends Controller
             }
 
             $user = Auth::user();
+            
+            // Check if user has admin or superadmin role
+            if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+                return redirect()->back()->with('error', 'Access denied. Gmail conversations are only available to administrators.');
+            }
+            
             if (!$user->google_token) {
                 return redirect()->route('google.redirect')->with('error', 'Please connect your Gmail account.');
             }
@@ -85,6 +91,12 @@ class GoogleController extends Controller
             }
 
             $user = Auth::user();
+            
+            // Check if user has admin or superadmin role
+            if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+                return redirect()->back()->with('error', 'Access denied. Gmail conversations are only available to administrators.');
+            }
+            
             if (!$user->google_token) {
                 return redirect()->route('google.redirect')->with('error', 'Please connect your Gmail account.');
             }
@@ -120,13 +132,19 @@ class GoogleController extends Controller
                 return redirect()->route('login')->with('error', 'Please login first to send emails.');
             }
 
+            $user = Auth::user();
+            
+            // Check if user has admin or superadmin role
+            if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+                return redirect()->back()->with('error', 'Access denied. Gmail conversations are only available to administrators.');
+            }
+
             $request->validate([
                 'to' => 'required|email',
                 'subject' => 'required|string|max:255',
                 'body' => 'required|string'
             ]);
 
-            $user = Auth::user();
             if (!$user->google_token) {
                 return redirect()->route('google.redirect')->with('error', 'Please connect your Gmail account.');
             }

@@ -273,4 +273,98 @@ class EmailTrackingController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get participants with email conversations
+     */
+    public function getParticipantsWithEmails(Request $request): JsonResponse
+    {
+        $conferenceId = $request->get('conference_id');
+        $participants = $this->emailTrackingService->getParticipantsWithEmails($conferenceId);
+        
+        $formattedParticipants = $participants->map(function($participant) {
+            return [
+                'id' => $participant->id,
+                'email' => $participant->user->email,
+                'name' => $participant->user->first_name . ' ' . $participant->user->last_name,
+                'conference' => $participant->conference->name ?? 'N/A',
+                'participant_type' => $participant->participantType->name ?? 'N/A',
+            ];
+        });
+        
+        return response()->json($formattedParticipants);
+    }
+
+    /**
+     * Get conversations for a participant
+     */
+    public function getParticipantConversations(Request $request): View
+    {
+        $participantEmail = $request->get('participant_email');
+        $conferenceId = $request->get('conference_id');
+        
+        if (!$participantEmail) {
+            return view('admin.email-tracking.conversations', [
+                'conversations' => collect(),
+                'participantEmail' => null,
+                'error' => 'No participant selected'
+            ]);
+        }
+        
+        $conversations = $this->emailTrackingService->getParticipantConversations($participantEmail, $conferenceId);
+        $stats = $this->emailTrackingService->getParticipantConversationStats($participantEmail, $conferenceId);
+        
+        return view('admin.email-tracking.conversations', compact(
+            'conversations',
+            'participantEmail',
+            'stats'
+        ));
+    }
+
+    /**
+     * Get specific conversation thread
+     */
+    public function getConversationThread(Request $request, string $threadId): View
+    {
+        $thread = $this->emailTrackingService->getConversationThread($threadId);
+        
+        if ($thread->isEmpty()) {
+            abort(404, 'Conversation thread not found');
+        }
+        
+        return view('admin.email-tracking.thread', compact('thread', 'threadId'));
+    }
+
+    /**
+     * Search emails within participant conversations
+     */
+    public function searchParticipantEmails(Request $request): JsonResponse
+    {
+        $participantEmail = $request->get('participant_email');
+        $searchTerm = $request->get('search_term');
+        $conferenceId = $request->get('conference_id');
+        
+        if (!$participantEmail || !$searchTerm) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Participant email and search term are required'
+            ], 400);
+        }
+        
+        $emails = $this->emailTrackingService->searchParticipantEmails($participantEmail, $searchTerm, $conferenceId);
+        
+        return response()->json([
+            'success' => true,
+            'emails' => $emails->map(function($email) {
+                return [
+                    'id' => $email->id,
+                    'subject' => $email->subject,
+                    'body_preview' => \Str::limit(strip_tags($email->body), 100),
+                    'created_at' => $email->created_at->format('M d, Y H:i'),
+                    'direction' => $email->direction,
+                    'thread_id' => $email->thread_id,
+                ];
+            })
+        ]);
+    }
 }

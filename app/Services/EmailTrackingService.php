@@ -5,10 +5,13 @@ namespace App\Services;
 use App\Models\Email;
 use App\Models\User;
 use App\Models\Conference;
+use App\Models\EmailThread;
+use App\Models\Participant;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Mailable;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class EmailTrackingService
 {
@@ -313,5 +316,186 @@ class EmailTrackingService
         ]);
 
         return $deleted;
+    }
+
+    /**
+     * Get participants who have email conversations
+     */
+    public function getParticipantsWithEmails(?int $conferenceId = null): Collection
+    {
+        $query = Participant::with(['user', 'conference'])
+            ->whereHas('user', function($q) {
+                $q->whereHas('emails', function($emailQuery) {
+                    $emailQuery->where('direction', Email::DIRECTION_OUTGOING);
+                });
+            });
+        
+        if ($conferenceId) {
+            $query->where('conference_id', $conferenceId);
+        }
+        
+        return $query->orderBy('created_at', 'desc')->get();
+    }
+
+    /**
+     * Get conversations for a participant
+     */
+    public function getParticipantConversations(string $participantEmail, ?int $conferenceId = null): Collection
+    {
+        $query = Email::with(['user', 'emailThread'])
+            ->byParticipant($participantEmail)
+            ->orderBy('created_at', 'desc');
+
+        if ($conferenceId) {
+            $query->byConference($conferenceId);
+        }
+
+        $emails = $query->get();
+        
+        // Group emails by thread_id, creating threads for emails without one
+        $conversations = collect();
+        
+        foreach ($emails as $email) {
+            $threadId = $email->thread_id;
+            
+            if (!$threadId) {
+                // Create a thread for this email if it doesn't have one
+                $threadId = $this->createThreadForEmail($email);
+            }
+            
+            if (!$conversations->has($threadId)) {
+                $conversations->put($threadId, collect());
+            }
+            
+            $conversations->get($threadId)->push($email);
+        }
+        
+        return $conversations;
+    }
+
+    /**
+     * Get specific conversation thread
+     */
+    public function getConversationThread(string $threadId): Collection
+    {
+        return Email::with(['user', 'emailThread'])
+            ->byThread($threadId)
+            ->orderBy('created_at', 'asc')
+            ->get();
+    }
+
+    /**
+     * Create a thread for an email that doesn't have one
+     */
+    private function createThreadForEmail(Email $email): string
+    {
+        $thread = EmailThread::createThread(
+            $email->subject,
+            $email->isOutgoing() ? $email->recipient_email : $email->sender_email,
+            $email->conference_id
+        );
+        
+        // Update the email with the thread ID
+        $email->update(['thread_id' => $thread->id]);
+        
+        return $thread->id;
+    }
+
+    /**
+     * Get conversation statistics for a participant
+     */
+    public function getParticipantConversationStats(string $participantEmail, ?int $conferenceId = null): array
+    {
+        $query = Email::byParticipant($participantEmail);
+        
+        if ($conferenceId) {
+            $query->byConference($conferenceId);
+        }
+        
+        $totalEmails = $query->count();
+        $outgoingEmails = $query->clone()->outgoing()->count();
+        $incomingEmails = $query->clone()->incoming()->count();
+        $conversations = $query->clone()->whereNotNull('thread_id')->distinct('thread_id')->count();
+        
+        return [
+            'total_emails' => $totalEmails,
+            'outgoing_emails' => $outgoingEmails,
+            'incoming_emails' => $incomingEmails,
+            'conversations' => $conversations,
+            'avg_emails_per_conversation' => $conversations > 0 ? round($totalEmails / $conversations, 2) : 0,
+        ];
+    }
+
+    /**
+     * Create a new conversation thread
+     */
+    public function createConversationThread(
+        string $subject,
+        string $participantEmail,
+        ?int $conferenceId = null
+    ): EmailThread {
+        return EmailThread::createThread($subject, $participantEmail, $conferenceId);
+    }
+
+    /**
+     * Add email to existing thread
+     */
+    public function addEmailToThread(
+        string $threadId,
+        string $recipientEmail,
+        string $subject,
+        string $body,
+        string $emailType = Email::TYPE_GENERAL,
+        ?User $sender = null,
+        ?Conference $conference = null,
+        array $metadata = []
+    ): Email {
+        $thread = EmailThread::findOrFail($threadId);
+        
+        $email = Email::create([
+            'user_id' => $sender?->id,
+            'recipient_email' => $recipientEmail,
+            'recipient_name' => $this->getRecipientName($recipientEmail),
+            'subject' => $subject,
+            'body' => $body,
+            'status' => Email::STATUS_PENDING,
+            'email_type' => $emailType,
+            'conference_id' => $conference?->id,
+            'metadata' => $metadata,
+            'direction' => Email::DIRECTION_OUTGOING,
+            'thread_id' => $threadId,
+        ]);
+        
+        // Update thread's last activity
+        $thread->updateLastActivity();
+        
+        Log::info('Email added to thread', [
+            'email_id' => $email->id,
+            'thread_id' => $threadId,
+            'recipient' => $recipientEmail,
+        ]);
+        
+        return $email;
+    }
+
+    /**
+     * Search emails within participant conversations
+     */
+    public function searchParticipantEmails(
+        string $participantEmail,
+        string $searchTerm,
+        ?int $conferenceId = null
+    ): Collection {
+        $query = Email::byParticipant($participantEmail)
+            ->where(function($q) use ($searchTerm) {
+                $q->where('subject', 'like', "%{$searchTerm}%")
+                  ->orWhere('body', 'like', "%{$searchTerm}%");
+            });
+        
+        if ($conferenceId) {
+            $query->byConference($conferenceId);
+        }
+        
+        return $query->orderBy('created_at', 'desc')->get();
     }
 }

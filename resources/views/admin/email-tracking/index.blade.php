@@ -21,7 +21,7 @@
                 <div class="card-body">
                     <!-- Filters -->
                     <div class="row mb-4">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="conference_filter">Conference:</label>
                             <select id="conference_filter" class="form-control" onchange="filterEmails()">
                                 <option value="">All Conferences</option>
@@ -50,21 +50,42 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label for="recipient_filter">Recipient Email:</label>
-                            <input id="recipient_filter" type="text" class="form-control" value="" placeholder="e.g. user@example.com" onkeydown="if(event.key==='Enter') filterEmails()" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                        <div class="col-md-3">
+                            <label for="participant_filter">Select Participant:</label>
+                            <select id="participant_filter" class="form-control select2" onchange="onParticipantChange()">
+                                <option value="">All Participants</option>
+                                <!-- Participants will be loaded via AJAX -->
+                            </select>
                         </div>
                         <div class="col-md-2">
-                            <label for="role_filter">User Role:</label>
+                            <label for="recipient_filter">Or Enter Email:</label>
+                            <input id="recipient_filter" type="text" class="form-control" value="{{ $recipientEmail }}" placeholder="e.g. user@example.com" onkeydown="if(event.key==='Enter') filterEmails()" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                        </div>
+                        <div class="col-md-1">
+                            <label for="role_filter">Role:</label>
                             <select id="role_filter" class="form-control" onchange="filterEmails()">
-                                <option value="">All Roles</option>
+                                <option value="">All</option>
                                 @foreach($roles as $r)
                                     <option value="{{ $r->name }}" {{ ($role ?? '') === $r->name ? 'selected' : '' }}>{{ ucfirst($r->name) }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2 mt-md-0 mt-2 d-flex align-items-end">
-                            <button class="btn btn-primary mt-4" style="min-width: 130px;" onclick="refreshStats()">
+                    </div>
+
+                    <!-- View Toggle and Actions -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-primary" onclick="toggleView('list')" id="list-view-btn">
+                                    <i class="fas fa-list"></i> List View
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="toggleView('conversations')" id="conversations-view-btn">
+                                    <i class="fas fa-comments"></i> Conversations
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-success btn-sm" onclick="refreshStats()">
                                 <i class="fas fa-sync"></i> Refresh
                             </button>
                         </div>
@@ -215,7 +236,7 @@
                     </div>
 
                     <!-- Recent Emails -->
-                    <div class="row">
+                    <div class="row" id="recent-emails-section">
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header">
@@ -285,6 +306,26 @@
                                     <!-- Pagination -->
                                     <div class="d-flex justify-content-center">
                                         {{ $emails->links() }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conversations Section -->
+                    <div class="row" id="conversations-section" style="display: none;">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Email Conversations</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div id="conversations-content">
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                            <h5>Select a Participant</h5>
+                                            <p class="text-muted">Choose a participant from the dropdown above to view their email conversations.</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -426,5 +467,119 @@ function confirmCleanup() {
         alert('An error occurred during cleanup');
     });
 }
+
+// Conversation functionality
+function toggleView(viewType) {
+    const listSection = document.getElementById('recent-emails-section');
+    const conversationsSection = document.getElementById('conversations-section');
+    const listBtn = document.getElementById('list-view-btn');
+    const conversationsBtn = document.getElementById('conversations-view-btn');
+    
+    if (viewType === 'conversations') {
+        listSection.style.display = 'none';
+        conversationsSection.style.display = 'block';
+        listBtn.classList.remove('btn-primary');
+        listBtn.classList.add('btn-outline-primary');
+        conversationsBtn.classList.remove('btn-outline-primary');
+        conversationsBtn.classList.add('btn-primary');
+        
+        // Load conversations for selected participant
+        loadParticipantConversations();
+    } else {
+        listSection.style.display = 'block';
+        conversationsSection.style.display = 'none';
+        listBtn.classList.remove('btn-outline-primary');
+        listBtn.classList.add('btn-primary');
+        conversationsBtn.classList.remove('btn-primary');
+        conversationsBtn.classList.add('btn-outline-primary');
+    }
+}
+
+function onParticipantChange() {
+    const participantEmail = document.getElementById('participant_filter').value;
+    const currentView = document.getElementById('conversations-view-btn').classList.contains('btn-primary') ? 'conversations' : 'list';
+    
+    if (currentView === 'conversations') {
+        loadParticipantConversations();
+    }
+}
+
+function loadParticipantConversations() {
+    const participantEmail = document.getElementById('participant_filter').value;
+    const conferenceId = document.getElementById('conference_filter').value;
+    
+    if (!participantEmail) {
+        document.getElementById('conversations-content').innerHTML = 
+            '<div class="text-center py-4"><i class="fas fa-comments fa-3x text-muted mb-3"></i><h5>Select a Participant</h5><p class="text-muted">Choose a participant from the dropdown above to view their email conversations.</p></div>';
+        return;
+    }
+    
+    // Show loading state
+    document.getElementById('conversations-content').innerHTML = 
+        '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i><p>Loading conversations...</p></div>';
+    
+    // Build URL with parameters
+    let url = `{{ route('admin.email-tracking.conversations') }}?participant_email=${encodeURIComponent(participantEmail)}`;
+    if (conferenceId) {
+        url += `&conference_id=${conferenceId}`;
+    }
+    
+    fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('conversations-content').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading conversations:', error);
+            document.getElementById('conversations-content').innerHTML = 
+                '<div class="alert alert-danger">Error loading conversations. Please try again.</div>';
+        });
+}
+
+// Load participants on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadParticipants();
+});
+
+function loadParticipants() {
+    const conferenceId = document.getElementById('conference_filter').value;
+    
+    let url = '{{ route("admin.email-tracking.participants") }}';
+    if (conferenceId) {
+        url += `?conference_id=${conferenceId}`;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(participants => {
+            const select = document.getElementById('participant_filter');
+            // Clear existing options except the first one
+            select.innerHTML = '<option value="">All Participants</option>';
+            
+            participants.forEach(participant => {
+                const option = document.createElement('option');
+                option.value = participant.email;
+                option.textContent = `${participant.name} (${participant.email})`;
+                select.appendChild(option);
+            });
+            
+            // Initialize Select2 if available
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $(select).select2({
+                    placeholder: 'Select a participant...',
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading participants:', error);
+        });
+}
+
+// Reload participants when conference changes
+document.getElementById('conference_filter').addEventListener('change', function() {
+    loadParticipants();
+});
 </script>
 @endpush

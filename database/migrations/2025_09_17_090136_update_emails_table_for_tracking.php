@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -32,15 +33,13 @@ return new class extends Migration
             $table->string('template_name')->nullable()->after('message_id');
             $table->foreignId('conference_id')->nullable()->after('template_name')->constrained()->onDelete('set null');
             $table->json('metadata')->nullable()->after('conference_id');
-            
-            // Add indexes for better performance (avoiding key length issues)
-            $table->index('email_type');
-            $table->index('status');
-            $table->index('conference_id');
-            $table->index('sent_at');
-            $table->index('recipient_email');
-            $table->index('message_id');
         });
+        
+        // Add indexes separately after columns are created
+        DB::statement('ALTER TABLE emails ADD INDEX email_type_index (email_type(50))');
+        DB::statement('ALTER TABLE emails ADD INDEX status_index (status(20))');
+        DB::statement('ALTER TABLE emails ADD INDEX recipient_email_index (recipient_email(191))');
+        DB::statement('ALTER TABLE emails ADD INDEX message_id_index (message_id(100))');
     }
 
     /**
@@ -48,15 +47,13 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Drop indexes first
+        DB::statement('ALTER TABLE emails DROP INDEX email_type_index');
+        DB::statement('ALTER TABLE emails DROP INDEX status_index');
+        DB::statement('ALTER TABLE emails DROP INDEX recipient_email_index');
+        DB::statement('ALTER TABLE emails DROP INDEX message_id_index');
+        
         Schema::table('emails', function (Blueprint $table) {
-            // Drop indexes first
-            $table->dropIndex(['email_type']);
-            $table->dropIndex(['status']);
-            $table->dropIndex(['conference_id']);
-            $table->dropIndex(['sent_at']);
-            $table->dropIndex(['recipient_email']);
-            $table->dropIndex(['message_id']);
-            
             // Drop foreign key constraints
             $table->dropForeign(['conference_id']);
             $table->dropForeign(['user_id']);

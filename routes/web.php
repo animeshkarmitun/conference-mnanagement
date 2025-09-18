@@ -265,6 +265,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{email}', [App\Http\Controllers\Admin\EmailTrackingController::class, 'destroy'])->name('destroy');
         Route::get('/export/csv', [App\Http\Controllers\Admin\EmailTrackingController::class, 'export'])->name('export');
         Route::post('/cleanup', [App\Http\Controllers\Admin\EmailTrackingController::class, 'cleanup'])->name('cleanup');
+        
+        // Conversation routes
+        Route::get('/participants', [App\Http\Controllers\Admin\EmailTrackingController::class, 'getParticipantsWithEmails'])->name('participants');
+        Route::get('/conversations', [App\Http\Controllers\Admin\EmailTrackingController::class, 'getParticipantConversations'])->name('conversations');
+        Route::get('/thread/{threadId}', [App\Http\Controllers\Admin\EmailTrackingController::class, 'getConversationThread'])->name('thread');
+        Route::get('/search', [App\Http\Controllers\Admin\EmailTrackingController::class, 'searchParticipantEmails'])->name('search');
     });
     Route::post('/participants/bulk-update', [\App\Http\Controllers\ParticipantController::class, 'bulkUpdate'])->name('participants.bulk-update');
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
@@ -325,6 +331,10 @@ Route::post('/roles/{role}/assign-users', [\App\Http\Controllers\RoleController:
 Route::middleware('auth')->group(function () {
     Route::get('/google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
     Route::get('/google-callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
+});
+
+// Gmail routes - Admin and Super Admin only
+Route::middleware(['auth', 'admin.access'])->group(function () {
     Route::get('/gmail', [GoogleController::class, 'showGmailThreads'])->name('gmail.index');
     Route::get('/gmail/{threadId}/reply', [GoogleController::class, 'showReplyForm'])->name('gmail.reply');
     Route::post('/gmail/{threadId}/reply', [GoogleController::class, 'sendReply'])->name('gmail.send-reply');

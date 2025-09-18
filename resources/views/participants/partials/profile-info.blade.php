@@ -2,6 +2,13 @@
     @csrf
     @method('PUT')
     
+    <!-- Hidden fields for admin-only validation (not shown in personal info form) -->
+    <input type="hidden" name="user_id" value="{{ $participant->user_id }}">
+    <input type="hidden" name="conference_id" value="{{ $participant->conference_id }}">
+    <input type="hidden" name="participant_type_id" value="{{ $participant->participant_type_id }}">
+    <input type="hidden" name="registration_status" value="{{ $participant->registration_status }}">
+    <input type="hidden" name="approved" value="{{ $participant->approved ? '1' : '0' }}">
+    
     <!-- Success/Error Messages -->
     @if(session('success'))
         <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">

@@ -283,22 +283,53 @@ class ParticipantController extends Controller
     // Update participant
     public function update(Request $request, Participant $participant)
     {
-        // Validate participant data
-        $participantValidated = $request->validate([
-            'visa_status' => 'required|in:required,not_required,pending,approved,issue',
-            'visa_issue_description' => 'nullable|string|max:1000',
-            'bio' => 'nullable|string|max:500',
-            'organization' => 'nullable|string|max:100',
-            'dietary_needs' => 'nullable|string|max:50',
-            'dietary_needs_other' => 'nullable|string|max:100',
-        ]);
+        // Check if this is a personal info update (participant updating their own profile)
+        $isPersonalUpdate = !Auth::user()->hasRole('admin') && !Auth::user()->hasRole('superadmin');
+        
+        if ($isPersonalUpdate) {
+            // Personal info update - only validate personal fields
+            $participantValidated = $request->validate([
+                'visa_status' => 'nullable|in:required,not_required,pending,approved,issue',
+                'visa_issue_description' => 'nullable|string|max:1000',
+                'bio' => 'nullable|string|max:500',
+                'organization' => 'nullable|string|max:100',
+                'dietary_needs' => 'nullable|string|max:50',
+                'dietary_needs_other' => 'nullable|string|max:100',
+                'travel_form_submitted' => 'boolean',
+                'travel_intent' => 'boolean',
+            ]);
 
-        // Validate user data
-        $userValidated = $request->validate([
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
-            'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
-        ]);
+            // Validate user data for personal update
+            $userValidated = $request->validate([
+                'first_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50',
+                'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
+            ]);
+        } else {
+            // Admin update - validate all fields
+            $participantValidated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'conference_id' => 'required|exists:conferences,id',
+                'participant_type_id' => 'required|exists:participant_types,id',
+                'visa_status' => 'required|in:required,not_required,pending,approved,issue',
+                'visa_issue_description' => 'nullable|string|max:1000',
+                'bio' => 'nullable|string|max:500',
+                'organization' => 'nullable|string|max:100',
+                'dietary_needs' => 'nullable|string|max:50',
+                'dietary_needs_other' => 'nullable|string|max:100',
+                'travel_form_submitted' => 'boolean',
+                'approved' => 'boolean',
+                'travel_intent' => 'boolean',
+                'registration_status' => 'required|in:pending,approved,rejected',
+            ]);
+
+            // Validate user data for admin update
+            $userValidated = $request->validate([
+                'first_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50',
+                'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
+            ]);
+        }
 
         // Validate file uploads
         $request->validate([
@@ -319,12 +350,35 @@ class ParticipantController extends Controller
         ];
 
         // Update user data
-        $user = $participant->user;
-        $user->update([
-            'first_name' => $userValidated['first_name'],
-            'last_name' => $userValidated['last_name'],
-            'email' => $userValidated['email'],
-        ]);
+        if ($isPersonalUpdate) {
+            // Personal update - always update the current participant's user
+            $user = $participant->user;
+            $user->update([
+                'first_name' => $userValidated['first_name'],
+                'last_name' => $userValidated['last_name'],
+                'email' => $userValidated['email'],
+            ]);
+        } else {
+            // Admin update - handle user_id changes
+            if ($participant->user_id == $participantValidated['user_id']) {
+                $user = $participant->user;
+                $user->update([
+                    'first_name' => $userValidated['first_name'],
+                    'last_name' => $userValidated['last_name'],
+                    'email' => $userValidated['email'],
+                ]);
+            } else {
+                // If user_id changed, get the new user and update their data
+                $user = User::find($participantValidated['user_id']);
+                if ($user) {
+                    $user->update([
+                        'first_name' => $userValidated['first_name'],
+                        'last_name' => $userValidated['last_name'],
+                        'email' => $userValidated['email'],
+                    ]);
+                }
+            }
+        }
 
         // Handle file uploads
         if ($request->hasFile('profile_picture')) {
@@ -355,6 +409,15 @@ class ParticipantController extends Controller
         // If visa status is not 'issue', clear the description
         if ($participantValidated['visa_status'] !== 'issue') {
             $participantValidated['visa_issue_description'] = null;
+        }
+
+        // Handle checkbox fields (convert to boolean)
+        $participantValidated['travel_form_submitted'] = $request->has('travel_form_submitted');
+        $participantValidated['travel_intent'] = $request->has('travel_intent');
+        
+        // Only handle 'approved' for admin updates
+        if (!$isPersonalUpdate) {
+            $participantValidated['approved'] = $request->has('approved');
         }
 
         // Update participant data

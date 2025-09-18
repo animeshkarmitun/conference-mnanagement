@@ -30,6 +30,14 @@ class Email extends Model
         'template_name',
         'conference_id',
         'metadata',
+        // Conversation fields
+        'direction',
+        'thread_id',
+        'parent_email_id',
+        'in_reply_to',
+        'sender_email',
+        'sender_name',
+        'received_at',
     ];
 
     protected $casts = [
@@ -39,6 +47,7 @@ class Email extends Model
         'clicked_at' => 'datetime',
         'bounced_at' => 'datetime',
         'metadata' => 'array',
+        'received_at' => 'datetime',
     ];
 
     // Email status constants
@@ -59,6 +68,10 @@ class Email extends Model
     const TYPE_PROFILE_UPDATE = 'profile_update';
     const TYPE_GENERAL = 'general';
 
+    // Direction constants
+    const DIRECTION_OUTGOING = 'outgoing';
+    const DIRECTION_INCOMING = 'incoming';
+
     // Relationships
     public function user()
     {
@@ -73,6 +86,21 @@ class Email extends Model
     public function relatedModel()
     {
         return $this->morphTo('related_model');
+    }
+
+    public function emailThread()
+    {
+        return $this->belongsTo(EmailThread::class, 'thread_id', 'id');
+    }
+
+    public function parentEmail()
+    {
+        return $this->belongsTo(Email::class, 'parent_email_id');
+    }
+
+    public function childEmails()
+    {
+        return $this->hasMany(Email::class, 'parent_email_id');
     }
 
     // Get related model safely (handles invalid types)
@@ -91,6 +119,11 @@ class Email extends Model
     }
 
     // Scopes
+    public function scopePending(Builder $query)
+    {
+        return $query->where('status', self::STATUS_PENDING);
+    }
+
     public function scopeSent(Builder $query)
     {
         return $query->where('status', self::STATUS_SENT);
@@ -129,6 +162,29 @@ class Email extends Model
     public function scopeRecent(Builder $query, int $days = 30)
     {
         return $query->where('sent_at', '>=', now()->subDays($days));
+    }
+
+    public function scopeOutgoing(Builder $query)
+    {
+        return $query->where('direction', self::DIRECTION_OUTGOING);
+    }
+
+    public function scopeIncoming(Builder $query)
+    {
+        return $query->where('direction', self::DIRECTION_INCOMING);
+    }
+
+    public function scopeByThread(Builder $query, string $threadId)
+    {
+        return $query->where('thread_id', $threadId);
+    }
+
+    public function scopeByParticipant(Builder $query, string $participantEmail)
+    {
+        return $query->where(function($q) use ($participantEmail) {
+            $q->where('recipient_email', $participantEmail)
+              ->orWhere('sender_email', $participantEmail);
+        });
     }
 
     // Helper methods
@@ -183,6 +239,33 @@ class Email extends Model
             'status' => self::STATUS_FAILED,
             'error_message' => $errorMessage,
         ]);
+    }
+
+    // Conversation helper methods
+    public function isOutgoing(): bool
+    {
+        return $this->direction === self::DIRECTION_OUTGOING;
+    }
+
+    public function isIncoming(): bool
+    {
+        return $this->direction === self::DIRECTION_INCOMING;
+    }
+
+    public function getSenderNameAttribute(): string
+    {
+        if ($this->isOutgoing()) {
+            return $this->user ? $this->user->first_name . ' ' . $this->user->last_name : 'System';
+        }
+        return $this->sender_name ?? $this->sender_email ?? 'Unknown';
+    }
+
+    public function getRecipientNameAttribute(): string
+    {
+        if ($this->isIncoming()) {
+            return $this->user ? $this->user->first_name . ' ' . $this->user->last_name : 'System';
+        }
+        return $this->recipient_name ?? $this->recipient_email ?? 'Unknown';
     }
 
     // Static helper methods
