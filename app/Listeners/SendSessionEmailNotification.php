@@ -6,6 +6,7 @@ use App\Events\SessionEvent;
 use App\Models\User;
 use App\Models\Role;
 use App\Services\EmailTrackingService;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -86,6 +87,18 @@ class SendSessionEmailNotification implements ShouldQueue
             }
         }
 
+        // For session creation, update, and deletion events, notify only participants assigned to this session
+        if (in_array($event->eventType, ['session_created', 'session_updated', 'session_deleted'])) {
+            // Get only participants who are assigned to this specific session
+            $sessionParticipants = $event->session->participants()->with('user')->get();
+            
+            foreach ($sessionParticipants as $participant) {
+                if ($participant->user && !in_array($participant->user->id, array_column($users, 'id'))) {
+                    $users[] = $participant->user;
+                }
+            }
+        }
+
         // Remove duplicates
         $uniqueUsers = [];
         $seenUserIds = [];
@@ -147,8 +160,12 @@ class SendSessionEmailNotification implements ShouldQueue
                 return "You've Been Assigned to a Session - {$conferenceName}";
             case 'session_removed':
                 return "Session Assignment Removed - {$conferenceName}";
+            case 'session_created':
+                return "New Session Added - {$conferenceName}";
             case 'session_updated':
                 return "Session Information Updated - {$conferenceName}";
+            case 'session_deleted':
+                return "Session Deleted - {$conferenceName}";
             case 'session_cancelled':
                 return "Session Cancelled - {$conferenceName}";
             case 'session_rescheduled':
@@ -173,6 +190,72 @@ class SendSessionEmailNotification implements ShouldQueue
         $role = $participant ? ucfirst($participant->pivot->role ?? 'participant') : 'Participant';
         
         switch ($event->eventType) {
+            case 'session_created':
+                return "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>New Session Added</h2>
+                    
+                    <p>Dear {$user->first_name} {$user->last_name},</p>
+                    
+                    <p>A new session has been added to <strong>{$conferenceName}</strong>:</p>
+                    
+                    <div style='background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;'>
+                        <h3 style='color: #374151; margin-top: 0;'>New Session Details:</h3>
+                        <p><strong>Title:</strong> {$sessionTitle}</p>
+                        <p><strong>Date & Time:</strong> {$sessionDate}</p>
+                        <p><strong>Location:</strong> {$sessionLocation}</p>
+                        <p><strong>Description:</strong> " . ($event->session->description ?? 'No description provided') . "</p>
+                    </div>
+                    
+                    <p>Please check the session details and register if you're interested in participating.</p>
+                    
+                    <div style='margin: 30px 0; text-align: center;'>
+                        <a href='" . route('sessions.show', $event->session->id) . "' 
+                           style='background-color: #22c55e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                            View Session Details
+                        </a>
+                    </div>
+                    
+                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                        Thank you for your participation in {$conferenceName}. We look forward to seeing you at the conference!
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                        This is an automated notification from the CGS Events management system.
+                    </p>
+                </div>
+                ";
+                
+            case 'session_deleted':
+                return "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>Session Deleted</h2>
+                    
+                    <p>Dear {$user->first_name} {$user->last_name},</p>
+                    
+                    <p>The following session has been removed from <strong>{$conferenceName}</strong>:</p>
+                    
+                    <div style='background-color: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;'>
+                        <h3 style='color: #374151; margin-top: 0;'>Deleted Session:</h3>
+                        <p><strong>Title:</strong> {$sessionTitle}</p>
+                        <p><strong>Date & Time:</strong> {$sessionDate}</p>
+                        <p><strong>Location:</strong> {$sessionLocation}</p>
+                    </div>
+                    
+                    <p>If you were planning to attend this session, please check the updated conference schedule for alternative sessions.</p>
+                    
+                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                        We apologize for any inconvenience this may cause. Please contact our team if you have any questions.
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                        This is an automated notification from the CGS Events management system.
+                    </p>
+                </div>
+                ";
+                
             case 'session_assigned':
                 return "
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>

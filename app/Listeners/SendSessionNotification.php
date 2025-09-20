@@ -83,8 +83,19 @@ class SendSessionNotification implements ShouldQueue
             }
         }
 
+        // For session creation, update, and deletion events, notify only participants assigned to this session
+        if (in_array($event->eventType, ['session_created', 'session_updated', 'session_deleted'])) {
+            // Get only participants who are assigned to this specific session
+            $sessionParticipants = $event->session->participants()->with('user')->get();
+            
+            foreach ($sessionParticipants as $participant) {
+                if ($participant->user && !in_array($participant->user->id, array_column($users, 'id'))) {
+                    $users[] = $participant->user;
+                }
+            }
+        }
         // For other events, also notify participants who are part of the conference but not specifically assigned to this session
-        if (!in_array($event->eventType, ['session_assigned', 'session_removed'])) {
+        elseif (!in_array($event->eventType, ['session_assigned', 'session_removed'])) {
             $conferenceParticipants = Participant::where('conference_id', $event->conferenceId)
                 ->with('user')
                 ->get();

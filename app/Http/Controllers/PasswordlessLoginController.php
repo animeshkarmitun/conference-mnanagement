@@ -85,6 +85,9 @@ class PasswordlessLoginController extends Controller
 
         $stats = $this->passwordlessLoginService->getLoginStats();
         $recentLogins = PasswordlessLogin::with('user')
+                                       ->whereHas('user.roles', function ($query) {
+                                           $query->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker']);
+                                       })
                                        ->orderBy('created_at', 'desc')
                                        ->limit(10)
                                        ->get();
@@ -118,11 +121,11 @@ class PasswordlessLoginController extends Controller
         try {
             $user = User::findOrFail($request->user_id);
             
-            // Check if user is an attendee or speaker
-            if (!$user->roles()->whereIn('name', ['attendee', 'speaker'])->exists()) {
+            // Check if user is a participant (organizer, speaker, attendee, or tasker)
+            if (!$user->roles()->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker'])->exists()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User is not an attendee or speaker.'
+                    'message' => 'User is not a participant.'
                 ], 400);
             }
 
@@ -296,7 +299,7 @@ class PasswordlessLoginController extends Controller
         }
 
         $participants = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['attendee', 'speaker']);
+            $query->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker']);
         })
         ->select('id', 'first_name', 'last_name', 'email')
         ->orderBy('first_name')

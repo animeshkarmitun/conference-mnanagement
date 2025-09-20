@@ -20,6 +20,24 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Debug route for testing (no auth required)
+Route::get('/debug/participants/{conferenceId}', function($conferenceId) {
+    $participants = \App\Models\Participant::with(['user', 'participantType'])
+        ->where('conference_id', $conferenceId)
+        ->get()
+        ->map(function($participant) {
+            return [
+                'id' => $participant->id,
+                'name' => ($participant->user->first_name ?? $participant->user->name) . ' ' . ($participant->user->last_name ?? ''),
+                'email' => $participant->user->email,
+                'organization' => $participant->user->organization ?? '',
+                'type' => $participant->participantType->name ?? '',
+            ];
+        });
+    
+    return response()->json(['participants' => $participants]);
+});
+
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'role.redirect'])->name('dashboard');
 Route::get('/participant-dashboard', [\App\Http\Controllers\ParticipantDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('participant-dashboard');
 
@@ -221,6 +239,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('conferences', \App\Http\Controllers\ConferenceController::class);
     Route::resource('participants', \App\Http\Controllers\ParticipantController::class);
     Route::resource('sessions', \App\Http\Controllers\SessionController::class);
+    Route::get('/sessions/participants/by-conference', [\App\Http\Controllers\SessionController::class, 'getParticipantsByConference'])->name('sessions.participants.by-conference');
+    
     Route::resource('tasks', \App\Http\Controllers\TaskController::class);
     Route::patch('/tasks/{task}/status', [\App\Http\Controllers\TaskController::class, 'updateStatus'])->name('tasks.update-status');
     Route::resource('notifications', \App\Http\Controllers\NotificationController::class);

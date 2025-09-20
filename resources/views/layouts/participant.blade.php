@@ -11,8 +11,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Static CSS for shared hosting -->
-        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        <!-- Vite CSS -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
         
         <!-- Alpine.js for interactive components -->
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -287,8 +287,8 @@
                             </div>
                         </div>
                         <!-- User Profile Dropdown -->
-                        <div class="relative group">
-                            <button class="flex items-center space-x-3 focus:outline-none">
+                        <div class="relative group" x-data="{ open: false }" @keydown.escape.window="open = false">
+                            <button class="flex items-center space-x-3 focus:outline-none" @click="open = !open">
                                 <span class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-white font-bold text-lg">
                                     {{ strtoupper(substr(auth()->user()->first_name,0,1)) }}
                                 </span>
@@ -298,7 +298,15 @@
                                 </span>
                                 <svg class="w-4 h-4 text-gray-400 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                             </button>
-                            <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-150">
+                            <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 transition-opacity duration-150" 
+                                 x-show="open" 
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 @click.away="open = false">
                                 <a href="{{ route('participants.profile') }}" class="block px-4 py-2 text-gray-700 hover:bg-slate-800">My Profile</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf

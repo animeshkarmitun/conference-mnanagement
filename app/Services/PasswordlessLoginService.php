@@ -129,12 +129,12 @@ class PasswordlessLoginService
             }
         }
 
-        // Check if user is an attendee or speaker
+        // Check if user is a participant (organizer, speaker, attendee, or tasker)
         $user = $passwordlessLogin->user;
-        if (!$user->roles()->whereIn('name', ['attendee', 'speaker'])->exists()) {
+        if (!$user->roles()->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker'])->exists()) {
             return [
                 'success' => false,
-                'message' => 'Access denied. This link is only for attendees and speakers.',
+                'message' => 'Access denied. This link is only for participants.',
                 'error_type' => 'access_denied'
             ];
         }
@@ -169,7 +169,7 @@ class PasswordlessLoginService
         $results = [];
         $users = User::whereIn('id', $userIds)
                     ->whereHas('roles', function ($query) {
-                        $query->whereIn('name', ['attendee', 'speaker']);
+                        $query->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker']);
                     })
                     ->get();
 
@@ -236,17 +236,21 @@ class PasswordlessLoginService
     }
 
     /**
-     * Get login statistics
+     * Get login statistics (only for participants: organizer, speaker, attendee, tasker)
      */
     public function getLoginStats(): array
     {
+        $participantTokens = PasswordlessLogin::whereHas('user.roles', function ($query) {
+            $query->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker']);
+        });
+
         return [
-            'total_tokens' => PasswordlessLogin::count(),
-            'active_tokens' => PasswordlessLogin::valid()->count(),
-            'used_tokens' => PasswordlessLogin::used()->count(),
-            'expired_tokens' => PasswordlessLogin::expired()->count(),
-            'tokens_created_today' => PasswordlessLogin::whereDate('created_at', today())->count(),
-            'tokens_used_today' => PasswordlessLogin::whereDate('used_at', today())->count(),
+            'total_tokens' => $participantTokens->count(),
+            'active_tokens' => (clone $participantTokens)->valid()->count(),
+            'used_tokens' => (clone $participantTokens)->used()->count(),
+            'expired_tokens' => (clone $participantTokens)->expired()->count(),
+            'tokens_created_today' => (clone $participantTokens)->whereDate('created_at', today())->count(),
+            'tokens_used_today' => (clone $participantTokens)->whereDate('used_at', today())->count(),
         ];
     }
 }
