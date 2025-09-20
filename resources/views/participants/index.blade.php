@@ -1003,18 +1003,46 @@ document.addEventListener('DOMContentLoaded', function() {
             sendButton.textContent = 'Sending...';
             sendButton.disabled = true;
             
-            // Simulate email sending (placeholder for now)
-            setTimeout(() => {
-                // Show success message
-                alert('Email sent successfully! (This is a placeholder - email functionality will be implemented later)');
-                
+            // Get form data
+            const formData = new FormData(emailForm);
+            const emailData = {
+                to: formData.get('to'),
+                subject: formData.get('subject'),
+                message: formData.get('message'),
+                conference_id: '{{ $conference->id ?? null }}'
+            };
+            
+            // Send email via AJAX
+            fetch('{{ route("participants.send-email") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(emailData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert('Email sent successfully!');
+                    
+                    // Close modal
+                    closeEmailModal();
+                } else {
+                    // Show error message
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while sending the email. Please try again.');
+            })
+            .finally(() => {
                 // Reset button
                 sendButton.textContent = originalText;
                 sendButton.disabled = false;
-                
-                // Close modal
-                closeEmailModal();
-            }, 1500);
+            });
         });
     }
     
@@ -1053,7 +1081,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <form id="emailForm" class="space-y-4">
                 <div>
                     <label for="fromEmail" class="block text-sm font-medium text-gray-700 mb-1">From</label>
-                    <input type="email" id="fromEmail" name="from" value="admin@conference.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" readonly>
+                    <input type="email" id="fromEmail" name="from" value="conferencescgs@gmail.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" readonly>
                 </div>
                 
                 <div>

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Mailable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class EmailTrackingService
 {
@@ -168,8 +169,107 @@ class EmailTrackingService
             $this->markAsSent($email);
 
         } catch (\Exception $e) {
+            // If SMTP fails, try Gmail API as fallback
+            if (strpos($e->getMessage(), 'Failed to authenticate on SMTP server') !== false) {
+                \Log::info('SMTP failed, trying Gmail API fallback for email: ' . $email->id);
+                
+                try {
+                    $this->sendViaGmailAPI($email, $recipientEmail, $subject, $body);
+                    $this->markAsSent($email);
+                    \Log::info('Email sent successfully via Gmail API: ' . $email->id);
+                } catch (\Exception $gmailException) {
+                    \Log::error('Gmail API also failed: ' . $gmailException->getMessage());
+                    $this->markAsFailed($email, 'SMTP failed: ' . $e->getMessage() . ' | Gmail API failed: ' . $gmailException->getMessage());
+                    throw new \Exception('Both SMTP and Gmail API failed. SMTP: ' . $e->getMessage() . ' | Gmail API: ' . $gmailException->getMessage());
+                }
+            } else {
+                // Mark as failed for other errors
+                $this->markAsFailed($email, $e->getMessage());
+                throw $e;
+            }
+        }
+
+        return $email;
+    }
+
+    /**
+     * Send email via Gmail API with tracking
+     */
+    public function sendTrackedEmailViaGmail(
+        string $recipientEmail,
+        string $subject,
+        string $body,
+        string $emailType = Email::TYPE_GENERAL,
+        ?User $sender = null,
+        ?Conference $conference = null,
+        ?string $relatedModelType = null,
+        ?int $relatedModelId = null,
+        ?string $templateName = null,
+        array $metadata = []
+    ): Email {
+        // Track the email first
+        $email = $this->trackEmail(
+            $recipientEmail,
+            $subject,
+            $body,
+            $emailType,
+            $sender,
+            $conference,
+            $relatedModelType,
+            $relatedModelId,
+            $templateName,
+            $metadata
+        );
+
+        try {
+            // Get current user's Gmail token
+            $user = $sender ?? Auth::user();
+            if (!$user || !$user->google_token) {
+                throw new \Exception('Gmail not connected for user');
+            }
+
+            // Initialize Google Service
+            $googleService = app(GoogleService::class);
+            $googleService->setAccessToken(json_decode($user->google_token, true));
+
+            // Send email via Gmail API
+            $result = $googleService->sendEmailWithThread(
+                $recipientEmail,
+                $subject,
+                $body,
+                null, // Let Gmail find or create thread
+                $recipientEmail
+            );
+
+            // Update email record with Gmail info
+            $email->update([
+                'status' => Email::STATUS_SENT,
+                'sent_at' => now(),
+                'message_id' => $result['message_id'],
+                'thread_id' => $result['thread_id'],
+                'direction' => Email::DIRECTION_OUTGOING,
+                'metadata' => array_merge($metadata, [
+                    'gmail_message_id' => $result['message_id'],
+                    'gmail_thread_id' => $result['thread_id']
+                ])
+            ]);
+
+            Log::info('Email sent via Gmail API', [
+                'email_id' => $email->id,
+                'recipient' => $recipientEmail,
+                'gmail_message_id' => $result['message_id'],
+                'gmail_thread_id' => $result['thread_id']
+            ]);
+
+        } catch (\Exception $e) {
             // Mark as failed
             $this->markAsFailed($email, $e->getMessage());
+            
+            Log::error('Failed to send email via Gmail API', [
+                'email_id' => $email->id,
+                'recipient' => $recipientEmail,
+                'error' => $e->getMessage()
+            ]);
             
             throw $e;
         }
@@ -498,4 +598,90 @@ class EmailTrackingService
         
         return $query->orderBy('created_at', 'desc')->get();
     }
+
+    /**
+     * Get complete conversation for a participant
+     */
+    public function getParticipantConversation(string $participantEmail, ?int $conferenceId = null): Collection
+    {
+        $query = Email::where(function($q) use ($participantEmail) {
+            $q->where('recipient_email', $participantEmail)
+              ->orWhere('sender_email', $participantEmail);
+        });
+
+        if ($conferenceId) {
+            $query->where('conference_id', $conferenceId);
+        }
+
+        return $query->orderBy('created_at', 'asc')->get();
+    }
+
+    /**
+     * Get all participants with email conversations
+     */
+    public function getAllParticipantsWithConversations(?int $conferenceId = null): Collection
+    {
+        $query = Participant::whereHas('user', function($q) {
+            $q->whereHas('emails', function($emailQuery) {
+                $emailQuery->where(function($subQuery) {
+                    $subQuery->where('direction', Email::DIRECTION_OUTGOING)
+                             ->orWhere('direction', Email::DIRECTION_INCOMING);
+                });
+            });
+        })->with(['user', 'conference']);
+
+        if ($conferenceId) {
+            $query->where('conference_id', $conferenceId);
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
+    }
+
+    /**
+     * Send email via Gmail API as fallback when SMTP fails
+     */
+    private function sendViaGmailAPI(Email $email, string $recipientEmail, string $subject, string $body): void
+    {
+        try {
+            // Get admin user with Google token
+            $adminUser = User::whereHas('roles', function($query) {
+                $query->whereIn('name', ['admin', 'superadmin']);
+            })->whereNotNull('google_token')->first();
+
+            if (!$adminUser) {
+                throw new \Exception('No admin user with Google token found. Please connect Gmail account first.');
+            }
+
+            // Initialize Google Service
+            $googleService = new \App\Services\GoogleService();
+            $googleService->setAccessToken(json_decode($adminUser->google_token, true));
+
+            // Send via Gmail API
+            $result = $googleService->sendEmail($recipientEmail, $subject, $body);
+
+            // Update email record with Gmail API details
+            $email->update([
+                'message_id' => $result->getId(),
+                'metadata' => array_merge($email->metadata ?? [], [
+                    'sent_via' => 'gmail_api',
+                    'gmail_message_id' => $result->getId(),
+                    'gmail_thread_id' => $result->getThreadId(),
+                ])
+            ]);
+
+            \Log::info('Email sent via Gmail API', [
+                'email_id' => $email->id,
+                'gmail_message_id' => $result->getId(),
+                'gmail_thread_id' => $result->getThreadId()
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Gmail API send failed', [
+                'email_id' => $email->id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
 }

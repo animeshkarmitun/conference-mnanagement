@@ -20,9 +20,9 @@ class SuperAdminSeeder extends Seeder
 
         // Create the superadmin user
         $user = User::firstOrCreate([
-            'email' => 'superadmin@example.com',
+            'email' => 'conferencescgs@gmail.com',
         ], [
-            'password' => Hash::make('SuperSecurePassword123!'),
+            'password' => Hash::make('Password@#24'),
             'first_name' => 'Super',
             'last_name' => 'Admin',
             'organization' => 'CGS Events',

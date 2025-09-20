@@ -91,6 +91,110 @@ class EmailTrackingController extends Controller
     }
 
     /**
+     * Get participant conversation
+     */
+    public function getParticipantConversation(Request $request): JsonResponse
+    {
+        $participantEmail = $request->input('participant_email');
+        $conferenceId = $request->input('conference_id');
+
+        if (!$participantEmail) {
+            return response()->json(['error' => 'Participant email required'], 400);
+        }
+
+        $conversation = $this->emailTrackingService->getParticipantConversation($participantEmail, $conferenceId);
+        $stats = $this->emailTrackingService->getParticipantConversationStats($participantEmail, $conferenceId);
+
+        return response()->json([
+            'conversation' => $conversation,
+            'stats' => $stats
+        ]);
+    }
+
+    /**
+     * Get all participants with conversations
+     */
+    public function getParticipantsWithConversations(Request $request): JsonResponse
+    {
+        $conferenceId = $request->input('conference_id');
+        $participants = $this->emailTrackingService->getAllParticipantsWithConversations($conferenceId);
+
+        return response()->json($participants);
+    }
+
+    /**
+     * Sync Gmail messages for participant
+     */
+    public function syncParticipantGmail(Request $request): JsonResponse
+    {
+        $participantEmail = $request->input('participant_email');
+        $conferenceId = $request->input('conference_id');
+
+        if (!$participantEmail) {
+            return response()->json(['error' => 'Participant email required'], 400);
+        }
+
+        try {
+            $gmailIncomingService = app(\App\Services\GmailIncomingEmailService::class);
+            $adminUser = \App\Models\User::whereHas('roles', function($query) {
+                $query->whereIn('name', ['admin', 'superadmin']);
+            })->whereNotNull('google_token')->first();
+
+            if (!$adminUser) {
+                return response()->json(['error' => 'No admin user with Gmail token found'], 400);
+            }
+
+            $googleService = app(\App\Services\GoogleService::class);
+            $googleService->setAccessToken(json_decode($adminUser->google_token, true));
+
+            $syncedCount = $gmailIncomingService->syncParticipantGmailMessages($participantEmail);
+
+            return response()->json([
+                'success' => true,
+                'synced_count' => $syncedCount,
+                'participant_email' => $participantEmail
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Send email to participant via Gmail
+     */
+    public function sendEmailToParticipant(Request $request): JsonResponse
+    {
+        $request->validate([
+            'participant_email' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'body' => 'required|string',
+            'conference_id' => 'nullable|exists:conferences,id',
+            'email_type' => 'nullable|string'
+        ]);
+
+        try {
+            $email = $this->emailTrackingService->sendTrackedEmailViaGmail(
+                $request->participant_email,
+                $request->subject,
+                $request->body,
+                $request->email_type ?? \App\Models\Email::TYPE_GENERAL,
+                auth()->user(),
+                $request->conference_id ? \App\Models\Conference::find($request->conference_id) : null
+            );
+
+            return response()->json([
+                'success' => true,
+                'email_id' => $email->id,
+                'message' => 'Email sent successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Show email details
      */
     public function show(Email $email): View

@@ -18,6 +18,23 @@
             </select>
             @error('user_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
+        
+        <!-- User Information Fields -->
+        <div class="mb-4">
+            <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
+            <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $participant->user->first_name ?? $participant->user->name) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+            @error('first_name')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+        </div>
+        <div class="mb-4">
+            <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
+            <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $participant->user->last_name) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+            @error('last_name')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+        </div>
+        <div class="mb-4">
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" name="email" id="email" value="{{ old('email', $participant->user->email) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+            @error('email')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+        </div>
         <div class="mb-4">
             <label for="conference_id" class="block text-sm font-medium text-gray-700">Conference</label>
             <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
@@ -27,6 +44,31 @@
                 @endforeach
             </select>
             @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+            
+            <!-- Conference Change Warning -->
+            <div id="conference-change-warning" class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md hidden">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">Warning: Conference Change</h3>
+                        <div class="mt-2 text-sm text-yellow-700">
+                            <p>Changing the conference will automatically remove:</p>
+                            <ul class="list-disc list-inside mt-1 space-y-1">
+                                <li>All session assignments</li>
+                                <li>Travel details and arrangements</li>
+                                <li>Room allocations</li>
+                                <li>Check-in records</li>
+                                <li>Reset registration status to pending</li>
+                            </ul>
+                            <p class="mt-2 font-medium">The participant will be notified of this change via email.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="mb-4">
             <label for="participant_type_id" class="block text-sm font-medium text-gray-700">Type</label>
@@ -118,6 +160,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Listen for changes
     visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
+    
+    // Conference change warning
+    const conferenceSelect = document.getElementById('conference_id');
+    const conferenceWarning = document.getElementById('conference-change-warning');
+    const originalConferenceId = conferenceSelect.value;
+    
+    function toggleConferenceWarning() {
+        if (conferenceSelect.value && conferenceSelect.value !== originalConferenceId) {
+            conferenceWarning.classList.remove('hidden');
+        } else {
+            conferenceWarning.classList.add('hidden');
+        }
+    }
+    
+    conferenceSelect.addEventListener('change', toggleConferenceWarning);
+    toggleConferenceWarning(); // Initial call
 });
 </script>
 @endsection 

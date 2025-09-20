@@ -11,6 +11,7 @@ use App\Models\Hotel;
 use App\Models\Session;
 use App\Services\TravelNotificationService;
 use App\Services\ProfileNotificationService;
+use App\Events\SessionEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -347,6 +348,7 @@ class ParticipantController extends Controller
             'visa_status' => $participant->visa_status,
             'dietary_needs' => $participant->dietary_needs,
             'organization' => $participant->organization,
+            'conference_id' => $participant->conference_id,
         ];
 
         // Update user data
@@ -420,45 +422,65 @@ class ParticipantController extends Controller
             $participantValidated['approved'] = $request->has('approved');
         }
 
+        // Check if conference has changed and handle conference-specific data cleanup
+        if (!$isPersonalUpdate && isset($participantValidated['conference_id']) && 
+            $oldParticipantData['conference_id'] != $participantValidated['conference_id']) {
+            $this->handleConferenceChange($participant, $oldParticipantData['conference_id'], $participantValidated['conference_id']);
+        }
+
         // Update participant data
         $participant->update($participantValidated);
         
-        // Send notifications if this is a participant updating their own profile
-        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('superadmin')) {
-            $profileNotificationService = new ProfileNotificationService();
-            $changes = [];
-            
-            // Check for personal info changes
-            $newUserData = [
-                'first_name' => $userValidated['first_name'],
-                'last_name' => $userValidated['last_name'],
-                'email' => $userValidated['email'],
-            ];
+        // Send notifications for both admin and participant updates
+        $profileNotificationService = new ProfileNotificationService();
+        $changes = [];
+        
+        // Check for personal info changes
+        $newUserData = [
+            'first_name' => $userValidated['first_name'],
+            'last_name' => $userValidated['last_name'],
+            'email' => $userValidated['email'],
+        ];
+        
+        if (($oldUserData['first_name'] ?? '') !== ($newUserData['first_name'] ?? '') ||
+            ($oldUserData['last_name'] ?? '') !== ($newUserData['last_name'] ?? '') ||
+            ($oldUserData['email'] ?? '') !== ($newUserData['email'] ?? '')) {
+            $changes['personal_info'] = true;
             $profileNotificationService->notifyPersonalInfoUpdated($participant, $oldUserData, $newUserData);
-            
-            // Check for visa status changes
-            if ($oldParticipantData['visa_status'] !== $participantValidated['visa_status']) {
-                $profileNotificationService->notifyVisaStatusUpdated($participant, $oldParticipantData['visa_status'], $participantValidated['visa_status']);
-            }
-            
-            // Check for dietary needs changes
-            if (($oldParticipantData['dietary_needs'] ?? '') !== ($participantValidated['dietary_needs'] ?? '')) {
-                $profileNotificationService->notifyDietaryNeedsUpdated($participant, $oldParticipantData['dietary_needs'] ?? '', $participantValidated['dietary_needs'] ?? '');
-            }
-            
-            // Check for organization changes
-            if (($oldParticipantData['organization'] ?? '') !== ($participantValidated['organization'] ?? '')) {
-                $profileNotificationService->notifyOrganizationUpdated($participant, $oldParticipantData['organization'] ?? '', $participantValidated['organization'] ?? '');
-            }
-            
-            // Check for document uploads
-            if ($request->hasFile('profile_picture')) {
-                $profileNotificationService->notifyDocumentUploaded($participant, 'Profile Picture');
-            }
-            
-            if ($request->hasFile('resume')) {
-                $profileNotificationService->notifyDocumentUploaded($participant, 'Resume');
-            }
+        }
+        
+        // Check for visa status changes
+        if ($oldParticipantData['visa_status'] !== $participantValidated['visa_status']) {
+            $changes['visa_status'] = true;
+            $profileNotificationService->notifyVisaStatusUpdated($participant, $oldParticipantData['visa_status'], $participantValidated['visa_status']);
+        }
+        
+        // Check for dietary needs changes
+        if (($oldParticipantData['dietary_needs'] ?? '') !== ($participantValidated['dietary_needs'] ?? '')) {
+            $changes['dietary_needs'] = true;
+            $profileNotificationService->notifyDietaryNeedsUpdated($participant, $oldParticipantData['dietary_needs'] ?? '', $participantValidated['dietary_needs'] ?? '');
+        }
+        
+        // Check for organization changes
+        if (($oldParticipantData['organization'] ?? '') !== ($participantValidated['organization'] ?? '')) {
+            $changes['organization'] = true;
+            $profileNotificationService->notifyOrganizationUpdated($participant, $oldParticipantData['organization'] ?? '', $participantValidated['organization'] ?? '');
+        }
+        
+        // Check for document uploads
+        if ($request->hasFile('profile_picture')) {
+            $changes['profile_picture'] = true;
+            $profileNotificationService->notifyDocumentUploaded($participant, 'Profile Picture');
+        }
+        
+        if ($request->hasFile('resume')) {
+            $changes['resume'] = true;
+            $profileNotificationService->notifyDocumentUploaded($participant, 'Resume');
+        }
+        
+        // Send email notification to participant if admin made changes
+        if ((Auth::user()->hasRole('admin') || Auth::user()->hasRole('superadmin')) && !empty($changes)) {
+            $this->sendParticipantUpdateEmail($participant, $changes, Auth::user());
         }
         
         // Redirect based on who is updating (admin vs participant)
@@ -705,6 +727,17 @@ class ParticipantController extends Controller
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
+                    
+                    // Trigger session assignment event
+                    $session = Session::find($sid);
+                    if ($session) {
+                        $message = "You have been assigned to the session '{$session->title}' as " . ($roles[$sid] ?? 'participant');
+                        event(new SessionEvent($session, 'session_assigned', $message, [
+                            'participant_id' => $participant->id,
+                            'role' => $roles[$sid] ?? 'participant',
+                            'assigned_by' => Auth::user()->id
+                        ]));
+                    }
                 }
             }
 
@@ -730,6 +763,15 @@ class ParticipantController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        
+        // Trigger session assignment event
+        $message = "You have been assigned to the session '{$session->title}' as {$validated['role']}";
+        event(new SessionEvent($session, 'session_assigned', $message, [
+            'participant_id' => $participant->id,
+            'role' => $validated['role'],
+            'assigned_by' => Auth::user()->id
+        ]));
+        
         return redirect()->back()->with('success', 'Session assigned successfully');
     }
 
@@ -739,7 +781,11 @@ class ParticipantController extends Controller
     public function removeSession(Request $request, Participant $participant)
     {
         // Check permissions
-        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin')) {
+        $user = Auth::user();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || in_array('super_admin', $userRoles) || in_array('superadmin', $userRoles);
+        
+        if (!$hasPermission) {
             return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
         }
 
@@ -747,8 +793,30 @@ class ParticipantController extends Controller
             'session_id' => 'required|exists:sessions,id',
         ]);
 
+        // Get session details before removing
+        $session = Session::find($validated['session_id']);
+        
+        // Verify session belongs to the same conference as participant
+        if ($session && $session->conference_id !== $participant->conference_id) {
+            return response()->json(['success' => false, 'message' => 'Session does not belong to the same conference'], 422);
+        }
+        
+        // Check if participant is actually assigned to this session
+        if (!$participant->sessions()->where('session_id', $validated['session_id'])->exists()) {
+            return response()->json(['success' => false, 'message' => 'Participant is not assigned to this session'], 422);
+        }
+        
         // Remove session from participant
         $participant->sessions()->detach($validated['session_id']);
+        
+        // Trigger session removal event
+        if ($session) {
+            $message = "Your assignment to the session '{$session->title}' has been removed";
+            event(new SessionEvent($session, 'session_removed', $message, [
+                'participant_id' => $participant->id,
+                'removed_by' => Auth::user()->id
+            ]));
+        }
 
         return response()->json(['success' => true, 'message' => 'Session removed successfully']);
     }
@@ -824,6 +892,428 @@ class ParticipantController extends Controller
         } catch (\Exception $e) {
             \Log::error('Bulk update failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to update participants: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send email notification to participant when admin updates their information
+     */
+    private function sendParticipantUpdateEmail(Participant $participant, array $changes, User $adminUser)
+    {
+        try {
+            $changeDescriptions = [];
+            
+            if (isset($changes['personal_info'])) {
+                $changeDescriptions[] = 'personal information';
+            }
+            if (isset($changes['visa_status'])) {
+                $changeDescriptions[] = 'visa status';
+            }
+            if (isset($changes['dietary_needs'])) {
+                $changeDescriptions[] = 'dietary preferences';
+            }
+            if (isset($changes['organization'])) {
+                $changeDescriptions[] = 'organization details';
+            }
+            if (isset($changes['profile_picture'])) {
+                $changeDescriptions[] = 'profile picture';
+            }
+            if (isset($changes['resume'])) {
+                $changeDescriptions[] = 'resume';
+            }
+            
+            $changesText = implode(', ', $changeDescriptions);
+            $subject = "Your Profile Has Been Updated - {$participant->conference->name}";
+            
+            $emailBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>Profile Update Notification</h2>
+                    
+                    <p>Dear {$participant->user->first_name} {$participant->user->last_name},</p>
+                    
+                    <p>Your profile information for the <strong>{$participant->conference->name}</strong> conference has been updated by our administrative team.</p>
+                    
+                    <div style='background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                        <h3 style='color: #374151; margin-top: 0;'>Updated Information:</h3>
+                        <ul style='color: #4b5563;'>
+            ";
+            
+            foreach ($changeDescriptions as $change) {
+                $emailBody .= "<li style='margin-bottom: 5px;'>" . ucfirst($change) . "</li>";
+            }
+            
+            $emailBody .= "
+                        </ul>
+                    </div>
+                    
+                    <p>Please log in to your account to review the changes and ensure all information is correct.</p>
+                    
+                    <div style='margin: 30px 0; text-align: center;'>
+                        <a href='" . route('participants.show', $participant) . "' 
+                           style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                            View Your Profile
+                        </a>
+                    </div>
+                    
+                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                        If you have any questions or concerns about these changes, please contact our support team.
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                        This is an automated notification from the CGS Events management system.
+                    </p>
+                </div>
+            ";
+            
+            // Use EmailTrackingService to send the email
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            
+            $emailTrackingService->sendTrackedEmailViaGmail(
+                $participant->user->email,
+                $subject,
+                $emailBody,
+                'profile_update',
+                $adminUser,
+                $participant->conference,
+                'Participant',
+                $participant->id,
+                'participant_update_notification'
+            );
+            
+            \Log::info('Participant update email sent', [
+                'participant_id' => $participant->id,
+                'admin_user_id' => $adminUser->id,
+                'changes' => $changes
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send participant update email', [
+                'participant_id' => $participant->id,
+                'admin_user_id' => $adminUser->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send email to participant
+     */
+    public function sendEmail(Request $request)
+    {
+        $request->validate([
+            'to' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'conference_id' => 'nullable|exists:conferences,id'
+        ]);
+
+        try {
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            $conference = $request->conference_id ? \App\Models\Conference::find($request->conference_id) : null;
+            
+            $email = $emailTrackingService->sendTrackedEmailViaGmail(
+                $request->to,
+                $request->subject,
+                $request->message,
+                \App\Models\Email::TYPE_GENERAL,
+                auth()->user(),
+                $conference,
+                'Participant',
+                null,
+                'manual_email'
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully!',
+                'email_id' => $email->id
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send email to participant', [
+                'to' => $request->to,
+                'subject' => $request->subject,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Handle conference change for participant - cleanup conference-specific data
+     */
+    private function handleConferenceChange(Participant $participant, $oldConferenceId, $newConferenceId)
+    {
+        try {
+            \Log::info('Handling conference change for participant', [
+                'participant_id' => $participant->id,
+                'old_conference_id' => $oldConferenceId,
+                'new_conference_id' => $newConferenceId
+            ]);
+
+            // 1. Remove all session assignments
+            $sessionCount = $participant->sessions()->count();
+            if ($sessionCount > 0) {
+                $participant->sessions()->detach();
+                \Log::info("Removed {$sessionCount} session assignments for participant {$participant->id}");
+            }
+
+            // 2. Remove travel details
+            if ($participant->travelDetails) {
+                $participant->travelDetails()->delete();
+                \Log::info("Removed travel details for participant {$participant->id}");
+            }
+
+            // 3. Remove room allocations
+            $roomAllocationCount = $participant->roomAllocations()->count();
+            if ($roomAllocationCount > 0) {
+                $participant->roomAllocations()->delete();
+                \Log::info("Removed {$roomAllocationCount} room allocations for participant {$participant->id}");
+            }
+
+            // 4. Remove checkins
+            $checkinCount = $participant->checkins()->count();
+            if ($checkinCount > 0) {
+                $participant->checkins()->delete();
+                \Log::info("Removed {$checkinCount} checkins for participant {$participant->id}");
+            }
+
+            // 5. Reset conference-specific participant fields
+            $participant->update([
+                'travel_form_submitted' => false,
+                'travel_intent' => false,
+                'registration_status' => 'pending',
+                'approved' => false,
+            ]);
+
+            \Log::info("Reset conference-specific fields for participant {$participant->id}");
+
+            // 6. Send notification about conference change
+            $this->notifyConferenceChange($participant, $oldConferenceId, $newConferenceId);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to handle conference change for participant', [
+                'participant_id' => $participant->id,
+                'old_conference_id' => $oldConferenceId,
+                'new_conference_id' => $newConferenceId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send notification about conference change
+     */
+    private function notifyConferenceChange(Participant $participant, $oldConferenceId, $newConferenceId)
+    {
+        try {
+            $oldConference = \App\Models\Conference::find($oldConferenceId);
+            $newConference = \App\Models\Conference::find($newConferenceId);
+
+            $subject = "Conference Assignment Changed - {$newConference->name}";
+            
+            $emailBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>Conference Assignment Update</h2>
+                    
+                    <p>Dear {$participant->user->first_name} {$participant->user->last_name},</p>
+                    
+                    <p>Your conference assignment has been changed by our administrative team.</p>
+                    
+                    <div style='background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                        <h3 style='color: #374151; margin-top: 0;'>Assignment Details:</h3>
+                        <p><strong>Previous Conference:</strong> " . ($oldConference ? $oldConference->name : 'N/A') . "</p>
+                        <p><strong>New Conference:</strong> {$newConference->name}</p>
+                    </div>
+                    
+                    <div style='background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                        <h3 style='color: #92400e; margin-top: 0;'>Important Notice:</h3>
+                        <p>Due to this conference change, the following have been reset:</p>
+                        <ul style='color: #92400e;'>
+                            <li>Session assignments</li>
+                            <li>Travel details and arrangements</li>
+                            <li>Room allocations</li>
+                            <li>Check-in records</li>
+                            <li>Registration status (reset to pending)</li>
+                        </ul>
+                        <p>Please review your new conference details and update your information as needed.</p>
+                    </div>
+                    
+                    <div style='margin: 30px 0; text-align: center;'>
+                        <a href='" . route('participants.show', $participant) . "' 
+                           style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                            View Your Profile
+                        </a>
+                    </div>
+                    
+                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                        If you have any questions about this change, please contact our support team.
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                        This is an automated notification from the CGS Events management system.
+                    </p>
+                </div>
+            ";
+            
+            // Use EmailTrackingService to send the email
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            
+            $emailTrackingService->sendTrackedEmailViaGmail(
+                $participant->user->email,
+                $subject,
+                $emailBody,
+                'conference_change',
+                auth()->user(),
+                $newConference,
+                'Participant',
+                $participant->id,
+                'conference_change_notification'
+            );
+            
+            \Log::info('Conference change notification sent', [
+                'participant_id' => $participant->id,
+                'old_conference_id' => $oldConferenceId,
+                'new_conference_id' => $newConferenceId
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send conference change notification', [
+                'participant_id' => $participant->id,
+                'old_conference_id' => $oldConferenceId,
+                'new_conference_id' => $newConferenceId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Store a new comment for a participant
+     */
+    public function storeComment(Request $request, Participant $participant)
+    {
+        $request->validate([
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        // Create the comment
+        $comment = \App\Models\Comment::create([
+            'user_id' => auth()->id(),
+            'participant_id' => $participant->id,
+            'conference_id' => $participant->conference_id,
+            'content' => $request->comment,
+        ]);
+
+        // Create notification for the participant (if not the same user)
+        if (auth()->id() !== $participant->user_id) {
+            $participant->user->notifications()->create([
+                'conference_id' => $participant->conference_id,
+                'type' => 'comment_added',
+                'title' => 'New Comment Added',
+                'message' => auth()->user()->first_name . ' ' . auth()->user()->last_name . ' added a comment to your profile.',
+                'data' => json_encode([
+                    'comment_id' => $comment->id,
+                    'participant_id' => $participant->id,
+                    'commenter_name' => auth()->user()->first_name . ' ' . auth()->user()->last_name,
+                ]),
+            ]);
+
+            // Send email notification
+            $this->sendCommentEmailNotification($participant, $comment, auth()->user());
+        }
+
+        // Create notification for admins (if participant is commenting)
+        if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
+            $admins = \App\Models\User::whereHas('roles', function($query) {
+                $query->whereIn('name', ['admin', 'superadmin']);
+            })->get();
+
+            foreach ($admins as $admin) {
+                $admin->notifications()->create([
+                    'conference_id' => $participant->conference_id,
+                    'type' => 'participant_comment',
+                    'title' => 'Participant Comment Added',
+                    'message' => $participant->user->first_name . ' ' . $participant->user->last_name . ' added a comment to their profile.',
+                    'data' => json_encode([
+                        'comment_id' => $comment->id,
+                        'participant_id' => $participant->id,
+                        'participant_name' => $participant->user->first_name . ' ' . $participant->user->last_name,
+                    ]),
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Comment added successfully.');
+    }
+
+    /**
+     * Send email notification for new comment
+     */
+    private function sendCommentEmailNotification(Participant $participant, $comment, $commenter)
+    {
+        try {
+            $subject = "New Comment Added to Your Profile - {$participant->conference->name}";
+            
+            $emailBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>New Comment Added</h2>
+                    
+                    <p>Dear {$participant->user->first_name} {$participant->user->last_name},</p>
+                    
+                    <p>A new comment has been added to your profile by {$commenter->first_name} {$commenter->last_name}.</p>
+                    
+                    <div style='background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                        <h3 style='color: #374151; margin-top: 0;'>Comment Details:</h3>
+                        <p><strong>Commenter:</strong> {$commenter->first_name} {$commenter->last_name}</p>
+                        <p><strong>Comment:</strong> {$comment->content}</p>
+                        <p><strong>Date:</strong> " . $comment->created_at->format('M d, Y H:i') . "</p>
+                    </div>
+                    
+                    <div style='margin: 30px 0; text-align: center;'>
+                        <a href='" . route('participants.show', $participant) . "' 
+                           style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                            View Your Profile
+                        </a>
+                    </div>
+                    
+                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                        You can view and respond to comments on your profile page.
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                        This is an automated notification from the CGS Events management system.
+                    </p>
+                </div>
+            ";
+            
+            // Use EmailTrackingService to send the email
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            
+            $emailTrackingService->sendTrackedEmailViaGmail(
+                $participant->user->email,
+                $subject,
+                $emailBody,
+                'comment_added',
+                $commenter,
+                $participant->conference,
+                'Participant',
+                $participant->id,
+                'comment_notification'
+            );
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send comment email notification', [
+                'participant_id' => $participant->id,
+                'comment_id' => $comment->id,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 } 

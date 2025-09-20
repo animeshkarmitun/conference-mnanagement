@@ -42,6 +42,19 @@
                                 <span class="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
                                     {{ $session->pivot->role ?? 'Participant' }}
                                 </span>
+                                @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('superadmin'))
+                                    <button 
+                                        type="button" 
+                                        class="remove-session-btn text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors duration-200"
+                                        data-session-id="{{ $session->id }}"
+                                        data-session-title="{{ $session->title }}"
+                                        title="Remove session assignment"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </li>
@@ -200,6 +213,62 @@
                 const res = await fetch(`{{ route('participants.assign-session', $participant) }}`, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}' }, body: JSON.stringify({ session_ids: checked, roles }) });
                 if(res.ok){ location.reload(); } else { alert('Failed to assign sessions'); }
             }catch(err){ alert('Network error'); }
+        });
+
+        // Handle remove session buttons
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('.remove-session-btn')) {
+                const button = e.target.closest('.remove-session-btn');
+                const sessionId = button.dataset.sessionId;
+                const sessionTitle = button.dataset.sessionTitle;
+                
+                if (confirm(`Are you sure you want to remove "${sessionTitle}" from this participant? This action will send notifications to the participant.`)) {
+                    try {
+                        const response = await fetch(`{{ route('participants.remove-session', $participant) }}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                session_id: sessionId
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // Show success message
+                            const successAlert = document.createElement('div');
+                            successAlert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                            successAlert.textContent = result.message || 'Session removed successfully';
+                            document.body.appendChild(successAlert);
+                            
+                            // Remove the session item from the UI
+                            const sessionItem = button.closest('li');
+                            if (sessionItem) {
+                                sessionItem.remove();
+                            }
+                            
+                            // Check if no sessions left and show empty state
+                            const sessionsList = document.querySelector('.divide-y');
+                            if (sessionsList && sessionsList.children.length === 0) {
+                                location.reload(); // Reload to show empty state
+                            }
+                            
+                            // Remove success alert after 3 seconds
+                            setTimeout(() => {
+                                successAlert.remove();
+                            }, 3000);
+                        } else {
+                            alert(result.message || 'Failed to remove session');
+                        }
+                    } catch (error) {
+                        console.error('Error removing session:', error);
+                        alert('Network error occurred while removing session');
+                    }
+                }
+            }
         });
     });
     </script>

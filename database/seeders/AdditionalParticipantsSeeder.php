@@ -160,6 +160,15 @@ class AdditionalParticipantsSeeder extends Seeder
                 'dietary_needs' => 'halal',
                 'travel_intent' => true,
                 'registration_status' => 'approved'
+            ],
+            [
+                'first_name' => 'John',
+                'last_name' => 'Leo',
+                'email' => 'johnleohere@gmail.com',
+                'participant_type' => 'attendee',
+                'dietary_needs' => 'none',
+                'travel_intent' => false,
+                'registration_status' => 'approved'
             ]
         ];
 

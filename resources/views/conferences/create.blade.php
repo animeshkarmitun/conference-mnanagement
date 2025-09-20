@@ -114,22 +114,6 @@
                 </div>
             </div>
         </div>
-        <div>
-            <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
-            <input type="date" id="end_date" name="end_date" value="{{ old('end_date') }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-            @error('end_date')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-        <div>
-            <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
-            <input type="text" id="location" name="location" value="{{ old('location') }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-            @error('location')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-        <div>
-           
 
         <!-- Sessions (Draft and Modal) -->
         <div class="bg-purple-50 p-6 rounded-lg">

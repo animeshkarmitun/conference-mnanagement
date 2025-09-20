@@ -17,8 +17,8 @@ return new class extends Migration
         });
 
         Schema::table('notifications', function (Blueprint $table) {
-            // Add the new enum column with TaskUpdate included
-            $table->enum('type', ['MissingDocuments', 'SessionUpdate', 'TravelUpdate', 'TaskUpdate', 'General'])->after('message');
+            // Add the new enum column with all notification types included
+            $table->enum('type', ['MissingDocuments', 'SessionUpdate', 'TravelUpdate', 'TaskUpdate', 'General', 'ConferenceUpdate', 'ProfileUpdate'])->after('message');
         });
     }
 
@@ -34,7 +34,7 @@ return new class extends Migration
 
         Schema::table('notifications', function (Blueprint $table) {
             // Restore the original enum column
-            $table->enum('type', ['MissingDocuments', 'SessionUpdate', 'TravelUpdate', 'General'])->after('message');
+            $table->enum('type', ['MissingDocuments', 'SessionUpdate', 'TravelUpdate', 'General', 'ConferenceUpdate', 'ProfileUpdate'])->after('message');
         });
     }
 };

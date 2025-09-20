@@ -65,6 +65,7 @@ class Email extends Model
     const TYPE_PASSWORDLESS_LOGIN = 'passwordless_login';
     const TYPE_CONFERENCE_UPDATE = 'conference_update';
     const TYPE_SESSION_UPDATE = 'session_update';
+    const TYPE_SESSION_NOTIFICATION = 'session_notification';
     const TYPE_PROFILE_UPDATE = 'profile_update';
     const TYPE_GENERAL = 'general';
 
@@ -290,6 +291,7 @@ class Email extends Model
             self::TYPE_PASSWORDLESS_LOGIN => 'Passwordless Login',
             self::TYPE_CONFERENCE_UPDATE => 'Conference Update',
             self::TYPE_SESSION_UPDATE => 'Session Update',
+            self::TYPE_SESSION_NOTIFICATION => 'Session Notification',
             self::TYPE_PROFILE_UPDATE => 'Profile Update',
             self::TYPE_GENERAL => 'General',
         ];

@@ -99,6 +99,11 @@ class User extends Authenticatable
         return $this->hasMany(PasswordlessLogin::class);
     }
 
+    public function emails()
+    {
+        return $this->hasMany(Email::class);
+    }
+
     // Scope: Filter users by role name
     public function scopeWithRole($query, $roleName)
     {

@@ -51,13 +51,22 @@ class SendSessionNotification implements ShouldQueue
     }
 
     /**
-     * Get users who should receive session notifications (participants assigned to the session)
+     * Get users who should receive session notifications
      */
     private function getUsersToNotify(SessionEvent $event): array
     {
         $users = [];
 
-        // Get participants assigned to this session
+        // For session removal, only notify the specific participant who was removed
+        if ($event->eventType === 'session_removed' && isset($event->changes['participant_id'])) {
+            $participant = Participant::with('user')->find($event->changes['participant_id']);
+            if ($participant && $participant->user) {
+                $users[] = $participant->user;
+            }
+            return $users;
+        }
+
+        // For other session events, get participants assigned to this session
         $participants = $event->session->participants()->with('user')->get();
         
         foreach ($participants as $participant) {
@@ -66,14 +75,24 @@ class SendSessionNotification implements ShouldQueue
             }
         }
 
-        // Also notify participants who are part of the conference but not specifically assigned to this session
-        $conferenceParticipants = Participant::where('conference_id', $event->conferenceId)
-            ->with('user')
-            ->get();
-            
-        foreach ($conferenceParticipants as $participant) {
-            if ($participant->user && !in_array($participant->user->id, array_column($users, 'id'))) {
+        // For session assignment, also notify the specific participant who was assigned
+        if ($event->eventType === 'session_assigned' && isset($event->changes['participant_id'])) {
+            $participant = Participant::with('user')->find($event->changes['participant_id']);
+            if ($participant && $participant->user && !in_array($participant->user->id, array_column($users, 'id'))) {
                 $users[] = $participant->user;
+            }
+        }
+
+        // For other events, also notify participants who are part of the conference but not specifically assigned to this session
+        if (!in_array($event->eventType, ['session_assigned', 'session_removed'])) {
+            $conferenceParticipants = Participant::where('conference_id', $event->conferenceId)
+                ->with('user')
+                ->get();
+                
+            foreach ($conferenceParticipants as $participant) {
+                if ($participant->user && !in_array($participant->user->id, array_column($users, 'id'))) {
+                    $users[] = $participant->user;
+                }
             }
         }
 

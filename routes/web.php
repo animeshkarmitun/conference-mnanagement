@@ -233,6 +233,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/{participant}/assign-session', [\App\Http\Controllers\ParticipantController::class, 'assignSession'])->name('participants.assign-session');
     Route::post('/participants/{participant}/update-status', [\App\Http\Controllers\ParticipantController::class, 'updateStatus'])->name('participants.update-status');
     Route::post('/participants/{participant}/remove-session', [\App\Http\Controllers\ParticipantController::class, 'removeSession'])->name('participants.remove-session');
+    Route::post('/participants/send-email', [\App\Http\Controllers\ParticipantController::class, 'sendEmail'])->name('participants.send-email');
     
     // Admin Conference Docs Routes (must come first to avoid conflicts)
     Route::resource('conference-docs', \App\Http\Controllers\ConferenceDocController::class);
@@ -338,6 +339,7 @@ Route::middleware(['auth', 'admin.access'])->group(function () {
     Route::get('/gmail', [GoogleController::class, 'showGmailThreads'])->name('gmail.index');
     Route::get('/gmail/{threadId}/reply', [GoogleController::class, 'showReplyForm'])->name('gmail.reply');
     Route::post('/gmail/{threadId}/reply', [GoogleController::class, 'sendReply'])->name('gmail.send-reply');
+    Route::get('/gmail/participants', [GoogleController::class, 'getParticipants'])->name('gmail.participants');
 });
 
 // Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');

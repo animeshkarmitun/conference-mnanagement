@@ -34,14 +34,25 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        <i class="fas fa-circle text-xs mr-2"></i>
-                        Connected to Gmail
-                    </span>
-                    <button onclick="window.location.href='{{ route('gmail.index') }}'" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <i class="fas fa-sync-alt mr-2"></i>
-                        Refresh
-                    </button>
+                    @if(isset($needsConnection) && $needsConnection)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                            <i class="fas fa-exclamation-triangle text-xs mr-2"></i>
+                            Gmail Not Connected
+                        </span>
+                        <a href="{{ route('google.redirect') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fab fa-google mr-2"></i>
+                            Connect Gmail
+                        </a>
+                    @else
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-circle text-xs mr-2"></i>
+                            Connected to Gmail
+                        </span>
+                        <button onclick="window.location.href='{{ route('gmail.index') }}'" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            Refresh
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -82,20 +93,107 @@
         </div>
 
         <!-- Search/filter form -->
-        <form method="GET" action="{{ route('gmail.index') }}" class="mb-6 flex flex-col sm:flex-row items-center gap-3">
-            <input type="text" name="q" value="{{ $searchQuery ?? '' }}" placeholder="Search (e.g. from:someone, after:2024/07/01)" class="w-full sm:w-80 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+        <form method="GET" action="{{ route('gmail.index') }}" class="mb-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <!-- Participant Dropdown -->
+                <div class="w-full sm:w-64">
+                    <label for="participant_select" class="block text-sm font-medium text-gray-700 mb-1">Select Participant</label>
+                    <select id="participant_select" name="participant" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">All Participants</option>
+                        @if(isset($participants) && $participants->count() > 0)
+                            @foreach($participants as $participant)
+                                <option value="{{ $participant->user->email }}" 
+                                        data-name="{{ $participant->user->first_name }} {{ $participant->user->last_name }}"
+                                        data-conference="{{ $participant->conference->name ?? 'N/A' }}"
+                                        {{ (($selectedParticipant ?? request('participant')) == $participant->user->email) ? 'selected' : '' }}>
+                                    {{ $participant->user->first_name }} {{ $participant->user->last_name }} ({{ $participant->user->email }})
+                                </option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                
+                <!-- Email Search Input -->
+                <div class="w-full sm:w-80">
+                    <label for="email_search" class="block text-sm font-medium text-gray-700 mb-1">Or Search Email</label>
+                    <input type="text" 
+                           id="email_search"
+                           name="q" 
+                           value="{{ $searchQuery ?? '' }}" 
+                           placeholder="Search (e.g. from:someone, after:2024/07/01)" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+                
+                <!-- Search Button -->
+                <div class="w-full sm:w-auto">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
+                    <button type="submit" class="w-full sm:w-auto inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-search mr-2"></i>
+                        Search
+                    </button>
+                </div>
+                
+                <!-- Clear Button -->
+                @if (!empty($searchQuery) || !empty($selectedParticipant ?? request('participant')))
+                    <div class="w-full sm:w-auto">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
+                        <a href="{{ route('gmail.index') }}" class="w-full sm:w-auto inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-times mr-2"></i>
+                            Clear
+                        </a>
+                    </div>
+                @endif
+            </div>
+            
             <input type="hidden" name="maxResults" value="{{ $maxResults }}">
-            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <i class="fas fa-search mr-2"></i>
-                Search
-            </button>
-            @if (!empty($searchQuery))
-                <a href="{{ route('gmail.index') }}" class="text-sm text-gray-500 hover:underline ml-2">Clear</a>
-            @endif
         </form>
 
+        <!-- Selected Participant Info -->
+        @if(!empty($selectedParticipant))
+            @php
+                $selectedParticipantData = $participants->firstWhere('user.email', $selectedParticipant);
+            @endphp
+            @if($selectedParticipantData)
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-white text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-blue-900">
+                                Viewing conversations for: <strong>{{ $selectedParticipantData->user->first_name }} {{ $selectedParticipantData->user->last_name }}</strong>
+                            </p>
+                            <p class="text-xs text-blue-700">
+                                {{ $selectedParticipantData->user->email }} • {{ $selectedParticipantData->conference->name ?? 'N/A' }}
+                            </p>
+                        </div>
+                        <div class="ml-auto">
+                            <a href="{{ route('gmail.index') }}" class="text-xs text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-times mr-1"></i>Clear Filter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         <!-- Conversations List -->
-        @if (isset($threads) && count($threads))
+        @if (isset($needsConnection) && $needsConnection)
+            <!-- Connect Gmail State -->
+            <div class="text-center py-12">
+                <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                    <i class="fab fa-google text-3xl text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Connect Your Gmail Account</h3>
+                <p class="text-gray-600 mb-6">Connect your Gmail account to view participant conversations and email communications.</p>
+                <a href="{{ route('google.redirect') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fab fa-google mr-2"></i>
+                    Connect Gmail Account
+                </a>
+            </div>
+        @elseif (isset($threads) && count($threads))
             <div class="grid gap-6">
                 @foreach ($threads as $thread)
                     <div class="conversation-card bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all duration-200">
@@ -232,6 +330,42 @@
         function refreshConversations() {
             window.location.reload();
         }
+
+        // Participant dropdown functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const participantSelect = document.getElementById('participant_select');
+            const emailSearch = document.getElementById('email_search');
+            
+            if (participantSelect && emailSearch) {
+                participantSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const participantEmail = selectedOption.value;
+                    
+                    if (participantEmail) {
+                        // Auto-populate email search with participant email
+                        emailSearch.value = `from:${participantEmail}`;
+                        
+                        // Show participant info
+                        const participantName = selectedOption.getAttribute('data-name');
+                        const conference = selectedOption.getAttribute('data-conference');
+                        
+                        // You could add a small info display here if needed
+                        console.log(`Selected: ${participantName} (${participantEmail}) - ${conference}`);
+                    } else {
+                        // Clear email search when "All Participants" is selected
+                        emailSearch.value = '';
+                    }
+                });
+                
+                // Auto-submit form when participant is selected (optional)
+                participantSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        // Uncomment the line below to auto-submit when participant is selected
+                        // this.form.submit();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html> 
