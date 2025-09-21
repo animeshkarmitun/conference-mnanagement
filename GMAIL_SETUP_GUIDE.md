@@ -99,3 +99,4 @@ php artisan conference:send-update 1 "Subject" "Message"
 4. Train team on new features
 5. Monitor email delivery and responses
 
+

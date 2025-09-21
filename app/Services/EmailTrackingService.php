@@ -423,18 +423,33 @@ class EmailTrackingService
      */
     public function getParticipantsWithEmails(?int $conferenceId = null): Collection
     {
-        $query = Participant::with(['user', 'conference'])
-            ->whereHas('user', function($q) {
-                $q->whereHas('emails', function($emailQuery) {
-                    $emailQuery->where('direction', Email::DIRECTION_OUTGOING);
-                });
-            });
+        // Get all participants first
+        $query = Participant::with(['user', 'conference']);
         
         if ($conferenceId) {
             $query->where('conference_id', $conferenceId);
         }
         
-        return $query->orderBy('created_at', 'desc')->get();
+        $participants = $query->orderBy('created_at', 'desc')->get();
+        
+        // Filter participants who have email conversations
+        return $participants->filter(function($participant) {
+            if (!$participant->user || !$participant->user->email) {
+                return false;
+            }
+            
+            $userEmail = $participant->user->email;
+            $userId = $participant->user->id;
+            
+            // Check if participant has any email conversations (sent or received)
+            $hasEmails = Email::where(function($emailQuery) use ($userEmail, $userId) {
+                $emailQuery->where('user_id', $userId)
+                          ->orWhere('recipient_email', $userEmail)
+                          ->orWhere('sender_email', $userEmail);
+            })->exists();
+            
+            return $hasEmails;
+        });
     }
 
     /**

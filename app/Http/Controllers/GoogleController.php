@@ -97,10 +97,10 @@ class GoogleController extends Controller
             if ($participant) {
                 if ($query) {
                     // If there's already a query, combine it with participant filter
-                    $query = "from:{$participant} {$query}";
+                    $query = "(from:{$participant} OR to:{$participant}) {$query}";
                 } else {
-                    // If no query, just filter by participant
-                    $query = "from:{$participant}";
+                    // If no query, just filter by participant (both sent and received)
+                    $query = "from:{$participant} OR to:{$participant}";
                 }
             }
             

@@ -342,8 +342,8 @@
                     const participantEmail = selectedOption.value;
                     
                     if (participantEmail) {
-                        // Auto-populate email search with participant email
-                        emailSearch.value = `from:${participantEmail}`;
+                        // Auto-populate email search with participant email (both sent and received)
+                        emailSearch.value = `from:${participantEmail} OR to:${participantEmail}`;
                         
                         // Show participant info
                         const participantName = selectedOption.getAttribute('data-name');
