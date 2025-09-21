@@ -112,15 +112,6 @@
             <label for="hashtags" class="block text-sm font-medium text-gray-700">Enter Hashtags:</label>
             <input type="text" id="hashtags" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" name="hashtags_input" placeholder="e.g., #abc, #xyz, #123">
         </div>
-        <div class="mb-6">
-            <label for="registration_status" class="block text-sm font-medium text-gray-700">Registration Status</label>
-            <select name="registration_status" id="registration_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-            </select>
-            @error('registration_status')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-
         <!-- Participant Information Section -->
         <div class="mb-8 p-6 bg-blue-50 rounded-lg">
             <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Participant Information</h3>

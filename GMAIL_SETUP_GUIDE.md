@@ -100,3 +100,4 @@ php artisan conference:send-update 1 "Subject" "Message"
 5. Monitor email delivery and responses
 
 
+
