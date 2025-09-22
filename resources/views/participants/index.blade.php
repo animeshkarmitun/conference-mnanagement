@@ -31,12 +31,6 @@
         transform: scale(1.05);
     }
     
-    .avatar {
-        background: linear-gradient(135deg, #f59e0b, #fbbf24);
-        color: white;
-        font-weight: bold;
-    }
-    
     .quick-action-btn {
         transition: all 0.2s ease;
     }
@@ -66,6 +60,156 @@
         border-radius: 4px;
     }
     
+    .tab-link {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .tab-link:hover {
+        transform: translateY(-1px);
+    }
+    
+    /* Clean Table Header Styles */
+    .table-header {
+        background: #f1f5f9;
+        border-bottom: 2px solid #cbd5e1;
+    }
+    
+    .sortable-header {
+        user-select: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        padding: 1.25rem 1.5rem;
+        font-weight: 700;
+        font-size: 0.875rem;
+        color: #1f2937;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-right: 1px solid #e5e7eb;
+        background: transparent;
+        position: relative;
+    }
+    
+    .sortable-header:last-child {
+        border-right: none;
+    }
+    
+    .sortable-header:hover {
+        background: #f8fafc;
+        color: #6366f1;
+    }
+    
+    .sortable-header.active {
+        background: #f8fafc;
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+    }
+    
+    .sort-icon {
+        opacity: 0.8;
+        color: #4b5563;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+    
+    .sortable-header:hover .sort-icon {
+        opacity: 1;
+        color: #6366f1;
+    }
+    
+    .sort-icon.active {
+        color: #6366f1;
+        opacity: 1;
+    }
+    
+    .sort-icon.asc {
+        transform: rotate(0deg);
+    }
+    
+    .sort-icon.desc {
+        transform: rotate(180deg);
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .animate-delay-1 { animation-delay: 0.1s; }
+    .animate-delay-2 { animation-delay: 0.2s; }
+    .animate-delay-3 { animation-delay: 0.3s; }
+    .animate-delay-4 { animation-delay: 0.4s; }
+    
+    /* Modern color scheme overrides */
+    .modern-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+    
+    .modern-primary:hover {
+        background: linear-gradient(135deg, #5855eb, #7c3aed);
+    }
+    
+    .modern-secondary {
+        background: linear-gradient(135deg, #64748b, #475569);
+        color: white;
+    }
+    
+    .modern-secondary:hover {
+        background: linear-gradient(135deg, #475569, #334155);
+    }
+    
+    .modern-success {
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+    }
+    
+    .modern-success:hover {
+        background: linear-gradient(135deg, #047857, #065f46);
+    }
+    
+    .modern-warning {
+        background: linear-gradient(135deg, #e11d48, #be123c);
+        color: white;
+    }
+    
+    .modern-warning:hover {
+        background: linear-gradient(135deg, #be123c, #9f1239);
+    }
+    
+    .modern-info {
+        background: linear-gradient(135deg, #0891b2, #0e7490);
+        color: white;
+    }
+    
+    .modern-info:hover {
+        background: linear-gradient(135deg, #0e7490, #155e75);
+    }
+    
+    .modern-admin {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        color: white;
+    }
+    
+    .modern-admin:hover {
+        background: linear-gradient(135deg, #6d28d9, #5b21b6);
+    }
+    
+    .participant-icon {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+        font-weight: bold;
+    }
+    
     .table-row-hover {
         transition: all 0.2s ease;
     }
@@ -75,52 +219,79 @@
         transform: scale(1.01);
     }
     
-    .sortable-header {
-        transition: all 0.2s ease;
+    /* Remove vertical scroll for participants page */
+    .participants-page {
+        min-height: 100vh;
     }
     
-    .sortable-header:hover {
-        background-color: #fefce8;
-        color: #f59e0b;
+    .participants-table-container {
+        max-height: none;
+        overflow-x: auto;
+        width: 100%;
     }
     
-    .sort-icon.active {
-        color: #f59e0b;
-        transform: rotate(180deg);
+    /* Ensure table displays all data */
+    #participantsTable {
+        width: 100%;
+        table-layout: auto;
     }
+    
+    #participantsTable tbody {
+        display: table-row-group;
+    }
+    
+    #participantsTable tr {
+        display: table-row;
+    }
+    
+    #participantsTable td,
+    #participantsTable th {
+        display: table-cell;
+        white-space: nowrap;
+    }
+    
 </style>
 @endpush
 
 @section('content')
-<!-- Enhanced Header with Quick Actions -->
-<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
-    <div class="flex justify-between items-center">
-        <div>
-            <h2 class="text-3xl font-bold text-gray-800">Participants</h2>
-            <p class="text-gray-600 mt-1">Manage conference participants and registrations</p>
+<div class="participants-page">
+<!-- Enhanced Header Section -->
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100 animate-fade-in-up">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div class="mb-4 lg:mb-0">
+            <h2 class="text-3xl font-bold text-slate-800">Participants</h2>
+            <p class="text-slate-600 mt-1">Manage conference participants and registrations</p>
         </div>
-        <div class="flex items-center space-x-4">
-            <!-- Quick Actions -->
-            <div class="flex space-x-3">
-                <button class="quick-action-btn bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Import Participants">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
-                    </svg>
-                </button>
-                <button class="quick-action-btn bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Send Bulk Email">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                </button>
-                <button class="quick-action-btn bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2m-4-4V7a4 4 0 10-8 0v6m0 4h8"></path>
-                    </svg>
-                </button>
-            </div>
-            <a href="{{ route('participants.create') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        
+        <!-- Quick Action Buttons -->
+        <div class="flex flex-wrap gap-3">
+            <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Import Participants">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+            </button>
+            
+            <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Send Bulk Email">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+            </button>
+            
+            <button class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </button>
+            
+            <button class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Bulk Operations">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </button>
+            
+            <a href="{{ route('participants.create') }}" class="modern-primary px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
                 Add Participant
             </a>
@@ -129,7 +300,7 @@
 </div>
 
 <!-- Enhanced Participant Status Tabs -->
-<div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100">
+<div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-1">
     <div class="border-b border-gray-200">
         <nav class="flex space-x-8 px-6" aria-label="Tabs">
             <a href="{{ route('participants.index', array_merge(request()->query(), ['status' => 'all'])) }}" 
@@ -180,7 +351,7 @@
 </div>
 
 <!-- Enhanced Search and Secondary Filters -->
-<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100 animate-fade-in-up animate-delay-2">
     <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
         <!-- Enhanced Search Bar -->
         <div class="flex-1 max-w-md">
@@ -325,9 +496,10 @@
     </div>
 @endif
 
-<div class="bg-white rounded-xl shadow p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">
+<!-- Enhanced Participants Table -->
+<div class="table-container bg-white animate-fade-in-up animate-delay-3">
+    <div class="flex justify-between items-center mb-6 p-6">
+        <h2 class="text-2xl font-bold text-slate-800">
             @if($status === 'approved')
                 Approved Participants
             @elseif($status === 'pending')
@@ -339,19 +511,19 @@
             @endif
         </h2>
         <div class="flex items-center space-x-4">
-            <div class="text-sm text-gray-500">{{ $participants->total() ?? 0 }} participants</div>
+            <div class="text-sm text-slate-500">{{ $participants->total() ?? 0 }} participants</div>
             <div class="flex items-center space-x-2">
                 <select id="format-select" class="rounded-md border-2 border-gray-400 bg-white text-gray-700 focus:border-blue-500 focus:ring-blue-500 text-sm font-medium shadow-sm">
                     <option value="pdf">PDF</option>
                     <option value="zip">ZIP</option>
                 </select>
-                <button id="download-biographies-btn" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-blue-700">
+                <button id="download-biographies-btn" class="modern-info px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Download Resumes (<span id="selected-count">0</span>)
                 </button>
-                <button id="export-csv-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105 border-2 border-green-700">
+                <button id="export-csv-btn" class="modern-success px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105">
                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
@@ -386,64 +558,55 @@
         </div>
     </div>
     
-    <table class="min-w-full divide-y divide-gray-200" id="participantsTable">
-        <thead>
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <input type="checkbox" id="select-all-header" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                </th>
-                
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="name">
-                    <div class="flex items-center space-x-1">
-                        <span>Name</span>
-                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="overflow-x-auto participants-table-container">
+        <table class="w-full" id="participantsTable">
+            <thead class="table-header">
+                <tr>
+                    <th class="sortable-header w-12">
+                        <input type="checkbox" id="select-all-header" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                    </th>
+                    
+                    <th class="sortable-header" data-sort="name">
+                        Name
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
-                    </div>
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="email">
-                    <div class="flex items-center space-x-1">
-                        <span>Email</span>
-                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </th>
+                    <th class="sortable-header" data-sort="email">
+                        Email
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
-                    </div>
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="type">
-                    <div class="flex items-center space-x-1">
-                        <span>Type</span>
-                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </th>
+                    <th class="sortable-header" data-sort="type">
+                        Type
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
-                    </div>
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="conference">
-                    <div class="flex items-center space-x-1">
-                        <span>Conference</span>
-                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </th>
+                    <th class="sortable-header" data-sort="conference">
+                        Conference
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
-                    </div>
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="status">
-                    <div class="flex items-center space-x-1">
-                        <span>Status</span>
-                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </th>
+                    <th class="sortable-header" data-sort="status">
+                        Status
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
-                    </div>
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors duration-200 sortable-header" data-sort="visa_status">
-                    <div class="flex items-center space-x-1">
-                        <span>Visa Status</span>
-                        <svg class="w-4 h-4 sort-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </th>
+                    <th class="sortable-header" data-sort="visa_status">
+                        Visa Status
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
-                    </div>
-                </th>
-                <th class="px-6 py-3"></th>
-            </tr>
-        </thead>
+                    </th>
+                    <th class="px-6 py-4 text-right bg-gray-50 border-r border-gray-200">
+                        <span class="text-sm font-semibold text-gray-600">Actions</span>
+                    </th>
+                </tr>
+            </thead>
         <tbody class="bg-white divide-y divide-gray-200">
             @forelse($participants ?? [] as $i => $participant)
                 @php
@@ -469,26 +632,52 @@
                     </td>
                     
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower(($user->first_name ?? $user->name) . ' ' . ($user->last_name ?? '')) }}">
-                        <div>
-                            <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:text-blue-800 font-semibold transition-colors duration-200">
-                                {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
-                            </a>
-                            @if($age)
-                                <div class="text-xs text-gray-500">{{ $age }} years old</div>
-                            @endif
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 participant-icon rounded-full flex items-center justify-center mr-3 shadow-lg">
+                                <span class="text-sm font-bold">
+                                    {{ substr(($user->first_name ?? $user->name), 0, 1) }}{{ substr($user->last_name ?? '', 0, 1) }}
+                                </span>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-900">
+                                    <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:text-blue-800 font-semibold transition-colors duration-200">
+                                        {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}
+                                    </a>
+                                </div>
+                                @if($age)
+                                    <div class="text-xs text-gray-500">{{ $age }} years old</div>
+                                @endif
+                            </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($user->email) }}">
-                        <button onclick="openEmailModal('{{ $user->email }}', '{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}')" class="text-blue-700 hover:text-blue-800 hover:underline cursor-pointer font-semibold transition-colors duration-200 border-none bg-transparent p-0">
-                            {{ $user->email }}
-                        </button>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <button onclick="openEmailModal('{{ $user->email }}', '{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}')" class="text-blue-700 hover:text-blue-800 hover:underline cursor-pointer font-semibold transition-colors duration-200 border-none bg-transparent p-0">
+                                {{ $user->email }}
+                            </button>
+                        </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->participantType->name ?? '') }}">{{ $participant->participantType->name ?? '' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->participantType->name ?? '') }}">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span>{{ $participant->participantType->name ?? '' }}</span>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->conference->name ?? 'unassigned') }}">
-                        {{ $participant->conference->name ?? 'Unassigned' }}
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            <span>{{ $participant->conference->name ?? 'Unassigned' }}</span>
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst($participant->registration_status) }}" data-sort-priority="{{ $statusPriority }}">
-                        <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm {{ $participant->registration_status == 'approved' ? 'bg-green-100 text-green-700 border border-green-200' : ($participant->registration_status == 'pending' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 'bg-red-100 text-red-700 border border-red-200') }}">
+                        <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $participant->registration_status == 'approved' ? 'bg-green-100 text-green-700 border-green-200' : ($participant->registration_status == 'pending' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-red-100 text-red-700 border-red-200') }}">
                             @if($participant->registration_status == 'approved')
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
@@ -506,12 +695,12 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst(str_replace('_', ' ', $participant->visa_status)) }}" data-sort-priority="{{ $visaPriority }}">
-                        <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm 
-                            {{ $participant->visa_status == 'approved' ? 'bg-green-100 text-green-700 border border-green-200' : 
-                               ($participant->visa_status == 'pending' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 
-                               ($participant->visa_status == 'issue' ? 'bg-red-100 text-red-700 border border-red-200' : 
-                               ($participant->visa_status == 'required' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 
-                               'bg-gray-100 text-gray-700 border border-gray-200'))) }}">
+                        <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border 
+                            {{ $participant->visa_status == 'approved' ? 'bg-green-100 text-green-700 border-green-200' : 
+                               ($participant->visa_status == 'pending' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
+                               ($participant->visa_status == 'issue' ? 'bg-red-100 text-red-700 border-red-200' : 
+                               ($participant->visa_status == 'required' ? 'bg-blue-100 text-blue-700 border-blue-200' : 
+                               'bg-gray-100 text-gray-700 border-gray-200'))) }}">
                             @if($participant->visa_status == 'approved')
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
@@ -532,11 +721,11 @@
                             {{ ucfirst(str_replace('_', ' ', $participant->visa_status)) }}
                         </span>
                         @if($participant->visa_status == 'issue')
-                            <div class="text-xs text-red-600 mt-1 flex items-center" title="{{ $participant->visa_issue_description }}">
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <div class="text-xs text-red-600 mt-1 flex items-center truncate" title="{{ $participant->visa_issue_description }}">
+                                <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                 </svg>
-                                Issue reported
+                                <span class="truncate">Issue reported</span>
                             </div>
                         @endif
                     </td>
@@ -578,60 +767,37 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="px-6 py-4 text-center text-gray-500">
-                        @if($status === 'approved')
-                            No approved participants found.
-                        @elseif($status === 'pending')
-                            No pending participants found.
-                        @elseif($status === 'rejected')
-                            No rejected participants found.
-                        @else
-                            No participants found.
-                        @endif
+                    <td colspan="8" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center">
+                            <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <p class="text-gray-500 mb-2">
+                                @if($status === 'approved')
+                                    No approved participants at the moment.
+                                @elseif($status === 'pending')
+                                    No pending participants found.
+                                @elseif($status === 'rejected')
+                                    No rejected participants found.
+                                @else
+                                    No participants found.
+                                @endif
+                            </p>
+                            <a href="{{ route('participants.create') }}" class="text-yellow-600 hover:text-yellow-700 font-medium">Add your first participant</a>
+                        </div>
                     </td>
                 </tr>
             @endforelse
         </tbody>
-    </table>
+        </table>
+    </div>
     
-    <div class="mt-4">
+    <div class="mt-6">
         {{ $participants->appends(['status' => $status])->links() }}
     </div>
 </div>
+</div>
 
-<style>
-.tab-link {
-    transition: all 0.2s ease-in-out;
-}
-
-.tab-link:hover {
-    transform: translateY(-1px);
-}
-
-.sortable-header {
-    user-select: none;
-}
-
-.sortable-header:hover {
-    background-color: #f9fafb;
-}
-
-.sort-icon {
-    transition: all 0.2s ease-in-out;
-}
-
-.sort-icon.active {
-    color: #3b82f6;
-}
-
-.sort-icon.asc {
-    transform: rotate(0deg);
-}
-
-.sort-icon.desc {
-    transform: rotate(180deg);
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

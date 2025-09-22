@@ -251,7 +251,7 @@
 <!-- Enhanced User Table -->
 <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100 animate-fade-in-up animate-delay-2">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-200" id="usersTable">
+        <table class="w-full divide-y divide-slate-200" id="usersTable">
             <thead>
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable-header" data-sort="name">

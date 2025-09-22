@@ -243,7 +243,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-[180px]">
+                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-0 flex-shrink-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-sm text-gray-500">Progress:</span>
                         <span class="text-lg font-bold text-yellow-700">{{ $dashboardData['conference_progress']['progress_percentage'] }}%</span>
@@ -276,7 +276,7 @@
                         <div class="text-sm text-gray-500">Completed Tasks</div>
                     </div>
                 </div>
-                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-[180px]">
+                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-0 flex-shrink-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-sm text-gray-500">{{ $dashboardData['task_progress']['completed_tasks'] }} / {{ $dashboardData['task_progress']['total_tasks'] }}</span>
                         <span class="text-lg font-bold text-green-700">{{ $dashboardData['task_progress']['progress_percentage'] }}%</span>

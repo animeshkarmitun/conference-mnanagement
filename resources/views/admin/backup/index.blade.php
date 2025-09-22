@@ -197,7 +197,7 @@
     
     .quick-actions .btn {
         margin: 0.25rem;
-        min-width: 120px;
+        min-width: 0;
     }
     
     /* Storage Info Cards */

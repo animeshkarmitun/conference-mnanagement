@@ -52,7 +52,7 @@
         <div class="bg-white rounded-xl shadow p-6 md:col-span-2">
             <h3 class="text-lg font-semibold mb-2">Participants</h3>
             @if($conference->participants->count())
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <table class="w-full divide-y divide-gray-200 text-sm">
                     <thead>
                         <tr>
                             <th class="px-4 py-2 text-left">

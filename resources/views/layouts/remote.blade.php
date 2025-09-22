@@ -26,6 +26,8 @@
                 font-family: 'Figtree', sans-serif;
                 background-color: #f3f4f6;
                 color: #1f2937;
+                overflow-x: hidden; /* Prevent horizontal scroll */
+                max-width: 100vw; /* Ensure body doesn't exceed viewport width */
             }
 
             /* Layout */
@@ -329,9 +331,9 @@
         </style>
     </head>
     <body class="antialiased" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 768 }" x-init="$watch('sidebarCollapsed', value => localStorage.setItem('sidebarCollapsed', value))" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
-        <div class="min-h-screen flex">
+        <div class="min-h-screen flex max-w-full overflow-hidden">
             <!-- Sidebar -->
-            <aside class="bg-white shadow-lg flex flex-col transition-all duration-300" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
+            <aside class="bg-white shadow-lg flex flex-col transition-all duration-300 flex-shrink-0" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
                 <div class="h-16 flex items-center justify-between border-b px-4">
                     <span class="text-2xl font-bold text-yellow-700 transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">CGS Events</span>
                     <button @click="sidebarCollapsed = !sidebarCollapsed" class="p-2 rounded-lg hover:bg-yellow-50 transition-colors duration-150 sidebar-toggle-btn" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
@@ -340,7 +342,7 @@
                         </svg>
                     </button>
                 </div>
-                <nav class="flex-1 px-4 py-6 space-y-2 sidebar-nav">
+                <nav class="flex-1 px-1 py-1 space-y-1 sidebar-nav">
                     <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-yellow-50 font-medium text-gray-800 group" :title="sidebarCollapsed ? 'Dashboard' : ''">
                         <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
@@ -407,15 +409,15 @@
                 </div>
             </aside>
             <!-- Main Content -->
-            <div class="flex-1 flex flex-col min-h-screen">
+            <div class="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden">
                 <!-- Topbar -->
-                <header class="h-16 bg-white shadow flex items-center px-8 justify-between">
-                    <h1 class="text-xl font-bold text-gray-900">@yield('title', 'Dashboard')</h1>
+                <header class="h-16 bg-white shadow flex items-center px-8 justify-between min-w-0">
+                    <h1 class="text-xl font-bold text-gray-900 truncate">@yield('title', 'Dashboard')</h1>
                     <div>
                         <!-- Placeholder for notifications, profile, etc. -->
                     </div>
                 </header>
-                <main class="flex-1 p-8">
+                <main class="flex-1 p-8 min-w-0 overflow-x-auto">
                     @yield('content')
                 </main>
             </div>

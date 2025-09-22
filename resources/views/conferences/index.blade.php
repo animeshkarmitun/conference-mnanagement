@@ -424,7 +424,7 @@
 <!-- Enhanced Conference Table -->
 <div class="table-container bg-white animate-fade-in-up animate-delay-2">
     <div class="overflow-x-auto">
-        <table class="min-w-full" id="conferencesTable">
+        <table class="w-full" id="conferencesTable">
             <thead class="table-header">
                 <tr>
                     <th class="sortable-header" data-sort="status">

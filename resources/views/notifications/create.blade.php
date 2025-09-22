@@ -90,7 +90,7 @@
                     <a href="{{ route('notifications.index') }}" class="px-6 py-3 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors font-medium">
                         Cancel
                     </a>
-                    <button type="submit" class="btn btn-primary" style="background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: block !important; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 999 !important; min-width: 150px !important; height: auto !important;">
+                    <button type="submit" class="btn btn-primary" style="background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: block !important; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 999 !important; height: auto !important;">
                         Create Notification
                     </button>
                 </div>

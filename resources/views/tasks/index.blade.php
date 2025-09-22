@@ -224,7 +224,7 @@
 <div id="table-view" class="animate-fade-in-up animate-delay-1">
     <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>

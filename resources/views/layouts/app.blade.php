@@ -165,10 +165,10 @@
             }
         </style>
     </head>
-    <body class="bg-gray-100 font-sans antialiased" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 768 }" x-init="$watch('sidebarCollapsed', value => localStorage.setItem('sidebarCollapsed', value))" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
-        <div class="min-h-screen flex">
+    <body class="bg-gray-100 font-sans antialiased" style="overflow-x: hidden; max-width: 100vw;" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 768 }" x-init="$watch('sidebarCollapsed', value => localStorage.setItem('sidebarCollapsed', value))" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
+        <div class="min-h-screen flex max-w-full overflow-hidden">
             <!-- Sidebar -->
-            <aside class="bg-slate-900 shadow-xl flex flex-col transition-all duration-300" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
+            <aside class="bg-slate-900 shadow-xl flex flex-col transition-all duration-300 flex-shrink-0" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
                 <div class="h-20 flex items-center justify-between border-b border-slate-800 px-4 relative">
                     <span class="text-2xl font-bold text-indigo-200 transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">CGS Events</span>
                     <button @click="sidebarCollapsed = !sidebarCollapsed" class="p-3 rounded-lg hover:bg-slate-800 transition-colors duration-150 flex-shrink-0 sidebar-toggle-btn bg-slate-800 border border-slate-700 shadow-sm" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
@@ -177,7 +177,7 @@
                         </svg>
                     </button>
                 </div>
-                <nav class="flex-1 px-4 py-6 space-y-3 sidebar-nav">
+                <nav class="flex-1 px-1 py-1 space-y-1 sidebar-nav">
                     @if(auth()->check() && auth()->user()->hasRole('superadmin'))
                         <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -454,10 +454,10 @@
                 </div>
             </aside>
             <!-- Main Content -->
-            <div class="flex-1 flex flex-col min-h-screen">
+            <div class="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden">
                 <!-- Topbar -->
-                <header class="h-16 bg-white shadow flex items-center px-8 justify-between">
-                    <h1 class="text-xl font-bold text-gray-900">@yield('title', 'Dashboard')</h1>
+                <header class="h-16 bg-white shadow flex items-center px-8 justify-between min-w-0">
+                    <h1 class="text-xl font-bold text-gray-900 truncate">@yield('title', 'Dashboard')</h1>
                     <div class="flex items-center space-x-6">
                         <!-- Notification Icon with Dropdown -->
                         <div class="relative group" x-data="{ open: false }" @keydown.escape.window="open = false">
@@ -535,7 +535,7 @@
                         </div>
                     </div>
                 </header>
-                <main class="flex-1 p-8">
+                <main class="flex-1 p-8 min-w-0">
                     @yield('content')
                 </main>
                 <!-- Sitewide Footer -->

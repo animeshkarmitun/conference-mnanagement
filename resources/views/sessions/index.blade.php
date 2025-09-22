@@ -329,7 +329,7 @@
 <!-- Enhanced Session Table -->
 <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-fade-in-up animate-delay-3">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200" id="sessionsTable">
+        <table class="w-full divide-y divide-gray-200" id="sessionsTable">
             <thead>
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">

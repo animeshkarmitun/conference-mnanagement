@@ -64,7 +64,7 @@
                             </select>
                         </div>
                         <div class="col-md-2 mt-md-0 mt-2 d-flex align-items-end">
-                            <button class="btn btn-primary mt-4" style="min-width: 130px;" onclick="refreshStats()">
+                            <button class="btn btn-primary mt-4" onclick="refreshStats()">
                                 <i class="fas fa-sync"></i> Refresh
                             </button>
                         </div>
