@@ -384,6 +384,8 @@ Route::get('/db-check', function () {
     }
 });
 
+
+
 // Passwordless Login Routes
 Route::prefix('passwordless-login')->name('passwordless-login.')->group(function () {
     // Public routes for participants

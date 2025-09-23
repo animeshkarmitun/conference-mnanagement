@@ -1,14 +1,15 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Create Participant Type') }}
-            </h2>
-            <a href="{{ route('participant-types.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                Back to List
-            </a>
-        </div>
-    </x-slot>
+@extends('layouts.app')
+
+@section('title', 'Create Participant Type')
+
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Create Participant Type</h1>
+        <a href="{{ route('participant-types.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+            Back to List
+        </a>
+    </div>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -96,4 +97,5 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

@@ -246,7 +246,7 @@
                                                     </td>
                                                     <td>{{ Str::limit($email->subject, 50) }}</td>
                                                     <td>
-                                                        <span class="badge badge-info">{{ $email->email_type }}</span>
+                                                        <span class="badge badge-info text-black">{{ $email->email_type }}</span>
                                                     </td>
                                                     <td>
                                                         @php
@@ -259,7 +259,7 @@
                                                                 default => 'secondary'
                                                             };
                                                         @endphp
-                                                        <span class="badge badge-{{ $statusClass }}">{{ ucfirst($email->status) }}</span>
+                                                        <span class="badge badge-{{ $statusClass }} text-black">{{ ucfirst($email->status) }}</span>
                                                     </td>
                                                     <td>{{ $email->sent_at?->format('M d, Y H:i') }}</td>
                                                     <td>{{ $email->conference?->name ?? 'N/A' }}</td>

@@ -55,7 +55,8 @@ class ParticipantTypeController extends Controller
      */
     public function show(ParticipantType $participantType)
     {
-        return view('participant-types.show', compact('participantType'));
+        $categories = ParticipantType::getCategories();
+        return view('participant-types.show', compact('participantType', 'categories'));
     }
 
     /**

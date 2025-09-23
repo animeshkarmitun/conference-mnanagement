@@ -147,26 +147,21 @@
     
     <!-- Quick Actions -->
     <div class="flex space-x-3">
-        <button class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
+        <a href="{{ route('tasks.create') }}" class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
-        </button>
-        <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Add Participant">
+        </a>
+        <a href="{{ route('participants.create') }}" class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Add Participant">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
             </svg>
-        </button>
-        <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Create Session">
+        </a>
+        <a href="{{ route('sessions.create') }}" class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Create Session">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
-        </button>
-        <a href="{{ route('id-cards.index') }}" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Manage ID Cards">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
-            </svg>
-        </a>
+        </a>       
     </div>
 </div>
 
@@ -482,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add click handlers for quick action buttons
     const quickActionBtns = document.querySelectorAll('.quick-action-btn');
     quickActionBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
             // Add ripple effect
             const ripple = document.createElement('span');
             ripple.classList.add('absolute', 'bg-white', 'rounded-full', 'opacity-50');
@@ -494,6 +489,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             this.appendChild(ripple);
             setTimeout(() => ripple.remove(), 600);
+            
+            // Add loading state for better UX
+            this.style.opacity = '0.7';
+            this.style.pointerEvents = 'none';
+            
+            // Reset after a short delay to allow navigation
+            setTimeout(() => {
+                this.style.opacity = '1';
+                this.style.pointerEvents = 'auto';
+            }, 300);
         });
     });
 });
