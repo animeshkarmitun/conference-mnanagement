@@ -70,6 +70,30 @@
         </div>
     </div>
 
+    <!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Filter Participants</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Participant Type</label>
+                <select id="typeFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <input type="text" id="globalSearch" placeholder="Search participants..." 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex items-end">
+                <button onclick="applyFilters()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Action Buttons -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
         <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
@@ -183,7 +207,7 @@
                 <h3 class="text-lg font-semibold mb-4">Generate Login Link</h3>
                 <form id="generateForm">
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Attendee/Speaker</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Participant</label>
                         <select id="userSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                             <option value="">Loading participants...</option>
                         </select>
@@ -213,7 +237,11 @@
                 <h3 class="text-lg font-semibold mb-4">Generate Bulk Login Links</h3>
                 <form id="bulkForm">
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Attendees/Speakers</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Participants</label>
+                        <div class="mb-2">
+                            <input type="text" id="participantSearch" placeholder="Search participants..." 
+                                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
                         <div id="participantList" class="max-h-60 overflow-y-auto border border-gray-300 rounded-md p-3">
                             <div class="text-center text-gray-500">Loading participants...</div>
                         </div>
@@ -239,6 +267,85 @@
 
 @push('scripts')
 <script>
+// Load participant types for filtering
+async function loadParticipantTypes() {
+    try {
+        const response = await fetch('{{ route("passwordless-login.participant-types") }}');
+        const data = await response.json();
+        
+        if (data.success) {
+            const select = document.getElementById('typeFilter');
+            select.innerHTML = '<option value="">All Types</option>';
+            
+            Object.keys(data.data).forEach(category => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = category;
+                data.data[category].forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.name;
+                    option.textContent = type.name;
+                    optgroup.appendChild(option);
+                });
+                select.appendChild(optgroup);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading participant types:', error);
+    }
+}
+
+// Apply filters
+async function applyFilters() {
+    const typeFilter = document.getElementById('typeFilter').value;
+    const searchTerm = document.getElementById('globalSearch').value;
+    
+    try {
+        let url = '{{ route("passwordless-login.participants") }}';
+        if (typeFilter) {
+            url = '{{ route("passwordless-login.participants.by-type") }}?type=' + encodeURIComponent(typeFilter);
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+            let filteredParticipants = data.data;
+            
+            if (searchTerm) {
+                const searchLower = searchTerm.toLowerCase();
+                filteredParticipants = filteredParticipants.filter(participant => 
+                    participant.first_name.toLowerCase().includes(searchLower) ||
+                    participant.last_name.toLowerCase().includes(searchLower) ||
+                    participant.email.toLowerCase().includes(searchLower) ||
+                    participant.participant_types.toLowerCase().includes(searchLower)
+                );
+            }
+            
+            // Update the display
+            updateParticipantDisplay(filteredParticipants);
+        }
+    } catch (error) {
+        console.error('Error applying filters:', error);
+    }
+}
+
+// Update participant display
+function updateParticipantDisplay(participants) {
+    // Update single select
+    const select = document.getElementById('userSelect');
+    select.innerHTML = '<option value="">Select a participant...</option>';
+    participants.forEach(participant => {
+        const option = document.createElement('option');
+        option.value = participant.id;
+        option.textContent = `${participant.first_name} ${participant.last_name} (${participant.email}) - ${participant.participant_types}`;
+        select.appendChild(option);
+    });
+    
+    // Update bulk list
+    allParticipants = participants;
+    renderBulkParticipants(participants);
+}
+
 // Load participants for single link generation
 async function loadParticipants() {
     try {
@@ -251,7 +358,7 @@ async function loadParticipants() {
             data.data.forEach(participant => {
                 const option = document.createElement('option');
                 option.value = participant.id;
-                option.textContent = `${participant.first_name} ${participant.last_name} (${participant.email})`;
+                option.textContent = `${participant.first_name} ${participant.last_name} (${participant.email}) - ${participant.participant_types}`;
                 select.appendChild(option);
             });
         }
@@ -260,6 +367,9 @@ async function loadParticipants() {
     }
 }
 
+// Store participants data globally for search functionality
+let allParticipants = [];
+
 // Load participants for bulk generation
 async function loadBulkParticipants() {
     try {
@@ -267,24 +377,48 @@ async function loadBulkParticipants() {
         const data = await response.json();
         
         if (data.success) {
-            const container = document.getElementById('participantList');
-            container.innerHTML = '';
-            data.data.forEach(participant => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center mb-2';
-                div.innerHTML = `
-                    <input type="checkbox" id="participant_${participant.id}" value="${participant.id}" 
-                           class="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <label for="participant_${participant.id}" class="text-sm text-gray-700">
-                        ${participant.first_name} ${participant.last_name} (${participant.email})
-                    </label>
-                `;
-                container.appendChild(div);
-            });
+            allParticipants = data.data;
+            renderBulkParticipants(allParticipants);
+            setupSearch();
         }
     } catch (error) {
         console.error('Error loading participants:', error);
     }
+}
+
+// Render participants in bulk modal
+function renderBulkParticipants(participants) {
+    const container = document.getElementById('participantList');
+    container.innerHTML = '';
+    participants.forEach(participant => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center mb-2 participant-item';
+        div.innerHTML = `
+            <input type="checkbox" id="participant_${participant.id}" value="${participant.id}" 
+                   class="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <label for="participant_${participant.id}" class="text-sm text-gray-700 flex-1">
+                <div class="font-medium">${participant.first_name} ${participant.last_name}</div>
+                <div class="text-xs text-gray-500">${participant.email}</div>
+                <div class="text-xs text-blue-600">${participant.participant_types}</div>
+            </label>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// Setup search functionality
+function setupSearch() {
+    const searchInput = document.getElementById('participantSearch');
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const filteredParticipants = allParticipants.filter(participant => 
+            participant.first_name.toLowerCase().includes(searchTerm) ||
+            participant.last_name.toLowerCase().includes(searchTerm) ||
+            participant.email.toLowerCase().includes(searchTerm) ||
+            participant.participant_types.toLowerCase().includes(searchTerm)
+        );
+        renderBulkParticipants(filteredParticipants);
+    });
 }
 
 // Modal functions
@@ -414,5 +548,11 @@ function copyToClipboard(text) {
         alert('Failed to copy link to clipboard.');
     });
 }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadParticipantTypes();
+    loadParticipants();
+});
 </script>
 @endpush

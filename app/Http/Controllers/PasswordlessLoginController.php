@@ -85,9 +85,7 @@ class PasswordlessLoginController extends Controller
 
         $stats = $this->passwordlessLoginService->getLoginStats();
         $recentLogins = PasswordlessLogin::with('user')
-                                       ->whereHas('user.roles', function ($query) {
-                                           $query->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker']);
-                                       })
+                                       ->whereHas('user.participants')
                                        ->orderBy('created_at', 'desc')
                                        ->limit(10)
                                        ->get();
@@ -121,8 +119,8 @@ class PasswordlessLoginController extends Controller
         try {
             $user = User::findOrFail($request->user_id);
             
-            // Check if user is a participant (organizer, speaker, attendee, or tasker)
-            if (!$user->roles()->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker'])->exists()) {
+            // Check if user is a participant (has participant records)
+            if (!$user->participants()->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'User is not a participant.'
@@ -298,16 +296,100 @@ class PasswordlessLoginController extends Controller
             abort(403, 'Access denied. Admin privileges required.');
         }
 
-        $participants = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker']);
-        })
-        ->select('id', 'first_name', 'last_name', 'email')
-        ->orderBy('first_name')
-        ->get();
+        // Get all users who are participants (have participant records)
+        $participants = User::whereHas('participants')
+            ->with(['participants.participantType'])
+            ->select('id', 'first_name', 'last_name', 'email')
+            ->orderBy('first_name')
+            ->get()
+            ->map(function ($user) {
+                $participantTypes = $user->participants->map(function ($participant) {
+                    return $participant->participantType->name ?? 'Unknown';
+                })->unique()->implode(', ');
+                
+                return [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'participant_types' => $participantTypes,
+                    'conferences' => $user->participants->pluck('conference_id')->unique()->count()
+                ];
+            });
 
         return response()->json([
             'success' => true,
             'data' => $participants
+        ]);
+    }
+
+    /**
+     * Get participants by type for filtering
+     */
+    public function getParticipantsByType(Request $request)
+    {
+        // Check if user has admin or superadmin role
+        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+            abort(403, 'Access denied. Admin privileges required.');
+        }
+
+        $participantType = $request->get('type');
+        $conferenceId = $request->get('conference_id');
+
+        $query = User::whereHas('participants', function ($q) use ($participantType, $conferenceId) {
+            if ($participantType) {
+                $q->whereHas('participantType', function ($typeQuery) use ($participantType) {
+                    $typeQuery->where('name', $participantType);
+                });
+            }
+            if ($conferenceId) {
+                $q->where('conference_id', $conferenceId);
+            }
+        })
+        ->with(['participants.participantType'])
+        ->select('id', 'first_name', 'last_name', 'email')
+        ->orderBy('first_name');
+
+        $participants = $query->get()->map(function ($user) {
+            $participantTypes = $user->participants->map(function ($participant) {
+                return $participant->participantType->name ?? 'Unknown';
+            })->unique()->implode(', ');
+            
+            return [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'participant_types' => $participantTypes,
+                'conferences' => $user->participants->pluck('conference_id')->unique()->count()
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $participants
+        ]);
+    }
+
+    /**
+     * Get participant types for filtering
+     */
+    public function getParticipantTypes(Request $request)
+    {
+        // Check if user has admin or superadmin role
+        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+            abort(403, 'Access denied. Admin privileges required.');
+        }
+
+        $types = \App\Models\ParticipantType::select('name', 'category', 'description')
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('category');
+
+        return response()->json([
+            'success' => true,
+            'data' => $types
         ]);
     }
 }

@@ -165,21 +165,69 @@ class ParticipantController extends Controller
     // Store new participant
     public function store(Request $request)
     {
-        // Validate user creation data
+        // Validate user creation data (base)
         $userValidated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'gender' => 'nullable|string|max:20',
+            'gender' => 'required|in:male,female,prefer_not_to_say',
             'nationality' => 'nullable|string|max:100',
             'profession' => 'nullable|string|max:100',
-            'date_of_birth' => 'nullable|date',
+            'date_of_birth' => 'required|date',
             'organization' => 'nullable|string|max:255',
             'dietary_needs' => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|max:2048',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            // New enhanced participant fields
+            'photo' => 'required|image|max:400|dimensions:width=1200,height=800',
+            'pronoun' => 'nullable|in:he_him,she_her,they_them',
+            'contact_no' => 'required|string|max:20',
+            'whatsapp_no' => 'required|string|max:20',
+            'field_of_work_study' => 'required|string|max:255',
+            'designation' => 'required|string|max:255',
+            'organization_institution' => 'required|string|max:255',
+            'is_student' => 'nullable|boolean',
+            'year' => 'nullable|in:honors_final_year,masters',
+            'department_name' => 'nullable|string|max:255',
+            'institution_name' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'home_district' => 'required|string|max:100',
+            'nid_passport_birth_certificate' => 'required|image|max:300',
+            'how_found_bobc' => 'required|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
+            'attended_previous_bobc' => 'required|boolean',
+            'expertise_interests' => 'required|string|max:1000',
         ]);
+
+        // Conditional validation for Media (press) and Speaker (presenter)
+        if ($request->participant_type_id) {
+            $type = \App\Models\ParticipantType::find($request->participant_type_id);
+            if ($type) {
+                if ($type->category === 'press') {
+                    $request->validate([
+                        'media_type' => 'required|in:print,television,online_portal',
+                        'media_designation' => 'required|in:reporter,camera_crew,photographer',
+                    ]);
+                } elseif ($type->category === 'presenter') {
+                    $request->validate([
+                        'other_contact_type' => 'required|in:whatsapp,telegram,signal',
+                        'other_contact_no' => 'required|string|max:50',
+                        'dietary_requirements' => 'required|in:veg,non_veg,vegan,others',
+                        'dietary_requirements_other' => 'nullable|required_if:dietary_requirements,others|string|max:255',
+                        'sector' => 'required|in:academia,government,international_organization,media,ngo,private,think_tank',
+                        'current_designation' => 'required|string|max:255',
+                        'organization' => 'required|string|max:255',
+                        'biography' => 'required|string',
+                        'areas_of_expertise' => 'required|string',
+                        'preferred_topic' => 'required|string',
+                        'resume' => 'required|file|mimes:pdf|max:10240',
+                        'has_valid_passport' => 'required|in:0,1',
+                        'had_visa_issue_bd' => 'required|in:0,1',
+                        'visa_issue_explanation' => 'nullable|required_if:had_visa_issue_bd,1|string',
+                    ]);
+                }
+            }
+        }
 
         // Validate participant data
         $participantValidated = $request->validate([
@@ -207,6 +255,40 @@ class ParticipantController extends Controller
             'date_of_birth' => $userValidated['date_of_birth'],
             'organization' => $userValidated['organization'],
             'dietary_needs' => $userValidated['dietary_needs'],
+            // New enhanced participant fields
+            'pronoun' => $userValidated['pronoun'] ?? null,
+            'contact_no' => $userValidated['contact_no'],
+            'whatsapp_no' => $userValidated['whatsapp_no'],
+            'field_of_work_study' => $userValidated['field_of_work_study'],
+            'designation' => $userValidated['designation'],
+            'organization_institution' => $userValidated['organization_institution'],
+            'is_student' => $userValidated['is_student'] ?? null,
+            'year' => $userValidated['year'] ?? null,
+            'department_name' => $userValidated['department_name'] ?? null,
+            'institution_name' => $userValidated['institution_name'] ?? null,
+            'address' => $userValidated['address'] ?? null,
+            'home_district' => $userValidated['home_district'],
+            'how_found_bobc' => $userValidated['how_found_bobc'],
+            'attended_previous_bobc' => $userValidated['attended_previous_bobc'],
+            'expertise_interests' => $userValidated['expertise_interests'],
+            // Media/Speaker conditional fields
+            'media_type' => $request->media_type,
+            'media_designation' => $request->media_designation,
+            'other_contact_type' => $request->other_contact_type,
+            'other_contact_no' => $request->other_contact_no,
+            'dietary_requirements' => $request->dietary_requirements,
+            'dietary_requirements_other' => $request->dietary_requirements_other,
+            'sector' => $request->sector,
+            'current_designation' => $request->current_designation,
+            'biography' => $request->biography,
+            'areas_of_expertise' => $request->areas_of_expertise,
+            'preferred_topic' => $request->preferred_topic,
+            'linkedin_link' => $request->linkedin_link,
+            'twitter_link' => $request->twitter_link,
+            'facebook_link' => $request->facebook_link,
+            'has_valid_passport' => $request->has_valid_passport,
+            'had_visa_issue_bd' => $request->had_visa_issue_bd,
+            'visa_issue_explanation' => $request->visa_issue_explanation,
         ]);
 
         // Handle file uploads for the user
@@ -217,6 +299,14 @@ class ParticipantController extends Controller
         if ($request->hasFile('resume')) {
             $resumePath = $request->file('resume')->store('resumes', 'public');
             $user->resume = $resumePath;
+        }
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('participant_photos', 'public');
+            $user->photo = $photoPath;
+        }
+        if ($request->hasFile('nid_passport_birth_certificate')) {
+            $nidPath = $request->file('nid_passport_birth_certificate')->store('nid_documents', 'public');
+            $user->nid_passport_birth_certificate = $nidPath;
         }
         $user->save();
 
@@ -305,6 +395,29 @@ class ParticipantController extends Controller
                 'first_name' => 'required|string|max:50',
                 'last_name' => 'required|string|max:50',
                 'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
+                // Enhanced participant fields
+                'gender' => 'nullable|in:male,female,prefer_not_to_say',
+                'contact_no' => 'nullable|string|max:20',
+                'whatsapp_no' => 'nullable|string|max:20',
+                'date_of_birth' => 'nullable|date',
+                'address' => 'nullable|string|max:500',
+                // Media fields (if participant type is press)
+                'media_type' => 'nullable|in:print,television,online_portal',
+                'media_designation' => 'nullable|in:reporter,camera_crew,photographer',
+                // Speaker fields (if participant type is presenter)
+                'other_contact_type' => 'nullable|in:whatsapp,telegram,signal',
+                'other_contact_no' => 'nullable|string|max:50',
+                'sector' => 'nullable|in:academia,government,international_organization,media,ngo,private,think_tank',
+                'current_designation' => 'nullable|string|max:255',
+                'biography' => 'nullable|string',
+                'areas_of_expertise' => 'nullable|string',
+                'preferred_topic' => 'nullable|string',
+                'linkedin_link' => 'nullable|url',
+                'twitter_link' => 'nullable|url',
+                'facebook_link' => 'nullable|url',
+                'has_valid_passport' => 'nullable|in:0,1',
+                'had_visa_issue_bd' => 'nullable|in:0,1',
+                'visa_issue_explanation' => 'nullable|string',
             ]);
         } else {
             // Admin update - validate all fields
@@ -359,6 +472,29 @@ class ParticipantController extends Controller
                 'first_name' => $userValidated['first_name'],
                 'last_name' => $userValidated['last_name'],
                 'email' => $userValidated['email'],
+                // Enhanced participant fields
+                'gender' => $userValidated['gender'] ?? null,
+                'contact_no' => $userValidated['contact_no'] ?? null,
+                'whatsapp_no' => $userValidated['whatsapp_no'] ?? null,
+                'date_of_birth' => $userValidated['date_of_birth'] ?? null,
+                'address' => $userValidated['address'] ?? null,
+                // Media fields
+                'media_type' => $userValidated['media_type'] ?? null,
+                'media_designation' => $userValidated['media_designation'] ?? null,
+                // Speaker fields
+                'other_contact_type' => $userValidated['other_contact_type'] ?? null,
+                'other_contact_no' => $userValidated['other_contact_no'] ?? null,
+                'sector' => $userValidated['sector'] ?? null,
+                'current_designation' => $userValidated['current_designation'] ?? null,
+                'biography' => $userValidated['biography'] ?? null,
+                'areas_of_expertise' => $userValidated['areas_of_expertise'] ?? null,
+                'preferred_topic' => $userValidated['preferred_topic'] ?? null,
+                'linkedin_link' => $userValidated['linkedin_link'] ?? null,
+                'twitter_link' => $userValidated['twitter_link'] ?? null,
+                'facebook_link' => $userValidated['facebook_link'] ?? null,
+                'has_valid_passport' => $userValidated['has_valid_passport'] ?? null,
+                'had_visa_issue_bd' => $userValidated['had_visa_issue_bd'] ?? null,
+                'visa_issue_explanation' => $userValidated['visa_issue_explanation'] ?? null,
             ]);
         } else {
             // Admin update - handle user_id changes

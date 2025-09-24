@@ -129,9 +129,9 @@ class PasswordlessLoginService
             }
         }
 
-        // Check if user is a participant (organizer, speaker, attendee, or tasker)
+        // Check if user is a participant (has participant records)
         $user = $passwordlessLogin->user;
-        if (!$user->roles()->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker'])->exists()) {
+        if (!$user->participants()->exists()) {
             return [
                 'success' => false,
                 'message' => 'Access denied. This link is only for participants.',

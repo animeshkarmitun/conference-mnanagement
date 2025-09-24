@@ -402,5 +402,7 @@ Route::prefix('passwordless-login')->name('passwordless-login.')->group(function
         Route::get('/user/{user}/links', [App\Http\Controllers\PasswordlessLoginController::class, 'getUserLinks'])->name('user.links');
         Route::delete('/user/{user}/revoke', [App\Http\Controllers\PasswordlessLoginController::class, 'revokeUserLinks'])->name('user.revoke');
         Route::post('/cleanup', [App\Http\Controllers\PasswordlessLoginController::class, 'cleanupExpired'])->name('cleanup');
+        Route::get('/participants/by-type', [App\Http\Controllers\PasswordlessLoginController::class, 'getParticipantsByType'])->name('participants.by-type');
+        Route::get('/participant-types', [App\Http\Controllers\PasswordlessLoginController::class, 'getParticipantTypes'])->name('participant-types');
     });
 });

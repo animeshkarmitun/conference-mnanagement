@@ -86,7 +86,277 @@
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
+
+        <!-- Enhanced participant fields -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <select name="gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('gender') border-red-300 @enderror">
+                    <option value="">Select Gender</option>
+                    <option value="male" {{ old('gender', $participant->user->gender) == 'male' ? 'selected' : '' }}>Male</option>
+                    <option value="female" {{ old('gender', $participant->user->gender) == 'female' ? 'selected' : '' }}>Female</option>
+                    <option value="prefer_not_to_say" {{ old('gender', $participant->user->gender) == 'prefer_not_to_say' ? 'selected' : '' }}>Prefer Not to Say</option>
+                </select>
+                @error('gender')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contact No</label>
+                <input type="tel" 
+                       name="contact_no" 
+                       value="{{ old('contact_no', $participant->user->contact_no) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('contact_no') border-red-300 @enderror"
+                       placeholder="+8801234567890">
+                @error('contact_no')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp No</label>
+                <input type="tel" 
+                       name="whatsapp_no" 
+                       value="{{ old('whatsapp_no', $participant->user->whatsapp_no) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('whatsapp_no') border-red-300 @enderror"
+                       placeholder="+8801234567890">
+                @error('whatsapp_no')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <input type="date" 
+                       name="date_of_birth" 
+                       value="{{ old('date_of_birth', $participant->user->date_of_birth) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('date_of_birth') border-red-300 @enderror">
+                @error('date_of_birth')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <textarea name="address" 
+                      rows="3" 
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('address') border-red-300 @enderror"
+                      placeholder="Your full address">{{ old('address', $participant->user->address) }}</textarea>
+            @error('address')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
     </div>
+
+    <!-- Media-specific fields (shown when participant type is press) -->
+    @if($participant->participantType && $participant->participantType->category === 'press')
+    <div class="bg-blue-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold text-blue-800 mb-4">Media Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type of Media</label>
+                <select name="media_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('media_type') border-red-300 @enderror">
+                    <option value="">Select Type</option>
+                    <option value="print" {{ old('media_type', $participant->user->media_type) == 'print' ? 'selected' : '' }}>Print</option>
+                    <option value="television" {{ old('media_type', $participant->user->media_type) == 'television' ? 'selected' : '' }}>Television</option>
+                    <option value="online_portal" {{ old('media_type', $participant->user->media_type) == 'online_portal' ? 'selected' : '' }}>Online Portal</option>
+                </select>
+                @error('media_type')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+                <select name="media_designation" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('media_designation') border-red-300 @enderror">
+                    <option value="">Select Designation</option>
+                    <option value="reporter" {{ old('media_designation', $participant->user->media_designation) == 'reporter' ? 'selected' : '' }}>Reporter</option>
+                    <option value="camera_crew" {{ old('media_designation', $participant->user->media_designation) == 'camera_crew' ? 'selected' : '' }}>Camera Crew</option>
+                    <option value="photographer" {{ old('media_designation', $participant->user->media_designation) == 'photographer' ? 'selected' : '' }}>Photographer</option>
+                </select>
+                @error('media_designation')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Speaker-specific fields (shown when participant type is presenter) -->
+    @if($participant->participantType && $participant->participantType->category === 'presenter')
+    <div class="bg-green-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold text-green-800 mb-4">Speaker Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Other Contact Type</label>
+                <select name="other_contact_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('other_contact_type') border-red-300 @enderror">
+                    <option value="">Select Type</option>
+                    <option value="whatsapp" {{ old('other_contact_type', $participant->user->other_contact_type) == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
+                    <option value="telegram" {{ old('other_contact_type', $participant->user->other_contact_type) == 'telegram' ? 'selected' : '' }}>Telegram</option>
+                    <option value="signal" {{ old('other_contact_type', $participant->user->other_contact_type) == 'signal' ? 'selected' : '' }}>Signal</option>
+                </select>
+                @error('other_contact_type')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Other Contact Number</label>
+                <input type="text" 
+                       name="other_contact_no" 
+                       value="{{ old('other_contact_no', $participant->user->other_contact_no) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('other_contact_no') border-red-300 @enderror"
+                       placeholder="Contact number">
+                @error('other_contact_no')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sector</label>
+                <select name="sector" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('sector') border-red-300 @enderror">
+                    <option value="">Select Sector</option>
+                    <option value="academia" {{ old('sector', $participant->user->sector) == 'academia' ? 'selected' : '' }}>Academia</option>
+                    <option value="government" {{ old('sector', $participant->user->sector) == 'government' ? 'selected' : '' }}>Government</option>
+                    <option value="international_organization" {{ old('sector', $participant->user->sector) == 'international_organization' ? 'selected' : '' }}>International Organization</option>
+                    <option value="media" {{ old('sector', $participant->user->sector) == 'media' ? 'selected' : '' }}>Media</option>
+                    <option value="ngo" {{ old('sector', $participant->user->sector) == 'ngo' ? 'selected' : '' }}>NGO</option>
+                    <option value="private" {{ old('sector', $participant->user->sector) == 'private' ? 'selected' : '' }}>Private</option>
+                    <option value="think_tank" {{ old('sector', $participant->user->sector) == 'think_tank' ? 'selected' : '' }}>Think-Tank</option>
+                </select>
+                @error('sector')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Current Designation</label>
+                <input type="text" 
+                       name="current_designation" 
+                       value="{{ old('current_designation', $participant->user->current_designation) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('current_designation') border-red-300 @enderror"
+                       placeholder="Your current designation">
+                @error('current_designation')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Biography</label>
+            <textarea name="biography" 
+                      rows="4" 
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('biography') border-red-300 @enderror"
+                      placeholder="Tell us about your professional background and expertise...">{{ old('biography', $participant->user->biography) }}</textarea>
+            @error('biography')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Areas of Expertise</label>
+            <textarea name="areas_of_expertise" 
+                      rows="3" 
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('areas_of_expertise') border-red-300 @enderror"
+                      placeholder="Describe your areas of expertise...">{{ old('areas_of_expertise', $participant->user->areas_of_expertise) }}</textarea>
+            @error('areas_of_expertise')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Topic to Speak</label>
+            <input type="text" 
+                   name="preferred_topic" 
+                   value="{{ old('preferred_topic', $participant->user->preferred_topic) }}" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('preferred_topic') border-red-300 @enderror"
+                   placeholder="What topic would you like to speak about?">
+            @error('preferred_topic')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <!-- Social Links -->
+        <div class="mt-4">
+            <h4 class="text-md font-semibold text-gray-700 mb-3">Social Links</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">LinkedIn Link</label>
+                    <input type="url" 
+                           name="linkedin_link" 
+                           value="{{ old('linkedin_link', $participant->user->linkedin_link) }}" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('linkedin_link') border-red-300 @enderror"
+                           placeholder="https://linkedin.com/in/yourprofile">
+                    @error('linkedin_link')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Twitter Link</label>
+                    <input type="url" 
+                           name="twitter_link" 
+                           value="{{ old('twitter_link', $participant->user->twitter_link) }}" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('twitter_link') border-red-300 @enderror"
+                           placeholder="https://twitter.com/yourhandle">
+                    @error('twitter_link')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Facebook Link</label>
+                    <input type="url" 
+                           name="facebook_link" 
+                           value="{{ old('facebook_link', $participant->user->facebook_link) }}" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('facebook_link') border-red-300 @enderror"
+                           placeholder="https://facebook.com/yourprofile">
+                    @error('facebook_link')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+        </div>
+
+        <!-- Passport/Visa Information -->
+        <div class="mt-4">
+            <h4 class="text-md font-semibold text-gray-700 mb-3">Passport & Visa Information</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Do you have a current/valid passport?</label>
+                    <select name="has_valid_passport" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('has_valid_passport') border-red-300 @enderror">
+                        <option value="">Select</option>
+                        <option value="1" {{ old('has_valid_passport', $participant->user->has_valid_passport) == '1' ? 'selected' : '' }}>Yes</option>
+                        <option value="0" {{ old('has_valid_passport', $participant->user->has_valid_passport) == '0' ? 'selected' : '' }}>No</option>
+                    </select>
+                    @error('has_valid_passport')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Did you previously face issues regarding a visa to Bangladesh?</label>
+                    <select name="had_visa_issue_bd" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('had_visa_issue_bd') border-red-300 @enderror">
+                        <option value="">Select</option>
+                        <option value="1" {{ old('had_visa_issue_bd', $participant->user->had_visa_issue_bd) == '1' ? 'selected' : '' }}>Yes</option>
+                        <option value="0" {{ old('had_visa_issue_bd', $participant->user->had_visa_issue_bd) == '0' ? 'selected' : '' }}>No</option>
+                    </select>
+                    @error('had_visa_issue_bd')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+            <div class="mt-4" id="visa-issue-explanation" style="display: {{ old('had_visa_issue_bd', $participant->user->had_visa_issue_bd) == '1' ? 'block' : 'none' }};">
+                <label class="block text-sm font-medium text-gray-700 mb-1">If yes, kindly provide a brief explanation</label>
+                <textarea name="visa_issue_explanation" 
+                          rows="3" 
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('visa_issue_explanation') border-red-300 @enderror"
+                          placeholder="These details will be kept strictly confidential and applied solely for visa facilitation.">{{ old('visa_issue_explanation', $participant->user->visa_issue_explanation) }}</textarea>
+                @error('visa_issue_explanation')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+    </div>
+    @endif
     
     <!-- Additional Information -->
     <div class="bg-gray-50 p-4 rounded-lg">
@@ -440,6 +710,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listen for changes
     visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
     dietarySelect.addEventListener('change', toggleDietaryOther);
+
+    // Visa issue explanation toggle for speaker section
+    const hadVisaIssueBd = document.querySelector('select[name="had_visa_issue_bd"]');
+    const visaIssueExplanation = document.getElementById('visa-issue-explanation');
+    
+    if (hadVisaIssueBd && visaIssueExplanation) {
+        function toggleVisaIssueExplanation() {
+            if (hadVisaIssueBd.value === '1') {
+                visaIssueExplanation.style.display = 'block';
+            } else {
+                visaIssueExplanation.style.display = 'none';
+            }
+        }
+        
+        toggleVisaIssueExplanation();
+        hadVisaIssueBd.addEventListener('change', toggleVisaIssueExplanation);
+    }
     
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {
