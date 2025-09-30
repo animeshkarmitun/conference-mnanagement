@@ -62,15 +62,46 @@
         </div>
 
         <div class="mb-4">
-            <label for="assigned_to" class="block text-sm font-medium text-gray-700">Assign To (Multiple Selection)</label>
-            <select name="assigned_to[]" id="assigned_to" multiple required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" size="5">
-                @foreach($users as $user)
-                    <option value="{{ $user->id }}" {{ (collect(old('assigned_to'))->contains($user->id)) ? 'selected' : '' }}>
-                        {{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }} ({{ $user->email }})
-                    </option>
-                @endforeach
-            </select>
-            <p class="text-sm text-gray-500 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple users</p>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Assign To (Multiple Selection)</label>
+            
+            <!-- Selected Users Box -->
+            <div id="selected-users-box" class="mb-3 p-3 border border-gray-300 rounded-md bg-gray-50 min-h-[60px]">
+                <div id="selected-users-list" class="flex flex-wrap gap-2">
+                    <!-- Selected users will be displayed here -->
+                </div>
+                <div id="no-users-selected" class="text-gray-500 text-sm italic">
+                    No users selected. Click on users below to assign them.
+                </div>
+            </div>
+
+            <!-- Available Users List -->
+            <div class="border border-gray-300 rounded-md max-h-48 overflow-y-auto">
+                <div class="p-2 bg-gray-100 border-b border-gray-300">
+                    <span class="text-sm font-medium text-gray-700">Available Users (Click to select)</span>
+                </div>
+                <div id="available-users-list" class="divide-y divide-gray-200">
+                    @foreach($users as $user)
+                        <div class="user-item p-3 hover:bg-blue-50 cursor-pointer transition-colors" 
+                             data-user-id="{{ $user->id }}" 
+                             data-user-name="{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}" 
+                             data-user-email="{{ $user->email }}">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-medium text-gray-900">{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}</span>
+                                    <span class="text-sm text-gray-500 ml-2">({{ $user->email }})</span>
+                                </div>
+                                <div class="text-blue-600 text-sm font-medium">
+                                    Click to select
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Hidden input to store selected user IDs -->
+            <input type="hidden" name="assigned_to" id="assigned_to_input" value="{{ old('assigned_to') ? implode(',', old('assigned_to')) : '' }}">
+            
             @error('assigned_to')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             @error('assigned_to.*')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
@@ -81,4 +112,125 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedUsers = new Set();
+    const selectedUsersList = document.getElementById('selected-users-list');
+    const noUsersSelected = document.getElementById('no-users-selected');
+    const assignedToInput = document.getElementById('assigned_to_input');
+    const userItems = document.querySelectorAll('.user-item');
+
+    // Initialize with old values if they exist
+    const oldValues = assignedToInput.value;
+    if (oldValues) {
+        const userIds = oldValues.split(',');
+        userIds.forEach(userId => {
+            if (userId.trim()) {
+                const userItem = document.querySelector(`[data-user-id="${userId.trim()}"]`);
+                if (userItem) {
+                    selectUser(userItem);
+                }
+            }
+        });
+    }
+
+    // Add click event listeners to user items
+    userItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            
+            if (selectedUsers.has(userId)) {
+                // User is already selected, remove them
+                removeUser(userId);
+            } else {
+                // User is not selected, add them
+                selectUser(this);
+            }
+        });
+    });
+
+    function selectUser(userItem) {
+        const userId = userItem.getAttribute('data-user-id');
+        const userName = userItem.getAttribute('data-user-name');
+        const userEmail = userItem.getAttribute('data-user-email');
+
+        if (selectedUsers.has(userId)) return; // Already selected
+
+        selectedUsers.add(userId);
+        
+        // Add visual feedback to the user item
+        userItem.classList.add('bg-blue-100', 'border-blue-300');
+        userItem.classList.remove('hover:bg-blue-50');
+        
+        // Update the "Click to select" text
+        const clickText = userItem.querySelector('.text-blue-600');
+        if (clickText) {
+            clickText.textContent = 'Selected';
+            clickText.classList.add('text-green-600');
+            clickText.classList.remove('text-blue-600');
+        }
+
+        // Create selected user chip
+        const userChip = document.createElement('div');
+        userChip.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200';
+        userChip.innerHTML = `
+            <span class="mr-2">${userName} (${userEmail})</span>
+            <button type="button" class="ml-1 text-blue-600 hover:text-blue-800 font-bold" onclick="removeUser('${userId}')">
+                ×
+            </button>
+        `;
+        userChip.setAttribute('data-user-id', userId);
+
+        selectedUsersList.appendChild(userChip);
+        
+        // Hide "no users selected" message
+        noUsersSelected.style.display = 'none';
+        
+        // Update hidden input
+        updateHiddenInput();
+    }
+
+    function removeUser(userId) {
+        selectedUsers.delete(userId);
+        
+        // Remove visual feedback from the user item
+        const userItem = document.querySelector(`[data-user-id="${userId}"]`);
+        if (userItem) {
+            userItem.classList.remove('bg-blue-100', 'border-blue-300');
+            userItem.classList.add('hover:bg-blue-50');
+            
+            // Update the "Selected" text back to "Click to select"
+            const clickText = userItem.querySelector('.text-green-600, .text-blue-600');
+            if (clickText) {
+                clickText.textContent = 'Click to select';
+                clickText.classList.add('text-blue-600');
+                clickText.classList.remove('text-green-600');
+            }
+        }
+
+        // Remove user chip
+        const userChip = document.querySelector(`[data-user-id="${userId}"]`);
+        if (userChip) {
+            userChip.remove();
+        }
+
+        // Show "no users selected" message if no users are selected
+        if (selectedUsers.size === 0) {
+            noUsersSelected.style.display = 'block';
+        }
+        
+        // Update hidden input
+        updateHiddenInput();
+    }
+
+    function updateHiddenInput() {
+        const userIds = Array.from(selectedUsers);
+        assignedToInput.value = userIds.join(',');
+    }
+
+    // Make removeUser function globally available for the remove buttons
+    window.removeUser = removeUser;
+});
+</script>
 @endsection 

@@ -414,7 +414,7 @@
             <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-xl font-bold text-gray-800">Recent Activities</h3>
-                    <button class="text-yellow-600 hover:text-yellow-700 font-medium text-sm">View All</button>
+                    <a href="{{ route('dashboard.activities', ['conference_id' => $selectedConferenceId]) }}" class="text-yellow-600 hover:text-yellow-700 font-medium text-sm transition-colors duration-200">View All</a>
                 </div>
                 
                 <div class="space-y-4">

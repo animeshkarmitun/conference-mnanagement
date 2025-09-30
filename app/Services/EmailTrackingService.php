@@ -126,6 +126,26 @@ class EmailTrackingService
     }
 
     /**
+     * Mark email as pending for manual send
+     */
+    public function markAsPendingForManualSend(Email $email, string $reason): void
+    {
+        $email->update([
+            'status' => Email::STATUS_PENDING,
+            'metadata' => array_merge($email->metadata ?? [], [
+                'manual_send_required' => true,
+                'manual_send_reason' => $reason,
+                'manual_send_required_at' => now()->toISOString(),
+            ])
+        ]);
+
+        Log::warning('Email marked as pending for manual send', [
+            'email_id' => $email->id,
+            'reason' => $reason,
+        ]);
+    }
+
+    /**
      * Send email with tracking
      */
     public function sendTrackedEmail(
@@ -160,9 +180,18 @@ class EmailTrackingService
             if ($mailable) {
                 Mail::to($recipientEmail)->send($mailable);
             } else {
-                Mail::raw($body, function ($message) use ($recipientEmail, $subject) {
-                    $message->to($recipientEmail)->subject($subject);
-                });
+                // Check if body contains HTML tags to determine content type
+                $isHtml = $this->isHtmlContent($body);
+                
+                if ($isHtml) {
+                    Mail::html($body, function ($message) use ($recipientEmail, $subject) {
+                        $message->to($recipientEmail)->subject($subject);
+                    });
+                } else {
+                    Mail::raw($body, function ($message) use ($recipientEmail, $subject) {
+                        $message->to($recipientEmail)->subject($subject);
+                    });
+                }
             }
 
             // Mark as sent
@@ -179,6 +208,19 @@ class EmailTrackingService
                     \Log::info('Email sent successfully via Gmail API: ' . $email->id);
                 } catch (\Exception $gmailException) {
                     \Log::error('Gmail API also failed: ' . $gmailException->getMessage());
+                    
+                    // For passwordless login emails, we'll mark as pending for manual sending
+                    if ($email->email_type === \App\Models\Email::TYPE_PASSWORDLESS_LOGIN) {
+                        $this->markAsPendingForManualSend($email, 'Both SMTP and Gmail API failed. Please fix email credentials and resend manually.');
+                        \Log::warning('Passwordless login email marked for manual sending due to email service failure', [
+                            'email_id' => $email->id,
+                            'recipient' => $recipientEmail,
+                            'smtp_error' => $e->getMessage(),
+                            'gmail_error' => $gmailException->getMessage()
+                        ]);
+                        return $email; // Return the email without throwing exception
+                    }
+                    
                     $this->markAsFailed($email, 'SMTP failed: ' . $e->getMessage() . ' | Gmail API failed: ' . $gmailException->getMessage());
                     throw new \Exception('Both SMTP and Gmail API failed. SMTP: ' . $e->getMessage() . ' | Gmail API: ' . $gmailException->getMessage());
                 }
@@ -401,6 +443,23 @@ class EmailTrackingService
         $localPart = explode('@', $email)[0];
         $name = str_replace(['.', '_', '-'], ' ', $localPart);
         return ucwords($name);
+    }
+
+    /**
+     * Check if content is HTML
+     */
+    private function isHtmlContent(string $content): bool
+    {
+        // Check for common HTML tags
+        $htmlTags = ['<html', '<body', '<div', '<p', '<h1', '<h2', '<h3', '<h4', '<h5', '<h6', '<span', '<a', '<img', '<table', '<tr', '<td', '<th', '<ul', '<ol', '<li', '<br', '<hr', '<strong', '<b', '<em', '<i', '<u', '<style'];
+        
+        foreach ($htmlTags as $tag) {
+            if (stripos($content, $tag) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**

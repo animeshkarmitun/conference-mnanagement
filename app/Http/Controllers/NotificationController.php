@@ -9,19 +9,51 @@ use Illuminate\Http\JsonResponse;
 
 class NotificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $notifications = Notification::where('user_id', auth()->id())
-            ->with(['conference'])
-            ->latest()
-            ->paginate(20);
-        return view('notifications.index', compact('notifications'));
+        // Check if user is admin or superadmin
+        if (auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin')) {
+            $type = $request->get('type', 'admin'); // Default to admin notifications
+            
+            if ($type === 'admin') {
+                // Show notifications sent by admins/superadmins
+                $notifications = Notification::with(['conference', 'user.roles'])
+                    ->whereHas('user', function($query) {
+                        $query->whereHas('roles', function($roleQuery) {
+                            $roleQuery->whereIn('name', ['superadmin', 'admin']);
+                        });
+                    })
+                    ->latest()
+                    ->paginate(20);
+            } else {
+                // Show notifications sent to regular users
+                $notifications = Notification::with(['conference', 'user.roles'])
+                    ->whereHas('user', function($query) {
+                        $query->whereDoesntHave('roles', function($roleQuery) {
+                            $roleQuery->whereIn('name', ['superadmin', 'admin']);
+                        });
+                    })
+                    ->latest()
+                    ->paginate(20);
+            }
+        } else {
+            // Show only user's own notifications for regular users (exclude those with missing users)
+            $notifications = Notification::where('user_id', auth()->id())
+                ->whereHas('user') // Only show notifications where user still exists
+                ->with(['conference', 'user.roles'])
+                ->latest()
+                ->paginate(20);
+            $type = 'user';
+        }
+        
+        return view('notifications.index', compact('notifications', 'type'));
     }
 
     public function participantIndex()
     {
         $notifications = Notification::where('user_id', auth()->id())
-            ->with(['conference'])
+            ->whereHas('user') // Only show notifications where user still exists
+            ->with(['conference', 'user'])
             ->latest()
             ->paginate(20);
         return view('notifications.index', compact('notifications'));
@@ -29,8 +61,11 @@ class NotificationController extends Controller
 
     public function markAsRead(Notification $notification): JsonResponse
     {
-        // Ensure user can only mark their own notifications as read
-        if ($notification->user_id !== auth()->id()) {
+        // Allow admin/superadmin to mark any notification as read, or users to mark their own
+        $isAdmin = auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin');
+        $isOwnNotification = $notification->user_id === auth()->id();
+        
+        if (!$isAdmin && !$isOwnNotification) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -44,9 +79,17 @@ class NotificationController extends Controller
 
     public function markAllAsRead(): JsonResponse
     {
-        Notification::where('user_id', auth()->id())
-            ->where('read_status', false)
-            ->update(['read_status' => true]);
+        // Check if user is admin or superadmin
+        if (auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin')) {
+            // Mark all notifications as read for admins
+            Notification::where('read_status', false)
+                ->update(['read_status' => true]);
+        } else {
+            // Mark only user's own notifications as read for regular users
+            Notification::where('user_id', auth()->id())
+                ->where('read_status', false)
+                ->update(['read_status' => true]);
+        }
         
         return response()->json([
             'success' => true,
@@ -56,8 +99,8 @@ class NotificationController extends Controller
 
     public function getNotificationData(Notification $notification): JsonResponse
     {
-        // Ensure user can only access their own notifications
-        if ($notification->user_id !== auth()->id()) {
+        // Allow admins to access any notification, regular users only their own
+        if (!auth()->user()->hasRole('superadmin') && !auth()->user()->hasRole('admin') && $notification->user_id !== auth()->id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -104,9 +147,8 @@ class NotificationController extends Controller
 
     public function create()
     {
-        $users = \App\Models\User::all();
         $conferences = Conference::all();
-        return view('notifications.create', compact('users', 'conferences'));
+        return view('notifications.create', compact('conferences'));
     }
 
     public function store(Request $request)
@@ -116,9 +158,6 @@ class NotificationController extends Controller
             'conference_id' => 'required|exists:conferences,id',
             'message' => 'required|string',
             'type' => 'required|in:MissingDocuments,SessionUpdate,TravelUpdate,General,TaskUpdate,ConferenceUpdate,ProfileUpdate',
-            'related_model' => 'nullable|string',
-            'related_id' => 'nullable|integer',
-            'action_url' => 'nullable|string',
         ]);
         
         $validated['sent_at'] = now();
@@ -162,5 +201,21 @@ class NotificationController extends Controller
         
         $notification->delete();
         return redirect()->route('notifications.index')->with('success', 'Notification deleted successfully.');
+    }
+
+    public function markAsUnread(Notification $notification)
+    {
+        // Only allow admin/superadmin to mark notifications as unread
+        if (!auth()->user()->hasRole('superadmin') && !auth()->user()->hasRole('admin')) {
+            abort(403);
+        }
+
+        $notification->update(['read_status' => false]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification marked as unread',
+            'unread_count' => auth()->user()->notifications()->where('read_status', false)->count()
+        ]);
     }
 } 

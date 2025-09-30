@@ -20,6 +20,8 @@ class Participant extends Model
         'approved',
         'organization',
         'dietary_needs',
+        'dietary_needs_other',
+        'hashtags',
         'travel_intent',
         'registration_status',
         'serial_number',

@@ -202,7 +202,7 @@
                 <tbody class="bg-white divide-y divide-slate-200">
                     @foreach($roles as $role)
                         @php
-                            $isSystemRole = in_array($role->name, ['superadmin', 'admin']);
+                            $isSystemRole = in_array($role->name, ['admin']);
                             $roleClass = $isSystemRole ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-indigo-100 text-indigo-800 border-indigo-200';
                         @endphp
                         <tr class="table-row-hover hover:bg-slate-50 transition-all duration-200">

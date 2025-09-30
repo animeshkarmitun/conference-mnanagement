@@ -64,15 +64,20 @@ class GoogleController extends Controller
     public function showGmailThreads(Request $request)
     {
         try {
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'Please login first to access Gmail.');
-            }
-
+            // Note: Authentication and admin role checks are handled by middleware
             $user = Auth::user();
             
-            // Check if user has admin or superadmin role
+            // Additional check for non-middleware routes
             if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
-                return redirect()->back()->with('error', 'Access denied. Gmail conversations are only available to administrators.');
+                return view('gmail.index', [
+                    'threads' => [],
+                    'nextPageToken' => null,
+                    'maxResults' => 30,
+                    'searchQuery' => $request->input('q'),
+                    'needsConnection' => false,
+                    'accessDenied' => true,
+                    'error' => 'Access denied. Gmail conversations are only available to administrators.'
+                ]);
             }
             
             // Check if user has Google token
@@ -127,16 +132,8 @@ class GoogleController extends Controller
     public function showReplyForm($threadId)
     {
         try {
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'Please login first to reply to emails.');
-            }
-
+            // Note: Authentication and admin role checks are handled by middleware
             $user = Auth::user();
-            
-            // Check if user has admin or superadmin role
-            if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
-                return redirect()->back()->with('error', 'Access denied. Gmail conversations are only available to administrators.');
-            }
             
             if (!$user->google_token) {
                 return redirect()->route('google.redirect')->with('error', 'Please connect your Gmail account.');
@@ -169,16 +166,8 @@ class GoogleController extends Controller
     public function sendReply(Request $request, $threadId)
     {
         try {
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'Please login first to send emails.');
-            }
-
+            // Note: Authentication and admin role checks are handled by middleware
             $user = Auth::user();
-            
-            // Check if user has admin or superadmin role
-            if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
-                return redirect()->back()->with('error', 'Access denied. Gmail conversations are only available to administrators.');
-            }
 
             $request->validate([
                 'to' => 'required|email',

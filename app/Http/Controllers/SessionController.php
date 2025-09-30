@@ -300,6 +300,106 @@ class SessionController extends Controller
     }
 
     /**
+     * Export sessions to CSV
+     */
+    public function export(Request $request)
+    {
+        $status = $request->get('status', 'all');
+        $conferenceId = $request->get('conference_id');
+        $now = now();
+        
+        $query = Session::with(['conference', 'participants']);
+        
+        // Filter by conference if specified
+        if ($conferenceId) {
+            $query->where('conference_id', $conferenceId);
+        }
+        
+        // Filter sessions based on status
+        switch ($status) {
+            case 'active':
+                $query->where('start_time', '<=', $now)
+                      ->where('end_time', '>=', $now)
+                      ->orderBy('end_time', 'asc');
+                break;
+                
+            case 'upcoming':
+                $query->where('start_time', '>', $now)
+                      ->orderBy('start_time', 'asc');
+                break;
+                
+            case 'finished':
+                $query->where('end_time', '<', $now)
+                      ->orderBy('end_time', 'desc');
+                break;
+                
+            case 'all':
+            default:
+                $query->orderBy('start_time', 'asc');
+                break;
+        }
+        
+        $sessions = $query->get();
+        
+        $filename = 'sessions_export_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+        
+        $callback = function() use ($sessions) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV Headers
+            fputcsv($file, [
+                'ID',
+                'Title',
+                'Description',
+                'Conference',
+                'Start Time',
+                'End Time',
+                'Duration (minutes)',
+                'Status',
+                'Participants Count',
+                'Created At',
+                'Updated At'
+            ]);
+            
+            // CSV Data
+            foreach ($sessions as $session) {
+                $timeData = \App\Helpers\DateHelper::formatSessionTime($session->start_time, $session->end_time);
+                
+                if ($timeData['is_active']) {
+                    $statusText = 'Active';
+                } elseif ($timeData['is_past']) {
+                    $statusText = 'Finished';
+                } else {
+                    $statusText = 'Upcoming';
+                }
+                
+                fputcsv($file, [
+                    $session->id,
+                    $session->title,
+                    $session->description ?? '',
+                    $session->conference->name ?? 'N/A',
+                    $session->start_time->format('Y-m-d H:i:s'),
+                    $session->end_time->format('Y-m-d H:i:s'),
+                    $timeData['duration_minutes'],
+                    $statusText,
+                    $session->participants->count(),
+                    $session->created_at->format('Y-m-d H:i:s'),
+                    $session->updated_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
      * Get participants for a specific conference
      */
     public function getParticipantsByConference(Request $request)

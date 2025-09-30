@@ -265,27 +265,15 @@
         
         <!-- Quick Action Buttons -->
         <div class="flex flex-wrap gap-3">
-            <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Import Participants">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                </svg>
-            </button>
-            
-            <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Send Bulk Email">
+            <button id="bulk-email-btn" class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Send Bulk Email">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
             </button>
             
-            <button class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
+            <button id="export-csv-btn" class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Export CSV">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-            </button>
-            
-            <button class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Bulk Operations">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
             </button>
             
@@ -406,7 +394,7 @@
             </form>
             <!-- Visa Status Filter -->
             <div class="relative group">
-                <button class="filter-dropdown bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm">
+                <button class="filter-dropdown {{ request()->has('visa_filter') ? 'bg-blue-200 text-blue-800 border-blue-300' : 'bg-blue-100 hover:bg-blue-200 text-blue-700' }} px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm" onclick="toggleDropdown('visa-dropdown')">
                     <div class="flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -417,9 +405,16 @@
                         </svg>
                     </div>
                 </button>
-                <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <div id="visa-dropdown" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                     <div class="py-2">
                         <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Visa Status</div>
+                        <a href="{{ route('participants.index', request()->except(['visa_filter'])) }}" 
+                           class="block px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <span>All Visa Statuses</span>
+                                <span class="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['required'] + $visaCounts['approved'] + $visaCounts['pending'] + $visaCounts['issue'] + $visaCounts['not_required'] }}</span>
+                            </div>
+                        </a>
                         <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'required'])) }}" 
                            class="block px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
                             <div class="flex items-center justify-between">
@@ -454,7 +449,7 @@
             
             <!-- Enhanced Participant Type Filter -->
             <div class="relative group">
-                <button class="filter-dropdown bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-200 shadow-sm">
+                <button class="filter-dropdown {{ request()->has('type') ? 'bg-purple-200 text-purple-800 border-purple-300' : 'bg-purple-100 hover:bg-purple-200 text-purple-700' }} px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-200 shadow-sm" onclick="toggleDropdown('type-dropdown')">
                     <div class="flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -465,9 +460,16 @@
                         </svg>
                     </div>
                 </button>
-                <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <div id="type-dropdown" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                     <div class="py-2">
                         <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Type</div>
+                        <a href="{{ route('participants.index', request()->except(['type'])) }}" 
+                           class="block px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <span>All Types</span>
+                                <span class="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">{{ array_sum($typeCounts) }}</span>
+                            </div>
+                        </a>
                         @foreach($participantTypes as $type)
                             <a href="{{ route('participants.index', array_merge(request()->query(), ['type' => $type->name])) }}" 
                                class="block px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 transition-colors duration-200">
@@ -480,6 +482,19 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Clear Filters Button -->
+            @if(request()->has('visa_filter') || request()->has('type'))
+                <a href="{{ route('participants.index', request()->except(['visa_filter', 'type'])) }}" 
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-gray-200 shadow-sm">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear Filters
+                    </div>
+                </a>
+            @endif
         </div>
     </div>
 </div>
@@ -523,12 +538,6 @@
                     </svg>
                     Download Resumes (<span id="selected-count">0</span>)
                 </button>
-                <button id="export-csv-btn" class="modern-success px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transition duration-200 transform hover:scale-105">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Export CSV
-                </button>
             </div>
         </div>
     </div>
@@ -551,9 +560,6 @@
             </select>
             <button id="bulk-update-btn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg font-semibold text-sm">
                 Update Selected
-            </button>
-            <button id="bulk-email-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-semibold text-sm">
-                Send Email
             </button>
         </div>
     </div>
@@ -1102,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = currentUrl.toString();
     });
     
-    // Bulk email functionality
+    // Bulk email functionality (using the top action button)
     document.getElementById('bulk-email-btn').addEventListener('click', function() {
         const selectedIds = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
             .map(checkbox => checkbox.value);
@@ -1120,6 +1126,33 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize state
     updateSelectionState();
+});
+
+// Dropdown toggle function
+function toggleDropdown(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown) {
+        dropdown.classList.toggle('opacity-0');
+        dropdown.classList.toggle('invisible');
+        dropdown.classList.toggle('opacity-100');
+        dropdown.classList.toggle('visible');
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    const visaDropdown = document.getElementById('visa-dropdown');
+    const typeDropdown = document.getElementById('type-dropdown');
+    
+    if (visaDropdown && !event.target.closest('.group')) {
+        visaDropdown.classList.add('opacity-0', 'invisible');
+        visaDropdown.classList.remove('opacity-100', 'visible');
+    }
+    
+    if (typeDropdown && !event.target.closest('.group')) {
+        typeDropdown.classList.add('opacity-0', 'invisible');
+        typeDropdown.classList.remove('opacity-100', 'visible');
+    }
 });
 
 // Email Modal Functions

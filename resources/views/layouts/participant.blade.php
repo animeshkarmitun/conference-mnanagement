@@ -361,11 +361,12 @@
         <!-- Notification click functionality -->
         <script>
             function markNotificationAsRead(notificationId, element) {
-                console.log('markNotificationAsRead called with ID:', notificationId);
                 
-                // Show loading state
-                element.style.opacity = '0.6';
-                element.style.pointerEvents = 'none';
+                // Show loading state if element is provided
+                if (element) {
+                    element.style.opacity = '0.6';
+                    element.style.pointerEvents = 'none';
+                }
                 
                 fetch(`/notifications/${notificationId}/mark-read`, {
                     method: 'POST',
@@ -376,7 +377,6 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Mark read response:', data);
                     if (data.success) {
                         // Remove the unread badge
                         const unreadBadge = document.getElementById(`unread-badge-${notificationId}`);
@@ -395,76 +395,30 @@
                             }
                         }
                         
-                        // Add visual feedback
-                        element.style.backgroundColor = '#fef3c7'; // Light yellow background
-                        setTimeout(() => {
-                            element.style.backgroundColor = '';
-                            element.style.opacity = '1';
-                            element.style.pointerEvents = 'auto';
-                        }, 1000);
+                        // Add visual feedback - only if element exists and has style property
+                        if (element && element.style) {
+                            element.style.backgroundColor = '#fef3c7'; // Light yellow background
+                            setTimeout(() => {
+                                if (element && element.style) {
+                                    element.style.backgroundColor = '';
+                                    element.style.opacity = '1';
+                                    element.style.pointerEvents = 'auto';
+                                }
+                            }, 1000);
+                        }
                         
-                        // Get notification data to find related content
-                        console.log('Fetching notification data from:', `/notifications/${notificationId}/data`);
-                        fetch(`/notifications/${notificationId}/data`)
-                            .then(response => {
-                                console.log('Response status:', response.status);
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! status: ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then(notification => {
-                                console.log('Notification data received:', notification);
-                                
-                                // Navigate based on notification data
-                                if (notification.related_model === 'Task' && notification.related_id) {
-                                    // Navigate to task details
-                                    const taskUrl = `/tasks/${notification.related_id}`;
-                                    console.log('About to navigate to task URL:', taskUrl);
-                                    window.location.href = taskUrl;
-                                } else if (notification.related_model === 'Participant' && notification.related_id) {
-                                    // Navigate to participant details
-                                    const participantUrl = `/participants/${notification.related_id}`;
-                                    console.log('About to navigate to participant URL:', participantUrl);
-                                    window.location.href = participantUrl;
-                                } else if (notification.related_model === 'Session' && notification.related_id) {
-                                    // Navigate to session details
-                                    const sessionUrl = `/sessions/${notification.related_id}`;
-                                    console.log('About to navigate to session URL:', sessionUrl);
-                                    window.location.href = sessionUrl;
-                                } else if (notification.type === 'TaskUpdate') {
-                                    // Fallback for task notifications without related_id
-                                    console.log('TaskUpdate notification clicked - no related_id found, redirecting to tasks index');
-                                    window.location.href = '/tasks';
-                                } else if (notification.type === 'TravelUpdate') {
-                                    // Fallback for travel notifications without related_id
-                                    console.log('TravelUpdate notification clicked - no related_id found, redirecting to participants');
-                                    window.location.href = '/participants';
-                                } else if (notification.type === 'SessionUpdate') {
-                                    // Fallback for session notifications without related_id
-                                    console.log('SessionUpdate notification clicked - no related_id found, redirecting to sessions');
-                                    window.location.href = '/sessions';
-                                } else if (notification.type === 'General') {
-                                    // Handle General notifications - redirect to dashboard
-                                    console.log('General notification clicked - redirecting to dashboard');
-                                    window.location.href = '/participant-dashboard';
-                                } else {
-                                    console.log('No navigation logic for this notification type:', notification.type);
-                                    // Default fallback to participant dashboard
-                                    window.location.href = '/participant-dashboard';
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error fetching notification data:', error);
-                            });
+                        // Redirect to notifications page and show popup
+                        window.location.href = '/notifications';
                     } else {
                         console.log('Mark read was not successful:', data);
                     }
                 })
                 .catch(error => {
                     console.error('Error marking notification as read:', error);
-                    element.style.opacity = '1';
-                    element.style.pointerEvents = 'auto';
+                    if (element && element.style) {
+                        element.style.opacity = '1';
+                        element.style.pointerEvents = 'auto';
+                    }
                 });
             }
         </script>

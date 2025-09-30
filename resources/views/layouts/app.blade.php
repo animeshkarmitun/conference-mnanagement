@@ -357,42 +357,13 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Itinerary</span>
                         </a>
-                    @else
-                        <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
+                    @elseif(auth()->check() && auth()->user()->hasRole('attendee'))
+                        <!-- Attendee/Speaker Menu -->
+                        <a href="{{ route('participants.profile') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participants.profile') ? 'active' : '' }}" :title="sidebarCollapsed ? 'My Profile' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Dashboard</span>
-                        </a>
-                        <a href="{{ route('conferences.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('conferences.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Conferences' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Conferences</span>
-                        </a>
-                        <a href="{{ route('participants.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participants.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Participants' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Participants</span>
-                        </a>
-                        <a href="{{ route('sessions.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('sessions.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Sessions' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Sessions</span>
-                        </a>
-                        <a href="{{ route('tasks.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('tasks.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Tasks' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Tasks</span>
-                        </a>
-                        <a href="{{ route('notifications.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('notifications.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Notifications' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notifications</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">My Profile</span>
                         </a>
                         <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'How to Use' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -400,40 +371,36 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
                         </a>
-                        <a href="{{ route('passwordless-login.admin.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('passwordless-login.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Passwordless Login' : ''">
+                    @elseif(auth()->check() && auth()->user()->hasRole('speaker'))
+                        <!-- Speaker Menu -->
+                        <a href="{{ route('participants.profile') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participants.profile') ? 'active' : '' }}" :title="sidebarCollapsed ? 'My Profile' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Passwordless Login</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">My Profile</span>
                         </a>
-                        <a href="{{ route('admin.email-tracking.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.email-tracking.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Email Tracking' : ''">
+                        <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'How to Use' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Email Tracking</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
                         </a>
-                        @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')))
-                        <a href="{{ route('gmail.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('gmail.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Gmail Conversations' : ''">
+                    @else
+                        <!-- Users with NO ROLES - Limited Access Only -->
+                        <div class="px-4 py-3 text-center">
+                            <div class="text-yellow-400 text-sm font-semibold mb-2">
+                                <svg class="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                                No Role Assigned
+                            </div>
+                            <p class="text-xs text-slate-400 mb-3">Please contact an administrator to assign you a role.</p>
+                        </div>
+                        <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'How to Use' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Gmail Conversations</span>
-                        </a>
-                        @endif
-                        <!-- Travel Management Section -->
-                        <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
-                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
-                        <a href="{{ route('admin.itineraries') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.itineraries') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Itineraries' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Itineraries</span>
-                        </a>
-                        <a href="{{ route('admin.export-itinerary') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.export-itinerary') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Itinerary' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Itinerary</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
                         </a>
                     @endif
 
@@ -580,11 +547,12 @@
         <!-- Notification click functionality -->
         <script>
             function markNotificationAsRead(notificationId, element) {
-                console.log('markNotificationAsRead called with ID:', notificationId);
                 
-                // Show loading state
-                element.style.opacity = '0.6';
-                element.style.pointerEvents = 'none';
+                // Show loading state if element is provided
+                if (element) {
+                    element.style.opacity = '0.6';
+                    element.style.pointerEvents = 'none';
+                }
                 
                 fetch(`/notifications/${notificationId}/read`, {
                     method: 'PATCH',
@@ -595,7 +563,6 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Mark read response:', data);
                     if (data.success) {
                         // Remove the unread badge
                         const unreadBadge = document.getElementById(`unread-badge-${notificationId}`);
@@ -614,77 +581,31 @@
                             }
                         }
                         
-                        // Add visual feedback
-                        element.style.backgroundColor = '#fef3c7'; // Light yellow background
-                        setTimeout(() => {
-                            element.style.backgroundColor = '';
-                            element.style.opacity = '1';
-                            element.style.pointerEvents = 'auto';
-                        }, 1000);
+                        // Add visual feedback - only if element exists and has style property
+                        if (element && element.style) {
+                            element.style.backgroundColor = '#fef3c7'; // Light yellow background
+                            setTimeout(() => {
+                                if (element && element.style) {
+                                    element.style.backgroundColor = '';
+                                    element.style.opacity = '1';
+                                    element.style.pointerEvents = 'auto';
+                                }
+                            }, 1000);
+                        }
                         
-                        // Get notification data to find related content
-                        console.log('Fetching notification data from:', `/notifications/${notificationId}/data`);
-                        fetch(`/notifications/${notificationId}/data`)
-                            .then(response => {
-                                console.log('Response status:', response.status);
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! status: ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then(notification => {
-                                console.log('Notification data received:', notification);
-                                
-                                // Navigate based on notification data
-                                if (notification.related_model === 'Task' && notification.related_id) {
-                                    // Navigate to task details
-                                    const taskUrl = `/tasks/${notification.related_id}`;
-                                    console.log('About to navigate to task URL:', taskUrl);
-                                    window.location.href = taskUrl;
-                                } else if (notification.related_model === 'Participant' && notification.related_id) {
-                                    // Navigate to participant details
-                                    const participantUrl = `/participants/${notification.related_id}`;
-                                    console.log('About to navigate to participant URL:', participantUrl);
-                                    window.location.href = participantUrl;
-                                } else if (notification.related_model === 'Session' && notification.related_id) {
-                                    // Navigate to session details
-                                    const sessionUrl = `/sessions/${notification.related_id}`;
-                                    console.log('About to navigate to session URL:', sessionUrl);
-                                    window.location.href = sessionUrl;
-                                } else if (notification.type === 'TaskUpdate') {
-                                    // Fallback for task notifications without related_id
-                                    console.log('TaskUpdate notification clicked - no related_id found, redirecting to tasks index');
-                                    window.location.href = '/tasks';
-                                } else if (notification.type === 'TravelUpdate') {
-                                    // Fallback for travel notifications without related_id
-                                    console.log('TravelUpdate notification clicked - no related_id found, redirecting to participants');
-                                    window.location.href = '/participants';
-                                } else if (notification.type === 'SessionUpdate') {
-                                    // Fallback for session notifications without related_id
-                                    console.log('SessionUpdate notification clicked - no related_id found, redirecting to sessions');
-                                    window.location.href = '/sessions';
-                                } else if (notification.type === 'General') {
-                                    // Handle General notifications - redirect to dashboard
-                                    console.log('General notification clicked - redirecting to dashboard');
-                                    window.location.href = '/dashboard';
-                                } else {
-                                    console.log('No navigation logic for this notification type:', notification.type);
-                                    // Default fallback to dashboard
-                                    window.location.href = '/dashboard';
-                                }
-                            })
-                                                         .catch(error => {
-                                 console.error('Error fetching notification data:', error);
-                             });
+                         // Redirect to notifications page and show popup
+                         window.location.href = '/notifications';
                                          } else {
                          console.log('Mark read was not successful:', data);
                      }
                 })
-                                 .catch(error => {
-                     console.error('Error marking notification as read:', error);
-                     element.style.opacity = '1';
-                     element.style.pointerEvents = 'auto';
-                 });
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                    if (element && element.style) {
+                        element.style.opacity = '1';
+                        element.style.pointerEvents = 'auto';
+                    }
+                });
             }
         </script>
         

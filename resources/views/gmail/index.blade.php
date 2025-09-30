@@ -173,7 +173,26 @@
     @endif
 
     <!-- Conversations List -->
-    @if (isset($needsConnection) && $needsConnection)
+    @if (isset($accessDenied) && $accessDenied)
+        <!-- Access Denied State -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="mx-auto w-24 h-24 bg-light rounded-circle d-flex align-items-center justify-content-center mb-4">
+                            <i class="fas fa-lock text-3xl text-danger"></i>
+                        </div>
+                        <h3 class="h5 mb-2">Access Denied</h3>
+                        <p class="text-muted mb-4">{{ $error ?? 'Gmail conversations are only available to administrators.' }}</p>
+                        <a href="{{ route('participant-dashboard') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Go to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @elseif (isset($needsConnection) && $needsConnection)
         <!-- Connect Gmail State -->
         <div class="row">
             <div class="col-12">

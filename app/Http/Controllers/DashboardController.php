@@ -24,6 +24,11 @@ class DashboardController extends Controller
         // SECURITY: Check if user has admin privileges
         $user = auth()->user();
         if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+            // If user has no roles at all, redirect to a restricted page
+            if (!$user->hasAnyRole()) {
+                return redirect()->route('participants.profile')->with('error', 'Access denied. No role assigned. Please contact an administrator.');
+            }
+            
             // Redirect participants to their profile page
             if ($user->hasRole('attendee') || $user->hasRole('speaker')) {
                 return redirect()->route('participants.profile')->with('error', 'Access denied. Please use your participant dashboard.');
@@ -197,6 +202,43 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to load summary statistics'], 500);
         }
+    }
+
+    /**
+     * Show all activities page
+     */
+    public function activities(Request $request)
+    {
+        // SECURITY: Check if user has admin privileges
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+            return redirect()->route('participants.profile')->with('error', 'Access denied. Insufficient privileges.');
+        }
+
+        // Get all conferences for dropdown
+        $conferences = Conference::orderBy('start_date', 'desc')->get();
+        
+        // Get selected conference (default to first if none selected)
+        $selectedConferenceId = $request->get('conference_id') ?? ($conferences->first()?->id);
+        
+        if (!$selectedConferenceId) {
+            // No conferences exist, return empty activities page
+            return view('dashboard.activities', [
+                'conferences' => collect(),
+                'selectedConferenceId' => null,
+                'activities' => collect(),
+                'noConferences' => true,
+            ]);
+        }
+
+        // Get all activities for the selected conference (no limit)
+        $activities = $this->dashboardService->getRecentActivities($selectedConferenceId, 100);
+
+        return view('dashboard.activities', compact(
+            'conferences',
+            'selectedConferenceId',
+            'activities'
+        ));
     }
 
     // Legacy methods for backward compatibility

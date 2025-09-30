@@ -186,28 +186,11 @@
         
         <!-- Quick Action Buttons -->
         <div class="flex flex-wrap gap-3">
-            <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Import Tasks">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                </svg>
-            </button>
-            
-            <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-            </button>
-            
-            <button class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Export Data">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button id="export-tasks-btn" class="modern-success px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-            </button>
-            
-            <button class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Bulk Assignment">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
+                Export CSV
             </button>
             
             <a href="{{ route('tasks.create') }}" class="modern-primary hover:modern-primary px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
@@ -216,6 +199,82 @@
                 </svg>
                 Add Task
             </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-2">
+    <div class="p-4 border-b border-gray-200">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Date Filter -->
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <label for="date_filter" class="text-sm font-medium text-gray-700">Date:</label>
+                    <select id="date_filter" name="date_filter" class="rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        <option value="">All Dates</option>
+                        <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
+                        <option value="tomorrow" {{ request('date_filter') == 'tomorrow' ? 'selected' : '' }}>Tomorrow</option>
+                        <option value="this_week" {{ request('date_filter') == 'this_week' ? 'selected' : '' }}>This Week</option>
+                        <option value="next_week" {{ request('date_filter') == 'next_week' ? 'selected' : '' }}>Next Week</option>
+                        <option value="overdue" {{ request('date_filter') == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                    </select>
+                </div>
+
+                <!-- Priority Filter -->
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <label for="priority_filter" class="text-sm font-medium text-gray-700">Priority:</label>
+                    <select id="priority_filter" name="priority_filter" class="rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        <option value="">All Priorities</option>
+                        <option value="high" {{ request('priority_filter') == 'high' ? 'selected' : '' }}>High</option>
+                        <option value="medium" {{ request('priority_filter') == 'medium' ? 'selected' : '' }}>Medium</option>
+                        <option value="low" {{ request('priority_filter') == 'low' ? 'selected' : '' }}>Low</option>
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <label for="status_filter" class="text-sm font-medium text-gray-700">Status:</label>
+                    <select id="status_filter" name="status_filter" class="rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        <option value="">All Statuses</option>
+                        <option value="pending" {{ request('status_filter') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="in_progress" {{ request('status_filter') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                        <option value="completed" {{ request('status_filter') == 'completed' ? 'selected' : '' }}>Completed</option>
+                        <option value="cancelled" {{ request('status_filter') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <!-- Clear Filters Button -->
+                @if(request()->hasAny(['date_filter', 'priority_filter', 'status_filter']))
+                    <a href="{{ route('tasks.index') }}" 
+                       class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border border-gray-200 shadow-sm">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Clear Filters
+                        </div>
+                    </a>
+                @endif
+                
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>{{ $tasks->count() }} task{{ $tasks->count() !== 1 ? 's' : '' }} found</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -635,6 +694,55 @@
 
 @push('scripts')
 <script>
+// Filter functionality - Define globally
+function initializeFilters() {
+    const dateFilter = document.getElementById('date_filter');
+    const priorityFilter = document.getElementById('priority_filter');
+    const statusFilter = document.getElementById('status_filter');
+
+
+    function applyFilters() {
+        const currentUrl = new URL(window.location);
+        
+        // Clear existing filter parameters
+        currentUrl.searchParams.delete('date_filter');
+        currentUrl.searchParams.delete('priority_filter');
+        currentUrl.searchParams.delete('status_filter');
+        
+        // Add new filter parameters
+        if (dateFilter && dateFilter.value) {
+            currentUrl.searchParams.set('date_filter', dateFilter.value);
+        }
+        if (priorityFilter && priorityFilter.value) {
+            currentUrl.searchParams.set('priority_filter', priorityFilter.value);
+        }
+        if (statusFilter && statusFilter.value) {
+            currentUrl.searchParams.set('status_filter', statusFilter.value);
+        }
+        // Navigate to filtered URL
+        window.location.href = currentUrl.toString();
+    }
+
+    // Add event listeners for filter changes
+    if (dateFilter) {
+        dateFilter.addEventListener('change', function() {
+            applyFilters();
+        });
+    }
+    
+    if (priorityFilter) {
+        priorityFilter.addEventListener('change', function() {
+            applyFilters();
+        });
+    }
+    
+    if (statusFilter) {
+        statusFilter.addEventListener('change', function() {
+            applyFilters();
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const tableViewBtn = document.getElementById('table-view-btn');
     const kanbanViewBtn = document.getElementById('kanban-view-btn');
@@ -642,19 +750,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const kanbanView = document.getElementById('kanban-view');
 
     // View toggle functionality
-    tableViewBtn.addEventListener('click', function() {
-        tableViewBtn.classList.add('active');
-        kanbanViewBtn.classList.remove('active');
-        tableView.classList.remove('hidden');
-        kanbanView.classList.add('hidden');
-    });
+    if (tableViewBtn && kanbanViewBtn && tableView && kanbanView) {
+        tableViewBtn.addEventListener('click', function() {
+            tableViewBtn.classList.add('active');
+            kanbanViewBtn.classList.remove('active');
+            tableView.classList.remove('hidden');
+            kanbanView.classList.add('hidden');
+        });
 
-    kanbanViewBtn.addEventListener('click', function() {
-        kanbanViewBtn.classList.add('active');
-        tableViewBtn.classList.remove('active');
-        kanbanView.classList.remove('hidden');
-        tableView.classList.add('hidden');
-    });
+        kanbanViewBtn.addEventListener('click', function() {
+            kanbanViewBtn.classList.add('active');
+            tableViewBtn.classList.remove('active');
+            kanbanView.classList.remove('hidden');
+            tableView.classList.add('hidden');
+        });
+    }
 
     // Add hover effects to task cards
     const taskCards = document.querySelectorAll('.task-card');
@@ -667,6 +777,54 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'translateY(0)';
         });
     });
+
+    // Filter functionality - Initialize immediately after DOM is loaded
+    initializeFilters();
+    
+    // Fallback: Try to initialize filters after a short delay
+    setTimeout(function() {
+        const dateFilter = document.getElementById('date_filter');
+        const priorityFilter = document.getElementById('priority_filter');
+        const statusFilter = document.getElementById('status_filter');
+        
+        if (!dateFilter || !priorityFilter || !statusFilter) {
+            initializeFilters();
+        }
+    }, 500);
+
+    // Export functionality
+    const exportBtn = document.getElementById('export-tasks-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            exportTaskData();
+        });
+    }
+
+    function exportTaskData() {
+        // Get current filter parameters
+        const currentUrl = new URL(window.location);
+        const dateFilter = currentUrl.searchParams.get('date_filter') || '';
+        const priorityFilter = currentUrl.searchParams.get('priority_filter') || '';
+        const statusFilter = currentUrl.searchParams.get('status_filter') || '';
+        
+        // Build export URL with current filters
+        let exportUrl = '{{ route("tasks.export") }}?';
+        if (dateFilter) {
+            exportUrl += 'date_filter=' + encodeURIComponent(dateFilter) + '&';
+        }
+        if (priorityFilter) {
+            exportUrl += 'priority_filter=' + encodeURIComponent(priorityFilter) + '&';
+        }
+        if (statusFilter) {
+            exportUrl += 'status_filter=' + encodeURIComponent(statusFilter) + '&';
+        }
+        
+        // Remove trailing & if present
+        exportUrl = exportUrl.replace(/&$/, '');
+        
+        // Trigger download
+        window.location.href = exportUrl;
+    }
 });
 </script>
 @endpush 

@@ -165,38 +165,39 @@ class ParticipantController extends Controller
     // Store new participant
     public function store(Request $request)
     {
-        // Validate user creation data (base)
+        // Validate user creation data (base) - Only essential fields required
         $userValidated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'gender' => 'required|in:male,female,prefer_not_to_say',
+            // All other fields are optional
+            'gender' => 'nullable|in:male,female,prefer_not_to_say',
             'nationality' => 'nullable|string|max:100',
             'profession' => 'nullable|string|max:100',
-            'date_of_birth' => 'required|date',
+            'date_of_birth' => 'nullable|date',
             'organization' => 'nullable|string|max:255',
             'dietary_needs' => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|max:2048',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
-            // New enhanced participant fields
-            'photo' => 'required|image|max:400|dimensions:width=1200,height=800',
+            // Enhanced participant fields - all optional
+            'photo' => 'nullable|image|max:400|dimensions:max_width=1200,max_height=800',
             'pronoun' => 'nullable|in:he_him,she_her,they_them',
-            'contact_no' => 'required|string|max:20',
-            'whatsapp_no' => 'required|string|max:20',
-            'field_of_work_study' => 'required|string|max:255',
-            'designation' => 'required|string|max:255',
-            'organization_institution' => 'required|string|max:255',
+            'contact_no' => 'nullable|string|max:20',
+            'whatsapp_no' => 'nullable|string|max:20',
+            'field_of_work_study' => 'nullable|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'organization_institution' => 'nullable|string|max:255',
             'is_student' => 'nullable|boolean',
             'year' => 'nullable|in:honors_final_year,masters',
             'department_name' => 'nullable|string|max:255',
             'institution_name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:500',
-            'home_district' => 'required|string|max:100',
-            'nid_passport_birth_certificate' => 'required|image|max:300',
-            'how_found_bobc' => 'required|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
-            'attended_previous_bobc' => 'required|boolean',
-            'expertise_interests' => 'required|string|max:1000',
+            'home_district' => 'nullable|string|max:100',
+            'nid_passport_birth_certificate' => 'nullable|image|max:300',
+            'how_found_bobc' => 'nullable|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
+            'attended_previous_bobc' => 'nullable|boolean',
+            'expertise_interests' => 'nullable|string|max:1000',
         ]);
 
         // Conditional validation for Media (press) and Speaker (presenter)
@@ -210,37 +211,40 @@ class ParticipantController extends Controller
                     ]);
                 } elseif ($type->category === 'presenter') {
                     $request->validate([
-                        'other_contact_type' => 'required|in:whatsapp,telegram,signal',
-                        'other_contact_no' => 'required|string|max:50',
-                        'dietary_requirements' => 'required|in:veg,non_veg,vegan,others',
+                        'other_contact_type' => 'nullable|in:whatsapp,telegram,signal',
+                        'other_contact_no' => 'nullable|string|max:50',
+                        'dietary_requirements' => 'nullable|in:veg,non_veg,vegan,others',
                         'dietary_requirements_other' => 'nullable|required_if:dietary_requirements,others|string|max:255',
-                        'sector' => 'required|in:academia,government,international_organization,media,ngo,private,think_tank',
-                        'current_designation' => 'required|string|max:255',
-                        'organization' => 'required|string|max:255',
-                        'biography' => 'required|string',
-                        'areas_of_expertise' => 'required|string',
-                        'preferred_topic' => 'required|string',
-                        'resume' => 'required|file|mimes:pdf|max:10240',
-                        'has_valid_passport' => 'required|in:0,1',
-                        'had_visa_issue_bd' => 'required|in:0,1',
+                        'sector' => 'nullable|in:academia,government,international_organization,media,ngo,private,think_tank',
+                        'current_designation' => 'nullable|string|max:255',
+                        'organization' => 'nullable|string|max:255',
+                        'biography' => 'nullable|string',
+                        'areas_of_expertise' => 'nullable|string',
+                        'preferred_topic' => 'nullable|string',
+                        'resume' => 'nullable|file|mimes:pdf|max:10240',
+                        'has_valid_passport' => 'nullable|in:0,1',
+                        'had_visa_issue_bd' => 'nullable|in:0,1',
                         'visa_issue_explanation' => 'nullable|required_if:had_visa_issue_bd,1|string',
                     ]);
                 }
             }
         }
 
-        // Validate participant data
+        // Validate participant data - Only essential fields required
         $participantValidated = $request->validate([
             'conference_id' => 'required|exists:conferences,id',
             'participant_type_id' => 'required|exists:participant_types,id',
-            'visa_status' => 'required|in:required,not_required,pending,approved,issue',
+            // All other participant fields are optional
+            'visa_status' => 'nullable|in:required,not_required,pending,approved,issue',
             'visa_issue_description' => 'nullable|string|max:1000',
-            'travel_form_submitted' => 'boolean',
+            'travel_form_submitted' => 'nullable|boolean',
             'bio' => 'nullable|string',
-            'approved' => 'boolean',
-            'travel_intent' => 'required',
-            'registration_status' => 'required',
+            'approved' => 'nullable|boolean',
+            'travel_intent' => 'nullable|boolean',
+            'registration_status' => 'nullable|in:pending,approved,rejected',
             'category' => 'nullable|string|max:50',
+            'dietary_needs_other' => 'nullable|string|max:255',
+            'hashtags' => 'nullable|string|max:1000',
         ]);
 
         // Create the user first
@@ -249,19 +253,19 @@ class ParticipantController extends Controller
             'last_name' => $userValidated['last_name'],
             'email' => $userValidated['email'],
             'password' => bcrypt($userValidated['password']),
-            'gender' => $userValidated['gender'],
-            'nationality' => $userValidated['nationality'],
-            'profession' => $userValidated['profession'],
-            'date_of_birth' => $userValidated['date_of_birth'],
-            'organization' => $userValidated['organization'],
-            'dietary_needs' => $userValidated['dietary_needs'],
+            'gender' => $userValidated['gender'] ?? null,
+            'nationality' => $userValidated['nationality'] ?? null,
+            'profession' => $userValidated['profession'] ?? null,
+            'date_of_birth' => $userValidated['date_of_birth'] ?? null,
+            'organization' => $userValidated['organization'] ?? null,
+            'dietary_needs' => $userValidated['dietary_needs'] ?? null,
             // New enhanced participant fields
             'pronoun' => $userValidated['pronoun'] ?? null,
-            'contact_no' => $userValidated['contact_no'],
-            'whatsapp_no' => $userValidated['whatsapp_no'],
-            'field_of_work_study' => $userValidated['field_of_work_study'],
-            'designation' => $userValidated['designation'],
-            'organization_institution' => $userValidated['organization_institution'],
+            'contact_no' => $userValidated['contact_no'] ?? null,
+            'whatsapp_no' => $userValidated['whatsapp_no'] ?? null,
+            'field_of_work_study' => $userValidated['field_of_work_study'] ?? null,
+            'designation' => $userValidated['designation'] ?? null,
+            'organization_institution' => $userValidated['organization_institution'] ?? null,
             'is_student' => $userValidated['is_student'] ?? null,
             'year' => $userValidated['year'] ?? null,
             'department_name' => $userValidated['department_name'] ?? null,
@@ -325,11 +329,91 @@ class ParticipantController extends Controller
         $participantValidated['user_id'] = $user->id;
         $participantValidated['serial_number'] = $serialNumber;
         $participantValidated['travel_intent'] = $request->travel_intent == '1' ? true : false;
+        $participantValidated['hashtags'] = $request->hashtags_input ?? null;
 
         // Create the participant
-        Participant::create($participantValidated);
+        $participant = Participant::create($participantValidated);
         
-        return redirect()->route('participants.index')->with('success', 'Participant created successfully.');
+        // Send welcome email to the participant
+        try {
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            $conference = \App\Models\Conference::find($participantValidated['conference_id']);
+            $participantType = \App\Models\ParticipantType::find($participantValidated['participant_type_id']);
+            
+            $subject = "Welcome to " . ($conference->name ?? 'the Conference') . " - Registration Confirmed";
+            
+            $emailBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;'>
+                    <div style='background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                            <h1 style='color: #1f2937; margin: 0; font-size: 28px;'>Welcome to " . ($conference->name ?? 'the Conference') . "!</h1>
+                            <p style='color: #6b7280; margin: 10px 0 0 0; font-size: 16px;'>Your registration has been successfully confirmed</p>
+                        </div>
+                        
+                        <div style='background-color: #f0f9ff; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3b82f6;'>
+                            <h3 style='color: #1e40af; margin: 0 0 10px 0; font-size: 18px;'>Registration Details</h3>
+                            <p style='margin: 5px 0; color: #374151;'><strong>Name:</strong> " . $user->first_name . " " . $user->last_name . "</p>
+                            <p style='margin: 5px 0; color: #374151;'><strong>Email:</strong> " . $user->email . "</p>
+                            <p style='margin: 5px 0; color: #374151;'><strong>Participant Type:</strong> " . ($participantType->name ?? 'N/A') . "</p>
+                            <p style='margin: 5px 0; color: #374151;'><strong>Serial Number:</strong> " . $serialNumber . "</p>
+                        </div>
+                        
+                        <div style='margin: 30px 0;'>
+                            <h3 style='color: #1f2937; margin: 0 0 15px 0; font-size: 18px;'>Next Steps</h3>
+                            <ul style='color: #374151; line-height: 1.6; padding-left: 20px;'>
+                                <li>Keep this email for your records</li>
+                                <li>Check your email regularly for conference updates</li>
+                                <li>Complete your profile with additional information if needed</li>
+                                <li>Contact us if you have any questions</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 30px 0; text-align: center;'>
+                            <a href='" . route('participants.show', $participant) . "' 
+                               style='background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                                View Your Profile
+                            </a>
+                        </div>
+                        
+                        <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                            If you have any questions about your registration, please contact our support team.
+                        </p>
+                        
+                        <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                        <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                            This is an automated notification from the CGS Events management system.
+                        </p>
+                    </div>
+                </div>
+            ";
+            
+            $emailTrackingService->sendTrackedEmailViaGmail(
+                $user->email,
+                $subject,
+                $emailBody,
+                'participant_creation',
+                auth()->user(),
+                $conference,
+                'Participant',
+                $participant->id,
+                'participant_welcome_notification'
+            );
+            
+            \Log::info('Participant welcome email sent', [
+                'participant_id' => $participant->id,
+                'user_email' => $user->email,
+                'conference_id' => $conference->id ?? null
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send participant welcome email', [
+                'participant_id' => $participant->id,
+                'user_email' => $user->email,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        return redirect()->route('participants.index')->with('success', 'Participant created successfully and welcome email sent.');
     }
 
     // Show participant details
@@ -395,12 +479,23 @@ class ParticipantController extends Controller
                 'first_name' => 'required|string|max:50',
                 'last_name' => 'required|string|max:50',
                 'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
-                // Enhanced participant fields
-                'gender' => 'nullable|in:male,female,prefer_not_to_say',
-                'contact_no' => 'nullable|string|max:20',
-                'whatsapp_no' => 'nullable|string|max:20',
-                'date_of_birth' => 'nullable|date',
-                'address' => 'nullable|string|max:500',
+            // Enhanced participant fields
+            'gender' => 'nullable|in:male,female,prefer_not_to_say',
+            'contact_no' => 'nullable|string|max:20',
+            'whatsapp_no' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date',
+            'address' => 'nullable|string|max:500',
+            'field_of_work_study' => 'nullable|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'organization_institution' => 'nullable|string|max:255',
+            'is_student' => 'nullable|boolean',
+            'year' => 'nullable|in:honors_final_year,masters',
+            'department_name' => 'nullable|string|max:255',
+            'institution_name' => 'nullable|string|max:255',
+            'home_district' => 'nullable|string|max:100',
+            'how_found_bobc' => 'nullable|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
+            'attended_previous_bobc' => 'nullable|boolean',
+            'expertise_interests' => 'nullable|string|max:1000',
                 // Media fields (if participant type is press)
                 'media_type' => 'nullable|in:print,television,online_portal',
                 'media_designation' => 'nullable|in:reporter,camera_crew,photographer',
@@ -478,6 +573,17 @@ class ParticipantController extends Controller
                 'whatsapp_no' => $userValidated['whatsapp_no'] ?? null,
                 'date_of_birth' => $userValidated['date_of_birth'] ?? null,
                 'address' => $userValidated['address'] ?? null,
+                'field_of_work_study' => $userValidated['field_of_work_study'] ?? null,
+                'designation' => $userValidated['designation'] ?? null,
+                'organization_institution' => $userValidated['organization_institution'] ?? null,
+                'is_student' => $userValidated['is_student'] ?? null,
+                'year' => $userValidated['year'] ?? null,
+                'department_name' => $userValidated['department_name'] ?? null,
+                'institution_name' => $userValidated['institution_name'] ?? null,
+                'home_district' => $userValidated['home_district'] ?? null,
+                'how_found_bobc' => $userValidated['how_found_bobc'] ?? null,
+                'attended_previous_bobc' => $userValidated['attended_previous_bobc'] ?? null,
+                'expertise_interests' => $userValidated['expertise_interests'] ?? null,
                 // Media fields
                 'media_type' => $userValidated['media_type'] ?? null,
                 'media_designation' => $userValidated['media_designation'] ?? null,

@@ -38,6 +38,78 @@ Route::get('/debug/participants/{conferenceId}', function($conferenceId) {
     return response()->json(['participants' => $participants]);
 });
 
+// Debug route for Gmail access testing
+Route::get('/debug/gmail-access', function() {
+    if (!Auth::check()) {
+        return response()->json(['error' => 'Not authenticated']);
+    }
+    
+    $user = Auth::user();
+    $roles = $user->roles->pluck('name')->toArray();
+    
+    return response()->json([
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'roles' => $roles,
+        'has_admin' => $user->hasRole('admin'),
+        'has_superadmin' => $user->hasRole('superadmin'),
+        'has_any_admin' => $user->hasRole('admin') || $user->hasRole('superadmin')
+    ]);
+});
+
+// Debug route to test middleware behavior
+Route::get('/debug/middleware-test', function() {
+    if (!Auth::check()) {
+        return response()->json(['error' => 'Not authenticated']);
+    }
+    
+    $user = Auth::user();
+    $roles = $user->roles->pluck('name')->toArray();
+    
+    // Simulate the middleware logic
+    $hasAdmin = $user->hasRole('admin');
+    $hasSuperAdmin = $user->hasRole('superadmin');
+    $hasAnyAdmin = $hasAdmin || $hasSuperAdmin;
+    
+    return response()->json([
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'roles' => $roles,
+        'has_admin' => $hasAdmin,
+        'has_superadmin' => $hasSuperAdmin,
+        'has_any_admin' => $hasAnyAdmin,
+        'would_redirect' => !$hasAnyAdmin,
+        'redirect_target' => !$hasAnyAdmin ? 'participant-dashboard' : 'none'
+    ]);
+});
+
+// Simple test route to check if server is working
+Route::get('/test', function() {
+    return response()->json(['status' => 'Server is working', 'time' => now()]);
+});
+
+// Test route to check redirect behavior
+Route::get('/test-redirect', function() {
+    return response()->json([
+        'message' => 'No redirect loop here!',
+        'time' => now(),
+        'url' => request()->url()
+    ]);
+});
+
+// Force cache clear route
+Route::get('/clear-cache', function() {
+    \Artisan::call('config:clear');
+    \Artisan::call('route:clear');
+    \Artisan::call('view:clear');
+    \Artisan::call('cache:clear');
+    
+    return response()->json([
+        'message' => 'All caches cleared successfully!',
+        'time' => now()
+    ]);
+});
+
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'role.redirect'])->name('dashboard');
 Route::get('/participant-dashboard', [\App\Http\Controllers\ParticipantDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('participant-dashboard');
 
@@ -49,6 +121,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::get('/participant-stats', [\App\Http\Controllers\DashboardController::class, 'getParticipantStats'])->name('participant-stats');
     Route::get('/speaker-stats', [\App\Http\Controllers\DashboardController::class, 'getSpeakerStats'])->name('speaker-stats');
     Route::get('/summary-stats', [\App\Http\Controllers\DashboardController::class, 'getSummaryStats'])->name('summary-stats');
+    Route::get('/activities', [\App\Http\Controllers\DashboardController::class, 'activities'])->name('activities');
 });
 
 Route::get('/dashboard-tasker', [\App\Http\Controllers\TaskerDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard.tasker');
@@ -171,16 +244,36 @@ Route::get('/notifications/{notification}/data', function (\App\Models\Notificat
 // Notification routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/create', [\App\Http\Controllers\NotificationController::class, 'create'])->name('notifications.create');
-    Route::post('/notifications', [\App\Http\Controllers\NotificationController::class, 'store'])->name('notifications.store');
     Route::get('/notifications/{notification}/data', [\App\Http\Controllers\NotificationController::class, 'getNotificationData'])->name('notifications.data');
     Route::patch('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::patch('/notifications/{notification}/unread', [\App\Http\Controllers\NotificationController::class, 'markAsUnread'])->name('notifications.mark-unread');
     Route::patch('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
     Route::get('/notifications/recent', [\App\Http\Controllers\NotificationController::class, 'getRecentNotifications'])->name('notifications.recent');
+});
+
+// Admin-only notification creation routes
+Route::middleware(['auth', 'verified', 'admin.access'])->group(function () {
+    Route::get('/notifications/create', [\App\Http\Controllers\NotificationController::class, 'create'])->name('notifications.create');
+    Route::post('/notifications', [\App\Http\Controllers\NotificationController::class, 'store'])->name('notifications.store');
+});
+
+// API endpoint to fetch users by conference
+Route::get('/api/conferences/{conference}/users', function(\App\Models\Conference $conference) {
+    $users = $conference->participants()->with('user')->get()->map(function($participant) {
+        return [
+            'id' => $participant->user->id,
+            'first_name' => $participant->user->first_name,
+            'last_name' => $participant->user->last_name,
+            'email' => $participant->user->email,
+        ];
+    });
     
-    // Add route for notification actions (clicking on notifications)
-    Route::get('/notifications/{notification}/action', function (\App\Models\Notification $notification) {
+    return response()->json($users);
+})->name('api.conferences.users');
+    
+// Add route for notification actions (clicking on notifications)
+Route::get('/notifications/{notification}/action', function (\App\Models\Notification $notification) {
         // Ensure the notification belongs to the authenticated user
         if ($notification->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');
@@ -229,20 +322,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Default fallback to notifications index
         return redirect()->route('notifications.index');
     })->name('notifications.action');
-});
 
 Route::middleware('auth')->group(function () {
+    Route::get('/tasks/export', [\App\Http\Controllers\TaskController::class, 'export'])->name('tasks.export');
+    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('conferences', \App\Http\Controllers\ConferenceController::class);
+    Route::get('/conferences-export', [\App\Http\Controllers\ConferenceController::class, 'export'])->name('conferences.export');
     Route::resource('participants', \App\Http\Controllers\ParticipantController::class);
     Route::resource('sessions', \App\Http\Controllers\SessionController::class);
     Route::get('/sessions/participants/by-conference', [\App\Http\Controllers\SessionController::class, 'getParticipantsByConference'])->name('sessions.participants.by-conference');
+    Route::get('/sessions/export', [\App\Http\Controllers\SessionController::class, 'export'])->name('sessions.export');
     
     Route::resource('tasks', \App\Http\Controllers\TaskController::class);
     Route::patch('/tasks/{task}/status', [\App\Http\Controllers\TaskController::class, 'updateStatus'])->name('tasks.update-status');
+    Route::get('/tasks/test-export', function() { return 'Test export route works'; })->name('tasks.test-export');
     Route::resource('notifications', \App\Http\Controllers\NotificationController::class);
     Route::get('/speakers', [\App\Http\Controllers\SpeakerController::class, 'index'])->name('speakers.index');
     Route::get('/my-profile', [\App\Http\Controllers\ParticipantController::class, 'profile'])->name('participants.profile');
@@ -362,9 +459,76 @@ Route::middleware(['auth', 'admin.access'])->group(function () {
     Route::get('/gmail/participants', [GoogleController::class, 'getParticipants'])->name('gmail.participants');
 });
 
+// TEMPORARY: Bypass Gmail route for testing
+Route::get('/gmail-working', [GoogleController::class, 'showGmailThreads'])->middleware('auth')->name('gmail.working');
+
+// Temporary Gmail route without middleware for testing
+Route::get('/gmail-test', [GoogleController::class, 'showGmailThreads'])->name('gmail.test');
+
+// Simple Gmail route with just auth middleware
+Route::get('/gmail-simple', [GoogleController::class, 'showGmailThreads'])->middleware('auth')->name('gmail.simple');
+
+// Completely isolated Gmail test route
+Route::get('/gmail-debug', function() {
+    if (!Auth::check()) {
+        return response()->json(['error' => 'Not authenticated', 'redirect_to' => 'login']);
+    }
+    
+    $user = Auth::user();
+    $roles = $user->roles->pluck('name')->toArray();
+    $hasAdmin = $user->hasRole('admin');
+    $hasSuperAdmin = $user->hasRole('superadmin');
+    
+    return response()->json([
+        'status' => 'success',
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'roles' => $roles,
+        'has_admin' => $hasAdmin,
+        'has_superadmin' => $hasSuperAdmin,
+        'has_any_admin' => $hasAdmin || $hasSuperAdmin,
+        'message' => 'This route works without redirect loops!'
+    ]);
+});
+
+// Completely bypassed Gmail route - no middleware at all
+Route::get('/gmail-bypass', function() {
+    return view('gmail.index', [
+        'threads' => [],
+        'nextPageToken' => null,
+        'maxResults' => 30,
+        'searchQuery' => '',
+        'needsConnection' => true,
+        'bypass_test' => true
+    ]);
+});
+
+// Test role assignment
+Route::get('/test-roles', function() {
+    $user = User::where('email', 'conferencescgs@gmail.com')->first();
+    if (!$user) {
+        return response()->json(['error' => 'User not found']);
+    }
+    
+    $roles = $user->roles->pluck('name')->toArray();
+    $hasSuperAdmin = $user->hasRole('superadmin');
+    $hasAdmin = $user->hasRole('admin');
+    
+    return response()->json([
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'roles' => $roles,
+        'has_superadmin' => $hasSuperAdmin,
+        'has_admin' => $hasAdmin,
+        'role_count' => $user->roles->count()
+    ]);
+});
+
 // Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');
 
 Route::get('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'show'])->name('bulk.email');
+Route::post('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'send'])->name('bulk.email.send');
+Route::get('/bulk-email/participants', [App\Http\Controllers\BulkEmailController::class, 'getParticipants'])->name('bulk.email.participants');
 
 // Load authentication routes if present
 if (file_exists(__DIR__.'/auth.php')) {

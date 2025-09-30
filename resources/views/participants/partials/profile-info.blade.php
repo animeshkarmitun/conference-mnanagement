@@ -102,6 +102,21 @@
                 @enderror
             </div>
             <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Pronoun</label>
+                <select name="pronoun" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('pronoun') border-red-300 @enderror">
+                    <option value="">Select Pronoun</option>
+                    <option value="he_him" {{ old('pronoun', $participant->user->pronoun) == 'he_him' ? 'selected' : '' }}>He/Him</option>
+                    <option value="she_her" {{ old('pronoun', $participant->user->pronoun) == 'she_her' ? 'selected' : '' }}>She/Her</option>
+                    <option value="they_them" {{ old('pronoun', $participant->user->pronoun) == 'they_them' ? 'selected' : '' }}>They/Them</option>
+                </select>
+                @error('pronoun')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Contact No</label>
                 <input type="tel" 
                        name="contact_no" 
@@ -112,9 +127,6 @@
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-        </div>
-
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp No</label>
                 <input type="tel" 
@@ -126,6 +138,9 @@
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
                 <input type="date" 
@@ -133,6 +148,42 @@
                        value="{{ old('date_of_birth', $participant->user->date_of_birth) }}" 
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('date_of_birth') border-red-300 @enderror">
                 @error('date_of_birth')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Field of Work/Study</label>
+                <input type="text" 
+                       name="field_of_work_study" 
+                       value="{{ old('field_of_work_study', $participant->user->field_of_work_study) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('field_of_work_study') border-red-300 @enderror"
+                       placeholder="e.g., Computer Science, Medicine, Engineering">
+                @error('field_of_work_study')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+                <input type="text" 
+                       name="designation" 
+                       value="{{ old('designation', $participant->user->designation) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('designation') border-red-300 @enderror"
+                       placeholder="e.g., Software Engineer, Professor, Student">
+                @error('designation')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Organization/Institution</label>
+                <input type="text" 
+                       name="organization_institution" 
+                       value="{{ old('organization_institution', $participant->user->organization_institution) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('organization_institution') border-red-300 @enderror"
+                       placeholder="Your current organization or institution">
+                @error('organization_institution')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
@@ -145,6 +196,104 @@
                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('address') border-red-300 @enderror"
                       placeholder="Your full address">{{ old('address', $participant->user->address) }}</textarea>
             @error('address')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Home District</label>
+                <input type="text" 
+                       name="home_district" 
+                       value="{{ old('home_district', $participant->user->home_district) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('home_district') border-red-300 @enderror"
+                       placeholder="e.g., Dhaka, Chittagong, Sylhet">
+                @error('home_district')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">How did you find out about BoBC?</label>
+                <select name="how_found_bobc" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('how_found_bobc') border-red-300 @enderror">
+                    <option value="">Select Option</option>
+                    <option value="social_media" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'social_media' ? 'selected' : '' }}>Social Media</option>
+                    <option value="bobc_cgs_website" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'bobc_cgs_website' ? 'selected' : '' }}>BoBC/CGS Website</option>
+                    <option value="friend_teacher_department" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'friend_teacher_department' ? 'selected' : '' }}>Friend/Teacher/Department</option>
+                    <option value="traditional_media" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'traditional_media' ? 'selected' : '' }}>Traditional Media</option>
+                    <option value="other" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'other' ? 'selected' : '' }}>Other</option>
+                </select>
+                @error('how_found_bobc')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Are you a student?</label>
+            <div class="flex items-center space-x-4">
+                <label class="inline-flex items-center">
+                    <input type="radio" name="is_student" value="1" {{ old('is_student', $participant->user->is_student) == '1' ? 'checked' : '' }} class="form-radio text-blue-600" onchange="toggleStudentFields()">
+                    <span class="ml-2">Yes</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="radio" name="is_student" value="0" {{ old('is_student', $participant->user->is_student) == '0' ? 'checked' : '' }} class="form-radio text-blue-600" onchange="toggleStudentFields()">
+                    <span class="ml-2">No</span>
+                </label>
+            </div>
+            @error('is_student')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div id="student-fields" class="mt-4 {{ old('is_student', $participant->user->is_student) == '1' ? '' : 'hidden' }}">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                    <select name="year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('year') border-red-300 @enderror">
+                        <option value="">Select Year</option>
+                        <option value="honors_final_year" {{ old('year', $participant->user->year) == 'honors_final_year' ? 'selected' : '' }}>Honors Final Year</option>
+                        <option value="masters" {{ old('year', $participant->user->year) == 'masters' ? 'selected' : '' }}>Master's</option>
+                    </select>
+                    @error('year')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department Name</label>
+                    <input type="text" 
+                           name="department_name" 
+                           value="{{ old('department_name', $participant->user->department_name) }}" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('department_name') border-red-300 @enderror"
+                           placeholder="e.g., Computer Science">
+                    @error('department_name')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Institution Name</label>
+                <input type="text" 
+                       name="institution_name" 
+                       value="{{ old('institution_name', $participant->user->institution_name) }}" 
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('institution_name') border-red-300 @enderror"
+                       placeholder="Your university or college name">
+                @error('institution_name')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Expertise/Interests</label>
+            <textarea name="expertise_interests" 
+                      rows="4" 
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 transition-colors duration-200 @error('expertise_interests') border-red-300 @enderror"
+                      placeholder="Provide your expertise/interests aligning with the theme of BoBC (200 words max)" 
+                      maxlength="1000">{{ old('expertise_interests', $participant->user->expertise_interests) }}</textarea>
+            <div class="mt-1 text-xs text-gray-500 text-right">
+                <span id="expertise-char-count">0</span>/1000 characters
+            </div>
+            @error('expertise_interests')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
@@ -604,6 +753,25 @@ document.addEventListener('DOMContentLoaded', function() {
         bioTextarea.addEventListener('input', updateBioCharCount);
         updateBioCharCount(); // Initial count
     }
+
+    // Expertise interests character counter
+    const expertiseTextarea = document.querySelector('textarea[name="expertise_interests"]');
+    const expertiseCharCount = document.getElementById('expertise-char-count');
+    
+    if (expertiseTextarea && expertiseCharCount) {
+        function updateExpertiseCharCount() {
+            const length = expertiseTextarea.value.length;
+            expertiseCharCount.textContent = length;
+            if (length > 900) {
+                expertiseCharCount.classList.add('text-red-500');
+            } else {
+                expertiseCharCount.classList.remove('text-red-500');
+            }
+        }
+        
+        expertiseTextarea.addEventListener('input', updateExpertiseCharCount);
+        updateExpertiseCharCount(); // Initial count
+    }
     
     // File upload validation and preview
     const profilePictureInput = document.querySelector('input[name="profile_picture"]');
@@ -703,9 +871,41 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.disabled = true;
     });
     
+    // Student fields toggle
+    window.toggleStudentFields = function() {
+        const studentFields = document.getElementById('student-fields');
+        const isStudentRadios = document.querySelectorAll('input[name="is_student"]');
+        const isStudent = Array.from(isStudentRadios).find(radio => radio.checked);
+        
+        if (studentFields) {
+            if (isStudent && isStudent.value === '1') {
+                studentFields.classList.remove('hidden');
+                // Make student fields required
+                const yearSelect = document.querySelector('select[name="year"]');
+                const deptInput = document.querySelector('input[name="department_name"]');
+                const instInput = document.querySelector('input[name="institution_name"]');
+                
+                if (yearSelect) yearSelect.required = true;
+                if (deptInput) deptInput.required = true;
+                if (instInput) instInput.required = true;
+            } else {
+                studentFields.classList.add('hidden');
+                // Make student fields not required
+                const yearSelect = document.querySelector('select[name="year"]');
+                const deptInput = document.querySelector('input[name="department_name"]');
+                const instInput = document.querySelector('input[name="institution_name"]');
+                
+                if (yearSelect) yearSelect.required = false;
+                if (deptInput) deptInput.required = false;
+                if (instInput) instInput.required = false;
+            }
+        }
+    };
+
     // Initialize all event listeners
     toggleVisaIssueDescription();
     toggleDietaryOther();
+    toggleStudentFields();
     
     // Listen for changes
     visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);

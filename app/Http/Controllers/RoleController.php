@@ -12,17 +12,17 @@ class RoleController extends Controller
     {
         $status = $request->get('status', 'system'); // Default to system roles
         
-        $query = Role::with(['users']);
+        $query = Role::with(['users'])->where('name', '!=', 'superadmin');
         
         // Filter roles based on status
         switch ($status) {
             case 'system':
-                $query->whereIn('name', ['superadmin', 'admin'])
+                $query->whereIn('name', ['admin'])
                       ->orderBy('name', 'asc');
                 break;
                 
             case 'user':
-                $query->whereNotIn('name', ['superadmin', 'admin'])
+                $query->whereNotIn('name', ['admin'])
                       ->orderBy('name', 'asc');
                 break;
                 
@@ -34,11 +34,11 @@ class RoleController extends Controller
         
         $roles = $query->paginate(10);
         
-        // Get role counts for each category
+        // Get role counts for each category (excluding superadmin)
         $roleCounts = [
-            'system' => Role::whereIn('name', ['superadmin', 'admin'])->count(),
+            'system' => Role::whereIn('name', ['admin'])->count(),
             'user' => Role::whereNotIn('name', ['superadmin', 'admin'])->count(),
-            'all' => Role::count(),
+            'all' => Role::where('name', '!=', 'superadmin')->count(),
         ];
         
         return view('roles.index', compact('roles', 'roleCounts', 'status'));

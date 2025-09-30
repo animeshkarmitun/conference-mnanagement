@@ -32,7 +32,7 @@ class User extends Authenticatable
         'dietary_needs',
         'google_token',
         'email_verified_at',
-        // New enhanced participant fields
+        // Enhanced participant fields
         'photo',
         'pronoun',
         'contact_no',
@@ -152,5 +152,17 @@ class User extends Authenticatable
     public function hasRole($roleName)
     {
         return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    // Helper: Check if user has any roles assigned
+    public function hasAnyRole()
+    {
+        return $this->roles()->count() > 0;
+    }
+
+    // Helper: Get user's primary role (first role)
+    public function getPrimaryRole()
+    {
+        return $this->roles()->first();
     }
 }

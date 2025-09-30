@@ -88,15 +88,15 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="photo" class="block text-sm font-medium text-gray-700">Photo *</label>
-                    <input type="file" name="photo" id="photo" accept="image/*" required class="mt-1 block w-full text-sm text-gray-500">
-                    <p class="text-xs text-gray-500 mt-1">1200x800px, 400kb max</p>
+                    <label for="photo" class="block text-sm font-medium text-gray-700">Photo (Optional)</label>
+                    <input type="file" name="photo" id="photo" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
+                    <p class="text-xs text-gray-500 mt-1">Max 1200x800px, 400kb max</p>
                     @error('photo')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
                 <div class="mb-4">
-                    <label for="gender" class="block text-sm font-medium text-gray-700">Gender *</label>
-                    <select name="gender" id="gender" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="gender" class="block text-sm font-medium text-gray-700">Gender (Optional)</label>
+                    <select name="gender" id="gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Gender</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -117,14 +117,14 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="contact_no" class="block text-sm font-medium text-gray-700">Contact No *</label>
-                    <input type="tel" name="contact_no" id="contact_no" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="+8801234567890" value="+8801234567890">
+                    <label for="contact_no" class="block text-sm font-medium text-gray-700">Contact No (Optional)</label>
+                    <input type="tel" name="contact_no" id="contact_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="+8801234567890" value="+8801234567890">
                     @error('contact_no')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
                 <div class="mb-4">
-                    <label for="whatsapp_no" class="block text-sm font-medium text-gray-700">WhatsApp No *</label>
-                    <input type="tel" name="whatsapp_no" id="whatsapp_no" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="+8801234567890" value="+8801234567890">
+                    <label for="whatsapp_no" class="block text-sm font-medium text-gray-700">WhatsApp No (Optional)</label>
+                    <input type="tel" name="whatsapp_no" id="whatsapp_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="+8801234567890" value="+8801234567890">
                     @error('whatsapp_no')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
@@ -135,27 +135,27 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Date of Birth *</label>
-                    <input type="date" name="date_of_birth" id="date_of_birth" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Date of Birth (Optional)</label>
+                    <input type="date" name="date_of_birth" id="date_of_birth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     <p class="text-xs text-gray-500 mt-1">Age will be calculated automatically</p>
                     @error('date_of_birth')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
                 <div class="mb-4">
-                    <label for="field_of_work_study" class="block text-sm font-medium text-gray-700">Field of Work/Study *</label>
-                    <input type="text" name="field_of_work_study" id="field_of_work_study" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Computer Science, Medicine, Engineering">
+                    <label for="field_of_work_study" class="block text-sm font-medium text-gray-700">Field of Work/Study (Optional)</label>
+                    <input type="text" name="field_of_work_study" id="field_of_work_study" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Computer Science, Medicine, Engineering">
                     @error('field_of_work_study')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
                 <div class="mb-4">
-                    <label for="designation" class="block text-sm font-medium text-gray-700">Designation *</label>
-                    <input type="text" name="designation" id="designation" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Software Engineer, Professor, Student">
+                    <label for="designation" class="block text-sm font-medium text-gray-700">Designation (Optional)</label>
+                    <input type="text" name="designation" id="designation" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Software Engineer, Professor, Student">
                     @error('designation')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
                 <div class="mb-4">
-                    <label for="organization_institution" class="block text-sm font-medium text-gray-700">Organization/Institution *</label>
-                    <input type="text" name="organization_institution" id="organization_institution" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Your current organization or institution">
+                    <label for="organization_institution" class="block text-sm font-medium text-gray-700">Organization/Institution (Optional)</label>
+                    <input type="text" name="organization_institution" id="organization_institution" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Your current organization or institution">
                     @error('organization_institution')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -166,35 +166,6 @@
             <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Media Registration</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Name *</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="text" name="first_name" id="media_first_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="First Name">
-                        <input type="text" name="last_name" id="media_last_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Last Name">
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label for="photo" class="block text-sm font-medium text-gray-700">Photo *</label>
-                    <input type="file" name="photo" id="media_photo" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
-                    <p class="text-xs text-gray-500 mt-1">1200x800px, 400kb max</p>
-                </div>
-                <div class="mb-4">
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email *</label>
-                    <input type="email" name="email" id="media_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                </div>
-                <div class="mb-4">
-                    <label for="contact_no" class="block text-sm font-medium text-gray-700">Contact No *</label>
-                    <input type="tel" name="contact_no" id="media_contact_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                </div>
-                <div class="mb-4">
-                    <label for="gender" class="block text-sm font-medium text-gray-700">Gender *</label>
-                    <select name="gender" id="media_gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                        <option value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="prefer_not_to_say">Prefer Not to Say</option>
-                    </select>
-                </div>
-                <div class="mb-4">
                     <label for="media_type" class="block text-sm font-medium text-gray-700">Type of Media *</label>
                     <select name="media_type" id="media_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Type</option>
@@ -202,10 +173,6 @@
                         <option value="television">Television</option>
                         <option value="online_portal">Online Portal</option>
                     </select>
-                </div>
-                <div class="mb-4">
-                    <label for="organization_institution" class="block text-sm font-medium text-gray-700">Organization *</label>
-                    <input type="text" name="organization_institution" id="media_organization" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                 </div>
                 <div class="mb-4">
                     <label for="media_designation" class="block text-sm font-medium text-gray-700">Designation *</label>
@@ -222,34 +189,10 @@
         <!-- Speaker Sections (shown when category is 'presenter') -->
         <div id="speaker-section" class="hidden">
             <div class="mb-8 p-6 bg-gray-50 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Personal Information (Speaker)</h3>
+                <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Speaker Additional Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Name *</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <input type="text" name="first_name" id="sp_first_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="First Name">
-                            <input type="text" name="last_name" id="sp_last_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Last Name">
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label for="gender" class="block text-sm font-medium text-gray-700">Gender *</label>
-                        <select name="gender" id="sp_gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                            <option value="">Select Gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="prefer_not_to_say">Prefer Not to Say</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email *</label>
-                        <input type="email" name="email" id="sp_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="contact_no" class="block text-sm font-medium text-gray-700">Contact No *</label>
-                        <input type="tel" name="contact_no" id="sp_contact_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="other_contact_type" class="block text-sm font-medium text-gray-700">Other Contact Number *</label>
+                        <label for="other_contact_type" class="block text-sm font-medium text-gray-700">Other Contact Number (Optional)</label>
                         <div class="grid grid-cols-2 gap-3">
                             <select name="other_contact_type" id="other_contact_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                                 <option value="">Select</option>
@@ -261,15 +204,7 @@
                         </div>
                     </div>
                     <div class="mb-4">
-                        <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Date of Birth *</label>
-                        <input type="date" name="date_of_birth" id="sp_date_of_birth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    </div>
-                    <div class="mb-4 md:col-span-2">
-                        <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
-                        <textarea name="address" id="sp_address" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
-                    </div>
-                    <div class="mb-4">
-                        <label for="dietary_requirements" class="block text-sm font-medium text-gray-700">Dietary Requirements *</label>
+                        <label for="dietary_requirements" class="block text-sm font-medium text-gray-700">Dietary Requirements (Optional)</label>
                         <select name="dietary_requirements" id="dietary_requirements" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                             <option value="">Select</option>
                             <option value="veg">Veg</option>
@@ -289,7 +224,7 @@
                 <h3 class="text-lg font-semibold mb-4 text-green-800 border-b border-green-200 pb-2">Professional Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="mb-4">
-                        <label for="sector" class="block text-sm font-medium text-gray-700">Sector *</label>
+                        <label for="sector" class="block text-sm font-medium text-gray-700">Sector (Optional)</label>
                         <select name="sector" id="sector" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                             <option value="">Select Sector</option>
                             <option value="academia">Academia</option>
@@ -302,23 +237,23 @@
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label for="current_designation" class="block text-sm font-medium text-gray-700">Current Designation *</label>
+                        <label for="current_designation" class="block text-sm font-medium text-gray-700">Current Designation (Optional)</label>
                         <input type="text" name="current_designation" id="current_designation" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     </div>
                     <div class="mb-4">
-                        <label for="organization" class="block text-sm font-medium text-gray-700">Organization *</label>
+                        <label for="organization" class="block text-sm font-medium text-gray-700">Organization (Optional)</label>
                         <input type="text" name="organization" id="sp_organization" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     </div>
                     <div class="mb-4 md:col-span-2">
-                        <label for="biography" class="block text-sm font-medium text-gray-700">Biography *</label>
+                        <label for="biography" class="block text-sm font-medium text-gray-700">Biography (Optional)</label>
                         <textarea name="biography" id="biography" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
                     </div>
                     <div class="mb-4 md:col-span-2">
-                        <label for="areas_of_expertise" class="block text-sm font-medium text-gray-700">Areas of Expertise *</label>
+                        <label for="areas_of_expertise" class="block text-sm font-medium text-gray-700">Areas of Expertise (Optional)</label>
                         <textarea name="areas_of_expertise" id="areas_of_expertise" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
                     </div>
                     <div class="mb-4 md:col-span-2">
-                        <label for="preferred_topic" class="block text-sm font-medium text-gray-700">Preferred topic to speak *</label>
+                        <label for="preferred_topic" class="block text-sm font-medium text-gray-700">Preferred topic to speak (Optional)</label>
                         <input type="text" name="preferred_topic" id="preferred_topic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                     </div>
                 </div>
@@ -346,16 +281,16 @@
                 <h3 class="text-lg font-semibold mb-4 text-yellow-800 border-b border-yellow-200 pb-2">Supporting Documents</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="mb-4">
-                        <label for="resume" class="block text-sm font-medium text-gray-700">CV/ Resume (PDF) *</label>
+                        <label for="resume" class="block text-sm font-medium text-gray-700">CV/ Resume (PDF) (Optional)</label>
                         <input type="file" name="resume" id="sp_resume" accept="application/pdf" class="mt-1 block w-full text-sm text-gray-500">
                     </div>
                     <div class="mb-4">
-                        <label for="photo" class="block text-sm font-medium text-gray-700">Photo *</label>
+                        <label for="photo" class="block text-sm font-medium text-gray-700">Photo (Optional)</label>
                         <input type="file" name="photo" id="sp_photo" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
-                        <p class="text-xs text-gray-500 mt-1">1200x800px, 400kb</p>
+                        <p class="text-xs text-gray-500 mt-1">Max 1200x800px, 400kb max</p>
                     </div>
                     <div class="mb-4">
-                        <label for="has_valid_passport" class="block text-sm font-medium text-gray-700">Do you have a current/valid passport? *</label>
+                        <label for="has_valid_passport" class="block text-sm font-medium text-gray-700">Do you have a current/valid passport? (Optional)</label>
                         <select name="has_valid_passport" id="has_valid_passport" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                             <option value="">Select</option>
                             <option value="1">Yes</option>
@@ -363,7 +298,7 @@
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label for="had_visa_issue_bd" class="block text-sm font-medium text-gray-700">Did you previously face issues regarding a visa to Bangladesh? *</label>
+                        <label for="had_visa_issue_bd" class="block text-sm font-medium text-gray-700">Did you previously face issues regarding a visa to Bangladesh? (Optional)</label>
                         <select name="had_visa_issue_bd" id="had_visa_issue_bd" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                             <option value="">Select</option>
                             <option value="1">Yes</option>
@@ -438,8 +373,8 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="home_district" class="block text-sm font-medium text-gray-700">Home District *</label>
-                    <input type="text" name="home_district" id="home_district" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Dhaka, Chittagong, Sylhet">
+                    <label for="home_district" class="block text-sm font-medium text-gray-700">Home District (Optional)</label>
+                    <input type="text" name="home_district" id="home_district" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Dhaka, Chittagong, Sylhet">
                     @error('home_district')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -450,8 +385,8 @@
             <h3 class="text-lg font-semibold mb-4 text-yellow-800 border-b border-yellow-200 pb-2">Document Upload</h3>
             
             <div class="mb-4">
-                <label for="nid_passport_birth_certificate" class="block text-sm font-medium text-gray-700">NID/Passport/Birth Certificate *</label>
-                <input type="file" name="nid_passport_birth_certificate" id="nid_passport_birth_certificate" accept="image/*" required class="mt-1 block w-full text-sm text-gray-500">
+                <label for="nid_passport_birth_certificate" class="block text-sm font-medium text-gray-700">NID/Passport/Birth Certificate (Optional)</label>
+                <input type="file" name="nid_passport_birth_certificate" id="nid_passport_birth_certificate" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
                 <p class="text-xs text-gray-500 mt-1">Photo max 300kb</p>
                 @error('nid_passport_birth_certificate')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
@@ -463,8 +398,8 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
-                    <label for="how_found_bobc" class="block text-sm font-medium text-gray-700">How did you find out about BoBC? *</label>
-                    <select name="how_found_bobc" id="how_found_bobc" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="how_found_bobc" class="block text-sm font-medium text-gray-700">How did you find out about BoBC? (Optional)</label>
+                    <select name="how_found_bobc" id="how_found_bobc" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Option</option>
                         <option value="social_media">Social Media</option>
                         <option value="bobc_cgs_website">BoBC/CGS Website</option>
@@ -476,8 +411,8 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="attended_previous_bobc" class="block text-sm font-medium text-gray-700">Have you attended any previous BoBC? *</label>
-                    <select name="attended_previous_bobc" id="attended_previous_bobc" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="attended_previous_bobc" class="block text-sm font-medium text-gray-700">Have you attended any previous BoBC? (Optional)</label>
+                    <select name="attended_previous_bobc" id="attended_previous_bobc" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Option</option>
                         <option value="1">Yes</option>
                         <option value="0">No</option>
@@ -487,8 +422,8 @@
             </div>
             
             <div class="mb-4">
-                <label for="expertise_interests" class="block text-sm font-medium text-gray-700">Provide your expertise/interests aligning with the theme of BoBC *</label>
-                <textarea name="expertise_interests" id="expertise_interests" rows="4" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Please provide your expertise and interests (200 words max)" maxlength="1000"></textarea>
+                <label for="expertise_interests" class="block text-sm font-medium text-gray-700">Provide your expertise/interests aligning with the theme of BoBC (Optional)</label>
+                <textarea name="expertise_interests" id="expertise_interests" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Please provide your expertise and interests (200 words max)" maxlength="1000"></textarea>
                 <p class="text-xs text-gray-500 mt-1">Any use of AI in the answers would be banned from the conference in the future</p>
                 <div class="flex justify-between text-xs text-gray-500 mt-1">
                     <span>Word count: <span id="word-count">0</span>/200</span>
@@ -516,7 +451,7 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="resume" class="block text-sm font-medium text-gray-700">Resume/CV (Optional)</label>
+                    <label for="resume" class="block text-sm font-medium text-gray-700">Resume/CV <span id="resume-required-text">(Optional)</span></label>
                     <input type="file" name="resume" id="resume" accept="application/pdf,.doc,.docx" class="mt-1 block w-full text-sm text-gray-500">
                     @error('resume')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
@@ -553,8 +488,8 @@
         <!-- Conference registration details continue -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
-                    <label for="visa_status" class="block text-sm font-medium text-gray-700">Visa Status *</label>
-                    <select name="visa_status" id="visa_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="visa_status" class="block text-sm font-medium text-gray-700">Visa Status (Optional)</label>
+                    <select name="visa_status" id="visa_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="required">Required</option>
                         <option value="not_required">Not Required</option>
                         <option value="pending">Pending</option>
@@ -565,8 +500,8 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="registration_status" class="block text-sm font-medium text-gray-700">Registration Status *</label>
-                    <select name="registration_status" id="registration_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="registration_status" class="block text-sm font-medium text-gray-700">Registration Status (Optional)</label>
+                    <select name="registration_status" id="registration_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
@@ -599,10 +534,10 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Travel Intent *</label>
+                    <label class="block text-sm font-medium text-gray-700">Travel Intent (Optional)</label>
                     <div class="mt-2 flex items-center space-x-4">
                         <label class="inline-flex items-center">
-                            <input type="radio" name="travel_intent" value="1" required class="form-radio text-yellow-600">
+                            <input type="radio" name="travel_intent" value="1" class="form-radio text-yellow-600">
                             <span class="ml-2">Yes</span>
                         </label>
                         <label class="inline-flex items-center">
@@ -633,13 +568,40 @@
             </div>
         </div>
         
-        <div class="flex justify-end">
-            <a href="{{ route('participants.index') }}" class="mr-4 text-gray-600 hover:text-gray-900">Cancel</a>
-            <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold text-lg">Create Participant</button>
+        <!-- Action Buttons Section -->
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <div class="flex justify-end space-x-4">
+                <a href="{{ route('participants.index') }}" 
+                   class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-all duration-200 font-medium">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="inline-flex items-center px-8 py-3 modern-primary rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Create Participant
+                </button>
+            </div>
         </div>
     </form>
 </div>
 </div>
+
+<style>
+    /* Modern color scheme overrides */
+    .modern-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+    
+    .modern-primary:hover {
+        background: linear-gradient(135deg, #5855eb, #7c3aed);
+    }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -689,16 +651,28 @@ document.addEventListener('DOMContentLoaded', function() {
         // Toggle Media/Speaker sections
         const mediaSection = document.getElementById('media-section');
         const speakerSection = document.getElementById('speaker-section');
+        const resumeRequiredText = document.getElementById('resume-required-text');
+        const resumeInput = document.getElementById('resume');
+        
         if (mediaSection && speakerSection) {
             if (category === 'press') {
                 mediaSection.classList.remove('hidden');
                 speakerSection.classList.add('hidden');
+                // Resume is optional for all types
+                if (resumeRequiredText) resumeRequiredText.textContent = '(Optional)';
+                if (resumeInput) resumeInput.required = false;
             } else if (category === 'presenter') {
                 speakerSection.classList.remove('hidden');
                 mediaSection.classList.add('hidden');
+                // Resume is optional for all types
+                if (resumeRequiredText) resumeRequiredText.textContent = '(Optional)';
+                if (resumeInput) resumeInput.required = false;
             } else {
                 mediaSection.classList.add('hidden');
                 speakerSection.classList.add('hidden');
+                // Resume is optional for all types
+                if (resumeRequiredText) resumeRequiredText.textContent = '(Optional)';
+                if (resumeInput) resumeInput.required = false;
             }
         }
     }
