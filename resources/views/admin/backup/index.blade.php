@@ -333,11 +333,6 @@
 
 @section('content')
 <!-- UI Enhancement Test -->
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <strong>UI Enhanced!</strong> The backup management interface has been updated with modern design elements.
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
