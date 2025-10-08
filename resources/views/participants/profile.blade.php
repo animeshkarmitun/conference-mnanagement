@@ -24,7 +24,7 @@
         </div>
         <div class="mb-4">
             <span class="font-semibold text-gray-700">Travel Intent:</span>
-            <span>{{ $participant->travel_intent ? 'Yes' : 'No' }}</span>
+            <span>{{ ucfirst($participant->travel_intent ?? 'National') }}</span>
         </div>
         <div class="mb-4">
             <span class="font-semibold text-gray-700">Registration Status:</span>

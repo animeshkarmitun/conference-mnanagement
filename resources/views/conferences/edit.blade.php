@@ -202,8 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         id: {{ $s->id }},
                         title: @json($s->title),
                         description: @json($s->description),
-                        start_time: @json($s->start_time),
-                        end_time: @json($s->end_time),
+                        start_time: @json($s->start_time ? \Carbon\Carbon::parse($s->start_time)->format('Y-m-d\TH:i') : null),
+                        end_time: @json($s->end_time ? \Carbon\Carbon::parse($s->end_time)->format('Y-m-d\TH:i') : null),
                         venue_id: @json($s->venue_id),
                         seating_arrangement: @json($s->seating_arrangement),
                         participants_count: {{ $s->participants_count ?? 0 }},
@@ -263,10 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700">Description</label>
         <textarea id="session_description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600"></textarea>
-      </div>
-      <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Seating arrangement</label>
-        <textarea id="session_seating" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600" placeholder="Optional JSON or notes"></textarea>
       </div>
     </div>
     <div class="mt-6 flex items-center justify-end space-x-3">
@@ -357,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${outOfRange ? '<span class="text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-800">Out of range</span>' : ''}
         ${conflicts.length ? `<span class=\"text-xs px-2 py-0.5 rounded bg-red-100 text-red-800\" title=\"This session overlaps with another at the same venue.\">Overlaps</span>` : ''}
       </div>
-      <div class="text-sm text-gray-600">${s.start_time || ''} → ${s.end_time || ''}</div>
+      <div class="text-sm text-gray-600">${s.start_time ? new Date(s.start_time).toLocaleString() : ''} → ${s.end_time ? new Date(s.end_time).toLocaleString() : ''}</div>
       ${bounds ? `<div class=\"text-xs text-gray-500\">Conference window: ${bounds.text}</div>` : ''}
       <div class="text-xs text-gray-500">Venue ID: ${s.venue_id || '-'}</div>
       ${s.description ? `<div class="text-sm text-gray-700 mt-1">${s.description}</div>` : ''}
@@ -402,7 +398,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (hintEnd) hintEnd.textContent = '';
         }
         document.getElementById('session_description').value = data.description || '';
-        document.getElementById('session_seating').value = data.seating_arrangement || '';
         clearErrors();
         modal.classList.remove('hidden');
         setTimeout(() => document.getElementById('session_title').focus(), 0);
@@ -440,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const first = sessionDrafts[overlaps[0]];
                 const label = first?.title || `Session ${overlaps[0] + 1}`;
                 const err = document.getElementById('err_end');
-                err.textContent = `Overlaps at the same venue with "${label}" (${first?.start_time || ''} → ${first?.end_time || ''})${overlaps.length > 1 ? ` and ${overlaps.length - 1} more` : ''}.`;
+                err.textContent = `Overlaps at the same venue with "${label}" (${first?.start_time ? new Date(first.start_time).toLocaleString() : ''} → ${first?.end_time ? new Date(first.end_time).toLocaleString() : ''})${overlaps.length > 1 ? ` and ${overlaps.length - 1} more` : ''}.`;
                 err.classList.remove('hidden');
                 ok = false;
             }
@@ -456,7 +451,6 @@ document.addEventListener('DOMContentLoaded', function() {
             start_time: document.getElementById('session_start_time').value,
             end_time: document.getElementById('session_end_time').value,
             description: document.getElementById('session_description').value.trim(),
-            seating_arrangement: document.getElementById('session_seating').value.trim(),
         };
         if (editingIndex !== null) {
             const preserved = sessionDrafts[editingIndex];

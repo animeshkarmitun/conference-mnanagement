@@ -46,7 +46,6 @@ class ParticipantController extends Controller
                               ->orWhere('email', 'like', "%{$search}%")
                               ->orWhere('organization', 'like', "%{$search}%");
                 })
-                ->orWhere('serial_number', 'like', "%{$search}%")
                 ->orWhere('organization', 'like', "%{$search}%");
             });
         }
@@ -119,13 +118,11 @@ class ParticipantController extends Controller
                     $age = $dob ? \Carbon\Carbon::parse($dob)->age : '';
                     
                     fputcsv($file, [
-                        $participant->serial_number ?? '',
+                        $participant->id,
                         $user->first_name ?? '',
                         $user->last_name ?? '',
                         $user->email ?? '',
                         $user->gender ?? '',
-                        $user->nationality ?? '',
-                        $user->profession ?? '',
                         $age,
                         $participant->participantType->name ?? '',
                         $participant->category ?? '',
@@ -164,6 +161,7 @@ class ParticipantController extends Controller
     // Store new participant
     public function store(Request $request)
     {
+<<<<<<< Updated upstream
         // Validate user creation data
         $userValidated = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -173,32 +171,108 @@ class ParticipantController extends Controller
             'gender' => 'nullable|string|max:20',
             'nationality' => 'nullable|string|max:100',
             'profession' => 'nullable|string|max:100',
+=======
+        // Get participant type for conditional validation
+        $type = null;
+        if ($request->participant_type_id) {
+            $type = \App\Models\ParticipantType::find($request->participant_type_id);
+        }
+
+        // Build validation rules dynamically
+        $validationRules = [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'nullable|string|min:8',
+            // All other fields are optional
+            'gender' => 'nullable|in:male,female,prefer_not_to_say',
+>>>>>>> Stashed changes
             'date_of_birth' => 'nullable|date',
             'organization' => 'nullable|string|max:255',
             'dietary_needs' => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|max:2048',
+<<<<<<< Updated upstream
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 
         // Validate participant data
+=======
+            // Enhanced participant fields - all optional
+            'pronoun' => 'nullable|in:he_him,she_her,they_them',
+            'contact_no' => 'nullable|string|max:20',
+            'whatsapp_no' => 'nullable|string|max:20',
+            'field_of_work_study' => 'nullable|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'organization_institution' => 'nullable|string|max:255',
+            'is_student' => 'nullable|boolean',
+            'year' => 'nullable|in:honors_final_year,masters',
+            'department_name' => 'nullable|string|max:255',
+            'institution_name' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'home_district' => 'nullable|string|max:100',
+            'nid_passport_birth_certificate' => 'nullable|image|max:300',
+            'how_found_bobc' => 'nullable|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
+            'attended_previous_bobc' => 'nullable|boolean',
+            'expertise_interests' => 'nullable|string|max:1000',
+        ];
+
+        // Add conditional validation rules based on participant type
+        if ($type) {
+            if ($type->category === 'press') {
+                $validationRules['media_type'] = 'required|in:print,television,online_portal';
+            } elseif ($type->category === 'presenter') {
+                $validationRules['other_contact_type'] = 'nullable|in:whatsapp,telegram,signal';
+                $validationRules['other_contact_no'] = 'nullable|string|max:50';
+                $validationRules['dietary_requirements'] = 'nullable|in:veg,non_veg,vegan,others';
+                $validationRules['dietary_requirements_other'] = 'nullable|required_if:dietary_requirements,others|string|max:255';
+                $validationRules['sector'] = 'nullable|in:academia,government,international_organization,media,ngo,private,think_tank';
+                $validationRules['areas_of_expertise'] = 'nullable|string';
+                $validationRules['preferred_topic'] = 'nullable|string';
+                $validationRules['has_valid_passport'] = 'nullable|in:0,1';
+                $validationRules['had_visa_issue_bd'] = 'nullable|in:0,1';
+                $validationRules['visa_issue_explanation'] = 'nullable|required_if:had_visa_issue_bd,1|string';
+            }
+        }
+
+        // Single validation call
+        $userValidated = $request->validate($validationRules);
+
+        // Validate participant data - Only essential fields required
+>>>>>>> Stashed changes
         $participantValidated = $request->validate([
             'conference_id' => 'required|exists:conferences,id',
             'participant_type_id' => 'required|exists:participant_types,id',
             'visa_status' => 'required|in:required,not_required,pending,approved,issue',
             'visa_issue_description' => 'nullable|string|max:1000',
+<<<<<<< Updated upstream
             'travel_form_submitted' => 'boolean',
             'bio' => 'nullable|string',
             'approved' => 'boolean',
             'travel_intent' => 'required',
             'registration_status' => 'required',
+=======
+            'bio' => 'nullable|string',
+            'approved' => 'nullable|boolean',
+            'travel_intent' => 'nullable|in:national,international',
+            'registration_status' => 'nullable|in:pending,approved,rejected',
+>>>>>>> Stashed changes
             'category' => 'nullable|string|max:50',
         ]);
+
+        // Generate password if not provided
+        $password = $userValidated['password'];
+        $isAutoGenerated = false;
+        if (empty($password)) {
+            $password = \Str::random(12); // Generate a 12-character random password
+            $isAutoGenerated = true;
+        }
 
         // Create the user first
         $user = User::create([
             'first_name' => $userValidated['first_name'],
             'last_name' => $userValidated['last_name'],
             'email' => $userValidated['email'],
+<<<<<<< Updated upstream
             'password' => bcrypt($userValidated['password']),
             'gender' => $userValidated['gender'],
             'nationality' => $userValidated['nationality'],
@@ -206,6 +280,44 @@ class ParticipantController extends Controller
             'date_of_birth' => $userValidated['date_of_birth'],
             'organization' => $userValidated['organization'],
             'dietary_needs' => $userValidated['dietary_needs'],
+=======
+            'password' => bcrypt($password),
+            'gender' => $userValidated['gender'] ?? null,
+            'date_of_birth' => $userValidated['date_of_birth'] ?? null,
+            'organization' => $userValidated['organization'] ?? null,
+            'dietary_needs' => $userValidated['dietary_needs'] ?? null,
+            // New enhanced participant fields
+            'pronoun' => $userValidated['pronoun'] ?? null,
+            'contact_no' => $userValidated['contact_no'] ?? null,
+            'whatsapp_no' => $userValidated['whatsapp_no'] ?? null,
+            'field_of_work_study' => $userValidated['field_of_work_study'] ?? null,
+            'designation' => $userValidated['designation'] ?? null,
+            'organization_institution' => $userValidated['organization_institution'] ?? null,
+            'is_student' => $userValidated['is_student'] ?? null,
+            'year' => $userValidated['year'] ?? null,
+            'department_name' => $userValidated['department_name'] ?? null,
+            'institution_name' => $userValidated['institution_name'] ?? null,
+            'address' => $userValidated['address'] ?? null,
+            'home_district' => $userValidated['home_district'],
+            'how_found_bobc' => $userValidated['how_found_bobc'],
+            'attended_previous_bobc' => $userValidated['attended_previous_bobc'],
+            'expertise_interests' => $userValidated['expertise_interests'],
+            // Media/Speaker conditional fields
+            'media_type' => $request->media_type,
+            'other_contact_type' => $request->other_contact_type,
+            'other_contact_no' => $request->other_contact_no,
+            'dietary_requirements' => $request->dietary_requirements,
+            'dietary_requirements_other' => $request->dietary_requirements_other,
+            'sector' => $request->sector,
+            'areas_of_expertise' => $request->areas_of_expertise,
+            'preferred_topic' => $request->preferred_topic,
+            'linkedin_link' => $request->linkedin_link,
+            'twitter_link' => $request->twitter_link,
+            'facebook_link' => $request->facebook_link,
+            'has_valid_passport' => $request->has_valid_passport,
+            'had_visa_issue_bd' => $request->had_visa_issue_bd,
+            'visa_issue_explanation' => $request->visa_issue_explanation,
+>>>>>>> Stashed changes
         ]);
 
         // Handle file uploads for the user
@@ -213,9 +325,15 @@ class ParticipantController extends Controller
             $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
             $user->profile_picture = $profilePicturePath;
         }
+<<<<<<< Updated upstream
         if ($request->hasFile('resume')) {
             $resumePath = $request->file('resume')->store('resumes', 'public');
             $user->resume = $resumePath;
+=======
+        if ($request->hasFile('nid_passport_birth_certificate')) {
+            $nidPath = $request->file('nid_passport_birth_certificate')->store('nid_documents', 'public');
+            $user->nid_passport_birth_certificate = $nidPath;
+>>>>>>> Stashed changes
         }
         $user->save();
 
@@ -224,21 +342,122 @@ class ParticipantController extends Controller
             $participantValidated['visa_issue_description'] = null;
         }
 
-        // Generate serial number
-        $year = date('Y');
-        $lastParticipant = Participant::whereYear('created_at', $year)->orderBy('id', 'desc')->first();
-        $sequence = $lastParticipant ? intval(substr($lastParticipant->serial_number, -3)) + 1 : 1;
-        $serialNumber = "CONF{$year}-" . str_pad($sequence, 3, '0', STR_PAD_LEFT);
-
-        // Add user_id and serial_number to participant data
+        // Add user_id to participant data
         $participantValidated['user_id'] = $user->id;
+<<<<<<< Updated upstream
         $participantValidated['serial_number'] = $serialNumber;
         $participantValidated['travel_intent'] = $request->travel_intent == '1' ? true : false;
+=======
+        $participantValidated['travel_intent'] = $request->travel_intent ?? 'national';
+        $participantValidated['hashtags'] = $request->hashtags_input ?? null;
+>>>>>>> Stashed changes
 
         // Create the participant
         Participant::create($participantValidated);
         
+<<<<<<< Updated upstream
         return redirect()->route('participants.index')->with('success', 'Participant created successfully.');
+=======
+        // Send welcome email to the participant
+        try {
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            $conference = \App\Models\Conference::find($participantValidated['conference_id']);
+            $participantType = \App\Models\ParticipantType::find($participantValidated['participant_type_id']);
+            
+            $subject = "Welcome to " . ($conference->name ?? 'the Conference') . " - Registration Confirmed";
+            
+            // Build password section for email
+            $passwordSection = '';
+            if ($isAutoGenerated) {
+                $passwordSection = "
+                        <div style='background-color: #fef3c7; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;'>
+                            <h3 style='color: #92400e; margin: 0 0 10px 0; font-size: 18px;'>Login Credentials</h3>
+                            <p style='margin: 5px 0; color: #92400e;'><strong>Email:</strong> " . $user->email . "</p>
+                            <p style='margin: 5px 0; color: #92400e;'><strong>Password:</strong> " . $password . "</p>
+                            <p style='margin: 10px 0 0 0; color: #92400e; font-size: 14px;'><em>Please change this password after your first login for security.</em></p>
+                        </div>";
+            }
+            
+            $emailBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;'>
+                    <div style='background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                            <h1 style='color: #1f2937; margin: 0; font-size: 28px;'>Welcome to " . ($conference->name ?? 'the Conference') . "!</h1>
+                            <p style='color: #6b7280; margin: 10px 0 0 0; font-size: 16px;'>Your registration has been successfully confirmed</p>
+                        </div>
+                        
+                        <div style='background-color: #f0f9ff; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3b82f6;'>
+                            <h3 style='color: #1e40af; margin: 0 0 10px 0; font-size: 18px;'>Registration Details</h3>
+                            <p style='margin: 5px 0; color: #374151;'><strong>Name:</strong> " . $user->first_name . " " . $user->last_name . "</p>
+                            <p style='margin: 5px 0; color: #374151;'><strong>Email:</strong> " . $user->email . "</p>
+                            <p style='margin: 5px 0; color: #374151;'><strong>Participant Type:</strong> " . ($participantType->name ?? 'N/A') . "</p>
+                            <p style='margin: 5px 0; color: #374151;'><strong>Serial Number:</strong> " . $serialNumber . "</p>
+                        </div>
+                        
+                        " . $passwordSection . "
+                        
+                        <div style='margin: 30px 0;'>
+                            <h3 style='color: #1f2937; margin: 0 0 15px 0; font-size: 18px;'>Next Steps</h3>
+                            <ul style='color: #374151; line-height: 1.6; padding-left: 20px;'>
+                                <li>Keep this email for your records</li>
+                                <li>Check your email regularly for conference updates</li>
+                                <li>Complete your profile with additional information if needed</li>
+                                <li>Contact us if you have any questions</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 30px 0; text-align: center;'>
+                            <a href='" . route('participants.show', $participant) . "' 
+                               style='background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                                View Your Profile
+                            </a>
+                        </div>
+                        
+                        <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                            If you have any questions about your registration, please contact our support team.
+                        </p>
+                        
+                        <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                        <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                            This is an automated notification from the CGS Events management system.
+                        </p>
+                    </div>
+                </div>
+            ";
+            
+            $emailTrackingService->sendTrackedEmailViaGmail(
+                $user->email,
+                $subject,
+                $emailBody,
+                'participant_creation',
+                auth()->user(),
+                $conference,
+                'Participant',
+                $participant->id,
+                'participant_welcome_notification'
+            );
+            
+            \Log::info('Participant welcome email sent', [
+                'participant_id' => $participant->id,
+                'user_email' => $user->email,
+                'conference_id' => $conference->id ?? null
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send participant welcome email', [
+                'participant_id' => $participant->id,
+                'user_email' => $user->email,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        $successMessage = 'Participant created successfully and welcome email sent.';
+        if ($isAutoGenerated) {
+            $successMessage .= ' Password was auto-generated and sent via email.';
+        }
+        
+        return redirect()->route('participants.index')->with('success', $successMessage);
+>>>>>>> Stashed changes
     }
 
     // Show participant details
@@ -283,6 +502,7 @@ class ParticipantController extends Controller
     // Update participant
     public function update(Request $request, Participant $participant)
     {
+<<<<<<< Updated upstream
         // Validate participant data
         $participantValidated = $request->validate([
             'visa_status' => 'required|in:required,not_required,pending,approved,issue',
@@ -299,6 +519,84 @@ class ParticipantController extends Controller
             'last_name' => 'required|string|max:50',
             'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
         ]);
+=======
+        // Check if this is a personal info update (participant updating their own profile)
+        $isPersonalUpdate = !Auth::user()->hasRole('admin') && !Auth::user()->hasRole('superadmin');
+        
+        if ($isPersonalUpdate) {
+            // Personal info update - only validate personal fields
+            $participantValidated = $request->validate([
+                'visa_status' => 'nullable|in:required,not_required,pending,approved,issue',
+                'visa_issue_description' => 'nullable|string|max:1000',
+                'bio' => 'nullable|string|max:500',
+                'organization' => 'nullable|string|max:100',
+                'dietary_needs' => 'nullable|string|max:50',
+                'dietary_needs_other' => 'nullable|string|max:100',
+                'travel_intent' => 'nullable|in:national,international',
+            ]);
+
+            // Validate user data for personal update
+            $userValidated = $request->validate([
+                'first_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50',
+                'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
+            // Enhanced participant fields
+            'gender' => 'nullable|in:male,female,prefer_not_to_say',
+            'contact_no' => 'nullable|string|max:20',
+            'whatsapp_no' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date',
+            'address' => 'nullable|string|max:500',
+            'field_of_work_study' => 'nullable|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'organization_institution' => 'nullable|string|max:255',
+            'is_student' => 'nullable|boolean',
+            'year' => 'nullable|in:honors_final_year,masters',
+            'department_name' => 'nullable|string|max:255',
+            'institution_name' => 'nullable|string|max:255',
+            'home_district' => 'nullable|string|max:100',
+            'how_found_bobc' => 'nullable|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
+            'attended_previous_bobc' => 'nullable|boolean',
+            'expertise_interests' => 'nullable|string|max:1000',
+                // Media fields (if participant type is press)
+                'media_type' => 'nullable|in:print,television,online_portal',
+                // Speaker fields (if participant type is presenter)
+                'other_contact_type' => 'nullable|in:whatsapp,telegram,signal',
+                'other_contact_no' => 'nullable|string|max:50',
+                'sector' => 'nullable|in:academia,government,international_organization,media,ngo,private,think_tank',
+                'areas_of_expertise' => 'nullable|string',
+                'preferred_topic' => 'nullable|string',
+                'linkedin_link' => 'nullable|url',
+                'twitter_link' => 'nullable|url',
+                'facebook_link' => 'nullable|url',
+                'has_valid_passport' => 'nullable|in:0,1',
+                'had_visa_issue_bd' => 'nullable|in:0,1',
+                'visa_issue_explanation' => 'nullable|string',
+            ]);
+        } else {
+            // Admin update - validate all fields
+            $participantValidated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'conference_id' => 'required|exists:conferences,id',
+                'participant_type_id' => 'required|exists:participant_types,id',
+                'visa_status' => 'required|in:required,not_required,pending,approved,issue',
+                'visa_issue_description' => 'nullable|string|max:1000',
+                'bio' => 'nullable|string|max:500',
+                'organization' => 'nullable|string|max:100',
+                'dietary_needs' => 'nullable|string|max:50',
+                'dietary_needs_other' => 'nullable|string|max:100',
+                'approved' => 'boolean',
+                'travel_intent' => 'nullable|in:national,international',
+                'registration_status' => 'required|in:pending,approved,rejected',
+            ]);
+
+            // Validate user data for admin update
+            $userValidated = $request->validate([
+                'first_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50',
+                'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
+            ]);
+        }
+>>>>>>> Stashed changes
 
         // Validate file uploads
         $request->validate([
@@ -319,12 +617,75 @@ class ParticipantController extends Controller
         ];
 
         // Update user data
+<<<<<<< Updated upstream
         $user = $participant->user;
         $user->update([
             'first_name' => $userValidated['first_name'],
             'last_name' => $userValidated['last_name'],
             'email' => $userValidated['email'],
         ]);
+=======
+        if ($isPersonalUpdate) {
+            // Personal update - always update the current participant's user
+            $user = $participant->user;
+            $user->update([
+                'first_name' => $userValidated['first_name'],
+                'last_name' => $userValidated['last_name'],
+                'email' => $userValidated['email'],
+                // Enhanced participant fields
+                'gender' => $userValidated['gender'] ?? null,
+                'contact_no' => $userValidated['contact_no'] ?? null,
+                'whatsapp_no' => $userValidated['whatsapp_no'] ?? null,
+                'date_of_birth' => $userValidated['date_of_birth'] ?? null,
+                'address' => $userValidated['address'] ?? null,
+                'field_of_work_study' => $userValidated['field_of_work_study'] ?? null,
+                'designation' => $userValidated['designation'] ?? null,
+                'organization_institution' => $userValidated['organization_institution'] ?? null,
+                'is_student' => $userValidated['is_student'] ?? null,
+                'year' => $userValidated['year'] ?? null,
+                'department_name' => $userValidated['department_name'] ?? null,
+                'institution_name' => $userValidated['institution_name'] ?? null,
+                'home_district' => $userValidated['home_district'] ?? null,
+                'how_found_bobc' => $userValidated['how_found_bobc'] ?? null,
+                'attended_previous_bobc' => $userValidated['attended_previous_bobc'] ?? null,
+                'expertise_interests' => $userValidated['expertise_interests'] ?? null,
+                // Media fields
+                'media_type' => $userValidated['media_type'] ?? null,
+                // Speaker fields
+                'other_contact_type' => $userValidated['other_contact_type'] ?? null,
+                'other_contact_no' => $userValidated['other_contact_no'] ?? null,
+                'sector' => $userValidated['sector'] ?? null,
+                'areas_of_expertise' => $userValidated['areas_of_expertise'] ?? null,
+                'preferred_topic' => $userValidated['preferred_topic'] ?? null,
+                'linkedin_link' => $userValidated['linkedin_link'] ?? null,
+                'twitter_link' => $userValidated['twitter_link'] ?? null,
+                'facebook_link' => $userValidated['facebook_link'] ?? null,
+                'has_valid_passport' => $userValidated['has_valid_passport'] ?? null,
+                'had_visa_issue_bd' => $userValidated['had_visa_issue_bd'] ?? null,
+                'visa_issue_explanation' => $userValidated['visa_issue_explanation'] ?? null,
+            ]);
+        } else {
+            // Admin update - handle user_id changes
+            if ($participant->user_id == $participantValidated['user_id']) {
+                $user = $participant->user;
+                $user->update([
+                    'first_name' => $userValidated['first_name'],
+                    'last_name' => $userValidated['last_name'],
+                    'email' => $userValidated['email'],
+                ]);
+            } else {
+                // If user_id changed, get the new user and update their data
+                $user = User::find($participantValidated['user_id']);
+                if ($user) {
+                    $user->update([
+                        'first_name' => $userValidated['first_name'],
+                        'last_name' => $userValidated['last_name'],
+                        'email' => $userValidated['email'],
+                    ]);
+                }
+            }
+        }
+>>>>>>> Stashed changes
 
         // Handle file uploads
         if ($request->hasFile('profile_picture')) {
@@ -357,6 +718,23 @@ class ParticipantController extends Controller
             $participantValidated['visa_issue_description'] = null;
         }
 
+<<<<<<< Updated upstream
+=======
+        // Handle travel intent field
+        $participantValidated['travel_intent'] = $request->travel_intent ?? 'national';
+        
+        // Only handle 'approved' for admin updates
+        if (!$isPersonalUpdate) {
+            $participantValidated['approved'] = $request->has('approved');
+        }
+
+        // Check if conference has changed and handle conference-specific data cleanup
+        if (!$isPersonalUpdate && isset($participantValidated['conference_id']) && 
+            $oldParticipantData['conference_id'] != $participantValidated['conference_id']) {
+            $this->handleConferenceChange($participant, $oldParticipantData['conference_id'], $participantValidated['conference_id']);
+        }
+
+>>>>>>> Stashed changes
         // Update participant data
         $participant->update($participantValidated);
         
@@ -706,13 +1084,11 @@ class ParticipantController extends Controller
 
         $validated = $request->validate([
             'registration_status' => 'required|in:pending,approved,rejected',
-            'approved' => 'required|boolean',
         ]);
 
         try {
             $participant->update([
                 'registration_status' => $validated['registration_status'],
-                'approved' => $validated['approved'],
             ]);
 
             $statusText = ucfirst($validated['registration_status']);
@@ -763,4 +1139,456 @@ class ParticipantController extends Controller
             return redirect()->back()->with('error', 'Failed to update participants: ' . $e->getMessage());
         }
     }
+<<<<<<< Updated upstream
+=======
+
+    /**
+     * Send email notification to participant when admin updates their information
+     */
+    private function sendParticipantUpdateEmail(Participant $participant, array $changes, User $adminUser)
+    {
+        try {
+            $changeDescriptions = [];
+            
+            if (isset($changes['personal_info'])) {
+                $changeDescriptions[] = 'personal information';
+            }
+            if (isset($changes['visa_status'])) {
+                $changeDescriptions[] = 'visa status';
+            }
+            if (isset($changes['dietary_needs'])) {
+                $changeDescriptions[] = 'dietary preferences';
+            }
+            if (isset($changes['organization'])) {
+                $changeDescriptions[] = 'organization details';
+            }
+            if (isset($changes['profile_picture'])) {
+                $changeDescriptions[] = 'profile picture';
+            }
+            if (isset($changes['resume'])) {
+                $changeDescriptions[] = 'resume';
+            }
+            
+            $changesText = implode(', ', $changeDescriptions);
+            $subject = "Your Profile Has Been Updated - {$participant->conference->name}";
+            
+            $emailBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>Profile Update Notification</h2>
+                    
+                    <p>Dear {$participant->user->first_name} {$participant->user->last_name},</p>
+                    
+                    <p>Your profile information for the <strong>{$participant->conference->name}</strong> conference has been updated by our administrative team.</p>
+                    
+                    <div style='background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                        <h3 style='color: #374151; margin-top: 0;'>Updated Information:</h3>
+                        <ul style='color: #4b5563;'>
+            ";
+            
+            foreach ($changeDescriptions as $change) {
+                $emailBody .= "<li style='margin-bottom: 5px;'>" . ucfirst($change) . "</li>";
+            }
+            
+            $emailBody .= "
+                        </ul>
+                    </div>
+                    
+                    <p>Please log in to your account to review the changes and ensure all information is correct.</p>
+                    
+                    <div style='margin: 30px 0; text-align: center;'>
+                        <a href='" . route('participants.show', $participant) . "' 
+                           style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                            View Your Profile
+                        </a>
+                    </div>
+                    
+                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                        If you have any questions or concerns about these changes, please contact our support team.
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                        This is an automated notification from the CGS Events management system.
+                    </p>
+                </div>
+            ";
+            
+            // Use EmailTrackingService to send the email
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            
+            $emailTrackingService->sendTrackedEmailViaGmail(
+                $participant->user->email,
+                $subject,
+                $emailBody,
+                'profile_update',
+                $adminUser,
+                $participant->conference,
+                'Participant',
+                $participant->id,
+                'participant_update_notification'
+            );
+            
+            \Log::info('Participant update email sent', [
+                'participant_id' => $participant->id,
+                'admin_user_id' => $adminUser->id,
+                'changes' => $changes
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send participant update email', [
+                'participant_id' => $participant->id,
+                'admin_user_id' => $adminUser->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send email to participant
+     */
+    public function sendEmail(Request $request)
+    {
+        $request->validate([
+            'to' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'conference_id' => 'nullable|exists:conferences,id'
+        ]);
+
+        try {
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            $conference = $request->conference_id ? \App\Models\Conference::find($request->conference_id) : null;
+            
+            $email = $emailTrackingService->sendTrackedEmailViaGmail(
+                $request->to,
+                $request->subject,
+                $request->message,
+                \App\Models\Email::TYPE_GENERAL,
+                auth()->user(),
+                $conference,
+                'Participant',
+                null,
+                'manual_email'
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully!',
+                'email_id' => $email->id
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send email to participant', [
+                'to' => $request->to,
+                'subject' => $request->subject,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Handle conference change for participant - cleanup conference-specific data
+     */
+    private function handleConferenceChange(Participant $participant, $oldConferenceId, $newConferenceId)
+    {
+        try {
+            \Log::info('Handling conference change for participant', [
+                'participant_id' => $participant->id,
+                'old_conference_id' => $oldConferenceId,
+                'new_conference_id' => $newConferenceId
+            ]);
+
+            // 1. Remove all session assignments
+            $sessionCount = $participant->sessions()->count();
+            if ($sessionCount > 0) {
+                $participant->sessions()->detach();
+                \Log::info("Removed {$sessionCount} session assignments for participant {$participant->id}");
+            }
+
+            // 2. Remove travel details
+            if ($participant->travelDetails) {
+                $participant->travelDetails()->delete();
+                \Log::info("Removed travel details for participant {$participant->id}");
+            }
+
+            // 3. Remove room allocations
+            $roomAllocationCount = $participant->roomAllocations()->count();
+            if ($roomAllocationCount > 0) {
+                $participant->roomAllocations()->delete();
+                \Log::info("Removed {$roomAllocationCount} room allocations for participant {$participant->id}");
+            }
+
+            // 4. Remove checkins
+            $checkinCount = $participant->checkins()->count();
+            if ($checkinCount > 0) {
+                $participant->checkins()->delete();
+                \Log::info("Removed {$checkinCount} checkins for participant {$participant->id}");
+            }
+
+            // 5. Reset conference-specific participant fields
+            $participant->update([
+                'travel_intent' => 'national',
+                'registration_status' => 'pending',
+            ]);
+
+            \Log::info("Reset conference-specific fields for participant {$participant->id}");
+
+            // 6. Send notification about conference change
+            $this->notifyConferenceChange($participant, $oldConferenceId, $newConferenceId);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to handle conference change for participant', [
+                'participant_id' => $participant->id,
+                'old_conference_id' => $oldConferenceId,
+                'new_conference_id' => $newConferenceId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send notification about conference change
+     */
+    private function notifyConferenceChange(Participant $participant, $oldConferenceId, $newConferenceId)
+    {
+        try {
+            $oldConference = \App\Models\Conference::find($oldConferenceId);
+            $newConference = \App\Models\Conference::find($newConferenceId);
+
+            $subject = "Conference Assignment Changed - {$newConference->name}";
+            
+            $emailBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>Conference Assignment Update</h2>
+                    
+                    <p>Dear {$participant->user->first_name} {$participant->user->last_name},</p>
+                    
+                    <p>Your conference assignment has been changed by our administrative team.</p>
+                    
+                    <div style='background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                        <h3 style='color: #374151; margin-top: 0;'>Assignment Details:</h3>
+                        <p><strong>Previous Conference:</strong> " . ($oldConference ? $oldConference->name : 'N/A') . "</p>
+                        <p><strong>New Conference:</strong> {$newConference->name}</p>
+                    </div>
+                    
+                    <div style='background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                        <h3 style='color: #92400e; margin-top: 0;'>Important Notice:</h3>
+                        <p>Due to this conference change, the following have been reset:</p>
+                        <ul style='color: #92400e;'>
+                            <li>Session assignments</li>
+                            <li>Travel details and arrangements</li>
+                            <li>Room allocations</li>
+                            <li>Check-in records</li>
+                            <li>Registration status (reset to pending)</li>
+                        </ul>
+                        <p>Please review your new conference details and update your information as needed.</p>
+                    </div>
+                    
+                    <div style='margin: 30px 0; text-align: center;'>
+                        <a href='" . route('participants.show', $participant) . "' 
+                           style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                            View Your Profile
+                        </a>
+                    </div>
+                    
+                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                        If you have any questions about this change, please contact our support team.
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                        This is an automated notification from the CGS Events management system.
+                    </p>
+                </div>
+            ";
+            
+            // Use EmailTrackingService to send the email
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            
+            $emailTrackingService->sendTrackedEmailViaGmail(
+                $participant->user->email,
+                $subject,
+                $emailBody,
+                'conference_change',
+                auth()->user(),
+                $newConference,
+                'Participant',
+                $participant->id,
+                'conference_change_notification'
+            );
+            
+            \Log::info('Conference change notification sent', [
+                'participant_id' => $participant->id,
+                'old_conference_id' => $oldConferenceId,
+                'new_conference_id' => $newConferenceId
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send conference change notification', [
+                'participant_id' => $participant->id,
+                'old_conference_id' => $oldConferenceId,
+                'new_conference_id' => $newConferenceId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Store a new comment for a participant
+     */
+    public function storeComment(Request $request, Participant $participant)
+    {
+        $request->validate([
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        // Create the comment
+        $comment = \App\Models\Comment::create([
+            'user_id' => auth()->id(),
+            'participant_id' => $participant->id,
+            'conference_id' => $participant->conference_id,
+            'content' => $request->comment,
+        ]);
+
+        // Create notification for the participant (if not the same user)
+        if (auth()->id() !== $participant->user_id) {
+            $participant->user->notifications()->create([
+                'conference_id' => $participant->conference_id,
+                'type' => 'comment_added',
+                'title' => 'New Comment Added',
+                'message' => auth()->user()->first_name . ' ' . auth()->user()->last_name . ' added a comment to your profile.',
+                'data' => json_encode([
+                    'comment_id' => $comment->id,
+                    'participant_id' => $participant->id,
+                    'commenter_name' => auth()->user()->first_name . ' ' . auth()->user()->last_name,
+                ]),
+            ]);
+
+            // Send email notification
+            $this->sendCommentEmailNotification($participant, $comment, auth()->user());
+        }
+
+        // Create notification for admins (if participant is commenting)
+        if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
+            $admins = \App\Models\User::whereHas('roles', function($query) {
+                $query->whereIn('name', ['admin', 'superadmin']);
+            })->get();
+
+            foreach ($admins as $admin) {
+                $admin->notifications()->create([
+                    'conference_id' => $participant->conference_id,
+                    'type' => 'participant_comment',
+                    'title' => 'Participant Comment Added',
+                    'message' => $participant->user->first_name . ' ' . $participant->user->last_name . ' added a comment to their profile.',
+                    'data' => json_encode([
+                        'comment_id' => $comment->id,
+                        'participant_id' => $participant->id,
+                        'participant_name' => $participant->user->first_name . ' ' . $participant->user->last_name,
+                    ]),
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Comment added successfully.');
+    }
+
+    /**
+     * Send email notification for new comment
+     */
+    private function sendCommentEmailNotification(Participant $participant, $comment, $commenter)
+    {
+        try {
+            $subject = "New Comment Added to Your Profile - {$participant->conference->name}";
+            
+            $emailBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>New Comment Added</h2>
+                    
+                    <p>Dear {$participant->user->first_name} {$participant->user->last_name},</p>
+                    
+                    <p>A new comment has been added to your profile by {$commenter->first_name} {$commenter->last_name}.</p>
+                    
+                    <div style='background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                        <h3 style='color: #374151; margin-top: 0;'>Comment Details:</h3>
+                        <p><strong>Commenter:</strong> {$commenter->first_name} {$commenter->last_name}</p>
+                        <p><strong>Comment:</strong> {$comment->content}</p>
+                        <p><strong>Date:</strong> " . $comment->created_at->format('M d, Y H:i') . "</p>
+                    </div>
+                    
+                    <div style='margin: 30px 0; text-align: center;'>
+                        <a href='" . route('participants.show', $participant) . "' 
+                           style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                            View Your Profile
+                        </a>
+                    </div>
+                    
+                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
+                        You can view and respond to comments on your profile page.
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                        This is an automated notification from the CGS Events management system.
+                    </p>
+                </div>
+            ";
+            
+            // Use EmailTrackingService to send the email
+            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
+            
+            $emailTrackingService->sendTrackedEmailViaGmail(
+                $participant->user->email,
+                $subject,
+                $emailBody,
+                'comment_added',
+                $commenter,
+                $participant->conference,
+                'Participant',
+                $participant->id,
+                'comment_notification'
+            );
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send comment email notification', [
+                'participant_id' => $participant->id,
+                'comment_id' => $comment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Check if email is unique via AJAX
+     */
+    public function checkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'user_id' => 'nullable|exists:users,id' // For update operations
+        ]);
+
+        $email = $request->email;
+        $userId = $request->user_id;
+
+        // Check if email exists
+        $query = User::where('email', $email);
+        
+        // If updating, exclude current user from check
+        if ($userId) {
+            $query->where('id', '!=', $userId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists ? 'Email is already taken' : 'Email is available'
+        ]);
+    }
+>>>>>>> Stashed changes
 } 

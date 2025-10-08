@@ -63,11 +63,6 @@
                     @error('room')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
-                <div>
-                    <label for="capacity" class="block text-sm font-medium text-gray-700">Capacity (Optional)</label>
-                    <input type="number" name="capacity" id="capacity" value="{{ old('capacity') }}" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    @error('capacity')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
             </div>
 
             <div class="mt-4">

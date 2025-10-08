@@ -35,6 +35,26 @@ class GoogleService
         $this->client->setAccessToken($token);
     }
 
+    /**
+     * Refresh the access token if it's expired
+     */
+    public function refreshTokenIfNeeded($token)
+    {
+        $this->client->setAccessToken($token);
+        
+        if ($this->client->isAccessTokenExpired()) {
+            $refreshToken = $this->client->getRefreshToken();
+            if ($refreshToken) {
+                $newToken = $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
+                return $newToken;
+            } else {
+                throw new \Exception('No refresh token available. Please reconnect your Gmail account.');
+            }
+        }
+        
+        return $token;
+    }
+
     public function listThreads($userId = 'me', $maxResults = 10, $pageToken = null, $query = null)
     {
         $service = new Gmail($this->client);

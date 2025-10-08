@@ -59,12 +59,8 @@
         </div>
         @endif
         <div>
-            <span class="font-semibold text-gray-700">Travel Form Submitted:</span>
-            <span class="ml-2">{{ $participant->travel_form_submitted ? 'Yes' : 'No' }}</span>
-        </div>
-        <div>
             <span class="font-semibold text-gray-700">Travel Intent:</span>
-            <span class="ml-2">{{ $participant->travel_intent ? 'Yes' : 'No' }}</span>
+            <span class="ml-2">{{ ucfirst($participant->travel_intent ?? 'National') }}</span>
         </div>
     </div>
     

@@ -15,14 +15,14 @@ class Participant extends Model
         'participant_type_id',
         'visa_status',
         'visa_issue_description',
-        'travel_form_submitted',
         'bio',
-        'approved',
         'organization',
+<<<<<<< Updated upstream
         'dietary_needs',
+=======
+>>>>>>> Stashed changes
         'travel_intent',
         'registration_status',
-        'serial_number',
         'category',
     ];
 
@@ -60,6 +60,11 @@ class Participant extends Model
     public function roomAllocations()
     {
         return $this->hasMany(RoomAllocation::class);
+    }
+
+    public function roomAllocation()
+    {
+        return $this->hasOne(RoomAllocation::class);
     }
 
     public function checkins()

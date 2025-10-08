@@ -87,22 +87,11 @@ class DashboardService
             return '51+';
         })->map->count();
 
-        // Nationality distribution
-        $nationalityStats = $participants->groupBy(function ($participant) {
-            return $participant->user->nationality ?? 'Other';
-        })->map->count();
-
-        // Profession distribution
-        $professionStats = $participants->groupBy(function ($participant) {
-            return $participant->user->profession ?? 'Other';
-        })->map->count();
 
         return [
             'total_participants' => $participants->count(),
             'gender_distribution' => $genderStats,
             'age_distribution' => $ageStats,
-            'nationality_distribution' => $nationalityStats,
-            'profession_distribution' => $professionStats,
         ];
     }
 
@@ -142,17 +131,17 @@ class DashboardService
         // Invited participants (all participants)
         $invitedCount = $participants->count();
         
-        // Accepted participants (approved = true)
-        $acceptedCount = $participants->where('approved', true)->count();
+        // Accepted participants (registration_status = approved)
+        $acceptedCount = $participants->where('registration_status', 'approved')->count();
         
         // Flying participants (with travel details)
         $flyingCount = $participants->whereHas('travelDetails')->count();
         
         // Status breakdown
         $statusBreakdown = [
-            'pending' => $participants->where('approved', null)->count(),
-            'approved' => $participants->where('approved', true)->count(),
-            'declined' => $participants->where('approved', false)->count(),
+            'pending' => $participants->where('registration_status', 'pending')->count(),
+            'approved' => $participants->where('registration_status', 'approved')->count(),
+            'declined' => $participants->where('registration_status', 'rejected')->count(),
         ];
         
         // Speaker count

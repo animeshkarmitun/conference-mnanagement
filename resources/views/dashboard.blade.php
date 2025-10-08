@@ -147,7 +147,16 @@
     
     <!-- Quick Actions -->
     <div class="flex space-x-3">
+<<<<<<< Updated upstream
         <button class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
+=======
+        <a href="{{ route('conferences.create') }}" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Create Conference">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+        </a>
+        <a href="{{ route('tasks.create') }}" class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
+>>>>>>> Stashed changes
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>

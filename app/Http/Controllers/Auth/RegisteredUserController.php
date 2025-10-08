@@ -41,7 +41,7 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'participant_type_id' => ['required', 'exists:participant_types,id'],
             'dietary_needs' => ['nullable', 'string', 'max:255'],
-            'travel_intent' => ['required', 'boolean'],
+            'travel_intent' => ['required', 'in:national,international'],
             'profile_picture' => ['nullable', 'image', 'max:2048'],
             'resume' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
         ]);
@@ -72,11 +72,8 @@ class RegisteredUserController extends Controller
             'conference_id' => $conference ? $conference->id : null,
             'participant_type_id' => $request->participant_type_id,
             'visa_status' => 'pending',
-            'travel_form_submitted' => false,
             'bio' => null,
-            'approved' => false,
             'organization' => null,
-            'dietary_needs' => $request->dietary_needs,
             'travel_intent' => $request->travel_intent,
             'registration_status' => 'pending',
         ]);

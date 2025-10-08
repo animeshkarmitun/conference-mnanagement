@@ -248,10 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
         <label class="block text-sm font-medium text-gray-700">Description</label>
         <textarea id="session_description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600"></textarea>
       </div>
-      <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Seating arrangement</label>
-        <textarea id="session_seating" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600" placeholder="Optional JSON or notes"></textarea>
-      </div>
     </div>
     <div class="mt-6 flex items-center justify-end space-x-3">
       <button type="button" id="cancelSessionBtn" class="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -369,7 +365,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (hintEnd) hintEnd.textContent = '';
         }
         document.getElementById('session_description').value = data.description || '';
-        document.getElementById('session_seating').value = data.seating_arrangement || '';
         clearErrors();
         modal.classList.remove('hidden');
         setTimeout(() => document.getElementById('session_title').focus(), 0);
@@ -434,7 +429,6 @@ document.addEventListener('DOMContentLoaded', function() {
             start_time: document.getElementById('session_start_time').value,
             end_time: document.getElementById('session_end_time').value,
             description: document.getElementById('session_description').value.trim(),
-            seating_arrangement: document.getElementById('session_seating').value.trim(),
         };
         if (editingIndex !== null) {
             sessionDrafts[editingIndex] = item;

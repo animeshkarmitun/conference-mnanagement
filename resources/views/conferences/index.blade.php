@@ -188,6 +188,68 @@
         background-color: #fefce8;
         transform: scale(1.01);
     }
+    
+    /* Conference table container for horizontal scrolling */
+    .conferences-table-container {
+        max-height: none;
+        overflow-x: auto;
+        width: 100%;
+        position: relative;
+    }
+    
+    /* Webkit scrollbar styling for conference table */
+    .conferences-table-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .conferences-table-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    
+    .conferences-table-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+        transition: background 0.2s ease;
+    }
+    
+    .conferences-table-container::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    /* Visual feedback for scrollable content */
+    .conferences-table-container.can-scroll-left::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.8), transparent);
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    .conferences-table-container.can-scroll-right::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    /* Smooth scrolling hint */
+    .conferences-table-container:hover {
+        cursor: grab;
+    }
+    
+    .conferences-table-container:active {
+        cursor: grabbing;
+    }
 </style>
 @endpush
 
@@ -287,10 +349,151 @@
     </div>
 </div>
 
+<<<<<<< Updated upstream
 <!-- Enhanced Conference Table -->
 <div class="table-container bg-white animate-fade-in-up animate-delay-2">
     <div class="overflow-x-auto">
         <table class="min-w-full" id="conferencesTable">
+=======
+<!-- Enhanced Search and Secondary Filters -->
+<div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+    <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
+        <!-- Enhanced Search Bar -->
+        <div class="flex-1 max-w-md">
+            <form method="GET" action="{{ route('conferences.index') }}" class="flex">
+                <input type="hidden" name="status" value="{{ $status }}">
+                @if(request()->has('conference_id'))
+                    <input type="hidden" name="conference_id" value="{{ request('conference_id') }}">
+                @endif
+                <div class="relative flex-1">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ $search }}" 
+                           placeholder="Search conferences by name, vanue ..."
+                           class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <button type="submit" class="ml-3 bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Search
+                </button>
+                @if($search)
+                    <a href="{{ route('participants.index', array_merge(request()->except('search'), ['status' => $status])) }}" class="ml-3 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear
+                    </a>
+                @endif
+            </form>
+        </div>
+        
+        <!-- Enhanced Secondary Filter Tabs -->
+        <div class="flex gap-3 flex-shrink-0">
+            <!-- Conference Filter -->
+            <form method="GET" action="{{ route('conferences.index') }}" class="flex items-center gap-2">
+                @foreach(request()->except(['conference_id']) as $k => $v)
+                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                @endforeach
+                <label for="conference_id" class="text-sm text-gray-600">Conference</label>
+                <select id="conference_id" name="conference_id" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-yellow-500 focus:border-yellow-500" onchange="this.form.submit()">
+                    <option value="">All Conferences</option>
+                    @foreach(($allConferences ?? []) as $conf)
+                        <option value="{{ $conf->id }}" {{ (request('conference_id') == $conf->id) ? 'selected' : '' }}>{{ $conf->name }}</option>
+                    @endforeach
+                </select>
+            </form>
+            <!-- Visa Status Filter -->
+            {{-- <div class="relative group">
+                <button class="filter-dropdown bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Visa Status
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </button>
+                <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                    <div class="py-2">
+                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Visa Status</div>
+                        <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'required'])) }}" 
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>Required</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['required'] }}</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'approved'])) }}" 
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-green-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>Approved</span>
+                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['approved'] }}</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'pending'])) }}" 
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-yellow-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>Pending</span>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['pending'] }}</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'issue'])) }}" 
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-red-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>Issues</span>
+                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['issue'] }}</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div> --}}
+            
+            <!-- Enhanced Participant Type Filter -->
+            {{-- <div class="relative group">
+                <button class="filter-dropdown bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-200 shadow-sm">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Participant Type
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </button>
+                <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                    <div class="py-2">
+                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Type</div>
+                        @foreach($participantTypes as $type)
+                            <a href="{{ route('participants.index', array_merge(request()->query(), ['type' => $type->name])) }}" 
+                               class="block px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 transition-colors duration-200">
+                                <div class="flex items-center justify-between">
+                                    <span>{{ $type->name }}</span>
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">{{ $typeCounts[$type->name] ?? 0 }}</span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div> --}}
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Conference Table -->
+<div class="table-container bg-white animate-fade-in-up animate-delay-2">
+    <div class="overflow-x-auto conferences-table-container">
+        <table class="w-full" id="conferencesTable">
+>>>>>>> Stashed changes
             <thead class="table-header">
                 <tr>
                     <th class="sortable-header" data-sort="status">
@@ -596,6 +799,57 @@ document.addEventListener('DOMContentLoaded', function() {
             const icon = activeHeader.querySelector('.sort-icon');
             icon.classList.add('active', direction);
         }
+    }
+    
+    // Horizontal scroll functionality for conferences table
+    const tableContainer = document.querySelector('.conferences-table-container');
+    if (tableContainer) {
+        let isScrolling = false;
+        let scrollTimeout;
+        
+        function updateScrollIndicators() {
+            const { scrollLeft, scrollWidth, clientWidth } = tableContainer;
+            const canScrollLeft = scrollLeft > 0;
+            const canScrollRight = scrollLeft < scrollWidth - clientWidth;
+            
+            tableContainer.classList.toggle('can-scroll-left', canScrollLeft);
+            tableContainer.classList.toggle('can-scroll-right', canScrollRight);
+        }
+        
+        function handleScroll() {
+            if (!isScrolling) {
+                isScrolling = true;
+                tableContainer.style.cursor = 'grabbing';
+            }
+            
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+                tableContainer.style.cursor = 'grab';
+            }, 150);
+            
+            updateScrollIndicators();
+        }
+        
+        // Initial check
+        updateScrollIndicators();
+        
+        // Add scroll event listener
+        tableContainer.addEventListener('scroll', handleScroll);
+        
+        // Add mouse events for better UX
+        tableContainer.addEventListener('mouseenter', () => {
+            if (!isScrolling) {
+                tableContainer.style.cursor = 'grab';
+            }
+        });
+        
+        tableContainer.addEventListener('mouseleave', () => {
+            tableContainer.style.cursor = 'default';
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', updateScrollIndicators);
     }
 });
 </script>

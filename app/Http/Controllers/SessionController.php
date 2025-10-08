@@ -116,7 +116,6 @@ class SessionController extends Controller
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
             'room' => 'nullable|string|max:255',
-            'capacity' => 'nullable|integer|min:1',
             'participants' => 'nullable|string', // JSON string from enhanced interface
         ]);
 
@@ -193,7 +192,6 @@ class SessionController extends Controller
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
             'room' => 'nullable|string|max:255',
-            'capacity' => 'nullable|integer|min:1',
             'participants' => 'nullable|string', // JSON string from enhanced interface
         ]);
 

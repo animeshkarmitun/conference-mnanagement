@@ -12,9 +12,15 @@ class ConferenceController extends Controller
     public function index(Request $request)
     {
         $status = $request->get('status', 'upcoming'); // Default to upcoming conferences
+        $conferenceId = $request->get('conference_id');
         $now = now();
         
         $query = Conference::with('venue');
+        
+        // Filter by specific conference if selected
+        if ($conferenceId) {
+            $query->where('id', $conferenceId);
+        }
         
         // Filter conferences based on status
         switch ($status) {
@@ -52,7 +58,14 @@ class ConferenceController extends Controller
             'all' => Conference::count(),
         ];
         
+<<<<<<< Updated upstream
         return view('conferences.index', compact('conferences', 'conferenceCounts', 'status'));
+=======
+        // Get all conferences for the filter dropdown
+        $allConferences = Conference::orderBy('name')->get();
+        
+        return view('conferences.index', compact('conferences', 'conferenceCounts', 'status', 'search', 'allConferences', 'conferenceId'));
+>>>>>>> Stashed changes
     }
 
     public function create()

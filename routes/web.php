@@ -207,6 +207,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/{participant}/assign-session', [\App\Http\Controllers\ParticipantController::class, 'assignSession'])->name('participants.assign-session');
     Route::post('/participants/{participant}/update-status', [\App\Http\Controllers\ParticipantController::class, 'updateStatus'])->name('participants.update-status');
     Route::post('/participants/{participant}/remove-session', [\App\Http\Controllers\ParticipantController::class, 'removeSession'])->name('participants.remove-session');
+<<<<<<< Updated upstream
+=======
+    Route::post('/participants/send-email', [\App\Http\Controllers\ParticipantController::class, 'sendEmail'])->name('participants.send-email');
+    Route::post('/participants/check-email', [\App\Http\Controllers\ParticipantController::class, 'checkEmail'])->name('participants.check-email');
+>>>>>>> Stashed changes
     
     // Conference Kit Routes for Participants
     Route::get('/conference-kit', [\App\Http\Controllers\ConferenceKitController::class, 'index'])->name('conference-kit.index');

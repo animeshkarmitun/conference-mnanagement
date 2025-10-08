@@ -100,28 +100,53 @@ class TravelController extends Controller
     public function updateRoomAllocation(Request $request, Participant $participant)
     {
         $validated = $request->validate([
-            'hotel_id' => 'nullable|exists:hotels,id',
+            'hotel_id' => 'required|exists:hotels,id',
             'room_number' => 'nullable|string|max:50',
-            'check_in' => 'nullable|date',
-            'check_out' => 'nullable|date|after_or_equal:check_in',
+            'check_in' => 'nullable|date|after:now',
+            'check_out' => 'nullable|date|after:check_in',
+        ], [
+            'hotel_id.required' => 'Hotel selection is required.',
+            'hotel_id.exists' => 'Selected hotel is invalid.',
+            'check_in.after' => 'Check-in time cannot be in the past.',
+            'check_out.after' => 'Check-out time must be after check-in time.',
         ]);
 
-        // Update or create room allocation
-        $roomAllocation = $participant->roomAllocations()->first() ?: new RoomAllocation();
-        $roomAllocation->hotel_id = $validated['hotel_id'] ?? null;
-        $roomAllocation->participant_id = $participant->id;
-        $roomAllocation->room_number = $validated['room_number'] ?? null;
-        $roomAllocation->check_in = $validated['check_in'] ?? null;
-        $roomAllocation->check_out = $validated['check_out'] ?? null;
-        $roomAllocation->save();
+        try {
+            // Update or create room allocation
+            $roomAllocation = $participant->roomAllocations()->first() ?: new RoomAllocation();
+            $roomAllocation->hotel_id = $validated['hotel_id'];
+            $roomAllocation->participant_id = $participant->id;
+            $roomAllocation->room_number = $validated['room_number'] ?? null;
+            $roomAllocation->check_in = $validated['check_in'] ?? null;
+            $roomAllocation->check_out = $validated['check_out'] ?? null;
+            $roomAllocation->save();
 
-        // Send room allocation notification
-        if ($roomAllocation->hotel_id) {
-            $travelNotificationService = new TravelNotificationService();
-            $travelNotificationService->notifyRoomAllocated($participant, $roomAllocation);
+            // Send room allocation notification
+            if ($roomAllocation->hotel_id) {
+                $travelNotificationService = new TravelNotificationService();
+                $travelNotificationService->notifyRoomAllocated($participant, $roomAllocation);
+            }
+
+            // Handle AJAX requests
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Room allocation updated successfully!'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Room allocation updated.');
+        } catch (\Exception $e) {
+            // Handle AJAX requests
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update room allocation: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to update room allocation: ' . $e->getMessage());
         }
-
-        return redirect()->back()->with('success', 'Room allocation updated.');
     }
 
     /**

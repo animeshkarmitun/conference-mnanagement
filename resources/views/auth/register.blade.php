@@ -55,17 +55,11 @@
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Will you need travel arrangements?</label>
-            <div class="mt-2 flex items-center space-x-4">
-                <label class="inline-flex items-center">
-                    <input type="radio" name="travel_intent" value="1" {{ old('travel_intent') == '1' ? 'checked' : '' }} class="form-radio text-yellow-600">
-                    <span class="ml-2">Yes</span>
-                </label>
-                <label class="inline-flex items-center">
-                    <input type="radio" name="travel_intent" value="0" {{ old('travel_intent') == '0' ? 'checked' : '' }} class="form-radio text-yellow-600">
-                    <span class="ml-2">No</span>
-                </label>
-            </div>
+            <label for="travel_intent" class="block text-sm font-medium text-gray-700">Travel Intent</label>
+            <select name="travel_intent" id="travel_intent" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                <option value="national" {{ old('travel_intent') == 'national' ? 'selected' : '' }}>National</option>
+                <option value="international" {{ old('travel_intent') == 'international' ? 'selected' : '' }}>International</option>
+            </select>
             @error('travel_intent')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
 

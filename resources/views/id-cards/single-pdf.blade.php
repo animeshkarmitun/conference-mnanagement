@@ -178,7 +178,7 @@
                     <div class="user-role">{{ $cardData['participant']->participantType->name ?? 'Participant' }}</div>
                     <div class="user-organization">{{ $cardData['user']->organization ?? 'N/A' }}</div>
                     <div class="conference-info">{{ $cardData['participant']->conference->name ?? 'Conference' }}</div>
-                    <div class="participant-type">ID: {{ $cardData['participant']->serial_number ?? $cardData['participant']->id }}</div>
+                    <div class="participant-type">ID: {{ $cardData['participant']->id }}</div>
                 @else
                     @php
                         $roles = $cardData['user']->roles->pluck('name')->first() ?? 'Employee';
@@ -213,7 +213,7 @@
             
             <div class="card-id">
                 @if($cardData['participant'])
-                    {{ $cardData['participant']->serial_number ?? 'ID: ' . $cardData['participant']->id }}
+                    ID: {{ $cardData['participant']->id }}
                 @else
                     ID: {{ $cardData['user']->id }}
                 @endif

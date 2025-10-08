@@ -79,9 +79,75 @@
         transition: all 0.2s ease;
     }
     
+<<<<<<< Updated upstream
     .sortable-header:hover {
         background-color: #fefce8;
         color: #f59e0b;
+=======
+    .participants-table-container {
+        max-height: none;
+        overflow-x: auto;
+        width: 100%;
+        position: relative;
+        scroll-behavior: smooth;
+        /* Custom scrollbar styling */
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+    
+    /* Webkit scrollbar styling */
+    .participants-table-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .participants-table-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    
+    .participants-table-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+        transition: background 0.2s ease;
+    }
+    
+    .participants-table-container::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    /* Visual feedback for scrollable content */
+    .participants-table-container.can-scroll-left::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        background: linear-gradient(to right, rgba(59, 130, 246, 0.1), transparent);
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    .participants-table-container.can-scroll-right::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        background: linear-gradient(to left, rgba(59, 130, 246, 0.1), transparent);
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    /* Smooth scrolling hint */
+    .participants-table-container:hover {
+        cursor: grab;
+    }
+    
+    .participants-table-container:active {
+        cursor: grabbing;
+>>>>>>> Stashed changes
     }
     
     .sort-icon.active {
@@ -448,7 +514,7 @@
             @forelse($participants ?? [] as $i => $participant)
                 @php
                     $user = $participant->user;
-                    $serial = $participant->serial_number ?? (sprintf('CONF%04d-%03d', $participant->conference_id ?? 0, $i+1));
+                    $serial = sprintf('CONF%04d-%03d', $participant->conference_id ?? 0, $i+1);
                     $dob = $user->date_of_birth ?? null;
                     $age = $dob ? \Carbon\Carbon::parse($dob)->age : '';
                     $category = $participant->category ?? ($participant->participantType->name === 'Delegate' ? 'Delegate' : '');
@@ -560,6 +626,28 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </a>
+                            
+                            @if($participant->registration_status !== 'approved')
+                            <button onclick="showApproveModal({{ $participant->id }}, '{{ $participant->user->first_name }} {{ $participant->user->last_name }}')" 
+                                    class="quick-action-btn inline-flex items-center p-2 bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 rounded-lg transition-all duration-200 border border-green-200 shadow-sm"
+                                    title="Approve Participant"
+                                    aria-label="Approve participant">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </button>
+                            @endif
+                            
+                            @if($participant->registration_status !== 'rejected')
+                            <button onclick="showRejectModal({{ $participant->id }}, '{{ $participant->user->first_name }} {{ $participant->user->last_name }}')" 
+                                    class="quick-action-btn inline-flex items-center p-2 bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 rounded-lg transition-all duration-200 border border-red-200 shadow-sm"
+                                    title="Reject Participant"
+                                    aria-label="Reject participant">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            @endif
                             
                             <form action="{{ route('participants.destroy', $participant) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this participant?');">
                                 @csrf
@@ -1034,6 +1122,424 @@ document.addEventListener('DOMContentLoaded', function() {
             closeEmailModal();
         }
     });
+
+    // Horizontal scroll functionality for participants table
+    const tableContainer = document.querySelector('.participants-table-container');
+    if (tableContainer) {
+        let isScrolling = false;
+        let scrollTimeout;
+
+        // Add smooth scrolling behavior
+        tableContainer.style.scrollBehavior = 'smooth';
+
+        // Mouse wheel horizontal scrolling
+        tableContainer.addEventListener('wheel', function(e) {
+            // Check if Shift key is held down for horizontal scrolling
+            if (e.shiftKey) {
+                e.preventDefault();
+                
+                // Horizontal scroll
+                const scrollAmount = e.deltaY;
+                tableContainer.scrollLeft += scrollAmount;
+                
+                // Show scroll indicator
+                showScrollIndicator();
+            } else {
+                // Check if we're at the horizontal scroll boundaries
+                const isAtLeft = tableContainer.scrollLeft <= 0;
+                const isAtRight = tableContainer.scrollLeft >= (tableContainer.scrollWidth - tableContainer.clientWidth);
+                
+                // If we're at the boundaries and trying to scroll vertically, allow horizontal scroll
+                if ((isAtLeft && e.deltaY < 0) || (isAtRight && e.deltaY > 0)) {
+                    e.preventDefault();
+                    tableContainer.scrollLeft += e.deltaY;
+                    showScrollIndicator();
+                }
+            }
+        });
+
+        // Touch/swipe support for mobile devices
+        let startX = 0;
+        let startY = 0;
+        let isHorizontalSwipe = false;
+
+        tableContainer.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isHorizontalSwipe = false;
+        });
+
+        tableContainer.addEventListener('touchmove', function(e) {
+            if (!startX || !startY) return;
+
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const diffX = startX - currentX;
+            const diffY = startY - currentY;
+
+            // Determine if this is a horizontal swipe
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                isHorizontalSwipe = true;
+                e.preventDefault();
+                
+                // Apply horizontal scroll
+                tableContainer.scrollLeft += diffX;
+                startX = currentX;
+                startY = currentY;
+                
+                showScrollIndicator();
+            }
+        });
+
+        tableContainer.addEventListener('touchend', function(e) {
+            startX = 0;
+            startY = 0;
+            isHorizontalSwipe = false;
+        });
+
+        // Keyboard navigation support
+        tableContainer.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            switch(e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    tableContainer.scrollLeft -= 50;
+                    showScrollIndicator();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    tableContainer.scrollLeft += 50;
+                    showScrollIndicator();
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    tableContainer.scrollLeft = 0;
+                    showScrollIndicator();
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    tableContainer.scrollLeft = tableContainer.scrollWidth;
+                    showScrollIndicator();
+                    break;
+            }
+        });
+
+        // Show scroll indicator function
+        function showScrollIndicator() {
+            // Remove existing indicator
+            const existingIndicator = document.querySelector('.scroll-indicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+
+            // Create scroll indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'scroll-indicator';
+            indicator.innerHTML = `
+                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18m-4 4l4-4m0 0l-4-4m4 4H3"></path>
+                </svg>
+                Scroll horizontally to see more columns
+            `;
+            
+            // Position indicator
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(59, 130, 246, 0.9);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 1000;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            
+            document.body.appendChild(indicator);
+            
+            // Animate in
+            setTimeout(() => {
+                indicator.style.opacity = '1';
+            }, 10);
+            
+            // Auto remove after 2 seconds
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+                setTimeout(() => {
+                    if (indicator.parentNode) {
+                        indicator.parentNode.removeChild(indicator);
+                    }
+                }, 300);
+            }, 2000);
+        }
+
+        // Add visual feedback for scrollable content
+        function updateScrollIndicators() {
+            const canScrollLeft = tableContainer.scrollLeft > 0;
+            const canScrollRight = tableContainer.scrollLeft < (tableContainer.scrollWidth - tableContainer.clientWidth);
+            
+            // Add/remove classes for visual feedback
+            if (canScrollLeft) {
+                tableContainer.classList.add('can-scroll-left');
+            } else {
+                tableContainer.classList.remove('can-scroll-left');
+            }
+            
+            if (canScrollRight) {
+                tableContainer.classList.add('can-scroll-right');
+            } else {
+                tableContainer.classList.remove('can-scroll-right');
+            }
+        }
+
+        // Update indicators on scroll
+        tableContainer.addEventListener('scroll', updateScrollIndicators);
+        
+        // Initial update
+        updateScrollIndicators();
+    }
+
+});
+</script>
+
+<!-- Global Functions for Modal Actions -->
+<script>
+// Global variables
+let currentParticipantId = null;
+
+// Approve Participant Modal Functions
+function showApproveModal(participantId, participantName) {
+    currentParticipantId = participantId;
+    document.getElementById('participantName').textContent = participantName;
+    
+    const modal = document.getElementById('approveModal');
+    const modalContent = document.getElementById('approveModalContent');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Trigger animation
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeApproveModal() {
+    const modal = document.getElementById('approveModal');
+    const modalContent = document.getElementById('approveModalContent');
+    
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+    
+    currentParticipantId = null;
+}
+
+function confirmApprove() {
+    if (!currentParticipantId) return;
+    
+    const approveButton = event.target;
+    const originalText = approveButton.textContent;
+    
+    // Show loading state
+    approveButton.disabled = true;
+    approveButton.textContent = 'Approving...';
+    approveButton.classList.add('opacity-75');
+    
+    // Send AJAX request
+    fetch(`/participants/${currentParticipantId}/update-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            registration_status: 'approved'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showNotification('Participant approved successfully!', 'success');
+            
+            // Close modal
+            closeApproveModal();
+            
+            // Reload page to update the list
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            throw new Error(data.message || 'Failed to approve participant');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to approve participant: ' + error.message, 'error');
+        
+        // Reset button state
+        approveButton.disabled = false;
+        approveButton.textContent = originalText;
+        approveButton.classList.remove('opacity-75');
+    });
+}
+
+// Reject Participant Modal Functions
+function showRejectModal(participantId, participantName) {
+    currentParticipantId = participantId;
+    document.getElementById('rejectParticipantName').textContent = participantName;
+    
+    const modal = document.getElementById('rejectModal');
+    const modalContent = document.getElementById('rejectModalContent');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Trigger animation
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    const modalContent = document.getElementById('rejectModalContent');
+    
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+    
+    currentParticipantId = null;
+}
+
+function confirmReject() {
+    if (!currentParticipantId) return;
+    
+    const rejectButton = event.target;
+    const originalText = rejectButton.textContent;
+    
+    // Show loading state
+    rejectButton.disabled = true;
+    rejectButton.textContent = 'Rejecting...';
+    rejectButton.classList.add('opacity-75');
+    
+    // Send AJAX request
+    fetch(`/participants/${currentParticipantId}/update-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            registration_status: 'rejected'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showNotification('Participant rejected successfully!', 'success');
+            
+            // Close modal
+            closeRejectModal();
+            
+            // Reload page to update the list
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            throw new Error(data.message || 'Failed to reject participant');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to reject participant: ' + error.message, 'error');
+        
+        // Reset button state
+        rejectButton.disabled = false;
+        rejectButton.textContent = originalText;
+        rejectButton.classList.remove('opacity-75');
+    });
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 10);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Event listeners for modal interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Close approve modal when clicking outside
+    const approveModal = document.getElementById('approveModal');
+    if (approveModal) {
+        approveModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeApproveModal();
+            }
+        });
+    }
+
+    // Close reject modal when clicking outside
+    const rejectModal = document.getElementById('rejectModal');
+    if (rejectModal) {
+        rejectModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRejectModal();
+            }
+        });
+    }
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const approveModal = document.getElementById('approveModal');
+            const rejectModal = document.getElementById('rejectModal');
+            if (approveModal && !approveModal.classList.contains('hidden')) {
+                closeApproveModal();
+            } else if (rejectModal && !rejectModal.classList.contains('hidden')) {
+                closeRejectModal();
+            }
+        }
+    });
 });
 </script>
 
@@ -1080,6 +1586,64 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Participant Modal -->
+<div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="approveModalContent">
+        <div class="p-6">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Approve Participant</h3>
+            <p class="text-gray-600 text-center mb-6">
+                Are you sure you want to approve <span id="participantName" class="font-semibold text-gray-900"></span>?
+            </p>
+            
+            <div class="flex space-x-3">
+                <button type="button" onclick="closeApproveModal()" 
+                        class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors duration-200">
+                    Cancel
+                </button>
+                <button type="button" onclick="confirmApprove()" 
+                        class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors duration-200">
+                    Approve
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Participant Modal -->
+<div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="rejectModalContent">
+        <div class="p-6">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+            
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Reject Participant</h3>
+            <p class="text-gray-600 text-center mb-6">
+                Are you sure you want to reject <span id="rejectParticipantName" class="font-semibold text-gray-900"></span>?
+            </p>
+            
+            <div class="flex space-x-3">
+                <button type="button" onclick="closeRejectModal()" 
+                        class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors duration-200">
+                    Cancel
+                </button>
+                <button type="button" onclick="confirmReject()" 
+                        class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200">
+                    Reject
+                </button>
+            </div>
         </div>
     </div>
 </div>

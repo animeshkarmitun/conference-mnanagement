@@ -3,7 +3,7 @@
 @section('title', 'Conference Details')
 
 @section('content')
-<div class="max-w-5xl mx-auto">
+<div class="max-w-7xl mx-auto">
     <div class="bg-white rounded-xl shadow p-6 mb-8">
         <h2 class="text-2xl font-bold mb-4">{{ $conference->name }}</h2>
         <div class="mb-2"><span class="font-semibold text-gray-700">Start Date:</span> {{ $conference->start_date }}</div>
@@ -33,14 +33,23 @@
         <div class="bg-white rounded-xl shadow p-6">
             <h3 class="text-lg font-semibold mb-2">Speakers</h3>
             @php
-                $speakers = $conference->participants->filter(fn($p) => $p->roles->contains('name', 'Speaker'));
+                $speakers = $conference->participants->filter(function($participant) {
+                    return $participant->participantType && $participant->participantType->category === 'presenter';
+                });
             @endphp
             @if($speakers->count())
                 <ul class="divide-y divide-gray-200">
                     @foreach($speakers as $speaker)
                         <li class="py-2">
-                            <span class="font-semibold">{{ $speaker->user->first_name ?? '' }} {{ $speaker->user->last_name ?? '' }}</span>
-                            <span class="text-sm text-gray-500"> ({{ $speaker->user->email ?? '' }})</span>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-semibold">{{ $speaker->user->first_name ?? '' }} {{ $speaker->user->last_name ?? '' }}</span>
+                                    <span class="text-sm text-gray-500"> ({{ $speaker->user->email ?? '' }})</span>
+                                </div>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                    {{ ucwords(str_replace('_', ' ', $speaker->participantType->name ?? '')) }}
+                                </span>
+                            </div>
                         </li>
                     @endforeach
                 </ul>
@@ -52,13 +61,15 @@
         <div class="bg-white rounded-xl shadow p-6 md:col-span-2">
             <h3 class="text-lg font-semibold mb-2">Participants</h3>
             @if($conference->participants->count())
+<<<<<<< Updated upstream
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
+=======
+                <div class="overflow-x-auto">
+                    <table class="w-full divide-y divide-gray-200 text-sm min-w-full table-fixed">
+>>>>>>> Stashed changes
                     <thead>
                         <tr>
-                            <th class="px-4 py-2 text-left">
-                                <input type="checkbox" class="participant-checkbox-all">
-                            </th>
-                            <th class="px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(1)">
+                            <th class="w-24 px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(0)">
                                 <div class="flex items-center">
                                     SERIAL NO.
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +77,7 @@
                                     </svg>
                                 </div>
                             </th>
-                            <th class="px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(2)">
+                            <th class="w-48 px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(1)">
                                 <div class="flex items-center">
                                     NAME
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +85,7 @@
                                     </svg>
                                 </div>
                             </th>
-                            <th class="px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(3)">
+                            <th class="w-64 px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(2)">
                                 <div class="flex items-center">
                                     EMAIL
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +93,7 @@
                                     </svg>
                                 </div>
                             </th>
-                            <th class="px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(4)">
+                            <th class="w-32 px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(3)">
                                 <div class="flex items-center">
                                     TYPE
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +101,7 @@
                                     </svg>
                                 </div>
                             </th>
-                            <th class="px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(5)">
+                            <th class="w-48 px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(4)">
                                 <div class="flex items-center">
                                     ORGANIZATION
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +109,7 @@
                                     </svg>
                                 </div>
                             </th>
-                            <th class="px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(6)">
+                            <th class="w-24 px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(5)">
                                 <div class="flex items-center">
                                     STATUS
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +117,7 @@
                                     </svg>
                                 </div>
                             </th>
-                            <th class="px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(7)">
+                            <th class="w-24 px-4 py-2 text-left cursor-pointer hover:bg-gray-50" onclick="sortTable(6)">
                                 <div class="flex items-center">
                                     VISA STATUS
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,16 +131,13 @@
                         @foreach($conference->participants as $i => $participant)
                             @php
                                 $user = $participant->user;
-                                $serial = $participant->serial_number ?? (sprintf('CONF%04d-%03d', $conference->id, $i+1));
+                                $serial = sprintf('CONF%04d-%03d', $conference->id, $i+1);
                                 $serialParts = explode('-', $serial);
                                 $conferenceNum = isset($serialParts[0]) ? intval(substr($serialParts[0], 4)) : 0;
                                 $participantNum = isset($serialParts[1]) ? intval($serialParts[1]) : 0;
                                 $serialSortValue = sprintf('%04d-%03d', $conferenceNum, $participantNum);
                             @endphp
                             <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-2">
-                                    <input type="checkbox" class="participant-checkbox" value="{{ $participant->id }}">
-                                </td>
                                 <td class="px-4 py-2" data-sort-value="{{ $serialSortValue }}">{{ $serial }}</td>
                                 <td class="px-4 py-2" data-sort-value="{{ strtolower(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) }}">
                                     <a href="{{ route('participants.show', $participant) }}" class="text-blue-700 hover:text-blue-800 font-semibold transition-colors duration-200">
@@ -156,7 +164,8 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                    </table>
+                </div>
             @else
                 <p class="text-gray-500">No participants found.</p>
             @endif
@@ -321,7 +330,7 @@ function sortTable(columnIndex) {
         const bValue = b.cells[columnIndex].getAttribute('data-sort-value') || b.cells[columnIndex].textContent.trim();
         
         // Handle numeric sorting for serial numbers and status priorities
-        if (columnIndex === 1 || columnIndex === 6 || columnIndex === 7) {
+        if (columnIndex === 0 || columnIndex === 5 || columnIndex === 6) {
             const aNum = parseFloat(aValue) || 0;
             const bNum = parseFloat(bValue) || 0;
             return (aNum - bNum) * sortDirection;
@@ -355,31 +364,5 @@ function updateSortIndicators(columnIndex, direction) {
     }
 }
 
-// Checkbox functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const selectAllCheckbox = document.querySelector('.participant-checkbox-all');
-    const participantCheckboxes = document.querySelectorAll('.participant-checkbox');
-    
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            participantCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-        });
-    }
-    
-    // Update select all checkbox when individual checkboxes change
-    participantCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const checkedBoxes = document.querySelectorAll('.participant-checkbox:checked');
-            const totalBoxes = participantCheckboxes.length;
-            
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = checkedBoxes.length === totalBoxes;
-                selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < totalBoxes;
-            }
-        });
-    });
-});
 </script>
 @endsection 
