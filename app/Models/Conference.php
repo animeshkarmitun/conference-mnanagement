@@ -59,9 +59,15 @@ class Conference extends Model
         return $this->hasMany(Checkin::class);
     }
 
+    public function conferenceDocs()
+    {
+        return $this->hasMany(ConferenceDoc::class);
+    }
+
+    // Legacy relationship for backward compatibility
     public function conferenceKits()
     {
-        return $this->hasMany(ConferenceKit::class);
+        return $this->conferenceDocs();
     }
 
     public function venue()

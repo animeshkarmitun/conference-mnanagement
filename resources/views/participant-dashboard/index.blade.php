@@ -20,12 +20,12 @@
                     </svg>
                     My Profile
                 </a>
-                <a href="{{ route('conference-kit.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('conference-docs.index') }}" 
+                   class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors duration-200 shadow-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    Conference Kit
+                    Conference Docs
                 </a>
             </div>
         </div>
@@ -112,7 +112,7 @@
                 </div>
             </a>
 
-            <a href="{{ route('conference-kit.index') }}" class="group">
+            <a href="{{ route('conference-docs.index') }}" class="group">
                 <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-200">
                     <div class="flex items-center mb-4">
                         <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors duration-200">
@@ -120,7 +120,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
-                        <h3 class="font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-200">Conference Kit</h3>
+                        <h3 class="font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-200">Conference Docs</h3>
                     </div>
                     <p class="text-gray-600 text-sm">Access session links, contacts, and city guide information.</p>
                 </div>

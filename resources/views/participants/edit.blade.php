@@ -27,21 +27,7 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="mb-4">
-<<<<<<< Updated upstream
-            <label for="user_id" class="block text-sm font-medium text-gray-700">User</label>
-            <select name="user_id" id="user_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                <option value="">Select User</option>
-                @foreach($users as $user)
-                    <option value="{{ $user->id }}" {{ old('user_id', $participant->user_id) == $user->id ? 'selected' : '' }}>{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }} ({{ $user->email }})</option>
-                @endforeach
-            </select>
-            @error('user_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-        </div>
-        <div class="mb-4">
-            <label for="conference_id" class="block text-sm font-medium text-gray-700">Conference</label>
-=======
                     <label for="conference_id" class="block text-sm font-medium text-gray-700">Conference *</label>
->>>>>>> Stashed changes
             <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                 <option value="">Select Conference</option>
                 @foreach($conferences as $conference)
@@ -49,8 +35,6 @@
                 @endforeach
             </select>
             @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-<<<<<<< Updated upstream
-=======
                 </div>
                 
                 <div class="mb-4">
@@ -353,7 +337,6 @@
                     </div>
                 </div>
             </div>
->>>>>>> Stashed changes
         </div>
 
         <!-- Address Information Section -->
@@ -552,8 +535,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Listen for changes
     visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
-<<<<<<< Updated upstream
-=======
     
     // Participant type description handling
     const participantTypeSelect = document.getElementById('participant_type_id');
@@ -723,7 +704,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Form validation is handled by the onsubmit attribute on the form element
->>>>>>> Stashed changes
 });
 
 // Global form validation function for edit form

@@ -264,27 +264,9 @@
         
         <!-- Quick Action Buttons -->
         <div class="flex flex-wrap gap-3">
-            <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Import Conferences">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                </svg>
-            </button>
-            
-            <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Generate Reports">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-            </button>
-            
-            <button class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Export Data">
+            <button onclick="exportConferenceData()" class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200" title="Export Data">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-            </button>
-            
-            <button class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Bulk Operations">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
             </button>
             
@@ -349,12 +331,6 @@
     </div>
 </div>
 
-<<<<<<< Updated upstream
-<!-- Enhanced Conference Table -->
-<div class="table-container bg-white animate-fade-in-up animate-delay-2">
-    <div class="overflow-x-auto">
-        <table class="min-w-full" id="conferencesTable">
-=======
 <!-- Enhanced Search and Secondary Filters -->
 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
     <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
@@ -493,7 +469,6 @@
 <div class="table-container bg-white animate-fade-in-up animate-delay-2">
     <div class="overflow-x-auto conferences-table-container">
         <table class="w-full" id="conferencesTable">
->>>>>>> Stashed changes
             <thead class="table-header">
                 <tr>
                     <th class="sortable-header" data-sort="status">
@@ -852,5 +827,22 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('resize', updateScrollIndicators);
     }
 });
+
+// Export function
+function exportConferenceData() {
+    const currentUrl = new URL(window.location.href);
+    const status = currentUrl.searchParams.get('status') || 'upcoming'; // Match index default
+    const search = currentUrl.searchParams.get('search') || '';
+    
+    // Build export URL with current filters
+    const exportUrl = new URL('{{ route("conferences.export") }}', window.location.origin);
+    exportUrl.searchParams.set('status', status);
+    if (search) {
+        exportUrl.searchParams.set('search', search);
+    }
+    
+    // Trigger download
+    window.location.href = exportUrl.toString();
+}
 </script>
 @endsection 

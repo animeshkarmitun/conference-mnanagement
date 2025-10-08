@@ -56,19 +56,47 @@ class SendTaskNotification implements ShouldQueue
     private function getUsersToNotify(TaskEvent $event): array
     {
         $users = [];
-
-        // Always notify the assigned tasker
-        if ($event->task->assignedTo) {
-            $users[] = $event->task->assignedTo;
+        $currentUser = auth()->user();
+        
+        // Check if current user is admin or superadmin
+        $isCurrentUserAdmin = $currentUser && $currentUser->roles()->whereIn('name', ['admin', 'superadmin'])->exists();
+        
+        if ($isCurrentUserAdmin) {
+            // If admin/superadmin made the change, notify assigned users
+            $assignedUsers = $event->task->users;
+            foreach ($assignedUsers as $user) {
+                // Don't notify the admin who made the change
+                if ($user->id !== $currentUser->id) {
+                    $users[] = $user;
+                }
+            }
+            
+            Log::info('Admin/Superadmin task change - notifying assigned users', [
+                'admin_user' => $currentUser->email,
+                'task_id' => $event->task->id,
+                'assigned_users_count' => count($users)
+            ]);
+            
+        } else {
+            // If regular user/tasker made the change, notify admins and superadmins
+            $adminRoleIds = Role::whereIn('name', ['admin', 'superadmin'])->pluck('id');
+            $adminUsers = User::whereHas('roles', function ($query) use ($adminRoleIds) {
+                $query->whereIn('role_id', $adminRoleIds);
+            })->get();
+            
+            foreach ($adminUsers as $user) {
+                // Don't notify the user who made the change (if they happen to be admin)
+                if ($user->id !== $currentUser->id) {
+                    $users[] = $user;
+                }
+            }
+            
+            Log::info('Regular user task change - notifying admins/superadmins', [
+                'user' => $currentUser ? $currentUser->email : 'Unknown',
+                'task_id' => $event->task->id,
+                'admin_users_count' => count($users)
+            ]);
         }
-
-        // Get admin and superadmin users for oversight
-        $adminRoleIds = Role::whereIn('name', ['admin', 'superadmin'])->pluck('id');
-        $adminUsers = User::whereHas('roles', function ($query) use ($adminRoleIds) {
-            $query->whereIn('role_id', $adminRoleIds);
-        })->get();
-
-        $users = array_merge($users, $adminUsers->toArray());
 
         // Remove duplicates
         $uniqueUsers = [];

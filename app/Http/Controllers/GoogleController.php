@@ -2,16 +2,19 @@
 namespace App\Http\Controllers;
 
 use App\Services\GoogleService;
+use App\Services\EmailTrackingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class GoogleController extends Controller
 {
     protected $googleService;
+    protected $emailTrackingService;
 
-    public function __construct(GoogleService $googleService)
+    public function __construct(GoogleService $googleService, EmailTrackingService $emailTrackingService)
     {
         $this->googleService = $googleService;
+        $this->emailTrackingService = $emailTrackingService;
     }
 
     public function redirectToGoogle()
@@ -27,19 +30,29 @@ class GoogleController extends Controller
                 return redirect()->route('login')->with('error', 'Please login first to connect your Gmail account.');
             }
 
-            $token = $this->googleService->authenticate($request->get('code'));
+            // Get the authorization code
+            $code = $request->get('code');
+            if (!$code) {
+                return redirect()->route('gmail.index')->with('error', 'No authorization code received from Google.');
+            }
+
+            // Authenticate with Google
+            $token = $this->googleService->authenticate($code);
             $user = Auth::user();
             
             if (!$user) {
                 return redirect()->route('login')->with('error', 'User not found. Please login again.');
             }
 
+            // Save the Google token
             $user->google_token = json_encode($token);
             $user->save();
 
-            return redirect()->route('dashboard')->with('success', 'Gmail connected successfully');
+            // Redirect back to Gmail page instead of dashboard
+            return redirect()->route('gmail.index')->with('success', 'Gmail connected successfully! You can now view your conversations.');
         } catch (\Exception $e) {
-            return redirect()->route('dashboard')->with('error', 'Failed to connect Gmail: ' . $e->getMessage());
+            \Log::error('Gmail OAuth callback error: ' . $e->getMessage());
+            return redirect()->route('gmail.index')->with('error', 'Failed to connect Gmail: ' . $e->getMessage());
         }
     }
 
@@ -51,40 +64,77 @@ class GoogleController extends Controller
     public function showGmailThreads(Request $request)
     {
         try {
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'Please login first to access Gmail.');
-            }
-
+            // Note: Authentication and admin role checks are handled by middleware
             $user = Auth::user();
+            
+            // Additional check for non-middleware routes
+            if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+                return view('gmail.index', [
+                    'threads' => [],
+                    'nextPageToken' => null,
+                    'maxResults' => 30,
+                    'searchQuery' => $request->input('q'),
+                    'needsConnection' => false,
+                    'accessDenied' => true,
+                    'error' => 'Access denied. Gmail conversations are only available to administrators.'
+                ]);
+            }
+            
+            // Check if user has Google token
             if (!$user->google_token) {
-                return redirect()->route('google.redirect')->with('error', 'Please connect your Gmail account.');
+                // Show the Gmail page with connect button instead of redirecting
+                return view('gmail.index', [
+                    'threads' => [],
+                    'nextPageToken' => null,
+                    'maxResults' => 30,
+                    'searchQuery' => $request->input('q'),
+                    'needsConnection' => true,
+                ]);
             }
 
             $this->googleService->setAccessToken(json_decode($user->google_token, true));
             $maxResults = $request->input('maxResults', 30); // Increased default
             $pageToken = $request->input('pageToken');
             $query = $request->input('q');
+            $participant = $request->input('participant');
+            
+            // If participant is selected, modify the query to search for that participant's emails
+            if ($participant) {
+                if ($query) {
+                    // If there's already a query, combine it with participant filter
+                    $query = "(from:{$participant} OR to:{$participant}) {$query}";
+                } else {
+                    // If no query, just filter by participant (both sent and received)
+                    $query = "from:{$participant} OR to:{$participant}";
+                }
+            }
+            
             $result = $this->googleService->listThreads('me', $maxResults, $pageToken, $query);
+
+            // Get participants for dropdown
+            $participants = $this->emailTrackingService->getParticipantsWithEmails();
 
             return view('gmail.index', [
                 'threads' => $result['threads'],
                 'nextPageToken' => $result['nextPageToken'],
                 'maxResults' => $maxResults,
-                'searchQuery' => $query,
+                'searchQuery' => $request->input('q'), // Original query without participant filter
+                'selectedParticipant' => $participant,
+                'needsConnection' => false,
+                'participants' => $participants,
             ]);
         } catch (\Exception $e) {
-            return redirect()->route('dashboard')->with('error', 'Failed to load Gmail threads: ' . $e->getMessage());
+            \Log::error('Gmail threads error: ' . $e->getMessage());
+            return redirect()->route('gmail.index')->with('error', 'Failed to load Gmail threads: ' . $e->getMessage());
         }
     }
 
     public function showReplyForm($threadId)
     {
         try {
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'Please login first to reply to emails.');
-            }
-
+            // Note: Authentication and admin role checks are handled by middleware
             $user = Auth::user();
+            
             if (!$user->google_token) {
                 return redirect()->route('google.redirect')->with('error', 'Please connect your Gmail account.');
             }
@@ -116,9 +166,8 @@ class GoogleController extends Controller
     public function sendReply(Request $request, $threadId)
     {
         try {
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'Please login first to send emails.');
-            }
+            // Note: Authentication and admin role checks are handled by middleware
+            $user = Auth::user();
 
             $request->validate([
                 'to' => 'required|email',
@@ -126,7 +175,6 @@ class GoogleController extends Controller
                 'body' => 'required|string'
             ]);
 
-            $user = Auth::user();
             if (!$user->google_token) {
                 return redirect()->route('google.redirect')->with('error', 'Please connect your Gmail account.');
             }
@@ -143,6 +191,30 @@ class GoogleController extends Controller
             return redirect()->route('gmail.index')->with('success', 'Reply sent successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to send reply: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * Get participants for dropdown
+     */
+    public function getParticipants(Request $request)
+    {
+        try {
+            $participants = $this->emailTrackingService->getParticipantsWithEmails();
+            
+            $formattedParticipants = $participants->map(function($participant) {
+                return [
+                    'id' => $participant->id,
+                    'email' => $participant->user->email,
+                    'name' => $participant->user->first_name . ' ' . $participant->user->last_name,
+                    'conference' => $participant->conference->name ?? 'N/A',
+                    'participant_type' => $participant->participantType->name ?? 'N/A',
+                ];
+            });
+            
+            return response()->json($formattedParticipants);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 } 

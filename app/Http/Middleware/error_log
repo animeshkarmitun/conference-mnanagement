@@ -1,0 +1,4 @@
+[21-Sep-2025 09:02:18 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Auth\Middleware\Authenticate" not found in /home/stagingi/public_html/app/Http/Middleware/Authenticate.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/stagingi/public_html/app/Http/Middleware/Authenticate.php on line 8

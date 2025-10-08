@@ -11,6 +11,7 @@ use App\Models\Hotel;
 use App\Models\Session;
 use App\Services\TravelNotificationService;
 use App\Services\ProfileNotificationService;
+use App\Events\SessionEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -161,17 +162,6 @@ class ParticipantController extends Controller
     // Store new participant
     public function store(Request $request)
     {
-<<<<<<< Updated upstream
-        // Validate user creation data
-        $userValidated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'gender' => 'nullable|string|max:20',
-            'nationality' => 'nullable|string|max:100',
-            'profession' => 'nullable|string|max:100',
-=======
         // Get participant type for conditional validation
         $type = null;
         if ($request->participant_type_id) {
@@ -186,17 +176,10 @@ class ParticipantController extends Controller
             'password' => 'nullable|string|min:8',
             // All other fields are optional
             'gender' => 'nullable|in:male,female,prefer_not_to_say',
->>>>>>> Stashed changes
             'date_of_birth' => 'nullable|date',
             'organization' => 'nullable|string|max:255',
             'dietary_needs' => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|max:2048',
-<<<<<<< Updated upstream
-            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
-        ]);
-
-        // Validate participant data
-=======
             // Enhanced participant fields - all optional
             'pronoun' => 'nullable|in:he_him,she_her,they_them',
             'contact_no' => 'nullable|string|max:20',
@@ -238,25 +221,19 @@ class ParticipantController extends Controller
         $userValidated = $request->validate($validationRules);
 
         // Validate participant data - Only essential fields required
->>>>>>> Stashed changes
         $participantValidated = $request->validate([
             'conference_id' => 'required|exists:conferences,id',
             'participant_type_id' => 'required|exists:participant_types,id',
-            'visa_status' => 'required|in:required,not_required,pending,approved,issue',
+            // All other participant fields are optional
+            'visa_status' => 'nullable|in:required,not_required,pending,approved,issue',
             'visa_issue_description' => 'nullable|string|max:1000',
-<<<<<<< Updated upstream
-            'travel_form_submitted' => 'boolean',
-            'bio' => 'nullable|string',
-            'approved' => 'boolean',
-            'travel_intent' => 'required',
-            'registration_status' => 'required',
-=======
             'bio' => 'nullable|string',
             'approved' => 'nullable|boolean',
             'travel_intent' => 'nullable|in:national,international',
             'registration_status' => 'nullable|in:pending,approved,rejected',
->>>>>>> Stashed changes
             'category' => 'nullable|string|max:50',
+            'dietary_needs_other' => 'nullable|string|max:255',
+            'hashtags' => 'nullable|string|max:1000',
         ]);
 
         // Generate password if not provided
@@ -272,15 +249,6 @@ class ParticipantController extends Controller
             'first_name' => $userValidated['first_name'],
             'last_name' => $userValidated['last_name'],
             'email' => $userValidated['email'],
-<<<<<<< Updated upstream
-            'password' => bcrypt($userValidated['password']),
-            'gender' => $userValidated['gender'],
-            'nationality' => $userValidated['nationality'],
-            'profession' => $userValidated['profession'],
-            'date_of_birth' => $userValidated['date_of_birth'],
-            'organization' => $userValidated['organization'],
-            'dietary_needs' => $userValidated['dietary_needs'],
-=======
             'password' => bcrypt($password),
             'gender' => $userValidated['gender'] ?? null,
             'date_of_birth' => $userValidated['date_of_birth'] ?? null,
@@ -317,7 +285,6 @@ class ParticipantController extends Controller
             'has_valid_passport' => $request->has_valid_passport,
             'had_visa_issue_bd' => $request->had_visa_issue_bd,
             'visa_issue_explanation' => $request->visa_issue_explanation,
->>>>>>> Stashed changes
         ]);
 
         // Handle file uploads for the user
@@ -325,15 +292,9 @@ class ParticipantController extends Controller
             $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
             $user->profile_picture = $profilePicturePath;
         }
-<<<<<<< Updated upstream
-        if ($request->hasFile('resume')) {
-            $resumePath = $request->file('resume')->store('resumes', 'public');
-            $user->resume = $resumePath;
-=======
         if ($request->hasFile('nid_passport_birth_certificate')) {
             $nidPath = $request->file('nid_passport_birth_certificate')->store('nid_documents', 'public');
             $user->nid_passport_birth_certificate = $nidPath;
->>>>>>> Stashed changes
         }
         $user->save();
 
@@ -344,20 +305,12 @@ class ParticipantController extends Controller
 
         // Add user_id to participant data
         $participantValidated['user_id'] = $user->id;
-<<<<<<< Updated upstream
-        $participantValidated['serial_number'] = $serialNumber;
-        $participantValidated['travel_intent'] = $request->travel_intent == '1' ? true : false;
-=======
         $participantValidated['travel_intent'] = $request->travel_intent ?? 'national';
         $participantValidated['hashtags'] = $request->hashtags_input ?? null;
->>>>>>> Stashed changes
 
         // Create the participant
-        Participant::create($participantValidated);
+        $participant = Participant::create($participantValidated);
         
-<<<<<<< Updated upstream
-        return redirect()->route('participants.index')->with('success', 'Participant created successfully.');
-=======
         // Send welcome email to the participant
         try {
             $emailTrackingService = app(\App\Services\EmailTrackingService::class);
@@ -457,7 +410,6 @@ class ParticipantController extends Controller
         }
         
         return redirect()->route('participants.index')->with('success', $successMessage);
->>>>>>> Stashed changes
     }
 
     // Show participant details
@@ -502,24 +454,6 @@ class ParticipantController extends Controller
     // Update participant
     public function update(Request $request, Participant $participant)
     {
-<<<<<<< Updated upstream
-        // Validate participant data
-        $participantValidated = $request->validate([
-            'visa_status' => 'required|in:required,not_required,pending,approved,issue',
-            'visa_issue_description' => 'nullable|string|max:1000',
-            'bio' => 'nullable|string|max:500',
-            'organization' => 'nullable|string|max:100',
-            'dietary_needs' => 'nullable|string|max:50',
-            'dietary_needs_other' => 'nullable|string|max:100',
-        ]);
-
-        // Validate user data
-        $userValidated = $request->validate([
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
-            'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
-        ]);
-=======
         // Check if this is a personal info update (participant updating their own profile)
         $isPersonalUpdate = !Auth::user()->hasRole('admin') && !Auth::user()->hasRole('superadmin');
         
@@ -596,7 +530,6 @@ class ParticipantController extends Controller
                 'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
             ]);
         }
->>>>>>> Stashed changes
 
         // Validate file uploads
         $request->validate([
@@ -614,17 +547,10 @@ class ParticipantController extends Controller
             'visa_status' => $participant->visa_status,
             'dietary_needs' => $participant->dietary_needs,
             'organization' => $participant->organization,
+            'conference_id' => $participant->conference_id,
         ];
 
         // Update user data
-<<<<<<< Updated upstream
-        $user = $participant->user;
-        $user->update([
-            'first_name' => $userValidated['first_name'],
-            'last_name' => $userValidated['last_name'],
-            'email' => $userValidated['email'],
-        ]);
-=======
         if ($isPersonalUpdate) {
             // Personal update - always update the current participant's user
             $user = $participant->user;
@@ -685,7 +611,6 @@ class ParticipantController extends Controller
                 }
             }
         }
->>>>>>> Stashed changes
 
         // Handle file uploads
         if ($request->hasFile('profile_picture')) {
@@ -718,8 +643,6 @@ class ParticipantController extends Controller
             $participantValidated['visa_issue_description'] = null;
         }
 
-<<<<<<< Updated upstream
-=======
         // Handle travel intent field
         $participantValidated['travel_intent'] = $request->travel_intent ?? 'national';
         
@@ -734,46 +657,59 @@ class ParticipantController extends Controller
             $this->handleConferenceChange($participant, $oldParticipantData['conference_id'], $participantValidated['conference_id']);
         }
 
->>>>>>> Stashed changes
         // Update participant data
         $participant->update($participantValidated);
         
-        // Send notifications if this is a participant updating their own profile
-        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('superadmin')) {
-            $profileNotificationService = new ProfileNotificationService();
-            $changes = [];
-            
-            // Check for personal info changes
-            $newUserData = [
-                'first_name' => $userValidated['first_name'],
-                'last_name' => $userValidated['last_name'],
-                'email' => $userValidated['email'],
-            ];
+        // Send notifications for both admin and participant updates
+        $profileNotificationService = new ProfileNotificationService();
+        $changes = [];
+        
+        // Check for personal info changes
+        $newUserData = [
+            'first_name' => $userValidated['first_name'],
+            'last_name' => $userValidated['last_name'],
+            'email' => $userValidated['email'],
+        ];
+        
+        if (($oldUserData['first_name'] ?? '') !== ($newUserData['first_name'] ?? '') ||
+            ($oldUserData['last_name'] ?? '') !== ($newUserData['last_name'] ?? '') ||
+            ($oldUserData['email'] ?? '') !== ($newUserData['email'] ?? '')) {
+            $changes['personal_info'] = true;
             $profileNotificationService->notifyPersonalInfoUpdated($participant, $oldUserData, $newUserData);
-            
-            // Check for visa status changes
-            if ($oldParticipantData['visa_status'] !== $participantValidated['visa_status']) {
-                $profileNotificationService->notifyVisaStatusUpdated($participant, $oldParticipantData['visa_status'], $participantValidated['visa_status']);
-            }
-            
-            // Check for dietary needs changes
-            if (($oldParticipantData['dietary_needs'] ?? '') !== ($participantValidated['dietary_needs'] ?? '')) {
-                $profileNotificationService->notifyDietaryNeedsUpdated($participant, $oldParticipantData['dietary_needs'] ?? '', $participantValidated['dietary_needs'] ?? '');
-            }
-            
-            // Check for organization changes
-            if (($oldParticipantData['organization'] ?? '') !== ($participantValidated['organization'] ?? '')) {
-                $profileNotificationService->notifyOrganizationUpdated($participant, $oldParticipantData['organization'] ?? '', $participantValidated['organization'] ?? '');
-            }
-            
-            // Check for document uploads
-            if ($request->hasFile('profile_picture')) {
-                $profileNotificationService->notifyDocumentUploaded($participant, 'Profile Picture');
-            }
-            
-            if ($request->hasFile('resume')) {
-                $profileNotificationService->notifyDocumentUploaded($participant, 'Resume');
-            }
+        }
+        
+        // Check for visa status changes
+        if ($oldParticipantData['visa_status'] !== $participantValidated['visa_status']) {
+            $changes['visa_status'] = true;
+            $profileNotificationService->notifyVisaStatusUpdated($participant, $oldParticipantData['visa_status'], $participantValidated['visa_status']);
+        }
+        
+        // Check for dietary needs changes
+        if (($oldParticipantData['dietary_needs'] ?? '') !== ($participantValidated['dietary_needs'] ?? '')) {
+            $changes['dietary_needs'] = true;
+            $profileNotificationService->notifyDietaryNeedsUpdated($participant, $oldParticipantData['dietary_needs'] ?? '', $participantValidated['dietary_needs'] ?? '');
+        }
+        
+        // Check for organization changes
+        if (($oldParticipantData['organization'] ?? '') !== ($participantValidated['organization'] ?? '')) {
+            $changes['organization'] = true;
+            $profileNotificationService->notifyOrganizationUpdated($participant, $oldParticipantData['organization'] ?? '', $participantValidated['organization'] ?? '');
+        }
+        
+        // Check for document uploads
+        if ($request->hasFile('profile_picture')) {
+            $changes['profile_picture'] = true;
+            $profileNotificationService->notifyDocumentUploaded($participant, 'Profile Picture');
+        }
+        
+        if ($request->hasFile('resume')) {
+            $changes['resume'] = true;
+            $profileNotificationService->notifyDocumentUploaded($participant, 'Resume');
+        }
+        
+        // Send email notification to participant if admin made changes
+        if ((Auth::user()->hasRole('admin') || Auth::user()->hasRole('superadmin')) && !empty($changes)) {
+            $this->sendParticipantUpdateEmail($participant, $changes, Auth::user());
         }
         
         // Redirect based on who is updating (admin vs participant)
@@ -1020,6 +956,17 @@ class ParticipantController extends Controller
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
+                    
+                    // Trigger session assignment event
+                    $session = Session::find($sid);
+                    if ($session) {
+                        $message = "You have been assigned to the session '{$session->title}' as " . ($roles[$sid] ?? 'participant');
+                        event(new SessionEvent($session, 'session_assigned', $message, [
+                            'participant_id' => $participant->id,
+                            'role' => $roles[$sid] ?? 'participant',
+                            'assigned_by' => Auth::user()->id
+                        ]));
+                    }
                 }
             }
 
@@ -1045,6 +992,15 @@ class ParticipantController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        
+        // Trigger session assignment event
+        $message = "You have been assigned to the session '{$session->title}' as {$validated['role']}";
+        event(new SessionEvent($session, 'session_assigned', $message, [
+            'participant_id' => $participant->id,
+            'role' => $validated['role'],
+            'assigned_by' => Auth::user()->id
+        ]));
+        
         return redirect()->back()->with('success', 'Session assigned successfully');
     }
 
@@ -1054,7 +1010,11 @@ class ParticipantController extends Controller
     public function removeSession(Request $request, Participant $participant)
     {
         // Check permissions
-        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('super_admin')) {
+        $user = Auth::user();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || in_array('super_admin', $userRoles) || in_array('superadmin', $userRoles);
+        
+        if (!$hasPermission) {
             return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
         }
 
@@ -1062,8 +1022,30 @@ class ParticipantController extends Controller
             'session_id' => 'required|exists:sessions,id',
         ]);
 
+        // Get session details before removing
+        $session = Session::find($validated['session_id']);
+        
+        // Verify session belongs to the same conference as participant
+        if ($session && $session->conference_id !== $participant->conference_id) {
+            return response()->json(['success' => false, 'message' => 'Session does not belong to the same conference'], 422);
+        }
+        
+        // Check if participant is actually assigned to this session
+        if (!$participant->sessions()->where('session_id', $validated['session_id'])->exists()) {
+            return response()->json(['success' => false, 'message' => 'Participant is not assigned to this session'], 422);
+        }
+        
         // Remove session from participant
         $participant->sessions()->detach($validated['session_id']);
+        
+        // Trigger session removal event
+        if ($session) {
+            $message = "Your assignment to the session '{$session->title}' has been removed";
+            event(new SessionEvent($session, 'session_removed', $message, [
+                'participant_id' => $participant->id,
+                'removed_by' => Auth::user()->id
+            ]));
+        }
 
         return response()->json(['success' => true, 'message' => 'Session removed successfully']);
     }
@@ -1139,8 +1121,6 @@ class ParticipantController extends Controller
             return redirect()->back()->with('error', 'Failed to update participants: ' . $e->getMessage());
         }
     }
-<<<<<<< Updated upstream
-=======
 
     /**
      * Send email notification to participant when admin updates their information
@@ -1590,5 +1570,4 @@ class ParticipantController extends Controller
             'message' => $exists ? 'Email is already taken' : 'Email is available'
         ]);
     }
->>>>>>> Stashed changes
 } 

@@ -16,7 +16,14 @@ class Session extends Model
         'start_time',
         'end_time',
         'venue_id',
+        'room',
+        'capacity',
         'seating_arrangement',
+    ];
+
+    protected $casts = [
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
     ];
 
     // Relationships

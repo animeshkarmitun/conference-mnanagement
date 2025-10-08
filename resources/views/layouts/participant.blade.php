@@ -11,8 +11,18 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        
+        <!-- Localhost CSS -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
         <!-- Static CSS for shared hosting -->
-        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        <!-- <link rel="stylesheet" href="{{ asset('public/build/assets/app-a8637ff7.css') }}">
+        <script src="{{ asset('public/build/assets/app-eff04317.js') }}"></script>  -->
         
         <!-- Alpine.js for interactive components -->
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -156,10 +166,10 @@
             }
         </style>
     </head>
-    <body class="bg-gray-100 font-sans antialiased" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 768 }" x-init="$watch('sidebarCollapsed', value => localStorage.setItem('sidebarCollapsed', value))" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
-        <div class="min-h-screen flex">
+    <body class="bg-gray-100 font-sans antialiased" style="overflow-x: hidden; max-width: 100vw;" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 768 }" x-init="$watch('sidebarCollapsed', value => localStorage.setItem('sidebarCollapsed', value))" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
+        <div class="min-h-screen flex max-w-full overflow-hidden">
             <!-- Sidebar -->
-            <aside class="bg-slate-900 shadow-xl flex flex-col transition-all duration-300" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
+            <aside class="bg-slate-900 shadow-xl flex flex-col transition-all duration-300 flex-shrink-0" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
                 <div class="h-20 flex items-center justify-between border-b border-slate-800 px-4 relative">
                     <span class="text-2xl font-bold text-indigo-200 transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">CGS Events</span>
                     <button @click="sidebarCollapsed = !sidebarCollapsed" class="p-3 rounded-lg hover:bg-slate-800 transition-colors duration-150 flex-shrink-0 sidebar-toggle-btn bg-slate-800 border border-slate-700 shadow-sm" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
@@ -168,7 +178,7 @@
                         </svg>
                     </button>
                 </div>
-                <nav class="flex-1 px-4 py-6 space-y-3 sidebar-nav">
+                <nav class="flex-1 px-1 py-1 space-y-1 sidebar-nav">
                     <!-- Participant Dashboard -->
                     <a href="{{ route('participant-dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant-dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
                         <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -185,12 +195,12 @@
                         <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">My Profile</span>
                     </a>
                     
-                    <!-- Conference Kit -->
-                    <a href="{{ route('conference-kit.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('conference-kit.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Conference Kit' : ''">
+                    <!-- Conference Docs -->
+                    <a href="{{ route('participant.conference-docs.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant.conference-docs.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Conference Docs' : ''">
                         <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Conference Kit</span>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Conference Docs</span>
                     </a>
                     
                     <!-- My Sessions -->
@@ -208,6 +218,7 @@
                         </svg>
                         <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notifications</span>
                     </a>
+                    
                     
                     <!-- Help/Support -->
                     <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Help' : ''">
@@ -234,10 +245,10 @@
                 </div>
             </aside>
             <!-- Main Content -->
-            <div class="flex-1 flex flex-col min-h-screen">
+            <div class="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden">
                 <!-- Topbar -->
-                <header class="h-16 bg-white shadow flex items-center px-8 justify-between">
-                    <h1 class="text-xl font-bold text-gray-900">@yield('title', 'Participant Dashboard')</h1>
+                <header class="h-16 bg-white shadow flex items-center px-8 justify-between min-w-0">
+                    <h1 class="text-xl font-bold text-gray-900 truncate">@yield('title', 'Participant Dashboard')</h1>
                     <div class="flex items-center space-x-6">
                         <!-- Notification Icon with Dropdown -->
                         <div class="relative group" x-data="{ open: false }" @keydown.escape.window="open = false">
@@ -286,8 +297,8 @@
                             </div>
                         </div>
                         <!-- User Profile Dropdown -->
-                        <div class="relative group">
-                            <button class="flex items-center space-x-3 focus:outline-none">
+                        <div class="relative group" x-data="{ open: false }" @keydown.escape.window="open = false">
+                            <button class="flex items-center space-x-3 focus:outline-none" @click="open = !open">
                                 <span class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-white font-bold text-lg">
                                     {{ strtoupper(substr(auth()->user()->first_name,0,1)) }}
                                 </span>
@@ -297,7 +308,15 @@
                                 </span>
                                 <svg class="w-4 h-4 text-gray-400 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                             </button>
-                            <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-150">
+                            <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 transition-opacity duration-150" 
+                                 x-show="open" 
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 @click.away="open = false">
                                 <a href="{{ route('participants.profile') }}" class="block px-4 py-2 text-gray-700 hover:bg-slate-800">My Profile</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -307,7 +326,7 @@
                         </div>
                     </div>
                 </header>
-                <main class="flex-1 p-8">
+                <main class="flex-1 p-8 min-w-0 overflow-x-auto">
                     @yield('content')
                 </main>
                 <!-- Sitewide Footer -->
@@ -352,11 +371,12 @@
         <!-- Notification click functionality -->
         <script>
             function markNotificationAsRead(notificationId, element) {
-                console.log('markNotificationAsRead called with ID:', notificationId);
                 
-                // Show loading state
-                element.style.opacity = '0.6';
-                element.style.pointerEvents = 'none';
+                // Show loading state if element is provided
+                if (element) {
+                    element.style.opacity = '0.6';
+                    element.style.pointerEvents = 'none';
+                }
                 
                 fetch(`/notifications/${notificationId}/mark-read`, {
                     method: 'POST',
@@ -367,7 +387,6 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Mark read response:', data);
                     if (data.success) {
                         // Remove the unread badge
                         const unreadBadge = document.getElementById(`unread-badge-${notificationId}`);
@@ -386,76 +405,30 @@
                             }
                         }
                         
-                        // Add visual feedback
-                        element.style.backgroundColor = '#fef3c7'; // Light yellow background
-                        setTimeout(() => {
-                            element.style.backgroundColor = '';
-                            element.style.opacity = '1';
-                            element.style.pointerEvents = 'auto';
-                        }, 1000);
+                        // Add visual feedback - only if element exists and has style property
+                        if (element && element.style) {
+                            element.style.backgroundColor = '#fef3c7'; // Light yellow background
+                            setTimeout(() => {
+                                if (element && element.style) {
+                                    element.style.backgroundColor = '';
+                                    element.style.opacity = '1';
+                                    element.style.pointerEvents = 'auto';
+                                }
+                            }, 1000);
+                        }
                         
-                        // Get notification data to find related content
-                        console.log('Fetching notification data from:', `/notifications/${notificationId}/data`);
-                        fetch(`/notifications/${notificationId}/data`)
-                            .then(response => {
-                                console.log('Response status:', response.status);
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! status: ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then(notification => {
-                                console.log('Notification data received:', notification);
-                                
-                                // Navigate based on notification data
-                                if (notification.related_model === 'Task' && notification.related_id) {
-                                    // Navigate to task details
-                                    const taskUrl = `/tasks/${notification.related_id}`;
-                                    console.log('About to navigate to task URL:', taskUrl);
-                                    window.location.href = taskUrl;
-                                } else if (notification.related_model === 'Participant' && notification.related_id) {
-                                    // Navigate to participant details
-                                    const participantUrl = `/participants/${notification.related_id}`;
-                                    console.log('About to navigate to participant URL:', participantUrl);
-                                    window.location.href = participantUrl;
-                                } else if (notification.related_model === 'Session' && notification.related_id) {
-                                    // Navigate to session details
-                                    const sessionUrl = `/sessions/${notification.related_id}`;
-                                    console.log('About to navigate to session URL:', sessionUrl);
-                                    window.location.href = sessionUrl;
-                                } else if (notification.type === 'TaskUpdate') {
-                                    // Fallback for task notifications without related_id
-                                    console.log('TaskUpdate notification clicked - no related_id found, redirecting to tasks index');
-                                    window.location.href = '/tasks';
-                                } else if (notification.type === 'TravelUpdate') {
-                                    // Fallback for travel notifications without related_id
-                                    console.log('TravelUpdate notification clicked - no related_id found, redirecting to participants');
-                                    window.location.href = '/participants';
-                                } else if (notification.type === 'SessionUpdate') {
-                                    // Fallback for session notifications without related_id
-                                    console.log('SessionUpdate notification clicked - no related_id found, redirecting to sessions');
-                                    window.location.href = '/sessions';
-                                } else if (notification.type === 'General') {
-                                    // Handle General notifications - redirect to dashboard
-                                    console.log('General notification clicked - redirecting to dashboard');
-                                    window.location.href = '/participant-dashboard';
-                                } else {
-                                    console.log('No navigation logic for this notification type:', notification.type);
-                                    // Default fallback to participant dashboard
-                                    window.location.href = '/participant-dashboard';
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error fetching notification data:', error);
-                            });
+                        // Redirect to notifications page and show popup
+                        window.location.href = '/notifications';
                     } else {
                         console.log('Mark read was not successful:', data);
                     }
                 })
                 .catch(error => {
                     console.error('Error marking notification as read:', error);
-                    element.style.opacity = '1';
-                    element.style.pointerEvents = 'auto';
+                    if (element && element.style) {
+                        element.style.opacity = '1';
+                        element.style.pointerEvents = 'auto';
+                    }
                 });
             }
         </script>

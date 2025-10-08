@@ -17,10 +17,6 @@ class Participant extends Model
         'visa_issue_description',
         'bio',
         'organization',
-<<<<<<< Updated upstream
-        'dietary_needs',
-=======
->>>>>>> Stashed changes
         'travel_intent',
         'registration_status',
         'category',

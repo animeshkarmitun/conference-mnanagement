@@ -133,12 +133,25 @@
             <input type="hidden" id="sessions_json" name="sessions_json" value='{{ old('sessions_json', '[]') }}'>
         </div>
 
-        <div class="flex justify-end">
-            <a href="{{ route('conferences.index') }}" class="mr-4 text-gray-600 hover:text-gray-900">Cancel</a>
-            <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold text-lg">Create Conference</button>
+        <div class="flex justify-end space-x-4 mt-4">
+            <a href="{{ route('conferences.index') }}" 
+               class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 font-semibold text-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Cancel
+            </a>
+            <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold text-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Create Conference
+            </button>
         </div>
     </form>
 </div>
+
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

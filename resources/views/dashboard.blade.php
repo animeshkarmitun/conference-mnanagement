@@ -147,35 +147,26 @@
     
     <!-- Quick Actions -->
     <div class="flex space-x-3">
-<<<<<<< Updated upstream
-        <button class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
-=======
         <a href="{{ route('conferences.create') }}" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Create Conference">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
             </svg>
         </a>
         <a href="{{ route('tasks.create') }}" class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
->>>>>>> Stashed changes
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
-        </button>
-        <button class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Add Participant">
+        </a>
+        <a href="{{ route('participants.create') }}" class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Add Participant">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
             </svg>
-        </button>
-        <button class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Create Session">
+        </a>
+        <a href="{{ route('sessions.create') }}" class="quick-action-btn modern-success p-3 rounded-full shadow-lg transition-all duration-200" title="Create Session">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
-        </button>
-        <a href="{{ route('id-cards.index') }}" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200" title="Manage ID Cards">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
-            </svg>
-        </a>
+        </a>       
     </div>
 </div>
 
@@ -252,7 +243,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-[180px]">
+                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-0 flex-shrink-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-sm text-gray-500">Progress:</span>
                         <span class="text-lg font-bold text-yellow-700">{{ $dashboardData['conference_progress']['progress_percentage'] }}%</span>
@@ -285,7 +276,7 @@
                         <div class="text-sm text-gray-500">Completed Tasks</div>
                     </div>
                 </div>
-                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-[180px]">
+                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-0 flex-shrink-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-sm text-gray-500">{{ $dashboardData['task_progress']['completed_tasks'] }} / {{ $dashboardData['task_progress']['total_tasks'] }}</span>
                         <span class="text-lg font-bold text-green-700">{{ $dashboardData['task_progress']['progress_percentage'] }}%</span>
@@ -373,12 +364,12 @@
                 
                                  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                     <!-- Manage ID Cards -->
-                    <a href="{{ route('id-cards.index') }}" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200 flex flex-col items-center" title="Manage ID Cards">
+                    <!-- <a href="{{ route('id-cards.index') }}" class="quick-action-btn modern-warning p-3 rounded-full shadow-lg transition-all duration-200 flex flex-col items-center" title="Manage ID Cards">
                         <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
                         </svg>
                         <span class="text-xs font-medium">ID Cards</span>
-                    </a>
+                    </a> -->
 
                     <!-- Manage Roles -->
                     <a href="{{ route('roles.index') }}" class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200 flex flex-col items-center" title="Manage Roles">
@@ -428,7 +419,7 @@
             <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-xl font-bold text-gray-800">Recent Activities</h3>
-                    <button class="text-yellow-600 hover:text-yellow-700 font-medium text-sm">View All</button>
+                    <a href="{{ route('dashboard.activities', ['conference_id' => $selectedConferenceId]) }}" class="text-yellow-600 hover:text-yellow-700 font-medium text-sm transition-colors duration-200">View All</a>
                 </div>
                 
                 <div class="space-y-4">
@@ -491,7 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add click handlers for quick action buttons
     const quickActionBtns = document.querySelectorAll('.quick-action-btn');
     quickActionBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
             // Add ripple effect
             const ripple = document.createElement('span');
             ripple.classList.add('absolute', 'bg-white', 'rounded-full', 'opacity-50');
@@ -503,6 +494,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             this.appendChild(ripple);
             setTimeout(() => ripple.remove(), 600);
+            
+            // Add loading state for better UX
+            this.style.opacity = '0.7';
+            this.style.pointerEvents = 'none';
+            
+            // Reset after a short delay to allow navigation
+            setTimeout(() => {
+                this.style.opacity = '1';
+                this.style.pointerEvents = 'auto';
+            }, 300);
         });
     });
 });

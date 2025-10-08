@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\TravelEvent;
 use App\Models\User;
 use App\Models\Role;
+use App\Services\EmailTrackingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -14,12 +15,14 @@ class SendTravelEmailNotification implements ShouldQueue
 {
     use InteractsWithQueue;
 
+    protected EmailTrackingService $emailTrackingService;
+
     /**
      * Create the event listener.
      */
-    public function __construct()
+    public function __construct(EmailTrackingService $emailTrackingService)
     {
-        //
+        $this->emailTrackingService = $emailTrackingService;
     }
 
     /**
@@ -95,23 +98,35 @@ class SendTravelEmailNotification implements ShouldQueue
      */
     private function sendEmailNotification(User $user, TravelEvent $event): void
     {
-        // For now, we'll log the email notification since the email system is not fully implemented
-        // This can be replaced with actual email sending when the email system is ready
-        
-        $emailData = [
-            'to' => $user->email,
-            'subject' => $this->getEmailSubject($event),
-            'message' => $this->getEmailMessage($user, $event),
-            'participant_name' => $event->participant->user->first_name . ' ' . $event->participant->user->last_name,
-            'event_type' => $event->eventType,
-            'conference_name' => $event->participant->conference->name ?? 'Conference'
-        ];
+        try {
+            $subject = $this->getEmailSubject($event);
+            $body = $this->getEmailMessage($user, $event);
+            
+            // Send tracked email
+            $this->emailTrackingService->sendTrackedEmail(
+                $user->email,
+                $subject,
+                $body,
+                \App\Models\Email::TYPE_TRAVEL_NOTIFICATION,
+                auth()->user(), // Sender
+                $event->participant->conference,
+                'participant',
+                $event->participant->id,
+                'travel-notification',
+                [
+                    'participant_name' => $event->participant->user->first_name . ' ' . $event->participant->user->last_name,
+                    'event_type' => $event->eventType,
+                    'conference_name' => $event->participant->conference->name ?? 'Conference'
+                ]
+            );
 
-        // Log the email notification for now
-        Log::info('Travel email notification would be sent', $emailData);
-
-        // TODO: Uncomment when email system is implemented
-        // Mail::to($user->email)->send(new TravelNotificationMail($emailData));
+        } catch (\Exception $e) {
+            Log::error('Failed to send travel email notification', [
+                'user_id' => $user->id,
+                'participant_id' => $event->participant->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

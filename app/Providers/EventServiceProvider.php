@@ -16,6 +16,7 @@ use App\Events\ProfileEvent;
 use App\Listeners\SendProfileNotification;
 use App\Events\SessionEvent;
 use App\Listeners\SendSessionNotification;
+use App\Listeners\SendSessionEmailNotification;
 use App\Events\ConferenceEvent;
 use App\Listeners\SendConferenceNotification;
 
@@ -43,6 +44,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         SessionEvent::class => [
             SendSessionNotification::class,
+            SendSessionEmailNotification::class,
         ],
         ConferenceEvent::class => [
             SendConferenceNotification::class,

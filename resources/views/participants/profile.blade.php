@@ -8,7 +8,7 @@
     @if($participant)
         <div class="mb-4">
             <span class="font-semibold text-gray-700">Conference:</span>
-            <span>{{ $participant->conference->title ?? '' }}</span>
+            <span>{{ $participant->conference->name ?? '' }}</span>
         </div>
         <div class="mb-4">
             <span class="font-semibold text-gray-700">Type:</span>

@@ -27,8 +27,6 @@ class User extends Authenticatable
         'organization',
         'profile_picture',
         'google_token',
-<<<<<<< Updated upstream
-=======
         'email_verified_at',
         // Enhanced participant fields
         'pronoun',
@@ -64,7 +62,6 @@ class User extends Authenticatable
         'had_visa_issue_bd',
         'visa_issue_explanation',
         'resume',
->>>>>>> Stashed changes
     ];
 
     /**
@@ -127,6 +124,16 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
+    public function passwordlessLogins()
+    {
+        return $this->hasMany(PasswordlessLogin::class);
+    }
+
+    public function emails()
+    {
+        return $this->hasMany(Email::class);
+    }
+
     // Scope: Filter users by role name
     public function scopeWithRole($query, $roleName)
     {
@@ -139,5 +146,17 @@ class User extends Authenticatable
     public function hasRole($roleName)
     {
         return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    // Helper: Check if user has any roles assigned
+    public function hasAnyRole()
+    {
+        return $this->roles()->count() > 0;
+    }
+
+    // Helper: Get user's primary role (first role)
+    public function getPrimaryRole()
+    {
+        return $this->roles()->first();
     }
 }

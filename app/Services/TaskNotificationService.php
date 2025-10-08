@@ -11,9 +11,16 @@ class TaskNotificationService
     /**
      * Send notification when a task is assigned
      */
-    public function notifyTaskAssigned(Task $task): void
+    public function notifyTaskAssigned(Task $task, $user = null): void
     {
-        $message = "New task assigned: '{$task->title}' to {$task->assignedTo->first_name} {$task->assignedTo->last_name}";
+        if ($user) {
+            // Single user assignment
+            $message = "New task assigned: '{$task->title}' to {$user->first_name} {$user->last_name}";
+        } else {
+            // Multiple user assignment
+            $userCount = $task->users->count();
+            $message = "New task assigned: '{$task->title}' to {$userCount} user(s)";
+        }
         
         if ($task->due_date) {
             $message .= " - Due: " . $task->due_date->format('M d, Y');
@@ -28,7 +35,8 @@ class TaskNotificationService
      */
     public function notifyTaskUpdated(Task $task): void
     {
-        $message = "Task updated: '{$task->title}' assigned to {$task->assignedTo->first_name} {$task->assignedTo->last_name}";
+        $userCount = $task->users->count();
+        $message = "Task updated: '{$task->title}' assigned to {$userCount} user(s)";
         
         if ($task->due_date) {
             $message .= " - Due: " . $task->due_date->format('M d, Y');
@@ -43,7 +51,8 @@ class TaskNotificationService
      */
     public function notifyTaskCompleted(Task $task): void
     {
-        $message = "Task completed: '{$task->title}' by {$task->assignedTo->first_name} {$task->assignedTo->last_name}";
+        $userCount = $task->users->count();
+        $message = "Task completed: '{$task->title}' by {$userCount} user(s)";
 
         $this->triggerTaskEvent($task, 'task_completed', $message);
     }
@@ -66,7 +75,8 @@ class TaskNotificationService
      */
     public function notifyTaskOverdue(Task $task): void
     {
-        $message = "Task overdue: '{$task->title}' assigned to {$task->assignedTo->first_name} {$task->assignedTo->last_name} - Due: " . $task->due_date->format('M d, Y');
+        $userCount = $task->users->count();
+        $message = "Task overdue: '{$task->title}' assigned to {$userCount} user(s) - Due: " . $task->due_date->format('M d, Y');
 
         $this->triggerTaskEvent($task, 'task_overdue', $message);
     }
@@ -76,7 +86,8 @@ class TaskNotificationService
      */
     public function notifyTaskDueSoon(Task $task): void
     {
-        $message = "Task due soon: '{$task->title}' assigned to {$task->assignedTo->first_name} {$task->assignedTo->last_name} - Due: " . $task->due_date->format('M d, Y H:i');
+        $userCount = $task->users->count();
+        $message = "Task due soon: '{$task->title}' assigned to {$userCount} user(s) - Due: " . $task->due_date->format('M d, Y H:i');
 
         $this->triggerTaskEvent($task, 'task_due_soon', $message);
     }

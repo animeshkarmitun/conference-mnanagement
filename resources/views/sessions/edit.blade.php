@@ -369,23 +369,138 @@ document.addEventListener('DOMContentLoaded', function() {
             addCheckedAvailableToSelected();
         });
     }
-});
 
-// Conference change handler (existing functionality)
-const conferenceVenues = @json($conferenceVenues);
-const conferenceDates = @json($conferenceDates);
-document.getElementById('conference_id').addEventListener('change', function() {
-    const confId = this.value;
-    const venueId = conferenceVenues[confId];
-    if (venueId) {
-        document.getElementById('venue_id').value = venueId;
+    // Function to load participants for a specific conference
+    async function loadParticipantsForConference(conferenceId) {
+        console.log('Loading participants for conference:', conferenceId);
+        
+        if (!conferenceId || conferenceId === '') {
+            // Clear participants if no conference selected
+            document.getElementById('available_participants').innerHTML = '<p class="text-gray-500 p-4">Please select a conference to view available participants.</p>';
+            document.getElementById('total_available').textContent = '0';
+            return;
+        }
+
+        // Show loading state
+        document.getElementById('available_participants').innerHTML = '<p class="text-blue-500 p-4">Loading participants...</p>';
+
+        try {
+            const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfTokenElement) {
+                throw new Error('CSRF token not found. Please refresh the page.');
+            }
+            const csrfToken = csrfTokenElement.getAttribute('content');
+            console.log('CSRF Token:', csrfToken);
+            
+            const response = await fetch(`/sessions/participants/by-conference?conference_id=${conferenceId}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText.substring(0, 100)}`);
+            }
+            
+            const data = await response.json();
+            console.log('Received data:', data);
+            console.log('Participants count:', data.participants ? data.participants.length : 'No participants array');
+            
+            // Clear existing participants
+            const availableContainer = document.getElementById('available_participants');
+            if (!availableContainer) {
+                throw new Error('Available participants container not found');
+            }
+            availableContainer.innerHTML = '';
+            
+            // Add new participants
+            if (data.participants && Array.isArray(data.participants)) {
+                data.participants.forEach((participant, index) => {
+                    console.log(`Creating participant ${index + 1}:`, participant);
+                    try {
+                        const participantElement = createParticipantElement(participant);
+                        availableContainer.appendChild(participantElement);
+                    } catch (error) {
+                        console.error(`Error creating participant ${index + 1}:`, error);
+                    }
+                });
+            } else {
+                throw new Error('Invalid participants data format');
+            }
+            
+            // Update total count
+            document.getElementById('total_available').textContent = data.participants.length;
+            
+            // Reset filters and search
+            document.getElementById('participant_search').value = '';
+            document.getElementById('participant_type_filter').value = '';
+            document.getElementById('organization_filter').value = '';
+            
+            // Apply initial filtering
+            filterParticipants();
+            
+        } catch (error) {
+            console.error('Error loading participants:', error);
+            let errorMessage = 'Error loading participants. Please try again.';
+            if (error.message.includes('401')) {
+                errorMessage = 'Authentication required. Please login and try again.';
+            } else if (error.message.includes('403')) {
+                errorMessage = 'Access denied. Please check your permissions.';
+            } else if (error.message.includes('404')) {
+                errorMessage = 'API endpoint not found. Please contact support.';
+            } else if (error.message.includes('CSRF token not found')) {
+                errorMessage = 'Security token not found. Please refresh the page.';
+            }
+            document.getElementById('available_participants').innerHTML = `<p class="text-red-500 p-4">${errorMessage}</p>`;
+        }
     }
-    if (conferenceDates[confId]) {
-        const start = conferenceDates[confId].start_date + 'T09:00';
-        const end = conferenceDates[confId].end_date + 'T17:00';
-        document.getElementById('start_time').value = start;
-        document.getElementById('end_time').value = end;
+
+    // Function to create participant element
+    function createParticipantElement(participant) {
+        const div = document.createElement('div');
+        div.className = 'participant-item available-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50';
+        div.setAttribute('data-id', participant.id);
+        div.setAttribute('data-name', participant.name);
+        div.setAttribute('data-email', participant.email);
+        div.setAttribute('data-organization', participant.organization);
+        div.setAttribute('data-type', participant.type);
+        
+        div.innerHTML = `
+            <input type="checkbox" class="participant-checkbox mr-3 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
+            <div class="flex-1">
+                <div class="font-medium text-gray-900">${participant.name}</div>
+                <div class="text-sm text-gray-500">${participant.email}</div>
+                ${participant.organization ? `<div class="text-xs text-gray-400">${participant.organization}</div>` : ''}
+            </div>
+            <button type="button" class="add-participant-btn ml-2 text-green-600 hover:text-green-800">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+            </button>
+        `;
+        
+        return div;
     }
-});
+
+    // Conference change handler (existing functionality)
+    const conferenceVenues = @json($conferenceVenues);
+    const conferenceDates = @json($conferenceDates);
+    document.getElementById('conference_id').addEventListener('change', function() {
+        const confId = this.value;
+        const venueId = conferenceVenues[confId];
+        if (venueId) document.getElementById('venue_id').value = venueId;
+        
+        // Load participants for the selected conference
+        loadParticipantsForConference(confId);
+    });
 </script>
 @endsection 

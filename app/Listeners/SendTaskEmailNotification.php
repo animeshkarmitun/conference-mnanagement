@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\TaskEvent;
 use App\Models\User;
 use App\Models\Role;
+use App\Services\EmailTrackingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -14,12 +15,14 @@ class SendTaskEmailNotification implements ShouldQueue
 {
     use InteractsWithQueue;
 
+    protected EmailTrackingService $emailTrackingService;
+
     /**
      * Create the event listener.
      */
-    public function __construct()
+    public function __construct(EmailTrackingService $emailTrackingService)
     {
-        //
+        $this->emailTrackingService = $emailTrackingService;
     }
 
     /**
@@ -57,9 +60,10 @@ class SendTaskEmailNotification implements ShouldQueue
     {
         $users = [];
 
-        // Always notify the assigned tasker via email
-        if ($event->task->assignedTo) {
-            $users[] = $event->task->assignedTo;
+        // Always notify all assigned taskers via email (many-to-many relationship)
+        $assignedUsers = $event->task->users;
+        foreach ($assignedUsers as $user) {
+            $users[] = $user;
         }
 
         // Get admin and superadmin users for email notifications
@@ -88,23 +92,35 @@ class SendTaskEmailNotification implements ShouldQueue
      */
     private function sendEmailNotification(User $user, TaskEvent $event): void
     {
-        // For now, we'll log the email notification since the email system is not fully implemented
-        // This can be replaced with actual email sending when the email system is ready
-        
-        $emailData = [
-            'to' => $user->email,
-            'subject' => $this->getEmailSubject($event),
-            'message' => $this->getEmailMessage($user, $event),
-            'task_title' => $event->task->title,
-            'event_type' => $event->eventType,
-            'conference_name' => $event->task->conference->name ?? 'Conference'
-        ];
+        try {
+            $subject = $this->getEmailSubject($event);
+            $body = $this->getEmailMessage($user, $event);
+            
+            // Send tracked email
+            $this->emailTrackingService->sendTrackedEmail(
+                $user->email,
+                $subject,
+                $body,
+                \App\Models\Email::TYPE_TASK_NOTIFICATION,
+                auth()->user(), // Sender
+                $event->task->conference,
+                'task',
+                $event->task->id,
+                'task-notification',
+                [
+                    'task_title' => $event->task->title,
+                    'event_type' => $event->eventType,
+                    'conference_name' => $event->task->conference->name ?? 'Conference'
+                ]
+            );
 
-        // Log the email notification for now
-        Log::info('Task email notification would be sent', $emailData);
-
-        // TODO: Uncomment when email system is implemented
-        // Mail::to($user->email)->send(new TaskNotificationMail($emailData));
+        } catch (\Exception $e) {
+            Log::error('Failed to send task email notification', [
+                'user_id' => $user->id,
+                'task_id' => $event->task->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -138,33 +154,45 @@ class SendTaskEmailNotification implements ShouldQueue
         $dueDate = $event->task->due_date ? $event->task->due_date->format('M d, Y') : 'Not specified';
         $priority = ucfirst($event->task->priority);
         
-        // Check if user is the assigned tasker or an admin
-        $isTasker = $user->id === $event->task->assigned_to;
+        // Check if user is one of the assigned taskers or an admin
+        $isTasker = $event->task->users->contains('id', $user->id);
         
         switch ($event->eventType) {
             case 'task_assigned':
                 if ($isTasker) {
                     return "Dear {$user->first_name},\n\nA new task has been assigned to you for {$conferenceName}.\n\nTask: {$taskTitle}\nPriority: {$priority}\nDue Date: {$dueDate}\n\nPlease review the task details and update the status as you progress.\n\nBest regards,\nConference Team";
                 } else {
-                    return "Dear {$user->first_name},\n\nA new task has been assigned for {$conferenceName}.\n\nTask: {$taskTitle}\nAssigned To: {$event->task->assignedTo->first_name} {$event->task->assignedTo->last_name}\nPriority: {$priority}\nDue Date: {$dueDate}\n\nBest regards,\nConference Team";
+                    $assignedNames = $event->task->users->map(function($user) {
+                        return $user->first_name . ' ' . $user->last_name;
+                    })->join(', ');
+                    return "Dear {$user->first_name},\n\nA new task has been assigned for {$conferenceName}.\n\nTask: {$taskTitle}\nAssigned To: {$assignedNames}\nPriority: {$priority}\nDue Date: {$dueDate}\n\nBest regards,\nConference Team";
                 }
                 
             case 'task_updated':
                 if ($isTasker) {
                     return "Dear {$user->first_name},\n\nA task assigned to you has been updated for {$conferenceName}.\n\nTask: {$taskTitle}\nPriority: {$priority}\nDue Date: {$dueDate}\n\nPlease review the changes and update your progress accordingly.\n\nBest regards,\nConference Team";
                 } else {
-                    return "Dear {$user->first_name},\n\nA task has been updated for {$conferenceName}.\n\nTask: {$taskTitle}\nAssigned To: {$event->task->assignedTo->first_name} {$event->task->assignedTo->last_name}\nPriority: {$priority}\nDue Date: {$dueDate}\n\nBest regards,\nConference Team";
+                    $assignedNames = $event->task->users->map(function($user) {
+                        return $user->first_name . ' ' . $user->last_name;
+                    })->join(', ');
+                    return "Dear {$user->first_name},\n\nA task has been updated for {$conferenceName}.\n\nTask: {$taskTitle}\nAssigned To: {$assignedNames}\nPriority: {$priority}\nDue Date: {$dueDate}\n\nBest regards,\nConference Team";
                 }
                 
             case 'task_completed':
-                return "Dear {$user->first_name},\n\nA task has been marked as completed for {$conferenceName}.\n\nTask: {$taskTitle}\nCompleted By: {$event->task->assignedTo->first_name} {$event->task->assignedTo->last_name}\n\nBest regards,\nConference Team";
+                $completedByNames = $event->task->users->map(function($user) {
+                    return $user->first_name . ' ' . $user->last_name;
+                })->join(', ');
+                return "Dear {$user->first_name},\n\nA task has been marked as completed for {$conferenceName}.\n\nTask: {$taskTitle}\nCompleted By: {$completedByNames}\n\nBest regards,\nConference Team";
                 
             case 'task_status_changed':
                 $status = ucfirst(str_replace('_', ' ', $event->task->status));
                 if ($isTasker) {
                     return "Dear {$user->first_name},\n\nThe status of your task has been updated for {$conferenceName}.\n\nTask: {$taskTitle}\nNew Status: {$status}\n\nBest regards,\nConference Team";
                 } else {
-                    return "Dear {$user->first_name},\n\nThe status of a task has been updated for {$conferenceName}.\n\nTask: {$taskTitle}\nAssigned To: {$event->task->assignedTo->first_name} {$event->task->assignedTo->last_name}\nNew Status: {$status}\n\nBest regards,\nConference Team";
+                    $assignedNames = $event->task->users->map(function($user) {
+                        return $user->first_name . ' ' . $user->last_name;
+                    })->join(', ');
+                    return "Dear {$user->first_name},\n\nThe status of a task has been updated for {$conferenceName}.\n\nTask: {$taskTitle}\nAssigned To: {$assignedNames}\nNew Status: {$status}\n\nBest regards,\nConference Team";
                 }
                 
             default:

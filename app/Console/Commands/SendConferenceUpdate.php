@@ -128,6 +128,3 @@ class SendConferenceUpdate extends Command
 
 
 
-
-
-

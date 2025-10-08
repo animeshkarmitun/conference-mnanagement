@@ -166,6 +166,3 @@ CGS Conference Team',
 
 
 
-
-
-

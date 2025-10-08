@@ -11,8 +11,21 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        
+        <!-- Localhost CSS -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+
         <!-- Static CSS for shared hosting -->
-        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        <!-- <link rel="stylesheet" href="{{ asset('public/build/assets/app-a8637ff7.css') }}">
+        <script src="{{ asset('public/build/assets/app-eff04317.js') }}"></script>  -->
+        
+        <!-- Custom styles stack -->
+        @stack('styles')
         
         <!-- Alpine.js for interactive components -->
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -156,10 +169,10 @@
             }
         </style>
     </head>
-    <body class="bg-gray-100 font-sans antialiased" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 768 }" x-init="$watch('sidebarCollapsed', value => localStorage.setItem('sidebarCollapsed', value))" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
-        <div class="min-h-screen flex">
+    <body class="bg-gray-100 font-sans antialiased" style="overflow-x: hidden; max-width: 100vw;" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 768 }" x-init="$watch('sidebarCollapsed', value => localStorage.setItem('sidebarCollapsed', value))" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
+        <div class="min-h-screen flex max-w-full overflow-hidden">
             <!-- Sidebar -->
-            <aside class="bg-slate-900 shadow-xl flex flex-col transition-all duration-300" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
+            <aside class="bg-slate-900 shadow-xl flex flex-col transition-all duration-300 flex-shrink-0" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
                 <div class="h-20 flex items-center justify-between border-b border-slate-800 px-4 relative">
                     <span class="text-2xl font-bold text-indigo-200 transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">CGS Events</span>
                     <button @click="sidebarCollapsed = !sidebarCollapsed" class="p-3 rounded-lg hover:bg-slate-800 transition-colors duration-150 flex-shrink-0 sidebar-toggle-btn bg-slate-800 border border-slate-700 shadow-sm" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
@@ -168,8 +181,8 @@
                         </svg>
                     </button>
                 </div>
-                <nav class="flex-1 px-4 py-6 space-y-3 sidebar-nav">
-                    @if(auth()->user()->hasRole('superadmin'))
+                <nav class="flex-1 px-1 py-1 space-y-1 sidebar-nav">
+                    @if(auth()->check() && auth()->user()->hasRole('superadmin'))
                         <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
@@ -218,17 +231,23 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notifications</span>
                         </a>
+                        <a href="{{ route('conference-docs.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('conference-docs.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Conference Docs' : ''">
+                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Conference Docs</span>
+                        </a>
                         <a href="{{ route('bulk.email') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('bulk.email') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Bulk Email' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Bulk Email</span>
                         </a>
-                        <a href="{{ route('gmail.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('gmail.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Gmail Conversations' : ''">
+                        <a href="{{ route('admin.backup.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Backup Management' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Gmail Conversations</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Backup Management</span>
                         </a>
                         <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'How to Use' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -236,22 +255,42 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
                         </a>
+                        <a href="{{ route('passwordless-login.admin.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('passwordless-login.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Passwordless Login' : ''">
+                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
+                            </svg>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Passwordless Login</span>
+                        </a>
+                        <a href="{{ route('admin.email-tracking.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.email-tracking.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Email Tracking' : ''">
+                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Email Tracking</span>
+                        </a>
+                        @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')))
+                        <a href="{{ route('gmail.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('gmail.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Gmail Conversations' : ''">
+                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Gmail Conversations</span>
+                        </a>
+                        @endif
                         <!-- Travel Management Section -->
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
-                        <a href="{{ route('admin.travel-manifests') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.travel-manifests') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Travel Manifests' : ''">
+                        <a href="{{ route('admin.itineraries') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.itineraries') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Itineraries' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Manifests</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Itineraries</span>
                         </a>
-                        <a href="{{ route('admin.export-manifest') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.export-manifest') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Manifest' : ''">
+                        <a href="{{ route('admin.export-itinerary') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.export-itinerary') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Itinerary' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Manifest</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Itinerary</span>
                         </a>
-                    @elseif(auth()->user()->hasRole('tasker'))
+                    @elseif(auth()->check() && auth()->user()->hasRole('tasker'))
                         <a href="{{ route('dashboard.tasker') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard.tasker') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Tasker Dashboard' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
@@ -270,13 +309,7 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notifications</span>
                         </a>
-                        <a href="{{ route('gmail.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('gmail.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Gmail Conversations' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Gmail Conversations</span>
-                        </a>
-                    @elseif(auth()->user()->hasRole('event_coordinator'))
+                    @elseif(auth()->check() && auth()->user()->hasRole('event_coordinator'))
                         <a href="{{ route('event-coordinator.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Event Coordinator Dashboard' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
@@ -313,69 +346,28 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notifications</span>
                         </a>
-                        <a href="{{ route('gmail.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('gmail.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Gmail Conversations' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Gmail Conversations</span>
-                        </a>
                         <!-- Travel Management Section -->
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
-                        <a href="{{ route('event-coordinator.travel-manifests') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.travel-manifests') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Travel Manifests' : ''">
+                        <a href="{{ route('event-coordinator.itineraries') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.itineraries') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Itineraries' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Manifests</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Itineraries</span>
                         </a>
-                        <a href="{{ route('event-coordinator.export-manifest') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.export-manifest') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Manifest' : ''">
+                        <a href="{{ route('event-coordinator.export-itinerary') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('event-coordinator.export-itinerary') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Itinerary' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Manifest</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Itinerary</span>
                         </a>
-                    @else
-                        <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
+                    @elseif(auth()->check() && auth()->user()->hasRole('attendee'))
+                        <!-- Attendee/Speaker Menu -->
+                        <a href="{{ route('participants.profile') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participants.profile') ? 'active' : '' }}" :title="sidebarCollapsed ? 'My Profile' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Dashboard</span>
-                        </a>
-                        <a href="{{ route('conferences.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('conferences.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Conferences' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Conferences</span>
-                        </a>
-                        <a href="{{ route('participants.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participants.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Participants' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Participants</span>
-                        </a>
-                        <a href="{{ route('sessions.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('sessions.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Sessions' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Sessions</span>
-                        </a>
-                        <a href="{{ route('tasks.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('tasks.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Tasks' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Tasks</span>
-                        </a>
-                        <a href="{{ route('notifications.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('notifications.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Notifications' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notifications</span>
-                        </a>
-                        <a href="{{ route('gmail.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('gmail.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Gmail Conversations' : ''">
-                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                            </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Gmail Conversations</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">My Profile</span>
                         </a>
                         <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'How to Use' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -383,30 +375,47 @@
                             </svg>
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
                         </a>
-                        <!-- Travel Management Section -->
-                        <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
-                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
-                        <a href="{{ route('admin.travel-manifests') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.travel-manifests') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Travel Manifests' : ''">
+                    @elseif(auth()->check() && auth()->user()->hasRole('speaker'))
+                        <!-- Speaker Menu -->
+                        <a href="{{ route('participants.profile') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participants.profile') ? 'active' : '' }}" :title="sidebarCollapsed ? 'My Profile' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Manifests</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">My Profile</span>
                         </a>
-                        <a href="{{ route('admin.export-manifest') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.export-manifest') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Export Manifest' : ''">
+                        <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'How to Use' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Export Manifest</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
+                        </a>
+                    @else
+                        <!-- Users with NO ROLES - Limited Access Only -->
+                        <div class="px-4 py-3 text-center">
+                            <div class="text-yellow-400 text-sm font-semibold mb-2">
+                                <svg class="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                                No Role Assigned
+                            </div>
+                            <p class="text-xs text-slate-400 mb-3">Please contact an administrator to assign you a role.</p>
+                        </div>
+                        <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'How to Use' : ''">
+                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">How to Use</span>
                         </a>
                     @endif
+
                 </nav>
                 <div class="border-t p-4">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                            {{ strtoupper(substr(auth()->user()->first_name,0,1)) }}
+                            {{ strtoupper(substr(auth()->user()->first_name ?? 'U',0,1)) }}
                         </div>
                         <div class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">
-                            <div class="font-semibold text-slate-200">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
+                            <div class="font-semibold text-slate-200">{{ auth()->user()->first_name ?? 'User' }} {{ auth()->user()->last_name ?? '' }}</div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="text-xs text-slate-400 hover:text-slate-200">Logout</button>
@@ -416,10 +425,10 @@
                 </div>
             </aside>
             <!-- Main Content -->
-            <div class="flex-1 flex flex-col min-h-screen">
+            <div class="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden">
                 <!-- Topbar -->
-                <header class="h-16 bg-white shadow flex items-center px-8 justify-between">
-                    <h1 class="text-xl font-bold text-gray-900">@yield('title', 'Dashboard')</h1>
+                <header class="h-16 bg-white shadow flex items-center px-8 justify-between min-w-0">
+                    <h1 class="text-xl font-bold text-gray-900 truncate">@yield('title', 'Dashboard')</h1>
                     <div class="flex items-center space-x-6">
                         <!-- Notification Icon with Dropdown -->
                         <div class="relative group" x-data="{ open: false }" @keydown.escape.window="open = false">
@@ -468,18 +477,26 @@
                             </div>
                         </div>
                         <!-- User Profile Dropdown -->
-                        <div class="relative group">
-                            <button class="flex items-center space-x-3 focus:outline-none">
+                        <div class="relative group" x-data="{ open: false }" @keydown.escape.window="open = false">
+                            <button class="flex items-center space-x-3 focus:outline-none" @click="open = !open">
                                 <span class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                    {{ strtoupper(substr(auth()->user()->first_name,0,1)) }}
+                                    {{ strtoupper(substr(auth()->user()->first_name ?? 'U',0,1)) }}
                                 </span>
                                 <span class="hidden md:flex flex-col items-start">
-                                    <span class="font-semibold text-slate-200">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</span>
-                                    <span class="text-xs text-slate-400">{{ auth()->user()->email }}</span>
+                                    <span class="font-semibold text-slate-200">{{ auth()->user()->first_name ?? 'User' }} {{ auth()->user()->last_name ?? '' }}</span>
+                                    <span class="text-xs text-slate-400">{{ auth()->user()->email ?? 'user@example.com' }}</span>
                                 </span>
                                 <svg class="w-4 h-4 text-gray-400 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                             </button>
-                            <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-150">
+                            <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 transition-opacity duration-150" 
+                                 x-show="open" 
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 @click.away="open = false">
                                 <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-slate-800">Profile</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -489,7 +506,7 @@
                         </div>
                     </div>
                 </header>
-                <main class="flex-1 p-8">
+                <main class="flex-1 p-8 min-w-0">
                     @yield('content')
                 </main>
                 <!-- Sitewide Footer -->
@@ -534,14 +551,15 @@
         <!-- Notification click functionality -->
         <script>
             function markNotificationAsRead(notificationId, element) {
-                console.log('markNotificationAsRead called with ID:', notificationId);
                 
-                // Show loading state
-                element.style.opacity = '0.6';
-                element.style.pointerEvents = 'none';
+                // Show loading state if element is provided
+                if (element) {
+                    element.style.opacity = '0.6';
+                    element.style.pointerEvents = 'none';
+                }
                 
-                fetch(`/notifications/${notificationId}/mark-read`, {
-                    method: 'POST',
+                fetch(`/notifications/${notificationId}/read`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -549,7 +567,6 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Mark read response:', data);
                     if (data.success) {
                         // Remove the unread badge
                         const unreadBadge = document.getElementById(`unread-badge-${notificationId}`);
@@ -568,78 +585,35 @@
                             }
                         }
                         
-                        // Add visual feedback
-                        element.style.backgroundColor = '#fef3c7'; // Light yellow background
-                        setTimeout(() => {
-                            element.style.backgroundColor = '';
-                            element.style.opacity = '1';
-                            element.style.pointerEvents = 'auto';
-                        }, 1000);
+                        // Add visual feedback - only if element exists and has style property
+                        if (element && element.style) {
+                            element.style.backgroundColor = '#fef3c7'; // Light yellow background
+                            setTimeout(() => {
+                                if (element && element.style) {
+                                    element.style.backgroundColor = '';
+                                    element.style.opacity = '1';
+                                    element.style.pointerEvents = 'auto';
+                                }
+                            }, 1000);
+                        }
                         
-                        // Get notification data to find related content
-                        console.log('Fetching notification data from:', `/notifications/${notificationId}/data`);
-                        fetch(`/notifications/${notificationId}/data`)
-                            .then(response => {
-                                console.log('Response status:', response.status);
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! status: ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then(notification => {
-                                console.log('Notification data received:', notification);
-                                
-                                // Navigate based on notification data
-                                if (notification.related_model === 'Task' && notification.related_id) {
-                                    // Navigate to task details
-                                    const taskUrl = `/tasks/${notification.related_id}`;
-                                    console.log('About to navigate to task URL:', taskUrl);
-                                    window.location.href = taskUrl;
-                                } else if (notification.related_model === 'Participant' && notification.related_id) {
-                                    // Navigate to participant details
-                                    const participantUrl = `/participants/${notification.related_id}`;
-                                    console.log('About to navigate to participant URL:', participantUrl);
-                                    window.location.href = participantUrl;
-                                } else if (notification.related_model === 'Session' && notification.related_id) {
-                                    // Navigate to session details
-                                    const sessionUrl = `/sessions/${notification.related_id}`;
-                                    console.log('About to navigate to session URL:', sessionUrl);
-                                    window.location.href = sessionUrl;
-                                } else if (notification.type === 'TaskUpdate') {
-                                    // Fallback for task notifications without related_id
-                                    console.log('TaskUpdate notification clicked - no related_id found, redirecting to tasks index');
-                                    window.location.href = '/tasks';
-                                } else if (notification.type === 'TravelUpdate') {
-                                    // Fallback for travel notifications without related_id
-                                    console.log('TravelUpdate notification clicked - no related_id found, redirecting to participants');
-                                    window.location.href = '/participants';
-                                } else if (notification.type === 'SessionUpdate') {
-                                    // Fallback for session notifications without related_id
-                                    console.log('SessionUpdate notification clicked - no related_id found, redirecting to sessions');
-                                    window.location.href = '/sessions';
-                                } else if (notification.type === 'General') {
-                                    // Handle General notifications - redirect to dashboard
-                                    console.log('General notification clicked - redirecting to dashboard');
-                                    window.location.href = '/dashboard';
-                                } else {
-                                    console.log('No navigation logic for this notification type:', notification.type);
-                                    // Default fallback to dashboard
-                                    window.location.href = '/dashboard';
-                                }
-                            })
-                                                         .catch(error => {
-                                 console.error('Error fetching notification data:', error);
-                             });
+                         // Redirect to notifications page and show popup
+                         window.location.href = '/notifications';
                                          } else {
                          console.log('Mark read was not successful:', data);
                      }
                 })
-                                 .catch(error => {
-                     console.error('Error marking notification as read:', error);
-                     element.style.opacity = '1';
-                     element.style.pointerEvents = 'auto';
-                 });
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                    if (element && element.style) {
+                        element.style.opacity = '1';
+                        element.style.pointerEvents = 'auto';
+                    }
+                });
             }
         </script>
+        
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

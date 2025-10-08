@@ -8,7 +8,7 @@
     
     <div class="mb-4">
         <span class="font-semibold text-gray-700">Conference:</span>
-        <span>{{ $session->conference->title }}</span>
+        <span>{{ $session->conference->name ?? 'N/A' }}</span>
     </div>
 
     <div class="mb-4">

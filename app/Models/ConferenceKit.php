@@ -5,22 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ConferenceKit extends Model
+/**
+ * @deprecated Use ConferenceDoc instead. This model is kept for backward compatibility.
+ */
+class ConferenceKit extends ConferenceDoc
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'conference_id',
-    ];
-
-    // Relationships
-    public function conference()
-    {
-        return $this->belongsTo(Conference::class);
-    }
-
-    public function conferenceKitItems()
-    {
-        return $this->hasMany(ConferenceKitItem::class, 'kit_id');
-    }
+    // This model now extends ConferenceDoc for backward compatibility
+    // The table has been renamed from conference_kits to conference_docs
 }

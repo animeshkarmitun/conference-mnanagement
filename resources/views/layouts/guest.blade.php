@@ -11,8 +11,12 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Localhost CSS -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
         <!-- Static CSS for shared hosting -->
-        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        <!-- <link rel="stylesheet" href="{{ asset('public/build/assets/app-a8637ff7.css') }}">
+        <script src="{{ asset('public/build/assets/app-eff04317.js') }}"></script>  -->
         
         <!-- Alpine.js for interactive components -->
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -21,7 +25,7 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>
                 <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+                    <img src="{{ asset('public/images/logo.png') }}" alt="Logo" class="img-fluid">
                 </a>
             </div>
 

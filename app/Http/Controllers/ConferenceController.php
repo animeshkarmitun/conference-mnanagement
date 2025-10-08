@@ -45,8 +45,16 @@ class ConferenceController extends Controller
                 $query->orderBy('start_date', 'asc'); // Default ordering
                 break;
         }
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('location', 'like', "%$search%");
+            });
+        }
         
-        $conferences = $query->paginate(10);
+        $conferences = $query->paginate(10)->withQueryString();
+        $search = $request->get('search', '');
         
         // Get conference counts for each category
         $conferenceCounts = [
@@ -58,14 +66,10 @@ class ConferenceController extends Controller
             'all' => Conference::count(),
         ];
         
-<<<<<<< Updated upstream
-        return view('conferences.index', compact('conferences', 'conferenceCounts', 'status'));
-=======
         // Get all conferences for the filter dropdown
         $allConferences = Conference::orderBy('name')->get();
         
         return view('conferences.index', compact('conferences', 'conferenceCounts', 'status', 'search', 'allConferences', 'conferenceId'));
->>>>>>> Stashed changes
     }
 
     public function create()
@@ -421,5 +425,108 @@ class ConferenceController extends Controller
     {
         $conference->delete();
         return redirect()->route('conferences.index')->with('success', 'Conference deleted successfully.');
+    }
+
+    public function export(Request $request)
+    {
+        $status = $request->get('status', 'upcoming'); // Match index default
+        $now = now();
+        
+        $query = Conference::with('venue');
+        
+        // Filter conferences based on status - EXACT same logic as index method
+        switch ($status) {
+            case 'active':
+                $query->where('start_date', '<=', $now)
+                      ->where('end_date', '>=', $now)
+                      ->orderBy('end_date', 'asc'); // Ending soonest first
+                break;
+                
+            case 'upcoming':
+                $query->where('start_date', '>', $now)
+                      ->orderBy('start_date', 'asc'); // Starting soonest first
+                break;
+                
+            case 'finished':
+                $query->where('end_date', '<', $now)
+                      ->orderBy('end_date', 'desc'); // Most recent first
+                break;
+                
+            case 'all':
+            default:
+                $query->orderBy('start_date', 'asc'); // Default ordering
+                break;
+        }
+
+        // Apply search filter if provided - EXACT same logic as index method
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('location', 'like', "%$search%");
+            });
+        }
+
+        // Get ALL results that match the current filters (no pagination limit)
+        $conferences = $query->get();
+
+        $filename = 'conferences_export_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($conferences) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV headers
+            fputcsv($file, [
+                'ID',
+                'Name',
+                'Description',
+                'Start Date',
+                'End Date',
+                'Duration (Days)',
+                'Location',
+                'Venue Name',
+                'Venue Address',
+                'Venue Capacity',
+                'Status',
+                'Created At',
+                'Updated At'
+            ]);
+
+            // CSV data
+            foreach ($conferences as $conference) {
+                $conferenceData = \App\Helpers\DateHelper::formatConferenceDates($conference->start_date, $conference->end_date);
+                $statusText = \App\Helpers\DateHelper::getConferenceStatusText(
+                    $conferenceData['is_active'], 
+                    $conferenceData['is_past'], 
+                    $conferenceData['is_today'], 
+                    $conferenceData['is_upcoming']
+                );
+
+                fputcsv($file, [
+                    $conference->id,
+                    $conference->name,
+                    $conference->description ?? '',
+                    $conference->start_date,
+                    $conference->end_date,
+                    $conferenceData['duration_days'],
+                    $conference->location,
+                    $conference->venue->name ?? 'N/A',
+                    $conference->venue->address ?? 'N/A',
+                    $conference->venue->capacity ?? 'N/A',
+                    $statusText,
+                    $conference->created_at->format('Y-m-d H:i:s'),
+                    $conference->updated_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 } 

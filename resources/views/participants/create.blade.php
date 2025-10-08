@@ -3,11 +3,6 @@
 @section('title', 'Add Participant')
 
 @section('content')
-<<<<<<< Updated upstream
-<div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-6">
-    <h2 class="text-2xl font-bold mb-6">Add New Participant</h2>
-    <form method="POST" action="{{ route('participants.store') }}" enctype="multipart/form-data">
-=======
 <!-- Professional Page Header -->
 <div class="rounded-2xl bg-gradient-to-r from-blue-100 via-blue-50 to-white shadow flex items-center px-8 py-6 mb-6 border border-blue-200">
     <div class="flex items-center justify-center w-16 h-16 bg-blue-200 rounded-full mr-6 shadow">
@@ -23,110 +18,8 @@
 
 <div class="bg-white rounded-xl shadow p-6">
     <form method="POST" action="{{ route('participants.store') }}" enctype="multipart/form-data" onsubmit="return validateForm(event)">
->>>>>>> Stashed changes
         @csrf
         
-        <!-- User Information Section -->
-        <div class="mb-8 p-6 bg-gray-50 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">User Information</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mb-4">
-                    <label for="first_name" class="block text-sm font-medium text-gray-700">First Name *</label>
-                    <input type="text" name="first_name" id="first_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    @error('first_name')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name *</label>
-                    <input type="text" name="last_name" id="last_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    @error('last_name')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email *</label>
-                    <input type="email" name="email" id="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    @error('email')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password *</label>
-                    <input type="password" name="password" id="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    @error('password')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
-                    <select name="gender" id="gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                        <option value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                        <option value="prefer_not_to_say">Prefer not to say</option>
-                    </select>
-                    @error('gender')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="nationality" class="block text-sm font-medium text-gray-700">Nationality</label>
-                    <input type="text" name="nationality" id="nationality" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., American, British, Indian">
-                    @error('nationality')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="profession" class="block text-sm font-medium text-gray-700">Profession</label>
-                    <input type="text" name="profession" id="profession" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Software Engineer, Professor, Student">
-                    @error('profession')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Date of Birth</label>
-                    <input type="date" name="date_of_birth" id="date_of_birth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    @error('date_of_birth')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="organization" class="block text-sm font-medium text-gray-700">Organization</label>
-                    <input type="text" name="organization" id="organization" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                    @error('organization')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="dietary_needs" class="block text-sm font-medium text-gray-700">Dietary Needs</label>
-                    <select name="dietary_needs" id="dietary_needs" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                        <option value="">Select dietary preference</option>
-                        <option value="none" {{ old('dietary_needs') == 'none' ? 'selected' : '' }}>No special requirements</option>
-                        <option value="vegetarian" {{ old('dietary_needs') == 'vegetarian' ? 'selected' : '' }}>Vegetarian</option>
-                        <option value="vegan" {{ old('dietary_needs') == 'vegan' ? 'selected' : '' }}>Vegan</option>
-                        <option value="gluten-free" {{ old('dietary_needs') == 'gluten-free' ? 'selected' : '' }}>Gluten-free</option>
-                        <option value="dairy-free" {{ old('dietary_needs') == 'dairy-free' ? 'selected' : '' }}>Dairy-free</option>
-                        <option value="halal" {{ old('dietary_needs') == 'halal' ? 'selected' : '' }}>Halal</option>
-                        <option value="kosher" {{ old('dietary_needs') == 'kosher' ? 'selected' : '' }}>Kosher</option>
-                        <option value="other" {{ old('dietary_needs') == 'other' ? 'selected' : '' }}>Other (please specify)</option>
-                    </select>
-                    @error('dietary_needs')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                <div class="mb-4 {{ old('dietary_needs') == 'other' ? '' : 'hidden' }}" id="dietary-other-wrapper">
-                    <label for="dietary_needs_other" class="block text-sm font-medium text-gray-700">Other dietary needs</label>
-                    <input type="text" name="dietary_needs_other" id="dietary_needs_other" value="{{ old('dietary_needs_other') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Please specify your dietary requirements">
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mb-4">
-                    <label for="profile_picture" class="block text-sm font-medium text-gray-700">Profile Picture</label>
-                    <input type="file" name="profile_picture" id="profile_picture" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
-                    @error('profile_picture')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="resume" class="block text-sm font-medium text-gray-700">Resume/CV</label>
-                    <input type="file" name="resume" id="resume" accept="application/pdf,.doc,.docx" class="mt-1 block w-full text-sm text-gray-500">
-                    @error('resume')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-            </div>
-        </div>
-
         <!-- Participant Information Section -->
         <div class="mb-8 p-6 bg-blue-50 rounded-lg">
             <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Participant Information</h3>
@@ -157,6 +50,7 @@
                                     @foreach($groupedTypes[$categoryKey] as $type)
                                         <option value="{{ $type->id }}" 
                                                 data-description="{{ $type->description }}"
+                                                data-category="{{ $type->category }}"
                                                 data-requires-approval="{{ $type->requires_approval ? 'true' : 'false' }}"
                                                 data-has-privileges="{{ $type->has_special_privileges ? 'true' : 'false' }}">
                                             {{ ucwords(str_replace('_', ' ', $type->name)) }}
@@ -169,17 +63,21 @@
                             @endif
                         @endforeach
                     </select>
-                    <div id="participant-type-description" class="mt-1 text-sm text-gray-500 hidden"></div>
+                    <div id="participant-type-description" class="mt-1 text-sm text-gray-500">
+                        <div>Requires Approval: No</div>
+                        <div>Has Special Privileges: No</div>
+                    </div>
                     @error('participant_type_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
             </div>
+        </div>
+
+        <!-- Personal Information Section -->
+        <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Personal Information</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
-<<<<<<< Updated upstream
-                    <label for="visa_status" class="block text-sm font-medium text-gray-700">Visa Status *</label>
-                    <select name="visa_status" id="visa_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-=======
                     <label for="first_name" class="block text-sm font-medium text-gray-700">Name *</label>
                     <div class="grid grid-cols-2 gap-3">
                         <input type="text" name="first_name" id="first_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="First Name">
@@ -567,7 +465,6 @@
                 <div class="mb-4">
                     <label for="visa_status" class="block text-sm font-medium text-gray-700">Visa Status (Optional)</label>
                     <select name="visa_status" id="visa_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
->>>>>>> Stashed changes
                         <option value="required">Required</option>
                         <option value="not_required">Not Required</option>
                         <option value="pending">Pending</option>
@@ -578,8 +475,8 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="registration_status" class="block text-sm font-medium text-gray-700">Registration Status *</label>
-                    <select name="registration_status" id="registration_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <label for="registration_status" class="block text-sm font-medium text-gray-700">Registration Status (Optional)</label>
+                    <select name="registration_status" id="registration_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
@@ -618,32 +515,6 @@
                 @error('visa_issue_description')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
             
-<<<<<<< Updated upstream
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Travel Intent *</label>
-                    <div class="mt-2 flex items-center space-x-4">
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="travel_intent" value="1" required class="form-radio text-yellow-600">
-                            <span class="ml-2">Yes</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="travel_intent" value="0" required class="form-radio text-yellow-600">
-                            <span class="ml-2">No</span>
-                        </label>
-                    </div>
-                    @error('travel_intent')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-                <div class="mb-4">
-                    <label for="travel_form_submitted" class="block text-sm font-medium text-gray-700">Travel Form Submitted</label>
-                    <input type="checkbox" name="travel_form_submitted" id="travel_form_submitted" value="1">
-                    @error('travel_form_submitted')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-            </div>
-            
-=======
->>>>>>> Stashed changes
             <div class="mb-4">
                 <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
                 <textarea name="bio" id="bio" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Brief biography or description..."></textarea>
@@ -652,12 +523,40 @@
             
         </div>
         
-        <div class="flex justify-end">
-            <a href="{{ route('participants.index') }}" class="mr-4 text-gray-600 hover:text-gray-900">Cancel</a>
-            <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold text-lg">Create Participant</button>
+        <!-- Action Buttons Section -->
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <div class="flex justify-end space-x-4">
+                <a href="{{ route('participants.index') }}" 
+                   class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-all duration-200 font-medium">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="inline-flex items-center px-8 py-3 modern-primary rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Create Participant
+                </button>
+            </div>
         </div>
     </form>
 </div>
+</div>
+
+<style>
+    /* Modern color scheme overrides */
+    .modern-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+    
+    .modern-primary:hover {
+        background: linear-gradient(135deg, #5855eb, #7c3aed);
+    }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -665,18 +564,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const visaIssueDescription = document.getElementById('visa-issue-description');
     const participantTypeSelect = document.getElementById('participant_type_id');
     const participantTypeDescription = document.getElementById('participant-type-description');
+    const expertiseTextarea = document.getElementById('expertise_interests');
+    const wordCountSpan = document.getElementById('word-count');
+    const charCountSpan = document.getElementById('char-count');
     
     function toggleVisaIssueDescription() {
-        if (visaStatusSelect.value === 'issue') {
+        if (visaStatusSelect && visaStatusSelect.value === 'issue') {
             visaIssueDescription.style.display = 'block';
-        } else {
+        } else if (visaIssueDescription) {
             visaIssueDescription.style.display = 'none';
         }
     }
 
     function updateParticipantTypeDescription() {
+        if (!participantTypeSelect || !participantTypeDescription) return;
+        
         const selectedOption = participantTypeSelect.options[participantTypeSelect.selectedIndex];
         const description = selectedOption.getAttribute('data-description');
+        const category = selectedOption.getAttribute('data-category');
         const requiresApproval = selectedOption.getAttribute('data-requires-approval');
         const hasPrivileges = selectedOption.getAttribute('data-has-privileges');
         const participantTypeName = selectedOption.textContent.toLowerCase().trim();
@@ -698,8 +603,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         participantTypeDescription.innerHTML = descriptionText;
         participantTypeDescription.style.display = 'block';
-<<<<<<< Updated upstream
-=======
 
         // Toggle Media/Speaker sections
         const mediaSection = document.getElementById('media-section');
@@ -817,31 +720,165 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // You can display the age somewhere if needed
         console.log('Calculated age:', age);
->>>>>>> Stashed changes
     }
     
     // Initial state
     toggleVisaIssueDescription();
-    updateParticipantTypeDescription(); // Set initial description
+    updateParticipantTypeDescription();
+    toggleStudentFields();
+    updateWordCount();
     
-    // Listen for changes
+    // Event listeners
+    if (visaStatusSelect) {
     visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
-    participantTypeSelect.addEventListener('change', updateParticipantTypeDescription);
-
-    // Dietary other toggle
-    const dietarySelect = document.getElementById('dietary_needs');
-    const dietaryOtherWrapper = document.getElementById('dietary-other-wrapper');
-    function toggleDietaryOther() {
-        if (dietarySelect.value === 'other') {
-            dietaryOtherWrapper.classList.remove('hidden');
-        } else {
-            dietaryOtherWrapper.classList.add('hidden');
-        }
     }
-<<<<<<< Updated upstream
-    toggleDietaryOther();
-    dietarySelect.addEventListener('change', toggleDietaryOther);
-=======
+    if (participantTypeSelect) {
+    participantTypeSelect.addEventListener('change', updateParticipantTypeDescription);
+    }
+    if (expertiseTextarea) {
+        expertiseTextarea.addEventListener('input', updateWordCount);
+    }
+    
+    const dobInput = document.getElementById('date_of_birth');
+    if (dobInput) {
+        dobInput.addEventListener('change', calculateAge);
+    }
+
+    // Dietary requirements other toggle
+    const dietaryReq = document.getElementById('dietary_requirements');
+    const dietaryReqOtherWrap = document.getElementById('dietary_req_other_wrap');
+    if (dietaryReq && dietaryReqOtherWrap) {
+        const toggleDietaryReqOther = () => {
+            if (dietaryReq.value === 'others') {
+                dietaryReqOtherWrap.style.display = '';
+            } else {
+                dietaryReqOtherWrap.style.display = 'none';
+            }
+        };
+        toggleDietaryReqOther();
+        dietaryReq.addEventListener('change', toggleDietaryReqOther);
+    }
+
+    // Visa issue explanation toggle
+    const hadVisaIssue = document.getElementById('had_visa_issue_bd');
+    const visaIssueWrap = document.getElementById('visa_issue_explanation_wrap');
+    if (hadVisaIssue && visaIssueWrap) {
+        const toggleVisaIssue = () => {
+            if (hadVisaIssue.value === '1') {
+                visaIssueWrap.style.display = '';
+        } else {
+                visaIssueWrap.style.display = 'none';
+        }
+        };
+        toggleVisaIssue();
+        hadVisaIssue.addEventListener('change', toggleVisaIssue);
+    }
+});
+
+// Modern Hashtag Input Handling
+document.addEventListener('DOMContentLoaded', function() {
+    const hashtagInput = document.getElementById('hashtag-input');
+    const hashtagContainer = document.getElementById('hashtag-container');
+    const hiddenInput = document.getElementById('hashtags');
+    let hashtags = [];
+
+    if (hashtagInput && hashtagContainer && hiddenInput) {
+        // Function to create hashtag element
+        function createHashtagElement(tag) {
+            const tagElement = document.createElement('div');
+            tagElement.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border border-purple-200 hover:from-purple-200 hover:to-pink-200 transition-all duration-200 cursor-pointer group';
+            tagElement.innerHTML = `
+                <span class="mr-1">#</span>
+                <span>${tag}</span>
+                <button type="button" class="ml-2 text-purple-600 hover:text-purple-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+            
+            // Add click to remove functionality
+            tagElement.addEventListener('click', function() {
+                removeHashtag(tag);
+            });
+            
+            return tagElement;
+        }
+
+        // Function to add hashtag
+        function addHashtag(tag) {
+            const cleanTag = tag.trim().replace(/^#+/, ''); // Remove existing # symbols
+            if (cleanTag && !hashtags.includes(cleanTag)) {
+                hashtags.push(cleanTag);
+                updateDisplay();
+                updateHiddenInput();
+            }
+        }
+
+        // Function to remove hashtag
+        function removeHashtag(tag) {
+            hashtags = hashtags.filter(t => t !== tag);
+            updateDisplay();
+            updateHiddenInput();
+        }
+
+        // Function to update display
+        function updateDisplay() {
+            hashtagContainer.innerHTML = '';
+            if (hashtags.length === 0) {
+                hashtagContainer.innerHTML = '<span class="text-gray-400 text-sm italic">No hashtags added yet</span>';
+            } else {
+                hashtags.forEach(tag => {
+                    hashtagContainer.appendChild(createHashtagElement(tag));
+                });
+            }
+        }
+
+        // Function to update hidden input
+        function updateHiddenInput() {
+            hiddenInput.value = hashtags.map(tag => `#${tag}`).join(', ');
+        }
+
+        // Handle input events
+        hashtagInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const value = this.value.trim();
+                if (value) {
+                    addHashtag(value);
+                    this.value = '';
+                }
+            }
+        });
+
+        // Handle paste events
+        hashtagInput.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                const value = this.value.trim();
+                if (value) {
+                    // Split by comma and add each hashtag
+                    value.split(',').forEach(tag => {
+                        if (tag.trim()) {
+                            addHashtag(tag.trim());
+                        }
+                    });
+                    this.value = '';
+                }
+            }, 0);
+        });
+
+        // Handle blur event
+        hashtagInput.addEventListener('blur', function() {
+            const value = this.value.trim();
+            if (value) {
+                addHashtag(value);
+                this.value = '';
+            }
+        });
+
+        // Initialize display
+        updateDisplay();
+    }
 
     // Email validation with AJAX
     const emailInput = document.getElementById('email');
@@ -909,7 +946,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize form state
     initializeFormState();
->>>>>>> Stashed changes
 });
 
 // Global form validation function

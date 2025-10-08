@@ -81,7 +81,7 @@
     <div class="bg-white rounded-xl shadow p-6">
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-bold text-gray-900">Recent Travel Details</h2>
-            <a href="{{ route('event-coordinator.travel-manifests') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
+            <a href="{{ route('event-coordinator.itineraries') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
         </div>
         
         @if($recentTravelDetails->count() > 0)
@@ -114,7 +114,7 @@
     <div class="bg-white rounded-xl shadow p-6">
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-bold text-gray-900">Upcoming Room Allocations</h2>
-            <a href="{{ route('event-coordinator.travel-manifests') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
+            <a href="{{ route('event-coordinator.itineraries') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
         </div>
         
         @if($upcomingRooms->count() > 0)
@@ -149,26 +149,26 @@
 <div class="bg-white rounded-xl shadow p-6">
     <h2 class="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a href="{{ route('event-coordinator.travel-manifests') }}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+        <a href="{{ route('event-coordinator.itineraries') }}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
             <div class="p-2 bg-blue-200 rounded-lg mr-4">
                 <svg class="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-gray-900">View Travel Manifests</h3>
+                <h3 class="font-medium text-gray-900">View Itineraries</h3>
                 <p class="text-sm text-gray-600">Manage and export travel details</p>
             </div>
         </a>
 
-        <a href="{{ route('event-coordinator.export-manifest') }}" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+        <a href="{{ route('event-coordinator.export-itinerary') }}" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
             <div class="p-2 bg-green-200 rounded-lg mr-4">
                 <svg class="w-6 h-6 text-green-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
             </div>
             <div>
-                <h3 class="font-medium text-gray-900">Export Manifest</h3>
+                <h3 class="font-medium text-gray-900">Export Itinerary</h3>
                 <p class="text-sm text-gray-600">Download travel data as CSV</p>
             </div>
         </a>

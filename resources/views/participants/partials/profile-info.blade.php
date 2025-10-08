@@ -2,14 +2,11 @@
     @csrf
     @method('PUT')
     
-<<<<<<< Updated upstream
-=======
     <!-- Hidden fields for admin-only validation (not shown in personal info form) -->
     <input type="hidden" name="user_id" value="{{ $participant->user_id }}">
     <input type="hidden" name="conference_id" value="{{ $participant->conference_id }}">
     <input type="hidden" name="participant_type_id" value="{{ $participant->participant_type_id }}">
     
->>>>>>> Stashed changes
     <!-- Success/Error Messages -->
     @if(session('success'))
         <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
@@ -70,8 +67,6 @@
             @enderror
         </div>
         
-<<<<<<< Updated upstream
-=======
 
         <!-- Enhanced participant fields -->
         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,7 +171,6 @@
             </div>
         </div>
 
->>>>>>> Stashed changes
         <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Organization</label>
             <input type="text" 
@@ -189,9 +183,6 @@
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
-<<<<<<< Updated upstream
-    </div>
-=======
 
         <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
@@ -568,7 +559,6 @@
         </div>
     </div>
     @endif
->>>>>>> Stashed changes
     
     <!-- Additional Information -->
     <div class="bg-gray-50 p-4 rounded-lg">
@@ -781,6 +771,25 @@ document.addEventListener('DOMContentLoaded', function() {
         bioTextarea.addEventListener('input', updateBioCharCount);
         updateBioCharCount(); // Initial count
     }
+
+    // Expertise interests character counter
+    const expertiseTextarea = document.querySelector('textarea[name="expertise_interests"]');
+    const expertiseCharCount = document.getElementById('expertise-char-count');
+    
+    if (expertiseTextarea && expertiseCharCount) {
+        function updateExpertiseCharCount() {
+            const length = expertiseTextarea.value.length;
+            expertiseCharCount.textContent = length;
+            if (length > 900) {
+                expertiseCharCount.classList.add('text-red-500');
+            } else {
+                expertiseCharCount.classList.remove('text-red-500');
+            }
+        }
+        
+        expertiseTextarea.addEventListener('input', updateExpertiseCharCount);
+        updateExpertiseCharCount(); // Initial count
+    }
     
     // File upload validation and preview
     const profilePictureInput = document.querySelector('input[name="profile_picture"]');
@@ -881,15 +890,6 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.disabled = true;
     });
     
-<<<<<<< Updated upstream
-    // Initialize all event listeners
-    toggleVisaIssueDescription();
-    toggleDietaryOther();
-    
-    // Listen for changes
-    visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
-    dietarySelect.addEventListener('change', toggleDietaryOther);
-=======
     // Student fields toggle
     window.toggleStudentFields = function() {
         const studentFields = document.getElementById('student-fields');
@@ -962,7 +962,6 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleVisaIssueExplanation();
         hadVisaIssueBd.addEventListener('change', toggleVisaIssueExplanation);
     }
->>>>>>> Stashed changes
     
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {
