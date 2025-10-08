@@ -5,17 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RoomAllocation extends Model
+class Room extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'hotel_id',
-        'participant_id',
         'room_number',
-        'number_of_beds',
-        'check_in',
-        'check_out',
+        'room_type',
+        'beds',
+        'price_per_night',
+        'description',
+        'is_available',
     ];
 
     // Relationships
@@ -24,8 +25,8 @@ class RoomAllocation extends Model
         return $this->belongsTo(Hotel::class);
     }
 
-    public function participant()
+    public function roomAllocations()
     {
-        return $this->belongsTo(Participant::class);
+        return $this->hasMany(RoomAllocation::class);
     }
 }

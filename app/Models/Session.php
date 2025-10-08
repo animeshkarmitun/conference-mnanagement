@@ -19,6 +19,7 @@ class Session extends Model
         'room',
         'capacity',
         'seating_arrangement',
+        'status',
     ];
 
     protected $casts = [
@@ -58,5 +59,29 @@ class Session extends Model
     {
         $now = now();
         return $this->start_time <= $now && $this->end_time >= $now;
+    }
+
+    // Helper: Is this session published?
+    public function isPublished()
+    {
+        return $this->status === 'published';
+    }
+
+    // Helper: Is this session a draft?
+    public function isDraft()
+    {
+        return $this->status === 'draft';
+    }
+
+    // Scope: Published sessions
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
+
+    // Scope: Draft sessions
+    public function scopeDraft($query)
+    {
+        return $query->where('status', 'draft');
     }
 }

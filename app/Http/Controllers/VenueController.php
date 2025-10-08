@@ -31,10 +31,21 @@ class VenueController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
+            'address' => 'required|string|max:500',
             'capacity' => 'required|integer|min:1',
         ]);
-        Venue::create($validated);
+        
+        $venue = Venue::create($validated);
+        
+        // Check if this is an AJAX request
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Venue created successfully.',
+                'venue' => $venue
+            ]);
+        }
+        
         return redirect()->route('venues.index')->with('success', 'Venue created successfully.');
     }
 

@@ -6,6 +6,7 @@ use App\Events\TravelEvent;
 use App\Models\User;
 use App\Models\Role;
 use App\Services\EmailTrackingService;
+use App\Services\EmailTemplateService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -16,13 +17,15 @@ class SendTravelEmailNotification implements ShouldQueue
     use InteractsWithQueue;
 
     protected EmailTrackingService $emailTrackingService;
+    protected EmailTemplateService $emailTemplateService;
 
     /**
      * Create the event listener.
      */
-    public function __construct(EmailTrackingService $emailTrackingService)
+    public function __construct(EmailTrackingService $emailTrackingService, EmailTemplateService $emailTemplateService)
     {
         $this->emailTrackingService = $emailTrackingService;
+        $this->emailTemplateService = $emailTemplateService;
     }
 
     /**
@@ -99,14 +102,33 @@ class SendTravelEmailNotification implements ShouldQueue
     private function sendEmailNotification(User $user, TravelEvent $event): void
     {
         try {
-            $subject = $this->getEmailSubject($event);
-            $body = $this->getEmailMessage($user, $event);
-            
+            // Prepare variables for template
+            $variables = [
+                'first_name' => $user->first_name ?? 'User',
+                'last_name' => $user->last_name ?? '',
+                'conference_name' => $event->participant->conference->name ?? 'Conference',
+                'participant_name' => $event->participant->user->first_name . ' ' . $event->participant->user->last_name,
+                'travel_type' => $event->participant->travelDetails->travel_type ?? 'Travel',
+                'departure_date' => $event->participant->travelDetails->departure_date ? $event->participant->travelDetails->departure_date->format('M d, Y') : 'TBD',
+                'return_date' => $event->participant->travelDetails->return_date ? $event->participant->travelDetails->return_date->format('M d, Y') : 'TBD',
+                'hotel_name' => $event->participant->travelDetails->hotel_name ?? 'TBD',
+                'event_type' => $event->eventType,
+            ];
+
+            // Get template from service
+            $template = $this->emailTemplateService->processTemplate(
+                \App\Models\Email::TYPE_TRAVEL_NOTIFICATION,
+                $variables
+            );
+
+            // Build full email body
+            $fullBody = $this->buildFullEmailBody($template);
+
             // Send tracked email
             $this->emailTrackingService->sendTrackedEmail(
                 $user->email,
-                $subject,
-                $body,
+                $template['subject'],
+                $fullBody,
                 \App\Models\Email::TYPE_TRAVEL_NOTIFICATION,
                 auth()->user(), // Sender
                 $event->participant->conference,
@@ -127,6 +149,32 @@ class SendTravelEmailNotification implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Build full email body from template parts
+     */
+    private function buildFullEmailBody(array $template): string
+    {
+        return "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;'>
+            <div style='background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                <p>{$template['greeting']}</p>
+                
+                <div style='margin: 20px 0;'>
+                    {$template['body']}
+                </div>
+                
+                <p style='margin: 20px 0;'>{$template['closing']}</p>
+                <p style='margin: 20px 0;'>{$template['signature']}</p>
+                
+                <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                    This is an automated notification from the Conference Management System.
+                </p>
+            </div>
+        </div>
+        ";
     }
 
     /**

@@ -271,6 +271,17 @@ Route::get('/api/conferences/{conference}/users', function(\App\Models\Conferenc
     
     return response()->json($users);
 })->name('api.conferences.users');
+
+// API endpoints for conferences and venues (for session forms)
+Route::get('/api/conferences', function() {
+    $conferences = \App\Models\Conference::select('id', 'name', 'start_date', 'end_date')->get();
+    return response()->json(['conferences' => $conferences]);
+})->name('api.conferences');
+
+Route::get('/api/venues', function() {
+    $venues = \App\Models\Venue::select('id', 'name', 'address', 'capacity')->get();
+    return response()->json(['venues' => $venues]);
+})->name('api.venues');
     
 // Add route for notification actions (clicking on notifications)
 Route::get('/notifications/{notification}/action', function (\App\Models\Notification $notification) {
@@ -336,6 +347,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('sessions', \App\Http\Controllers\SessionController::class);
     Route::get('/sessions/participants/by-conference', [\App\Http\Controllers\SessionController::class, 'getParticipantsByConference'])->name('sessions.participants.by-conference');
     Route::get('/sessions/export', [\App\Http\Controllers\SessionController::class, 'export'])->name('sessions.export');
+    Route::post('/sessions/auto-save-draft', [\App\Http\Controllers\SessionController::class, 'autoSaveDraft'])->name('sessions.auto-save-draft');
+    Route::post('/sessions/{session}/publish', [\App\Http\Controllers\SessionController::class, 'publish'])->name('sessions.publish');
+    Route::post('/sessions/check-conflicts', [\App\Http\Controllers\SessionController::class, 'checkParticipantConflicts'])->name('sessions.check-conflicts');
+    Route::get('/sessions/test-conflicts', [\App\Http\Controllers\SessionController::class, 'testConflictDetection'])->name('sessions.test-conflicts');
     
     Route::resource('tasks', \App\Http\Controllers\TaskController::class);
     Route::patch('/tasks/{task}/status', [\App\Http\Controllers\TaskController::class, 'updateStatus'])->name('tasks.update-status');
@@ -345,6 +360,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-profile', [\App\Http\Controllers\ParticipantController::class, 'profile'])->name('participants.profile');
     Route::post('/participants/{participant}/comments', [\App\Http\Controllers\ParticipantController::class, 'storeComment'])->name('participants.comments.store');
     Route::put('/participants/{participant}/travel', [\App\Http\Controllers\ParticipantController::class, 'updateTravel'])->name('participants.travel.update');
+    Route::post('/participants/{participant}/room-allocation', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('room.allocation.update');
+    Route::get('/api/hotels/{hotel}/rooms', [\App\Http\Controllers\HotelController::class, 'getRooms'])->name('api.hotels.rooms');
     Route::get('/participants/{participant}/download-resume', [\App\Http\Controllers\ParticipantController::class, 'downloadResume'])->name('participants.download-resume');
     Route::get('/participants/{participant}/profile-picture', [\App\Http\Controllers\ParticipantController::class, 'showProfilePicture'])->name('participants.profile-picture');
     Route::post('/participants/{participant}/assign-session', [\App\Http\Controllers\ParticipantController::class, 'assignSession'])->name('participants.assign-session');
@@ -391,6 +408,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/thread/{threadId}', [App\Http\Controllers\Admin\EmailTrackingController::class, 'getConversationThread'])->name('thread');
         Route::get('/search', [App\Http\Controllers\Admin\EmailTrackingController::class, 'searchParticipantEmails'])->name('search');
     });
+    
+    // Email Settings Routes (Admin Only)
+    Route::prefix('admin/settings')->name('admin.email-settings.')->group(function () {
+        Route::get('email', [App\Http\Controllers\Admin\EmailSettingsController::class, 'index'])->name('index');
+        Route::get('email/{type}/edit', [App\Http\Controllers\Admin\EmailSettingsController::class, 'edit'])->name('edit');
+        Route::put('email/{type}', [App\Http\Controllers\Admin\EmailSettingsController::class, 'update'])->name('update');
+        Route::get('email/{type}/preview', [App\Http\Controllers\Admin\EmailSettingsController::class, 'preview'])->name('preview');
+        Route::post('email/{type}/test', [App\Http\Controllers\Admin\EmailSettingsController::class, 'test'])->name('test');
+        Route::post('email/{type}/reset', [App\Http\Controllers\Admin\EmailSettingsController::class, 'reset'])->name('reset');
+    });
+    
     Route::post('/participants/bulk-update', [\App\Http\Controllers\ParticipantController::class, 'bulkUpdate'])->name('participants.bulk-update');
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
     Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');

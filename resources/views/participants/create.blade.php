@@ -501,11 +501,28 @@
                 </div>
                 <div class="mb-4">
                     <label for="travel_intent" class="block text-sm font-medium text-gray-700">Travel Intent (Optional)</label>
-                    <select name="travel_intent" id="travel_intent" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <select name="travel_intent" id="travel_intent" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" onchange="toggleTravelDates()">
                         <option value="national" selected>National</option>
                         <option value="international">International</option>
                     </select>
                     @error('travel_intent')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                </div>
+            </div>
+            
+            <!-- Travel Dates Section (shown when International is selected) -->
+            <div id="travel-dates-section" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="arrival_date" class="block text-sm font-medium text-gray-700">Arrival Date (Optional)</label>
+                        <input type="datetime-local" name="arrival_date" id="arrival_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                        @error('arrival_date')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="departure_date" class="block text-sm font-medium text-gray-700">Departure Date (Optional)</label>
+                        <input type="datetime-local" name="departure_date" id="departure_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                        @error('departure_date')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
                 </div>
             </div>
             
@@ -674,6 +691,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
+    // Travel dates toggle
+    window.toggleTravelDates = function() {
+        const travelIntentSelect = document.getElementById('travel_intent');
+        const travelDatesSection = document.getElementById('travel-dates-section');
+        
+        if (travelIntentSelect && travelDatesSection) {
+            if (travelIntentSelect.value === 'international') {
+                travelDatesSection.classList.remove('hidden');
+            } else {
+                travelDatesSection.classList.add('hidden');
+                // Clear the date fields when hidden
+                const arrivalDate = document.getElementById('arrival_date');
+                const departureDate = document.getElementById('departure_date');
+                if (arrivalDate) arrivalDate.value = '';
+                if (departureDate) departureDate.value = '';
+            }
+        }
+    };
+    
     // Word and character counting
     function updateWordCount() {
         if (!expertiseTextarea || !wordCountSpan || !charCountSpan) return;
@@ -726,6 +762,7 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleVisaIssueDescription();
     updateParticipantTypeDescription();
     toggleStudentFields();
+    toggleTravelDates();
     updateWordCount();
     
     // Event listeners
@@ -737,6 +774,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (expertiseTextarea) {
         expertiseTextarea.addEventListener('input', updateWordCount);
+    }
+    
+    const travelIntentSelect = document.getElementById('travel_intent');
+    if (travelIntentSelect) {
+        travelIntentSelect.addEventListener('change', toggleTravelDates);
     }
     
     const dobInput = document.getElementById('date_of_birth');

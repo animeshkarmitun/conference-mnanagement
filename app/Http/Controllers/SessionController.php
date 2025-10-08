@@ -16,6 +16,7 @@ class SessionController extends Controller
     {
         $status = $request->get('status', 'all'); // Default to all sessions
         $conferenceId = $request->get('conference_id');
+        $sessionStatus = $request->get('session_status'); // New parameter for draft/published
         $now = now();
         
         $query = Session::with(['conference', 'participants']);
@@ -23,6 +24,11 @@ class SessionController extends Controller
         // Filter by conference if specified
         if ($conferenceId) {
             $query->where('conference_id', $conferenceId);
+        }
+        
+        // Filter by session status (draft/published) if specified
+        if ($sessionStatus && in_array($sessionStatus, ['draft', 'published'])) {
+            $query->where('status', $sessionStatus);
         }
         
         // Filter sessions based on status
@@ -122,7 +128,11 @@ class SessionController extends Controller
             'end_time' => 'required|date|after:start_time',
             'room' => 'nullable|string|max:255',
             'participants' => 'nullable|string', // JSON string from enhanced interface
+            'status' => 'nullable|in:draft,published',
         ]);
+
+        // Set default status to draft if not provided
+        $validated['status'] = $validated['status'] ?? 'draft';
 
         \Log::info('Validated data:', $validated);
 
@@ -149,16 +159,22 @@ class SessionController extends Controller
             \Log::info('No participants data received');
         }
 
-        // Trigger session creation event to notify only participants assigned to this session
-        $conference = Conference::find($session->conference_id);
-        $message = "A new session '{$session->title}' has been added to {$conference->name}";
-        event(new SessionEvent($session, 'session_created', $message, [
-            'created_by' => auth()->user()->id,
-            'conference_name' => $conference->name
-        ]));
+        // Only send notifications if session is published
+        if ($session->status === 'published') {
+            $conference = Conference::find($session->conference_id);
+            $message = "A new session '{$session->title}' has been added to {$conference->name}";
+            event(new SessionEvent($session, 'session_created', $message, [
+                'created_by' => auth()->user()->id,
+                'conference_name' => $conference->name
+            ]));
+        }
+
+        $message = $session->status === 'published' 
+            ? 'Session published successfully.' 
+            : 'Session saved as draft successfully.';
 
         return redirect()->route('sessions.index')
-            ->with('success', 'Session created successfully.');
+            ->with('success', $message);
     }
 
     public function show(Session $session)
@@ -230,6 +246,7 @@ class SessionController extends Controller
             'end_time' => 'required|date|after:start_time',
             'room' => 'nullable|string|max:255',
             'participants' => 'nullable|string', // JSON string from enhanced interface
+            'status' => 'nullable|in:draft,published',
         ]);
 
         $session->update($validated);
@@ -249,17 +266,19 @@ class SessionController extends Controller
             $session->participants()->detach();
         }
 
-        // Send notifications if dates or venue changed
-        $sessionNotificationService = new SessionNotificationService();
-        
-        // Check for date changes
-        $sessionNotificationService->notifySessionDatesUpdated($session, $oldData, $validated);
-        
-        // Check for venue/room changes
-        if (($oldData['room'] ?? '') !== ($validated['room'] ?? '')) {
-            $oldVenue = $oldData['room'] ?? 'TBD';
-            $newVenue = $validated['room'] ?? 'TBD';
-            $sessionNotificationService->notifySessionVenueUpdated($session, $oldVenue, $newVenue);
+        // Send notifications only if session is published
+        if ($session->status === 'published') {
+            $sessionNotificationService = new SessionNotificationService();
+            
+            // Check for date changes
+            $sessionNotificationService->notifySessionDatesUpdated($session, $oldData, $validated);
+            
+            // Check for venue/room changes
+            if (($oldData['room'] ?? '') !== ($validated['room'] ?? '')) {
+                $oldVenue = $oldData['room'] ?? 'TBD';
+                $newVenue = $validated['room'] ?? 'TBD';
+                $sessionNotificationService->notifySessionVenueUpdated($session, $oldVenue, $newVenue);
+            }
         }
 
         // Trigger session update event to notify only participants assigned to this session
@@ -423,5 +442,320 @@ class SessionController extends Controller
             });
 
         return response()->json(['participants' => $participants]);
+    }
+
+    /**
+     * Auto-save session as draft
+     */
+    public function autoSaveDraft(Request $request)
+    {
+        $validated = $request->validate([
+            'conference_id' => 'required|exists:conferences,id',
+            'venue_id' => 'required|exists:venues,id',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+            'room' => 'nullable|string|max:255',
+            'participants' => 'nullable|string',
+            'draft_session_id' => 'nullable|exists:sessions,id', // For updating existing draft
+        ]);
+
+        // Check if all required fields are filled
+        $requiredFields = ['conference_id', 'venue_id', 'title', 'start_time', 'end_time'];
+        $missingFields = [];
+        
+        foreach ($requiredFields as $field) {
+            if (empty($validated[$field])) {
+                $missingFields[] = $field;
+            }
+        }
+
+        if (!empty($missingFields)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please fill in all required fields: ' . implode(', ', $missingFields),
+                'missing_fields' => $missingFields
+            ], 422);
+        }
+
+        // Check if we're updating an existing draft
+        $draftSessionId = $request->input('draft_session_id');
+        $isUpdate = false;
+        
+        if ($draftSessionId) {
+            $existingDraft = Session::where('id', $draftSessionId)
+                ->where('status', 'draft')
+                ->first();
+                
+            if ($existingDraft) {
+                // Update existing draft
+                $existingDraft->update($validated);
+                $session = $existingDraft;
+                $isUpdate = true;
+            } else {
+                // Draft doesn't exist or is not a draft, create new one
+                $session = Session::create(array_merge($validated, ['status' => 'draft']));
+            }
+        } else {
+            // Check if there's already a draft for this user (optional: you might want to limit to one draft per user)
+            $existingDraft = Session::where('status', 'draft')
+                ->where('conference_id', $validated['conference_id'])
+                ->where('title', $validated['title'])
+                ->first();
+                
+            if ($existingDraft) {
+                // Update existing draft
+                $existingDraft->update($validated);
+                $session = $existingDraft;
+                $isUpdate = true;
+            } else {
+                // Create new draft
+                $session = Session::create(array_merge($validated, ['status' => 'draft']));
+            }
+        }
+
+        // Handle participants
+        if ($request->has('participants') && $request->participants) {
+            $participantIds = json_decode($request->participants, true);
+            if (is_array($participantIds)) {
+                $participantData = [];
+                foreach ($participantIds as $participantId) {
+                    $participantData[$participantId] = ['role' => 'participant'];
+                }
+                $session->participants()->sync($participantData);
+            }
+        }
+
+        $message = $isUpdate ? 'Draft updated successfully' : 'Draft saved successfully';
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'session_id' => $session->id,
+            'status' => 'draft',
+            'is_update' => $isUpdate
+        ]);
+    }
+
+    /**
+     * Publish session
+     */
+    public function publish(Request $request, Session $session)
+    {
+        $validated = $request->validate([
+            'conference_id' => 'required|exists:conferences,id',
+            'venue_id' => 'required|exists:venues,id',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+            'room' => 'nullable|string|max:255',
+            'participants' => 'nullable|string',
+        ]);
+
+        // Update session to published
+        $session->update(array_merge($validated, ['status' => 'published']));
+
+        // Handle participants
+        if ($request->has('participants') && $request->participants) {
+            $participantIds = json_decode($request->participants, true);
+            if (is_array($participantIds)) {
+                $participantData = [];
+                foreach ($participantIds as $participantId) {
+                    $participantData[$participantId] = ['role' => 'participant'];
+                }
+                $session->participants()->sync($participantData);
+            }
+        }
+
+        // Send notifications to participants
+        $conference = Conference::find($session->conference_id);
+        $message = "A new session '{$session->title}' has been published in {$conference->name}";
+        event(new SessionEvent($session, 'session_created', $message, [
+            'created_by' => auth()->user()->id,
+            'conference_name' => $conference->name
+        ]));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Session published successfully',
+            'session_id' => $session->id,
+            'status' => 'published'
+        ]);
+    }
+
+    /**
+     * Check for participant session conflicts
+     */
+    public function checkParticipantConflicts(Request $request)
+    {
+        // Debug: Log the incoming request data
+        \Log::info('Conflict check request data:', $request->all());
+        
+        try {
+            $validated = $request->validate([
+                'participant_ids' => 'required|array',
+                'participant_ids.*' => 'required|exists:participants,id',
+                'start_time' => 'required|date',
+                'end_time' => 'required|date|after:start_time',
+                'session_id' => 'nullable|exists:sessions,id', // For editing existing session
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Conflict check validation failed:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            return response()->json([
+                'has_conflicts' => false,
+                'conflicts' => [],
+                'total_conflicts' => 0,
+                'validation_error' => $e->errors()
+            ], 422);
+        }
+        
+        \Log::info('Conflict check validated data:', $validated);
+
+        $participantIds = $validated['participant_ids'];
+        $startTime = $validated['start_time'];
+        $endTime = $validated['end_time'];
+        $sessionId = $validated['session_id'] ?? null;
+
+        \Log::info("Conflict check parameters:", [
+            'participant_ids' => $participantIds,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'session_id' => $sessionId
+        ]);
+
+        // Debug: Check all sessions (published and draft)
+        $allSessions = \App\Models\Session::whereIn('status', ['published', 'draft'])
+            ->with(['participants', 'conference'])
+            ->get();
+        \Log::info("All sessions (published and draft):", $allSessions->toArray());
+
+        $conflicts = [];
+
+        foreach ($participantIds as $participantId) {
+            \Log::info("Checking conflicts for participant ID: {$participantId}");
+            
+            $participant = Participant::with(['user', 'sessions' => function($query) use ($startTime, $endTime, $sessionId) {
+                $query->where(function($q) use ($startTime, $endTime) {
+                    // Check for overlapping sessions
+                    $q->where(function($timeQuery) use ($startTime, $endTime) {
+                        // Session starts before our end time and ends after our start time
+                        $timeQuery->where('start_time', '<', $endTime)
+                                 ->where('end_time', '>', $startTime);
+                    });
+                })
+                ->whereIn('status', ['published', 'draft']) // Check both published and draft sessions
+                ->when($sessionId, function($q) use ($sessionId) {
+                    // Exclude current session when editing
+                    $q->where('sessions.id', '!=', $sessionId);
+                });
+            }])->find($participantId);
+
+            \Log::info("Participant found: " . ($participant ? 'Yes' : 'No'));
+            if ($participant) {
+                \Log::info("Participant sessions count: " . $participant->sessions->count());
+                \Log::info("Participant sessions: " . json_encode($participant->sessions->toArray()));
+            }
+
+            if ($participant && $participant->sessions->count() > 0) {
+                $conflictingSessions = $participant->sessions->map(function($session) {
+                    return [
+                        'id' => $session->id,
+                        'title' => $session->title,
+                        'start_time' => $session->start_time->format('Y-m-d H:i'),
+                        'end_time' => $session->end_time->format('Y-m-d H:i'),
+                        'status' => $session->status,
+                        'conference' => $session->conference->name ?? 'Unknown Conference'
+                    ];
+                });
+
+                $conflicts[] = [
+                    'participant_id' => $participantId,
+                    'participant_name' => ($participant->user->first_name ?? $participant->user->name) . ' ' . ($participant->user->last_name ?? ''),
+                    'participant_email' => $participant->user->email,
+                    'conflicting_sessions' => $conflictingSessions
+                ];
+            }
+        }
+
+        \Log::info("Final conflicts result:", [
+            'has_conflicts' => count($conflicts) > 0,
+            'conflicts' => $conflicts,
+            'total_conflicts' => count($conflicts)
+        ]);
+
+        return response()->json([
+            'has_conflicts' => count($conflicts) > 0,
+            'conflicts' => $conflicts,
+            'total_conflicts' => count($conflicts)
+        ]);
+    }
+
+    /**
+     * Test method to debug conflict detection
+     */
+    public function testConflictDetection(Request $request)
+    {
+        $participantId = $request->get('participant_id');
+        $startTime = $request->get('start_time');
+        $endTime = $request->get('end_time');
+
+        if (!$participantId || !$startTime || !$endTime) {
+            return response()->json(['error' => 'Missing parameters'], 400);
+        }
+
+        $participant = Participant::with(['user', 'sessions' => function($query) {
+            $query->whereIn('status', ['published', 'draft']);
+        }])->find($participantId);
+
+        if (!$participant) {
+            return response()->json(['error' => 'Participant not found'], 404);
+        }
+
+        // Check for time overlaps manually
+        $overlappingSessions = [];
+        foreach ($participant->sessions as $session) {
+            $sessionStart = $session->start_time;
+            $sessionEnd = $session->end_time;
+            
+            // Check if sessions overlap
+            if ($sessionStart < $endTime && $sessionEnd > $startTime) {
+                $overlappingSessions[] = [
+                    'id' => $session->id,
+                    'title' => $session->title,
+                    'start_time' => $sessionStart->format('Y-m-d H:i:s'),
+                    'end_time' => $sessionEnd->format('Y-m-d H:i:s'),
+                    'conference' => $session->conference->name ?? 'Unknown'
+                ];
+            }
+        }
+
+        return response()->json([
+            'participant' => [
+                'id' => $participant->id,
+                'name' => ($participant->user->first_name ?? $participant->user->name) . ' ' . ($participant->user->last_name ?? ''),
+                'email' => $participant->user->email
+            ],
+            'check_time_range' => [
+                'start' => $startTime,
+                'end' => $endTime
+            ],
+            'all_sessions' => $participant->sessions->map(function($session) {
+                return [
+                    'id' => $session->id,
+                    'title' => $session->title,
+                    'start_time' => $session->start_time->format('Y-m-d H:i:s'),
+                    'end_time' => $session->end_time->format('Y-m-d H:i:s'),
+                    'status' => $session->status,
+                    'conference' => $session->conference->name ?? 'Unknown'
+                ];
+            }),
+            'overlapping_sessions' => $overlappingSessions,
+            'has_conflicts' => count($overlappingSessions) > 0
+        ]);
     }
 } 

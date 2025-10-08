@@ -473,11 +473,28 @@
                 </div>
                 <div class="mb-4">
                     <label for="travel_intent" class="block text-sm font-medium text-gray-700">Travel Intent (Optional)</label>
-                    <select name="travel_intent" id="travel_intent" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <select name="travel_intent" id="travel_intent" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" onchange="toggleTravelDates()">
                         <option value="national" {{ old('travel_intent', $participant->travel_intent) == 'national' ? 'selected' : '' }}>National</option>
                         <option value="international" {{ old('travel_intent', $participant->travel_intent) == 'international' ? 'selected' : '' }}>International</option>
                     </select>
                     @error('travel_intent')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                </div>
+            </div>
+            
+            <!-- Travel Dates Section (shown when International is selected) -->
+            <div id="travel-dates-section" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="arrival_date" class="block text-sm font-medium text-gray-700">Arrival Date (Optional)</label>
+                        <input type="datetime-local" name="arrival_date" id="arrival_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('arrival_date', optional($participant->travelDetails)->arrival_date ? \Carbon\Carbon::parse($participant->travelDetails->arrival_date)->format('Y-m-d\TH:i') : '') }}">
+                        @error('arrival_date')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="departure_date" class="block text-sm font-medium text-gray-700">Departure Date (Optional)</label>
+                        <input type="datetime-local" name="departure_date" id="departure_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('departure_date', optional($participant->travelDetails)->departure_date ? \Carbon\Carbon::parse($participant->travelDetails->departure_date)->format('Y-m-d\TH:i') : '') }}">
+                        @error('departure_date')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
                 </div>
             </div>
             
@@ -576,14 +593,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Travel dates handling
+    function toggleTravelDates() {
+        const travelIntentSelect = document.getElementById('travel_intent');
+        const travelDatesSection = document.getElementById('travel-dates-section');
+        
+        if (travelIntentSelect && travelDatesSection) {
+            if (travelIntentSelect.value === 'international') {
+                travelDatesSection.classList.remove('hidden');
+            } else {
+                travelDatesSection.classList.add('hidden');
+                // Clear the date fields when hidden
+                const arrivalDate = document.getElementById('arrival_date');
+                const departureDate = document.getElementById('departure_date');
+                if (arrivalDate) arrivalDate.value = '';
+                if (departureDate) departureDate.value = '';
+            }
+        }
+    }
+    
     // Initial state
     toggleStudentFields();
+    toggleTravelDates();
     
     // Listen for changes
     const isStudentRadios = document.querySelectorAll('input[name="is_student"]');
     isStudentRadios.forEach(radio => {
         radio.addEventListener('change', toggleStudentFields);
     });
+    
+    const travelIntentSelect = document.getElementById('travel_intent');
+    if (travelIntentSelect) {
+        travelIntentSelect.addEventListener('change', toggleTravelDates);
+    }
     
     // Dietary requirements handling
     const dietaryRequirements = document.getElementById('dietary_requirements');

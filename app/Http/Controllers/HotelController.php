@@ -41,4 +41,34 @@ class HotelController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get rooms for a specific hotel
+     */
+    public function getRooms(Hotel $hotel): JsonResponse
+    {
+        try {
+            $rooms = $hotel->rooms()->where('is_available', true)->get();
+            
+            return response()->json([
+                'success' => true,
+                'rooms' => $rooms->map(function($room) {
+                    return [
+                        'id' => $room->id,
+                        'room_number' => $room->room_number,
+                        'room_type' => $room->room_type,
+                        'beds' => $room->beds,
+                        'price_per_night' => $room->price_per_night,
+                        'description' => $room->description,
+                    ];
+                })
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load rooms.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

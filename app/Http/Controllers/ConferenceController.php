@@ -86,43 +86,14 @@ class ConferenceController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'location' => 'required|string|max:255',
-            'venue_type' => 'required|in:existing,new',
+            'venue_id' => 'required|exists:venues,id',
             'sessions_json' => 'nullable|string',
         ]);
 
-        // Validate venue data based on type
-        if ($request->venue_type === 'existing') {
-            $request->validate([
-                'venue_id' => 'required|exists:venues,id',
-            ]);
-        } else {
-            $request->validate([
-                'venue_name' => 'required|string|max:255',
-                'venue_address' => 'required|string|max:500',
-                'venue_capacity' => 'required|integer|min:1',
-            ]);
-        }
-
         // Use database transaction to ensure data consistency
         return \DB::transaction(function () use ($request, $conferenceValidated) {
-            $venueId = null;
-
-            if ($request->venue_type === 'existing') {
-                // Use existing venue
-                $venueId = $request->venue_id;
-            } else {
-                // Create new venue
-                $venue = Venue::create([
-                    'name' => $request->venue_name,
-                    'address' => $request->venue_address,
-                    'capacity' => $request->venue_capacity,
-                ]);
-                $venueId = $venue->id;
-            }
-
             // Create conference with the venue ID
-            $conferenceData = array_merge($conferenceValidated, ['venue_id' => $venueId]);
-            $conference = Conference::create($conferenceData);
+            $conference = Conference::create($conferenceValidated);
 
             // Handle sessions creation if provided
             $sessions = [];

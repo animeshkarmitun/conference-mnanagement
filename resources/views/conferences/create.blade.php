@@ -51,67 +51,61 @@
         <div class="bg-blue-50 p-6 rounded-lg">
             <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Venue Information</h3>
             
-            <!-- Venue Type Selection -->
+            <!-- Venue Selection -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-3">Venue Selection *</label>
-                <div class="flex items-center space-x-6">
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="venue_type" value="existing" id="venue_existing" class="form-radio text-yellow-600" {{ old('venue_type', 'existing') == 'existing' ? 'checked' : '' }}>
-                        <span class="ml-2">Select Existing Venue</span>
-                    </label>
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="venue_type" value="new" id="venue_new" class="form-radio text-yellow-600" {{ old('venue_type') == 'new' ? 'checked' : '' }}>
-                        <span class="ml-2">Create New Venue</span>
-                    </label>
-                </div>
-                @error('venue_type')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Existing Venue Selection -->
-            <div id="existing_venue_section" class="venue-section">
-                <div>
-                    <label for="venue_id" class="block text-sm font-medium text-gray-700">Select Venue *</label>
-                    <select id="venue_id" name="venue_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                        <option value="">Select Venue</option>
-                        @foreach($venues as $venue)
-                            <option value="{{ $venue->id }}" {{ old('venue_id') == $venue->id ? 'selected' : '' }}>{{ $venue->name }} - {{ $venue->address }}</option>
-                        @endforeach
-                    </select>
-                    @error('venue_id')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
-            <!-- New Venue Creation -->
-            <div id="new_venue_section" class="venue-section" style="display: none;">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="venue_name" class="block text-sm font-medium text-gray-700">Venue Name *</label>
-                        <input type="text" id="venue_name" name="venue_name" value="{{ old('venue_name') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Convention Center">
-                        @error('venue_name')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    
-                    <div>
-                        <label for="venue_capacity" class="block text-sm font-medium text-gray-700">Capacity *</label>
-                        <input type="number" id="venue_capacity" name="venue_capacity" value="{{ old('venue_capacity') }}" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., 500">
-                        @error('venue_capacity')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <div class="flex items-center justify-between mb-3">
+                    <label class="block text-sm font-medium text-gray-700">Select Venue *</label>
+                    <button type="button" id="openVenueModalBtn" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Create New Venue
+                    </button>
                 </div>
                 
-                <div class="mt-4">
-                    <label for="venue_address" class="block text-sm font-medium text-gray-700">Address *</label>
-                    <textarea id="venue_address" name="venue_address" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Full address of the venue">{{ old('venue_address') }}</textarea>
-                    @error('venue_address')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
+                <!-- Searchable Venue Dropdown -->
+                <div class="relative">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="venue_search" 
+                            placeholder="Search venues..." 
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pr-16"
+                            autocomplete="off"
+                        >
+                        <button 
+                            type="button" 
+                            id="clear_venue" 
+                            class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                            title="Clear selection"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <button 
+                            type="button" 
+                            id="venue_dropdown_toggle" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            title="Show all venues"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Hidden input for form submission -->
+                    <input type="hidden" id="venue_id" name="venue_id" value="{{ old('venue_id') }}">
+                    
+                    <!-- Dropdown -->
+                    <div id="venue_dropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto">
+                        <div id="venue_options"></div>
+                    </div>
                 </div>
+                @error('venue_id')
+                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                @enderror
             </div>
         </div>
 
@@ -154,50 +148,12 @@
 
 
 <script>
+// Venue data for dropdowns
+const venues = @json($venues ?? []);
+
 document.addEventListener('DOMContentLoaded', function() {
-    const venueExisting = document.getElementById('venue_existing');
-    const venueNew = document.getElementById('venue_new');
-    const existingSection = document.getElementById('existing_venue_section');
-    const newSection = document.getElementById('new_venue_section');
-    const venueIdSelect = document.getElementById('venue_id');
-    const venueNameInput = document.getElementById('venue_name');
-    const venueCapacityInput = document.getElementById('venue_capacity');
-    const venueAddressInput = document.getElementById('venue_address');
     const confStartInput = document.getElementById('start_date');
     const confEndInput = document.getElementById('end_date');
-
-    function toggleVenueSections() {
-        if (venueExisting.checked) {
-            existingSection.style.display = 'block';
-            newSection.style.display = 'none';
-            // Clear new venue fields
-            venueNameInput.value = '';
-            venueCapacityInput.value = '';
-            venueAddressInput.value = '';
-            // Make existing venue required
-            venueIdSelect.required = true;
-            venueNameInput.required = false;
-            venueCapacityInput.required = false;
-            venueAddressInput.required = false;
-        } else if (venueNew.checked) {
-            existingSection.style.display = 'none';
-            newSection.style.display = 'block';
-            // Clear existing venue selection
-            venueIdSelect.value = '';
-            // Make new venue fields required
-            venueIdSelect.required = false;
-            venueNameInput.required = true;
-            venueCapacityInput.required = true;
-            venueAddressInput.required = true;
-        }
-    }
-
-    // Initial state
-    toggleVenueSections();
-
-    // Listen for changes
-    venueExisting.addEventListener('change', toggleVenueSections);
-    venueNew.addEventListener('change', toggleVenueSections);
 
     // ===================== Sessions Modal and Drafts =====================
     const sessionsJsonInput = document.getElementById('sessions_json');
@@ -236,13 +192,52 @@ document.addEventListener('DOMContentLoaded', function() {
         <p id="err_title" class="text-red-600 text-xs mt-1 hidden"></p>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">Venue *</label>
-        <select id="session_venue_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600">
-          <option value="">Select Venue</option>
-          @foreach($venues as $venue)
-            <option value="{{ $venue->id }}">{{ $venue->name }} - {{ $venue->address }}</option>
-          @endforeach
-        </select>
+        <div class="flex items-center justify-between mb-1">
+          <label class="block text-sm font-medium text-gray-700">Venue *</label>
+          <button type="button" id="openSessionVenueModalBtn" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            New
+          </button>
+        </div>
+        <div class="relative">
+          <div class="relative">
+            <input 
+              type="text" 
+              id="session_venue_search" 
+              placeholder="Search venues..." 
+              class="w-full rounded-md border-gray-300 text-sm focus:ring-purple-600 focus:border-purple-600 pr-16"
+              autocomplete="off"
+            >
+            <button 
+              type="button" 
+              id="clear_session_venue" 
+              class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+              title="Clear selection"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+            <button 
+              type="button" 
+              id="session_dropdown_toggle" 
+              class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              title="Show all venues"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+          </div>
+          <div id="session_venue_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
+            <div id="session_venue_options">
+              <!-- Venue options will be populated here -->
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="session_venue_id" name="session_venue_id" value="">
         <p id="err_venue" class="text-red-600 text-xs mt-1 hidden"></p>
       </div>
       <div>
@@ -488,6 +483,480 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial render
     renderDrafts();
+
+    // ===================== Venue Creation Modal =====================
+    const venueModal = document.createElement('div');
+    venueModal.id = 'venueModal';
+    venueModal.className = 'fixed inset-0 z-50 hidden';
+    venueModal.setAttribute('role', 'dialog');
+    venueModal.setAttribute('aria-modal', 'true');
+    venueModal.innerHTML = `
+<div class="flex items-end justify-center min-h-screen text-center sm:block sm:p-0">
+  <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true"></div>
+  <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+  <div class="inline-block align-bottom bg-white rounded-lg px-6 pt-6 pb-5 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+    <div class="flex items-start justify-between mb-4">
+      <h3 class="text-xl font-semibold text-gray-900" id="venueModalTitle">Create New Venue</h3>
+      <button type="button" id="closeVenueModalBtn" class="text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Close">✕</button>
+    </div>
+    <form id="venueForm">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Venue Name *</label>
+          <input id="modal_venue_name" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600" placeholder="e.g., Convention Center">
+          <p id="err_venue_name" class="text-red-600 text-xs mt-1 hidden"></p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Capacity *</label>
+          <input id="modal_venue_capacity" type="number" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600" placeholder="e.g., 500">
+          <p id="err_venue_capacity" class="text-red-600 text-xs mt-1 hidden"></p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Address *</label>
+          <textarea id="modal_venue_address" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600" placeholder="Full address of the venue"></textarea>
+          <p id="err_venue_address" class="text-red-600 text-xs mt-1 hidden"></p>
+        </div>
+      </div>
+      <div class="mt-6 flex items-center justify-end space-x-3">
+        <button type="button" id="cancelVenueBtn" class="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button type="submit" id="saveVenueBtn" class="px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 font-medium">Create Venue</button>
+      </div>
+    </form>
+  </div>
+</div>
+`;
+    document.body.appendChild(venueModal);
+
+    const openVenueModalBtn = document.getElementById('openVenueModalBtn');
+    const venueIdSelect = document.getElementById('venue_id');
+
+    function openVenueModal() {
+        // Clear form
+        document.getElementById('modal_venue_name').value = '';
+        document.getElementById('modal_venue_capacity').value = '';
+        document.getElementById('modal_venue_address').value = '';
+        clearVenueErrors();
+        venueModal.classList.remove('hidden');
+        setTimeout(() => document.getElementById('modal_venue_name').focus(), 0);
+    }
+
+    function closeVenueModal() {
+        venueModal.classList.add('hidden');
+    }
+
+    function clearVenueErrors() {
+        ['err_venue_name', 'err_venue_capacity', 'err_venue_address'].forEach(id => {
+            const el = document.getElementById(id);
+            el.textContent = '';
+            el.classList.add('hidden');
+        });
+    }
+
+    function validateVenueForm() {
+        clearVenueErrors();
+        const name = document.getElementById('modal_venue_name').value.trim();
+        const capacity = document.getElementById('modal_venue_capacity').value;
+        const address = document.getElementById('modal_venue_address').value.trim();
+        let ok = true;
+
+        if (!name) {
+            const e = document.getElementById('err_venue_name');
+            e.textContent = 'Venue name is required.';
+            e.classList.remove('hidden');
+            ok = false;
+        }
+
+        if (!capacity || capacity < 1) {
+            const e = document.getElementById('err_venue_capacity');
+            e.textContent = 'Capacity must be at least 1.';
+            e.classList.remove('hidden');
+            ok = false;
+        }
+
+        if (!address) {
+            const e = document.getElementById('err_venue_address');
+            e.textContent = 'Address is required.';
+            e.classList.remove('hidden');
+            ok = false;
+        }
+
+        return ok;
+    }
+
+    function createVenue() {
+        if (!validateVenueForm()) return;
+
+        const formData = {
+            name: document.getElementById('modal_venue_name').value.trim(),
+            capacity: document.getElementById('modal_venue_capacity').value,
+            address: document.getElementById('modal_venue_address').value.trim(),
+            _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        };
+
+        // Show loading state
+        const saveBtn = document.getElementById('saveVenueBtn');
+        const originalText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Creating...';
+
+        // Send AJAX request to create venue
+        fetch('{{ route("venues.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': formData._token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type:', contentType);
+            
+            if (!contentType || !contentType.includes('application/json')) {
+                // Try to get the response text for debugging
+                return response.text().then(text => {
+                    console.log('Non-JSON response body:', text);
+                    throw new Error('Server returned non-JSON response. Status: ' + response.status + '. Body: ' + text.substring(0, 200));
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Add new venue to main conference venue dropdown
+                const venueSearch = document.getElementById('venue_search');
+                const venueIdInput = document.getElementById('venue_id');
+                if (venueSearch && venueIdInput) {
+                    venueSearch.value = `${data.venue.name} - ${data.venue.address}`;
+                    venueIdInput.value = data.venue.id;
+                    document.getElementById('clear_venue').classList.remove('hidden');
+                }
+
+                // Add new venue to session venue dropdown
+                const sessionVenueSearch = document.getElementById('session_venue_search');
+                const sessionVenueIdInput = document.getElementById('session_venue_id');
+                if (sessionVenueSearch && sessionVenueIdInput) {
+                    sessionVenueSearch.value = `${data.venue.name} - ${data.venue.address}`;
+                    sessionVenueIdInput.value = data.venue.id;
+                }
+
+                // Update venues array for both dropdowns
+                venues.push(data.venue);
+
+                // Close modal
+                closeVenueModal();
+
+                // Show success message
+                alert('Venue created successfully and selected!');
+            } else {
+                throw new Error(data.message || 'Failed to create venue');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating venue: ' + error.message);
+        })
+        .finally(() => {
+            // Reset button
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+        });
+    }
+
+    // Event listeners for venue modal
+    openVenueModalBtn.addEventListener('click', openVenueModal);
+    venueModal.addEventListener('click', (e) => {
+        if (e.target === venueModal) closeVenueModal();
+    });
+    document.getElementById('closeVenueModalBtn').addEventListener('click', closeVenueModal);
+    document.getElementById('cancelVenueBtn').addEventListener('click', closeVenueModal);
+    document.getElementById('venueForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        createVenue();
+    });
+
+    // Keyboard accessibility: ESC closes modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !venueModal.classList.contains('hidden')) closeVenueModal();
+    });
+
+    // ===================== Main Conference Venue Searchable Dropdown =====================
+    function initializeMainVenueDropdown() {
+        const venueSearch = document.getElementById('venue_search');
+        const venueDropdown = document.getElementById('venue_dropdown');
+        const venueOptions = document.getElementById('venue_options');
+        const venueIdInput = document.getElementById('venue_id');
+        const clearVenueBtn = document.getElementById('clear_venue');
+        const venueDropdownToggle = document.getElementById('venue_dropdown_toggle');
+        
+        let selectedVenue = null;
+        let filteredVenues = [];
+        let isDropdownOpen = false;
+        
+        function filterVenues(query) {
+            if (!query.trim()) {
+                return venues;
+            }
+            const lowerQuery = query.toLowerCase();
+            return venues.filter(venue => 
+                venue.name.toLowerCase().includes(lowerQuery) ||
+                venue.address.toLowerCase().includes(lowerQuery)
+            );
+        }
+        
+        function renderVenueOptions(venues) {
+            venueOptions.innerHTML = '';
+            
+            if (venues.length === 0) {
+                venueOptions.innerHTML = `
+                    <div class="px-4 py-2 text-sm text-gray-500">
+                        No venues found
+                    </div>
+                `;
+                return;
+            }
+            
+            venues.forEach(venue => {
+                const option = document.createElement('div');
+                option.className = 'px-4 py-2 text-sm cursor-pointer hover:bg-yellow-50 transition-colors duration-150';
+                option.textContent = `${venue.name} - ${venue.address}`;
+                option.dataset.id = venue.id;
+                option.dataset.name = venue.name;
+                
+                option.addEventListener('click', () => {
+                    selectVenue(venue);
+                });
+                
+                venueOptions.appendChild(option);
+            });
+        }
+        
+        function selectVenue(venue) {
+            selectedVenue = venue;
+            venueSearch.value = `${venue.name} - ${venue.address}`;
+            venueIdInput.value = venue.id;
+            clearVenueBtn.classList.remove('hidden');
+            venueDropdown.classList.add('hidden');
+            isDropdownOpen = false;
+        }
+        
+        function clearVenueSelection() {
+            selectedVenue = null;
+            venueSearch.value = '';
+            venueIdInput.value = '';
+            clearVenueBtn.classList.add('hidden');
+            venueDropdown.classList.add('hidden');
+            isDropdownOpen = false;
+        }
+        
+        function toggleVenueDropdown() {
+            if (isDropdownOpen) {
+                venueDropdown.classList.add('hidden');
+                isDropdownOpen = false;
+            } else {
+                filteredVenues = filterVenues(venueSearch.value);
+                renderVenueOptions(filteredVenues);
+                venueDropdown.classList.remove('hidden');
+                isDropdownOpen = true;
+            }
+        }
+        
+        // Event listeners
+        venueSearch.addEventListener('input', (e) => {
+            const query = e.target.value;
+            filteredVenues = filterVenues(query);
+            renderVenueOptions(filteredVenues);
+            venueDropdown.classList.remove('hidden');
+            isDropdownOpen = true;
+        });
+        
+        venueSearch.addEventListener('focus', () => {
+            if (!isDropdownOpen) {
+                filteredVenues = filterVenues(venueSearch.value);
+                renderVenueOptions(filteredVenues);
+                venueDropdown.classList.remove('hidden');
+                isDropdownOpen = true;
+            }
+        });
+        
+        clearVenueBtn.addEventListener('click', clearVenueSelection);
+        venueDropdownToggle.addEventListener('click', toggleVenueDropdown);
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!venueSearch.contains(e.target) && !venueDropdown.contains(e.target)) {
+                venueDropdown.classList.add('hidden');
+                isDropdownOpen = false;
+            }
+        });
+        
+        // Initialize with existing selection if any
+        const existingVenueId = venueIdInput.value;
+        if (existingVenueId) {
+            const existingVenue = venues.find(v => v.id == existingVenueId);
+            if (existingVenue) {
+                selectVenue(existingVenue);
+            }
+        }
+    }
+
+    // ===================== Session Venue Searchable Dropdown =====================
+    function initializeSessionVenueDropdown() {
+        const sessionVenueSearch = document.getElementById('session_venue_search');
+        const sessionVenueDropdown = document.getElementById('session_venue_dropdown');
+        const sessionVenueOptions = document.getElementById('session_venue_options');
+        const sessionVenueIdInput = document.getElementById('session_venue_id');
+        const clearSessionVenueBtn = document.getElementById('clear_session_venue');
+        const sessionDropdownToggle = document.getElementById('session_dropdown_toggle');
+        const openSessionVenueModalBtn = document.getElementById('openSessionVenueModalBtn');
+        
+        let selectedSessionVenue = null;
+        let filteredSessionVenues = [];
+        let isSessionDropdownOpen = false;
+        
+        function filterSessionVenues(query) {
+            if (!query.trim()) {
+                return venues;
+            }
+            const lowerQuery = query.toLowerCase();
+            return venues.filter(venue => 
+                venue.name.toLowerCase().includes(lowerQuery)
+            );
+        }
+        
+        function renderSessionVenueOptions(venues) {
+            sessionVenueOptions.innerHTML = '';
+            
+            if (venues.length === 0) {
+                sessionVenueOptions.innerHTML = `
+                    <div class="px-4 py-2 text-sm text-gray-500">
+                        No venues found
+                    </div>
+                `;
+                return;
+            }
+            
+            venues.forEach(venue => {
+                const option = document.createElement('div');
+                option.className = 'px-4 py-2 text-sm cursor-pointer hover:bg-purple-50 transition-colors duration-150';
+                option.textContent = `${venue.name} - ${venue.address}`;
+                option.dataset.id = venue.id;
+                option.dataset.name = venue.name;
+                
+                option.addEventListener('click', () => {
+                    selectSessionVenue(venue);
+                });
+                
+                sessionVenueOptions.appendChild(option);
+            });
+        }
+        
+        function selectSessionVenue(venue) {
+            selectedSessionVenue = venue;
+            sessionVenueSearch.value = `${venue.name} - ${venue.address}`;
+            sessionVenueIdInput.value = venue.id;
+            clearSessionVenueBtn.classList.remove('hidden');
+            sessionVenueDropdown.classList.add('hidden');
+            isSessionDropdownOpen = false;
+        }
+        
+        function clearSessionVenueSelection() {
+            selectedSessionVenue = null;
+            sessionVenueSearch.value = '';
+            sessionVenueIdInput.value = '';
+            clearSessionVenueBtn.classList.add('hidden');
+            sessionVenueDropdown.classList.add('hidden');
+            isSessionDropdownOpen = false;
+        }
+        
+        function toggleSessionVenueDropdown() {
+            if (isSessionDropdownOpen) {
+                sessionVenueDropdown.classList.add('hidden');
+                isSessionDropdownOpen = false;
+            } else {
+                const query = sessionVenueSearch.value.trim();
+                if (query) {
+                    // Show filtered results
+                    filteredSessionVenues = filterSessionVenues(query);
+                    renderSessionVenueOptions(filteredSessionVenues);
+                } else {
+                    // Show all venues
+                    renderSessionVenueOptions(venues);
+                }
+                sessionVenueDropdown.classList.remove('hidden');
+                isSessionDropdownOpen = true;
+            }
+        }
+        
+        // Event listeners
+        if (sessionVenueSearch) {
+            sessionVenueSearch.addEventListener('input', function() {
+                const query = this.value;
+                filteredSessionVenues = filterSessionVenues(query);
+                
+                if (query.trim() && filteredSessionVenues.length > 0) {
+                    renderSessionVenueOptions(filteredSessionVenues);
+                    sessionVenueDropdown.classList.remove('hidden');
+                    isSessionDropdownOpen = true;
+                } else if (query.trim() && filteredSessionVenues.length === 0) {
+                    renderSessionVenueOptions([]);
+                    sessionVenueDropdown.classList.remove('hidden');
+                    isSessionDropdownOpen = true;
+                } else {
+                    sessionVenueDropdown.classList.add('hidden');
+                    isSessionDropdownOpen = false;
+                }
+            });
+            
+            sessionVenueSearch.addEventListener('focus', function() {
+                if (this.value.trim()) {
+                    filteredSessionVenues = filterSessionVenues(this.value);
+                    renderSessionVenueOptions(filteredSessionVenues);
+                    sessionVenueDropdown.classList.remove('hidden');
+                    isSessionDropdownOpen = true;
+                }
+            });
+            
+            sessionVenueSearch.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    sessionVenueDropdown.classList.add('hidden');
+                    isSessionDropdownOpen = false;
+                }
+            });
+        }
+        
+        if (clearSessionVenueBtn) {
+            clearSessionVenueBtn.addEventListener('click', clearSessionVenueSelection);
+        }
+        
+        if (sessionDropdownToggle) {
+            sessionDropdownToggle.addEventListener('click', toggleSessionVenueDropdown);
+        }
+        
+        if (openSessionVenueModalBtn) {
+            openSessionVenueModalBtn.addEventListener('click', function() {
+                // Open the main venue creation modal
+                openVenueModal();
+            });
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.relative') || e.target.closest('#session_venue_dropdown')) {
+                sessionVenueDropdown.classList.add('hidden');
+                isSessionDropdownOpen = false;
+            }
+        });
+    }
+
+    // Initialize all dropdowns
+    initializeMainVenueDropdown();
+    initializeSessionVenueDropdown();
 });
 </script>
 @endsection 

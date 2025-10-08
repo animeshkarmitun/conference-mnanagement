@@ -99,17 +99,47 @@ class TravelController extends Controller
 
     public function updateRoomAllocation(Request $request, Participant $participant)
     {
-        $validated = $request->validate([
+        \Log::info('Room allocation request received', [
+            'participant_id' => $participant->id,
+            'request_data' => $request->all(),
+            'is_ajax' => $request->ajax(),
+            'headers' => $request->headers->all()
+        ]);
+
+        try {
+            $validated = $request->validate([
             'hotel_id' => 'required|exists:hotels,id',
             'room_number' => 'nullable|string|max:50',
-            'check_in' => 'nullable|date|after:now',
+            'number_of_beds' => 'nullable|integer|min:1|max:10',
+            'check_in' => 'nullable|date|after_or_equal:today',
             'check_out' => 'nullable|date|after:check_in',
         ], [
             'hotel_id.required' => 'Hotel selection is required.',
             'hotel_id.exists' => 'Selected hotel is invalid.',
+            'number_of_beds.integer' => 'Number of beds must be a valid number.',
+            'number_of_beds.min' => 'Number of beds must be at least 1.',
+            'number_of_beds.max' => 'Number of beds cannot exceed 10.',
             'check_in.after' => 'Check-in time cannot be in the past.',
             'check_out.after' => 'Check-out time must be after check-in time.',
         ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Room allocation validation failed', [
+                'participant_id' => $participant->id,
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
 
         try {
             // Update or create room allocation
@@ -117,9 +147,15 @@ class TravelController extends Controller
             $roomAllocation->hotel_id = $validated['hotel_id'];
             $roomAllocation->participant_id = $participant->id;
             $roomAllocation->room_number = $validated['room_number'] ?? null;
+            $roomAllocation->number_of_beds = $validated['number_of_beds'] ?? null;
             $roomAllocation->check_in = $validated['check_in'] ?? null;
             $roomAllocation->check_out = $validated['check_out'] ?? null;
             $roomAllocation->save();
+
+            \Log::info('Room allocation saved successfully', [
+                'room_allocation_id' => $roomAllocation->id,
+                'participant_id' => $participant->id
+            ]);
 
             // Send room allocation notification
             if ($roomAllocation->hotel_id) {
@@ -137,6 +173,12 @@ class TravelController extends Controller
 
             return redirect()->back()->with('success', 'Room allocation updated.');
         } catch (\Exception $e) {
+            \Log::error('Room allocation save failed', [
+                'participant_id' => $participant->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             // Handle AJAX requests
             if ($request->ajax()) {
                 return response()->json([

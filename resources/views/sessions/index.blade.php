@@ -166,6 +166,31 @@
     .modern-admin:hover {
         background: linear-gradient(135deg, #6d28d9, #5b21b6);
     }
+    
+    /* Session title link styling */
+    .session-title-link {
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    .session-title-link:hover {
+        transform: translateY(-1px);
+    }
+    
+    .session-title-link::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        transition: width 0.3s ease;
+    }
+    
+    .session-title-link:hover::after {
+        width: 100%;
+    }
 </style>
 @endpush
 
@@ -299,11 +324,29 @@
                     <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
                 </div>
             </div>
-            <div class="flex items-center space-x-2 text-sm text-gray-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>{{ $sessions->total() }} session{{ $sessions->total() !== 1 ? 's' : '' }} found</span>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                    <label for="status_filter" class="text-sm font-medium text-gray-700">Filter by Status:</label>
+                </div>
+                <div class="relative">
+                    <select 
+                        id="status_filter" 
+                        class="w-40 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500"
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="published" {{ request('session_status') === 'published' ? 'selected' : '' }}>Published</option>
+                        <option value="draft" {{ request('session_status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>{{ $sessions->total() }} session{{ $sessions->total() !== 1 ? 's' : '' }} found</span>
+                </div>
             </div>
         </div>
     </div>
@@ -317,6 +360,12 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">
                         Status
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="session_status">
+                        Session Status
                         <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
@@ -389,6 +438,27 @@
                                 {{ $statusText }}
                             </span>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $session->status ?? 'draft' }}">
+                            @php
+                                $sessionStatus = $session->status ?? 'draft';
+                                $sessionStatusClass = $sessionStatus === 'published' 
+                                    ? 'bg-green-100 text-green-800 border-green-200' 
+                                    : 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                                $sessionStatusText = $sessionStatus === 'published' ? 'Published' : 'Draft';
+                            @endphp
+                            <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $sessionStatusClass }}">
+                                @if($sessionStatus === 'published')
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                @else
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                @endif
+                                {{ $sessionStatusText }}
+                            </span>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $session->title }}">
                             <div class="flex items-center">
                                 <div class="w-10 h-10 session-icon rounded-full flex items-center justify-center mr-3 shadow-lg">
@@ -397,7 +467,13 @@
                                     </span>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-gray-900">{{ $session->title }}</div>
+                                    <div class="font-medium text-gray-900">
+                                        <a href="{{ route('sessions.edit', $session) }}" 
+                                           class="session-title-link text-blue-600 hover:text-blue-800"
+                                           title="Edit session: {{ $session->title }}">
+                                            {{ $session->title }}
+                                        </a>
+                                    </div>
                                     @if($session->description)
                                         <div class="text-xs text-gray-500 truncate max-w-xs">{{ $session->description }}</div>
                                     @endif
@@ -800,6 +876,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Status filter functionality
+    const statusFilter = document.getElementById('status_filter');
+    if (statusFilter) {
+        statusFilter.addEventListener('change', function() {
+            const currentUrl = new URL(window.location);
+            const sessionStatus = this.value;
+            
+            if (sessionStatus) {
+                currentUrl.searchParams.set('session_status', sessionStatus);
+            } else {
+                currentUrl.searchParams.delete('session_status');
+            }
+            
+            // Preserve conference filter if it exists
+            const conferenceId = currentUrl.searchParams.get('conference_id');
+            if (conferenceId) {
+                currentUrl.searchParams.set('conference_id', conferenceId);
+            }
+            
+            window.location.href = currentUrl.toString();
+        });
+    }
+
     // Export sessions functionality
     const exportBtn = document.getElementById('export-sessions-btn');
     if (exportBtn) {
@@ -812,12 +911,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get current filter parameters
         const currentUrl = new URL(window.location);
         const status = currentUrl.searchParams.get('status') || 'all';
+        const sessionStatus = currentUrl.searchParams.get('session_status') || '';
         const conferenceId = currentUrl.searchParams.get('conference_id') || '';
         
         // Build export URL with current filters
         let exportUrl = '{{ route("sessions.export") }}?';
         if (status && status !== 'all') {
             exportUrl += 'status=' + encodeURIComponent(status) + '&';
+        }
+        if (sessionStatus) {
+            exportUrl += 'session_status=' + encodeURIComponent(sessionStatus) + '&';
         }
         if (conferenceId) {
             exportUrl += 'conference_id=' + encodeURIComponent(conferenceId) + '&';

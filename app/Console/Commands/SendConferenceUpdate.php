@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\EmailTrackingService;
+use App\Services\EmailTemplateService;
 use App\Models\Conference;
 use App\Models\Participant;
 use App\Models\User;
@@ -53,18 +54,34 @@ class SendConferenceUpdate extends Command
         $this->info("Found {$participants->count()} participants");
         
         $emailTrackingService = app(EmailTrackingService::class);
+        $emailTemplateService = app(EmailTemplateService::class);
         $sentCount = 0;
         $failedCount = 0;
         
         foreach ($participants as $participant) {
             try {
-                $emailBody = $this->buildEmailBody($conference, $participant, $message);
+                // Prepare variables for template
+                $variables = [
+                    'first_name' => $participant->user->first_name ?? 'User',
+                    'last_name' => $participant->user->last_name ?? '',
+                    'conference_name' => $conference->name,
+                    'custom_message' => $message,
+                ];
+
+                // Get template from service
+                $template = $emailTemplateService->processTemplate(
+                    \App\Models\Email::TYPE_CONFERENCE_UPDATE,
+                    $variables
+                );
+
+                // Build full email body with custom message
+                $emailBody = $this->buildEmailBody($template, $conference, $participant, $message);
                 
                 $email = $emailTrackingService->sendTrackedEmailViaGmail(
                     $participant->user->email,
-                    $subject,
+                    $template['subject'],
                     $emailBody,
-                    'conference_update',
+                    \App\Models\Email::TYPE_CONFERENCE_UPDATE,
                     $adminUser,
                     $conference
                 );
@@ -85,30 +102,43 @@ class SendConferenceUpdate extends Command
         return 0;
     }
     
-    private function buildEmailBody($conference, $participant, $message)
+    private function buildEmailBody($template, $conference, $participant, $message)
     {
         return "
-        <h2>Conference Update: {$conference->name}</h2>
-        
-        <p>Dear {$participant->user->first_name} {$participant->user->last_name},</p>
-        
-        <p>{$message}</p>
-        
-        <h3>Conference Details:</h3>
-        <ul>
-            <li><strong>Conference:</strong> {$conference->name}</li>
-            <li><strong>Start Date:</strong> " . ($conference->start_date ? $conference->start_date->format('F j, Y') : 'TBD') . "</li>
-            <li><strong>End Date:</strong> " . ($conference->end_date ? $conference->end_date->format('F j, Y') : 'TBD') . "</li>
-            <li><strong>Location:</strong> " . ($conference->venue ? $conference->venue->name : 'TBD') . "</li>
-        </ul>
-        
-        <p>If you have any questions, please don't hesitate to contact us.</p>
-        
-        <p>Best regards,<br>
-        Conference Management Team</p>
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;'>
+            <div style='background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                <p>{$template['greeting']}</p>
+                
+                <div style='margin: 20px 0;'>
+                    <div style='background-color: #f0f9ff; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3b82f6;'>
+                        <h3 style='color: #1e40af; margin: 0 0 10px 0; font-size: 18px;'>Conference Update: {$conference->name}</h3>
+                        <div style='color: #374151; line-height: 1.6; white-space: pre-line;'>{$message}</div>
+                    </div>
+                    
+                    <div style='background-color: #f8fafc; padding: 20px; border-radius: 6px; margin: 20px 0;'>
+                        <h3 style='color: #1f2937; margin: 0 0 15px 0; font-size: 16px;'>Conference Details:</h3>
+                        <ul style='color: #374151; line-height: 1.6; padding-left: 20px; margin: 0;'>
+                            <li><strong>Conference:</strong> {$conference->name}</li>
+                            <li><strong>Start Date:</strong> " . ($conference->start_date ? $conference->start_date->format('F j, Y') : 'TBD') . "</li>
+                            <li><strong>End Date:</strong> " . ($conference->end_date ? $conference->end_date->format('F j, Y') : 'TBD') . "</li>
+                            <li><strong>Location:</strong> " . ($conference->venue ? $conference->venue->name : 'TBD') . "</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <p style='margin: 20px 0;'>{$template['closing']}</p>
+                <p style='margin: 20px 0;'>{$template['signature']}</p>
+                
+                <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+                <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
+                    This is an automated notification from the Conference Management System.
+                </p>
+            </div>
+        </div>
         ";
     }
 }
+
 
 
 

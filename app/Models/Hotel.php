@@ -31,4 +31,9 @@ class Hotel extends Model
     {
         return $this->hasMany(RoomAllocation::class);
     }
+
+    public function rooms()
+    {
+        return $this->hasMany(Room::class);
+    }
 }

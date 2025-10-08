@@ -17,6 +17,10 @@
         <!-- Font Awesome -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
+        <!-- Select2 CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+        
         <!-- Localhost CSS -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -275,6 +279,19 @@
                             <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Gmail Conversations</span>
                         </a>
                         @endif
+                        
+                        <!-- Settings Section (Admin Only) -->
+                        @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')))
+                        <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Settings</div>
+                        <a href="{{ route('admin.email-settings.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.email-settings.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Email Settings' : ''">
+                            <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Email Settings</span>
+                        </a>
+                        @endif
+                        
                         <!-- Travel Management Section -->
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Travel Management</div>
@@ -615,5 +632,28 @@
         
         <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <!-- Select2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        
+        <!-- Select2 initialization script -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize Select2 on all select elements with class 'select2'
+                $('.select2').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Select an option',
+                    allowClear: true
+                });
+                
+                // Initialize Select2 on all select elements with class 'select2-searchable'
+                $('.select2-searchable').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Search and select...',
+                    allowClear: true,
+                    minimumInputLength: 0
+                });
+            });
+        </script>
     </body>
 </html>
