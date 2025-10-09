@@ -1,92 +1,199 @@
-<form method="POST" action="{{ route('participants.travel.update', $participant) }}" enctype="multipart/form-data" class="space-y-4">
-    @csrf
-    @method('PUT')
-    <div class="grid grid-cols-2 gap-4">
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Arrival Date</label>
-            <input type="datetime-local" name="arrival_date" id="arrival_date" value="{{ old('arrival_date', optional($travelDetail)->arrival_date ? \Carbon\Carbon::parse($travelDetail->arrival_date)->format('Y-m-d\TH:i') : '' ) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Departure Date</label>
-            <input type="datetime-local" name="departure_date" id="departure_date" value="{{ old('departure_date', optional($travelDetail)->departure_date ? \Carbon\Carbon::parse($travelDetail->departure_date)->format('Y-m-d\TH:i') : '' ) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-        </div>
-    </div>
+<!-- Travel & Accommodation Information -->
+<div class="bg-gray-50 p-6 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Travel & Accommodation Details</h3>
     
-    <div class="grid grid-cols-2 gap-4">
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Travel Intent</label>
-            <div class="mt-1 p-3 bg-gray-50 rounded-md border">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $participant->travel_intent === 'international' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                    {{ ucfirst($participant->travel_intent ?? 'National') }}
-                </span>
-                <p class="text-xs text-gray-500 mt-1">This is set in your Personal Information</p>
+    @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+    <!-- Admin Edit Form -->
+    <form method="POST" action="{{ route('participants.travel.update', $participant) }}" enctype="multipart/form-data" class="space-y-4">
+        @csrf
+        @method('PUT')
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Arrival Date</label>
+                <input type="datetime-local" name="arrival_date" id="arrival_date" value="{{ old('arrival_date', optional($travelDetail)->arrival_date ? \Carbon\Carbon::parse($travelDetail->arrival_date)->format('Y-m-d\TH:i') : '' ) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Departure Date</label>
+                <input type="datetime-local" name="departure_date" id="departure_date" value="{{ old('departure_date', optional($travelDetail)->departure_date ? \Carbon\Carbon::parse($travelDetail->departure_date)->format('Y-m-d\TH:i') : '' ) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
             </div>
         </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Extra Nights</label>
-            <input type="number" name="extra_nights" min="0" value="{{ old('extra_nights', optional($travelDetail)->extra_nights ?? 0) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-        </div>
-    </div>
+    @else
+    <!-- Read-only view for participants -->
+    <div class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-            <label class="block text-sm font-medium text-gray-700">Flight Info</label>
-            <textarea name="flight_info" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">{{ old('flight_info', optional($travelDetail)->flight_info) }}</textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Arrival Date</label>
+                <div class="text-gray-900">
+                    @if(optional($travelDetail)->arrival_date)
+                        {{ \Carbon\Carbon::parse($travelDetail->arrival_date)->format('M d, Y \a\t g:i A') }}
+                    @else
+                        <span class="text-gray-400">Not specified</span>
+                    @endif
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Departure Date</label>
+                <div class="text-gray-900">
+                    @if(optional($travelDetail)->departure_date)
+                        {{ \Carbon\Carbon::parse($travelDetail->departure_date)->format('M d, Y \a\t g:i A') }}
+                    @else
+                        <span class="text-gray-400">Not specified</span>
+                    @endif
+                </div>
+            </div>
         </div>
-    <!-- Hotel and Room Selection Row -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Hotel Selection (Left) -->
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Hotel</label>
-            <div class="flex gap-2 items-center">
-                <select name="hotel_id" id="hotel-select" class="mt-1 block flex-1 select2-searchable">
-                    <option value="">Search and select hotel...</option>
-                    @foreach($hotels as $hotel)
-                        <option value="{{ $hotel->id }}" {{ old('hotel_id', optional($travelDetail)->hotel_id) == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
-                    @endforeach
-                </select>
-                <button type="button" id="add-hotel-btn" class="mt-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md text-sm font-medium border border-yellow-700 shadow-sm" title="Add New Hotel">
-                    <i class="fas fa-plus"></i>
-                </button>
+    @endif
+    
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Travel Intent</label>
+                <div class="text-gray-900">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $participant->travel_intent === 'international' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                        {{ ucfirst($participant->travel_intent ?? 'National') }}
+                    </span>
+                    <p class="text-xs text-gray-500 mt-1">This is set in your Personal Information</p>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Extra Nights</label>
+                @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                <input type="number" name="extra_nights" min="0" value="{{ old('extra_nights', optional($travelDetail)->extra_nights ?? 0) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                @else
+                <div class="text-gray-900">{{ optional($travelDetail)->extra_nights ?? 0 }} night(s)</div>
+                @endif
             </div>
         </div>
         
-        <!-- Room Selection (Right) -->
         <div>
-            <label class="block text-sm font-medium text-gray-700">Room</label>
-            <div class="flex gap-2 items-center">
-                <select name="room_id" id="room-select" class="mt-1 block flex-1 select2-searchable">
-                    <option value="">Search and select room...</option>
-                    @if(optional($travelDetail)->hotel_id)
-                        @php
-                            $selectedHotel = $hotels->firstWhere('id', $travelDetail->hotel_id);
-                            $rooms = $selectedHotel ? $selectedHotel->rooms ?? [] : [];
-                        @endphp
-                        @foreach($rooms as $room)
-                            <option value="{{ $room->id }}" {{ old('room_id', optional($travelDetail)->room_id) == $room->id ? 'selected' : '' }}>
-                                {{ $room->room_number }} - {{ $room->roomType->name ?? ($room->room_type ?? 'Standard') }} ({{ $room->beds ?? 1 }} bed{{ $room->beds > 1 ? 's' : '' }})
-                            </option>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Flight Info</label>
+            @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+            <textarea name="flight_info" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">{{ old('flight_info', optional($travelDetail)->flight_info) }}</textarea>
+            @else
+            <div class="text-gray-900">{{ optional($travelDetail)->flight_info ?: 'Not provided' }}</div>
+            @endif
+        </div>
+        <!-- Hotel and Room Information -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Hotel</label>
+                @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                <div class="flex gap-2 items-center">
+                    <select name="hotel_id" id="hotel-select" class="mt-1 block flex-1 select2-searchable">
+                        <option value="">Search and select hotel...</option>
+                        @foreach($hotels as $hotel)
+                            <option value="{{ $hotel->id }}" {{ old('hotel_id', optional($travelDetail)->hotel_id) == $hotel->id ? 'selected' : '' }}>{{ $hotel->name }}</option>
                         @endforeach
+                    </select>
+                    <button type="button" id="add-hotel-btn" class="mt-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md text-sm font-medium border border-yellow-700 shadow-sm" title="Add New Hotel">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                @else
+                <div class="text-gray-900">
+                    @if(optional($travelDetail)->hotel)
+                        {{ $travelDetail->hotel->name }}
+                    @else
+                        <span class="text-gray-400">Not assigned</span>
                     @endif
-                </select>
-                <button type="button" id="room-details-btn" class="mt-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium border border-blue-700 shadow-sm" title="Room Details">
-                    <i class="fas fa-cog"></i>
-                </button>
+                </div>
+                @endif
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Room</label>
+                @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                <div class="flex gap-2 items-center">
+                    <select name="room_id" id="room-select" class="mt-1 block flex-1 select2-searchable">
+                        <option value="">Search and select room...</option>
+                        @if(optional($travelDetail)->hotel_id)
+                            @php
+                                $selectedHotel = $hotels->firstWhere('id', $travelDetail->hotel_id);
+                                $rooms = $selectedHotel ? $selectedHotel->rooms ?? [] : [];
+                            @endphp
+                            @foreach($rooms as $room)
+                                <option value="{{ $room->id }}" {{ old('room_id', optional($travelDetail)->room_id) == $room->id ? 'selected' : '' }}>
+                                    {{ $room->room_number }} - {{ $room->roomType->name ?? ($room->room_type ?? 'Standard') }} ({{ $room->beds ?? 1 }} bed{{ $room->beds > 1 ? 's' : '' }})
+                                </option>
+                            @endforeach
+                        @endif
+                    </select>
+                    <button type="button" id="room-details-btn" class="mt-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium border border-blue-700 shadow-sm" title="Room Details">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+                @else
+                <div class="text-gray-900">
+                    @if(optional($travelDetail)->room)
+                        {{ $travelDetail->room->room_number }} - {{ $travelDetail->room->roomType->name ?? ($travelDetail->room->room_type ?? 'Standard') }} ({{ $travelDetail->room->beds ?? 1 }} bed{{ $travelDetail->room->beds > 1 ? 's' : '' }})
+                    @else
+                        <span class="text-gray-400">Not assigned</span>
+                    @endif
+                </div>
+                @endif
             </div>
         </div>
-    </div>
     
-    <!-- Check-in/Check-out DateTime (only show after room selection) -->
-    <div id="room-dates-section" class="grid grid-cols-2 gap-4" style="display: none;">
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Room Check-in DateTime</label>
-            <input type="datetime-local" name="room_check_in" id="room_check_in" value="{{ old('room_check_in', optional($participant->roomAllocation)->check_in ? \Carbon\Carbon::parse($participant->roomAllocation->check_in)->format('Y-m-d\TH:i') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 check-in-input auto-save-input" data-participant-id="{{ $participant->id }}">
-            <p class="text-xs text-gray-500 mt-1">Must be between arrival and departure dates</p>
+        <!-- Check-in/Check-out Information -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Room Check-in DateTime</label>
+                @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                <div id="room-dates-section" style="display: none;">
+                    <input type="datetime-local" name="room_check_in" id="room_check_in" value="{{ old('room_check_in', optional($participant->roomAllocation)->check_in ? \Carbon\Carbon::parse($participant->roomAllocation->check_in)->format('Y-m-d\TH:i') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 check-in-input auto-save-input" data-participant-id="{{ $participant->id }}">
+                    <p class="text-xs text-gray-500 mt-1">Must be between arrival and departure dates</p>
+                </div>
+                @else
+                <div class="text-gray-900">
+                    @if(optional($participant->roomAllocation)->check_in)
+                        {{ \Carbon\Carbon::parse($participant->roomAllocation->check_in)->format('M d, Y \a\t g:i A') }}
+                    @else
+                        <span class="text-gray-400">Not specified</span>
+                    @endif
+                </div>
+                @endif
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Room Check-out DateTime</label>
+                @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                <div id="room-dates-section" style="display: none;">
+                    <input type="datetime-local" name="room_check_out" id="room_check_out" value="{{ old('room_check_out', optional($participant->roomAllocation)->check_out ? \Carbon\Carbon::parse($participant->roomAllocation->check_out)->format('Y-m-d\TH:i') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 check-out-input auto-save-input" data-participant-id="{{ $participant->id }}">
+                    <p class="text-xs text-gray-500 mt-1">Must be between arrival and departure dates</p>
+                </div>
+                @else
+                <div class="text-gray-900">
+                    @if(optional($participant->roomAllocation)->check_out)
+                        {{ \Carbon\Carbon::parse($participant->roomAllocation->check_out)->format('M d, Y \a\t g:i A') }}
+                    @else
+                        <span class="text-gray-400">Not specified</span>
+                    @endif
+                </div>
+                @endif
+            </div>
         </div>
+        
         <div>
-            <label class="block text-sm font-medium text-gray-700">Room Check-out DateTime</label>
-            <input type="datetime-local" name="room_check_out" id="room_check_out" value="{{ old('room_check_out', optional($participant->roomAllocation)->check_out ? \Carbon\Carbon::parse($participant->roomAllocation->check_out)->format('Y-m-d\TH:i') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 check-out-input auto-save-input" data-participant-id="{{ $participant->id }}">
-            <p class="text-xs text-gray-500 mt-1">Must be between arrival and departure dates</p>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Travel Documents</label>
+            @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+            <input type="file" name="travel_documents" class="mt-1 block w-full text-sm text-gray-500">
+            @if(optional($travelDetail)->travel_documents)
+                <a href="{{ asset('storage/' . $travelDetail->travel_documents) }}" target="_blank" class="text-blue-600 hover:underline mt-2 block">View Current Document</a>
+            @endif
+            @else
+            <div class="text-gray-900">
+                @if(optional($travelDetail)->travel_documents)
+                    <a href="{{ asset('storage/' . $travelDetail->travel_documents) }}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        View Uploaded Document
+                    </a>
+                @else
+                    <span class="text-gray-400">No documents uploaded</span>
+                @endif
+            </div>
+            @endif
         </div>
-    </div>
     
     <!-- Conflict Message Container -->
     <div id="message-container" class="hidden mt-4">
@@ -126,16 +233,41 @@
     </div>
     <div>
         <label class="block text-sm font-medium text-gray-700">Travel Documents</label>
+        @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
         <input type="file" name="travel_documents" class="mt-1 block w-full text-sm text-gray-500">
-        @if(optional($travelDetail)->travel_documents)
-            <a href="{{ asset('storage/' . $travelDetail->travel_documents) }}" target="_blank" class="text-blue-600 hover:underline mt-2 block">View Uploaded Document</a>
+        @else
+        <div class="mt-1 p-3 bg-gray-50 rounded-md border">
+            @if(optional($travelDetail)->travel_documents)
+                <a href="{{ asset('storage/' . $travelDetail->travel_documents) }}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    View Uploaded Document
+                </a>
+            @else
+                <span class="text-gray-400">No documents uploaded</span>
+            @endif
+        </div>
         @endif
+        @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+        @if(optional($travelDetail)->travel_documents)
+            <a href="{{ asset('storage/' . $travelDetail->travel_documents) }}" target="_blank" class="text-blue-600 hover:underline mt-2 block">View Current Document</a>
+        @endif
+        @endif
+        </div>
+        
+        @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+        <div class="flex justify-end">
+            <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Save Travel Details</button>
+        </div>
+        @endif
+    @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+    </form>
+    @else
     </div>
-    <div class="flex justify-end">
-        <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">Save Travel Details</button>
-    </div>
-</form>
+    @endif
 
+@if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
 <!-- Hotel Creation Modal -->
 <div id="hotel-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-10 mx-auto p-5 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
@@ -939,4 +1071,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 });
-</script> 
+</script>
+@endif 

@@ -7,6 +7,17 @@ use Illuminate\Http\Request;
 
 class VenueController extends Controller
 {
+    public function __construct()
+    {
+        // Restrict all venue management to admins only
+        $this->middleware(function ($request, $next) {
+            if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
+                abort(403, 'Access denied. Admin privileges required.');
+            }
+            return $next($request);
+        });
+    }
+
     /**
      * Display a listing of the resource.
      */

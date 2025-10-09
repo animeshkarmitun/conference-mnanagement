@@ -5,10 +5,25 @@ namespace App\Http\Controllers;
 use App\Models\Conference;
 use App\Models\Venue;
 use App\Services\ConferenceNotificationService;
+use App\Services\ConferenceConflictService;
 use Illuminate\Http\Request;
 
 class ConferenceController extends Controller
 {
+    protected $conflictService;
+
+    public function __construct(ConferenceConflictService $conflictService)
+    {
+        $this->conflictService = $conflictService;
+        
+        // Restrict all conference management to admins only
+        $this->middleware(function ($request, $next) {
+            if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
+                abort(403, 'Access denied. Admin privileges required.');
+            }
+            return $next($request);
+        });
+    }
     public function index(Request $request)
     {
         $status = $request->get('status', 'upcoming'); // Default to upcoming conferences
@@ -499,5 +514,76 @@ class ConferenceController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Check for conflicts when creating or updating a conference
+     */
+    public function checkConflicts(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $excludeConferenceId = $request->input('exclude_conference_id');
+
+        if (!$startDate || !$endDate) {
+            return response()->json(['conflicts' => []]);
+        }
+
+        $conflictingConferences = $this->conflictService->validateConferenceDates($startDate, $endDate, $excludeConferenceId);
+
+        return response()->json([
+            'has_conflicts' => $conflictingConferences->isNotEmpty(),
+            'conflicts' => $conflictingConferences->map(function ($conference) {
+                return [
+                    'id' => $conference->id,
+                    'name' => $conference->name,
+                    'start_date' => $conference->start_date,
+                    'end_date' => $conference->end_date,
+                    'location' => $conference->location,
+                ];
+            })->toArray()
+        ]);
+    }
+
+    /**
+     * Get conflicts for a specific conference
+     */
+    public function getConferenceConflicts($conferenceId)
+    {
+        $conflicts = $this->conflictService->getConferenceConflicts($conferenceId);
+
+        return response()->json([
+            'conflicts' => $conflicts->map(function ($conflict) {
+                return [
+                    'id' => $conflict->id,
+                    'user' => $conflict->user->first_name . ' ' . $conflict->user->last_name,
+                    'participant' => $conflict->participant->getProfileDisplayName(),
+                    'conflicting_conference' => $conflict->conflictingConference->name,
+                    'conflict_type' => $conflict->conflict_type,
+                    'conflict_details' => $conflict->conflict_details,
+                    'status' => $conflict->status,
+                    'created_at' => $conflict->created_at->format('Y-m-d H:i:s'),
+                ];
+            })->toArray()
+        ]);
+    }
+
+    /**
+     * Resolve a conference conflict
+     */
+    public function resolveConflict(Request $request, $conflictId)
+    {
+        $resolutionNotes = $request->input('resolution_notes');
+        $action = $request->input('action'); // 'resolve' or 'ignore'
+
+        if ($action === 'resolve') {
+            $this->conflictService->resolveConflict($conflictId, $resolutionNotes, auth()->id());
+            $message = 'Conflict resolved successfully.';
+        } else {
+            $this->conflictService->ignoreConflict($conflictId, $resolutionNotes, auth()->id());
+            $message = 'Conflict ignored successfully.';
+        }
+
+        return back()->with('success', $message);
     }
 } 

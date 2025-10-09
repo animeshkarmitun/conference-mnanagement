@@ -17,6 +17,51 @@
         </div>
     </div>
 </div>
+
+<!-- Profile Switcher -->
+@if(isset($allParticipants) && $allParticipants->count() > 1)
+<div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+            </svg>
+            <span class="text-sm font-medium text-gray-700">Switch Participant Profile:</span>
+        </div>
+        <div class="flex space-x-2">
+            @foreach($allParticipants as $profile)
+                <form method="POST" action="{{ route('participants.switch-profile', $profile->id) }}" class="inline">
+                    @csrf
+                    <button type="submit" 
+                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-full transition-colors duration-200
+                                   @if($profile->id === $participant->id)
+                                       bg-yellow-100 text-yellow-800 border border-yellow-200
+                                   @else
+                                       bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200
+                                   @endif">
+                        @if($profile->id === $participant->id)
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        @endif
+                        {{ $profile->getProfileDisplayName() }}
+                        @if($profile->is_primary)
+                            <span class="ml-1 text-xs bg-yellow-200 text-yellow-800 px-1.5 py-0.5 rounded-full">Primary</span>
+                        @endif
+                    </button>
+                </form>
+            @endforeach
+        </div>
+    </div>
+    <div class="mt-2 text-xs text-gray-500">
+        Currently viewing: <strong>{{ $participant->getProfileDisplayName() }}</strong> 
+        @if($participant->conference)
+            for <strong>{{ $participant->conference->name }}</strong>
+        @endif
+    </div>
+</div>
+@endif
+
 <hr class="mb-8 border-yellow-200">
 <div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-6 participant-details-fix mt-8 min-h-[60vh]">
     <!-- Tab Navigation -->
@@ -54,6 +99,9 @@
     </div>
 
     <!-- Tabs Content -->
+    <div style="background: orange; color: white; padding: 10px; margin: 10px 0; font-weight: bold;">
+        🔧 DEBUG: JavaScript Fixed - Check Console for Tab Switching Logs
+    </div>
     <div id="tab-info" class="tab-content">
         @include('participants.partials.profile-info', ['participant' => $participant])
     </div>
@@ -84,45 +132,73 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        console.log('Tab switching script loaded');
+        
         const tabLinks = document.querySelectorAll('.tab-link');
         const tabContents = document.querySelectorAll('.tab-content');
         
+        console.log('Found tab links:', tabLinks.length);
+        console.log('Found tab contents:', tabContents.length);
+        
         // Get active tab from localStorage or default to first tab
         const activeTab = localStorage.getItem('participant-active-tab') || 'info';
+        console.log('Active tab:', activeTab);
         
         function switchTab(tabName) {
-            // Remove active classes from all tabs
+            console.log('Switching to tab:', tabName);
+            
+            // Hide all tab contents first
+            tabContents.forEach(c => {
+                c.classList.add('hidden');
+                console.log('Hiding tab content:', c.id);
+            });
+            
+            // Remove active classes from all tab links
             tabLinks.forEach(l => {
                 l.classList.remove('border-yellow-600', 'text-yellow-600');
                 l.classList.add('border-transparent');
             });
-            tabContents.forEach(c => c.classList.add('hidden'));
             
-            // Add active classes to selected tab
+            // Find and activate the selected tab
             const activeLink = document.querySelector(`[data-tab="${tabName}"]`);
             const activeContent = document.getElementById(`tab-${tabName}`);
             
+            console.log('Active link found:', !!activeLink);
+            console.log('Active content found:', !!activeContent);
+            
             if (activeLink && activeContent) {
+                // Show the active content
+                activeContent.classList.remove('hidden');
+                console.log('Showing tab content:', activeContent.id);
+                
+                // Style the active link
                 activeLink.classList.add('border-yellow-600', 'text-yellow-600');
                 activeLink.classList.remove('border-transparent');
-                activeContent.classList.remove('hidden');
+                
+                console.log('Tab switched successfully to:', tabName);
                 
                 // Save active tab to localStorage
                 localStorage.setItem('participant-active-tab', tabName);
                 
                 // Trigger custom event for tab-specific functionality
                 window.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: tabName } }));
+            } else {
+                console.error('Could not find tab elements for:', tabName);
             }
         }
         
         // Add click handlers
-        tabLinks.forEach(link => {
-            link.addEventListener('click', function () {
+        tabLinks.forEach((link, index) => {
+            console.log('Adding click handler to tab:', link.dataset.tab);
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                console.log('Tab clicked:', this.dataset.tab);
                 switchTab(this.dataset.tab);
             });
         });
         
         // Initialize with saved tab or first tab
+        console.log('Initializing with tab:', activeTab);
         switchTab(activeTab);
         
         // Add tab completion indicators

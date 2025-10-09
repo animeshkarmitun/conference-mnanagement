@@ -1,4 +1,10 @@
 <div>
+    <!-- LOCAL DEBUG: Test if this partial is loading -->
+    <div class="mb-4 p-4 bg-blue-200 border-2 border-blue-400 rounded">
+        <p class="text-blue-800 font-bold text-lg">LOCAL DEBUG: Notifications partial is loading!</p>
+        <p class="text-blue-700">Time: {{ now() }}</p>
+    </div>
+    
     <h3 class="text-lg font-semibold mb-4">Notifications</h3>
     @if(count($notifications))
         <ul class="divide-y divide-gray-200">

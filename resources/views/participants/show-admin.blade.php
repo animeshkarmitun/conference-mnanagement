@@ -107,16 +107,25 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        console.log('Admin: DOM Content Loaded - Starting tab initialization');
+        
         const tabLinks = document.querySelectorAll('.tab-link');
         const tabContents = document.querySelectorAll('.tab-content');
         
+        console.log('Admin: Found tab links:', tabLinks.length);
+        console.log('Admin: Found tab contents:', tabContents.length);
+        
         // Get active tab from localStorage or default to first tab
         const activeTab = localStorage.getItem('participant-active-tab') || 'info';
+        console.log('Admin: Active tab from localStorage:', activeTab);
         
         function switchTab(tabName) {
+            console.log('Admin: Switching to tab:', tabName);
+            
             // Hide all tab contents
             tabContents.forEach(content => {
                 content.classList.add('hidden');
+                console.log('Admin: Hiding tab content:', content.id, 'hidden:', content.classList.contains('hidden'));
             });
             
             // Remove active state from all tab links
@@ -133,6 +142,9 @@
             const selectedContent = document.getElementById('tab-' + tabName);
             if (selectedContent) {
                 selectedContent.classList.remove('hidden');
+                console.log('Admin: Showing tab content:', selectedContent.id, 'hidden:', selectedContent.classList.contains('hidden'));
+            } else {
+                console.error('Admin: Could not find tab content for:', tabName);
             }
             
             // Activate selected tab link
@@ -144,6 +156,9 @@
                 if (indicator) {
                     indicator.style.width = '100%';
                 }
+                console.log('Admin: Activated tab link:', tabName);
+            } else {
+                console.error('Admin: Could not find tab link for:', tabName);
             }
             
             // Save active tab to localStorage
@@ -155,9 +170,17 @@
         
         // Add tab completion indicators
         function updateTabCompletion() {
+            console.log('Admin: Running updateTabCompletion');
             tabLinks.forEach(link => {
                 const tabName = link.dataset.tab;
                 const content = document.getElementById(`tab-${tabName}`);
+                
+                if (!content) {
+                    console.warn(`Admin: Content not found for tab: ${tabName}`);
+                    return;
+                }
+                
+                console.log(`Admin: Processing tab completion for: ${tabName}`);
                 
                 // Special handling for travel tab
                 if (tabName === 'travel') {
@@ -165,26 +188,16 @@
                     const departureDate = content.querySelector('input[name="departure_date"]');
                     const flightInfo = content.querySelector('textarea[name="flight_info"]');
                     
-                    // Debug logging
-                    console.log('Travel tab completion check (admin):');
-                    console.log('Arrival Date:', arrivalDate?.value);
-                    console.log('Departure Date:', departureDate?.value);
-                    console.log('Flight Info:', flightInfo?.value);
-                    
                     // Check if essential travel fields are filled
                     // Hotel is optional, so we don't require it for completion
                     const isComplete = arrivalDate && arrivalDate.value.trim() !== '' &&
                                      departureDate && departureDate.value.trim() !== '' &&
                                      flightInfo && flightInfo.value.trim() !== '';
                     
-                    console.log('Is travel complete (admin):', isComplete);
-                    
                     if (isComplete) {
                         link.classList.add('tab-complete');
-                        console.log('Added tab-complete class to travel tab (admin)');
                     } else {
                         link.classList.remove('tab-complete');
-                        console.log('Removed tab-complete class from travel tab (admin)');
                     }
                 } else if (tabName === 'sessions') {
                     // Special handling for sessions tab
@@ -206,16 +219,6 @@
                     const dietaryNeeds = content.querySelector('select[name="dietary_needs"]');
                     const visaStatus = content.querySelector('select[name="visa_status"]');
                     
-                    // Debug logging
-                    console.log('Personal Info tab completion check (admin):');
-                    console.log('First Name:', firstName?.value);
-                    console.log('Last Name:', lastName?.value);
-                    console.log('Email:', email?.value);
-                    console.log('Organization:', organization?.value);
-                    console.log('Bio:', bio?.value);
-                    console.log('Dietary Needs:', dietaryNeeds?.value);
-                    console.log('Visa Status:', visaStatus?.value);
-                    
                     // Check if ALL fields are filled
                     const isComplete = firstName && firstName.value.trim() !== '' &&
                                      lastName && lastName.value.trim() !== '' &&
@@ -225,14 +228,10 @@
                                      dietaryNeeds && dietaryNeeds.value !== '' &&
                                      visaStatus && visaStatus.value !== '';
                     
-                    console.log('Is Personal Info complete (admin):', isComplete);
-                    
                     if (isComplete) {
                         link.classList.add('tab-complete');
-                        console.log('Added tab-complete class to Personal Info tab (admin)');
                     } else {
                         link.classList.remove('tab-complete');
-                        console.log('Removed tab-complete class from Personal Info tab (admin)');
                     }
                 } else {
                     // Default completion logic for other tabs
@@ -272,6 +271,32 @@
         
         // Initial completion check
         setTimeout(updateTabCompletion, 100);
+        
+        // Debug: Log tab content visibility
+        console.log('Admin: Tab contents after initialization:');
+        tabContents.forEach(content => {
+            console.log(`Admin: ${content.id} - hidden: ${content.classList.contains('hidden')}`);
+        });
+        
+        // Test if specific tab content exists
+        const sessionsTab = document.getElementById('tab-sessions');
+        console.log('Admin: Sessions tab element:', sessionsTab);
+        if (sessionsTab) {
+            console.log('Admin: Sessions tab innerHTML length:', sessionsTab.innerHTML.length);
+            console.log('Admin: Sessions tab classes:', sessionsTab.className);
+            console.log('Admin: Sessions tab innerHTML preview:', sessionsTab.innerHTML.substring(0, 200));
+        } else {
+            console.error('Admin: Sessions tab not found!');
+        }
+        
+        // Test all tab contents
+        ['info', 'travel', 'sessions', 'status', 'notifications', 'comments', 'conference-docs'].forEach(tabName => {
+            const tab = document.getElementById(`tab-${tabName}`);
+            console.log(`Admin: Tab ${tabName}:`, tab ? 'Found' : 'NOT FOUND');
+            if (tab) {
+                console.log(`Admin: Tab ${tabName} innerHTML length:`, tab.innerHTML.length);
+            }
+        });
     });
 </script>
 

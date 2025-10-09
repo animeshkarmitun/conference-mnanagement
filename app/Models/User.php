@@ -134,6 +134,16 @@ class User extends Authenticatable
         return $this->hasMany(Email::class);
     }
 
+    public function conferenceConflicts()
+    {
+        return $this->hasMany(ConferenceConflict::class);
+    }
+
+    public function participantProfileSessions()
+    {
+        return $this->hasMany(ParticipantProfileSession::class);
+    }
+
     // Scope: Filter users by role name
     public function scopeWithRole($query, $roleName)
     {
@@ -158,5 +168,83 @@ class User extends Authenticatable
     public function getPrimaryRole()
     {
         return $this->roles()->first();
+    }
+
+    // Multi-participant profile methods
+    public function getActiveParticipants()
+    {
+        return $this->participants()->where('status', 'active')->get();
+    }
+
+    public function getParticipantsByConference($conferenceId)
+    {
+        return $this->participants()
+            ->where('conference_id', $conferenceId)
+            ->where('status', 'active')
+            ->get();
+    }
+
+    public function hasConferenceConflict($conferenceId, $excludeParticipantId = null)
+    {
+        $query = $this->conferenceConflicts()
+            ->where('conference_id', $conferenceId)
+            ->where('status', 'pending');
+
+        if ($excludeParticipantId) {
+            $query->where('participant_id', '!=', $excludeParticipantId);
+        }
+
+        return $query->exists();
+    }
+
+    public function getActiveParticipantProfile()
+    {
+        $sessionId = session()->getId();
+        $profileSession = $this->participantProfileSessions()
+            ->where('session_id', $sessionId)
+            ->with('participant')
+            ->first();
+
+        if ($profileSession) {
+            return $profileSession->participant;
+        }
+
+        // Fallback to primary participant or first active participant
+        return $this->participants()
+            ->where('status', 'active')
+            ->where('is_primary', true)
+            ->first() ?? $this->participants()
+            ->where('status', 'active')
+            ->first();
+    }
+
+    public function setActiveParticipantProfile($participantId)
+    {
+        $sessionId = session()->getId();
+        $participant = $this->participants()->find($participantId);
+
+        if (!$participant || $participant->status !== 'active') {
+            return false;
+        }
+
+        // Update or create profile session
+        $this->participantProfileSessions()->updateOrCreate(
+            ['session_id' => $sessionId],
+            [
+                'participant_id' => $participantId,
+                'last_activity' => now()
+            ]
+        );
+
+        return true;
+    }
+
+    public function getConferencesWithConflicts()
+    {
+        return $this->conferenceConflicts()
+            ->where('status', 'pending')
+            ->with(['conference', 'conflictingConference'])
+            ->get()
+            ->groupBy('conference_id');
     }
 }

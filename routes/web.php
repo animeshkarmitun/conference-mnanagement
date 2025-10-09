@@ -343,6 +343,11 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('conferences', \App\Http\Controllers\ConferenceController::class);
     Route::get('/conferences-export', [\App\Http\Controllers\ConferenceController::class, 'export'])->name('conferences.export');
+    
+    // Conference conflict management routes
+    Route::post('/conferences/check-conflicts', [\App\Http\Controllers\ConferenceController::class, 'checkConflicts'])->name('conferences.check-conflicts');
+    Route::get('/conferences/{conferenceId}/conflicts', [\App\Http\Controllers\ConferenceController::class, 'getConferenceConflicts'])->name('conferences.conflicts');
+    Route::post('/conferences/conflicts/{conflictId}/resolve', [\App\Http\Controllers\ConferenceController::class, 'resolveConflict'])->name('conferences.resolve-conflict');
     Route::resource('participants', \App\Http\Controllers\ParticipantController::class);
     Route::resource('sessions', \App\Http\Controllers\SessionController::class);
     Route::get('/sessions/participants/by-conference', [\App\Http\Controllers\SessionController::class, 'getParticipantsByConference'])->name('sessions.participants.by-conference');
@@ -366,9 +371,32 @@ Route::middleware('auth')->group(function () {
     Route::get('/participants/{participant}/profile-picture', [\App\Http\Controllers\ParticipantController::class, 'showProfilePicture'])->name('participants.profile-picture');
     Route::post('/participants/{participant}/assign-session', [\App\Http\Controllers\ParticipantController::class, 'assignSession'])->name('participants.assign-session');
     Route::post('/participants/{participant}/update-status', [\App\Http\Controllers\ParticipantController::class, 'updateStatus'])->name('participants.update-status');
+    Route::post('/participants/{participant}/update-visa-status', [\App\Http\Controllers\ParticipantController::class, 'updateVisaStatus'])->name('participants.update-visa-status');
     Route::post('/participants/{participant}/remove-session', [\App\Http\Controllers\ParticipantController::class, 'removeSession'])->name('participants.remove-session');
+    Route::post('/participants/{participant}/send-notification', [\App\Http\Controllers\ParticipantController::class, 'sendNotification'])->name('participants.send-notification');
+    Route::post('/participants/{participant}/mark-notifications-read', [\App\Http\Controllers\ParticipantController::class, 'markNotificationsRead'])->name('participants.mark-notifications-read');
+    Route::delete('/participants/{participant}/delete-notification/{notification}', [\App\Http\Controllers\ParticipantController::class, 'deleteNotification'])->name('participants.delete-notification');
+    Route::delete('/participants/{participant}/comments/{comment}', [\App\Http\Controllers\ParticipantController::class, 'destroyComment'])->name('participants.comments.destroy');
     Route::post('/participants/send-email', [\App\Http\Controllers\ParticipantController::class, 'sendEmail'])->name('participants.send-email');
     Route::post('/participants/check-email', [\App\Http\Controllers\ParticipantController::class, 'checkEmail'])->name('participants.check-email');
+    
+    // Multi-participant profile management routes
+    Route::get('/participant-profiles', [\App\Http\Controllers\ParticipantProfileController::class, 'index'])->name('participant-profiles.index');
+    Route::get('/participant-profiles/create', [\App\Http\Controllers\ParticipantProfileController::class, 'create'])->name('participant-profiles.create');
+    Route::post('/participant-profiles', [\App\Http\Controllers\ParticipantProfileController::class, 'store'])->name('participant-profiles.store');
+    Route::post('/participant-profiles/{participantId}/switch', [\App\Http\Controllers\ParticipantProfileController::class, 'switch'])->name('participant-profiles.switch');
+    Route::post('/participant-profiles/{participantId}/set-primary', [\App\Http\Controllers\ParticipantProfileController::class, 'setPrimary'])->name('participant-profiles.set-primary');
+    Route::post('/participant-profiles/{participantId}/archive', [\App\Http\Controllers\ParticipantProfileController::class, 'archive'])->name('participant-profiles.archive');
+    Route::post('/participant-profiles/{participantId}/restore', [\App\Http\Controllers\ParticipantProfileController::class, 'restore'])->name('participant-profiles.restore');
+    Route::delete('/participant-profiles/{participantId}', [\App\Http\Controllers\ParticipantProfileController::class, 'destroy'])->name('participant-profiles.destroy');
+    
+    // Profile switching in participant dashboard
+    Route::post('/participants/{participantId}/switch-profile', [\App\Http\Controllers\ParticipantController::class, 'switchProfile'])->name('participants.switch-profile');
+    
+    // Conflict management routes
+    Route::post('/participant-profiles/check-conflicts', [\App\Http\Controllers\ParticipantProfileController::class, 'checkConflicts'])->name('participant-profiles.check-conflicts');
+    Route::get('/participant-profiles/conflicts/{conflictId}/resolutions', [\App\Http\Controllers\ParticipantProfileController::class, 'getConflictResolutions'])->name('participant-profiles.conflict-resolutions');
+    Route::post('/participant-profiles/conflicts/{conflictId}/resolve', [\App\Http\Controllers\ParticipantProfileController::class, 'resolveConflict'])->name('participant-profiles.resolve-conflict');
     
     // Admin Conference Docs Routes (must come first to avoid conflicts)
     Route::resource('conference-docs', \App\Http\Controllers\ConferenceDocController::class);

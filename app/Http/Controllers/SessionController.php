@@ -12,6 +12,17 @@ use Illuminate\Http\Request;
 
 class SessionController extends Controller
 {
+    public function __construct()
+    {
+        // Restrict all session management to admins only
+        $this->middleware(function ($request, $next) {
+            if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
+                abort(403, 'Access denied. Admin privileges required.');
+            }
+            return $next($request);
+        });
+    }
+
     public function index(Request $request)
     {
         $status = $request->get('status', 'all'); // Default to all sessions

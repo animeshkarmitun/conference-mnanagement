@@ -179,6 +179,21 @@
                     </button>
                 </div>
                 <nav class="flex-1 px-1 py-1 space-y-1 sidebar-nav">
+                    @if(!auth()->user()->hasAnyRole())
+                    <!-- No Role Warning -->
+                    <div class="px-4 py-3 rounded-lg bg-yellow-900/20 border border-yellow-700/30 mb-4">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-yellow-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            <div class="text-sm">
+                                <div class="font-semibold text-yellow-200">No Role Assigned</div>
+                                <div class="text-xs text-yellow-300">Please contact an administrator to assign you a role.</div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    
                     <!-- Participant Dashboard -->
                     <a href="{{ route('participant-dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant-dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
                         <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -195,21 +210,14 @@
                         <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">My Profile</span>
                     </a>
                     
-                    <!-- Conference Docs -->
-                    <a href="{{ route('participant.conference-docs.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant.conference-docs.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Conference Docs' : ''">
+                    <!-- Participant Profiles -->
+                    <a href="{{ route('participant-profiles.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant-profiles.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Participant Profiles' : ''">
                         <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Conference Docs</span>
+                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">All Profiles</span>
                     </a>
                     
-                    <!-- My Sessions -->
-                    <a href="{{ route('participants.profile') }}#tab-sessions" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200" :title="sidebarCollapsed ? 'My Sessions' : ''">
-                        <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">My Sessions</span>
-                    </a>
                     
                                          <!-- Notifications -->
                      <a href="{{ route('participant.notifications.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant.notifications.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Notifications' : ''">
@@ -235,7 +243,7 @@
                         </div>
                         <div class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">
                             <div class="font-semibold text-slate-200">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
-                            <div class="text-xs text-slate-400">{{ ucfirst(auth()->user()->roles->first()->name ?? 'Participant') }}</div>
+                            <div class="text-xs text-slate-400">{{ ucfirst(auth()->user()->roles->first()->name ?? 'Attendee') }}</div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="text-xs text-slate-400 hover:text-slate-200">Logout</button>
@@ -318,6 +326,7 @@
                                  x-transition:leave-end="transform opacity-0 scale-95"
                                  @click.away="open = false">
                                 <a href="{{ route('participants.profile') }}" class="block px-4 py-2 text-gray-700 hover:bg-slate-800">My Profile</a>
+                                <a href="{{ route('participant-profiles.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-slate-800">All Profiles</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-slate-800">Logout</button>

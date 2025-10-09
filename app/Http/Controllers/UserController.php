@@ -10,6 +10,17 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        // Restrict all user management to admins only
+        $this->middleware(function ($request, $next) {
+            if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
+                abort(403, 'Access denied. Admin privileges required.');
+            }
+            return $next($request);
+        });
+    }
+
     public function index(Request $request)
     {
         $status = $request->get('status', 'active'); // Default to active users
