@@ -459,7 +459,8 @@ class ParticipantController extends Controller
         $notifications = $participant->user->notifications()->latest()->get();
         $comments = $participant->comments()->with('user')->latest()->get();
         $travelDetail = $participant->travelDetails;
-        $hotels = Hotel::all();
+        $hotels = Hotel::with('rooms.roomType')->get();
+        $roomTypes = \App\Models\RoomType::where('is_active', true)->get();
         
         // Determine if the current user is an admin/superadmin viewing someone else's profile
         $isAdminViewing = (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')) && 
@@ -467,10 +468,10 @@ class ParticipantController extends Controller
         
         if ($isAdminViewing) {
             // Use admin layout for admin viewing participant details
-            return view('participants.show-admin', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'availableSessions'));
+            return view('participants.show-admin', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'roomTypes', 'availableSessions'));
         } else {
             // Use participant layout for participants viewing their own profile
-            return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'availableSessions'));
+            return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'roomTypes', 'availableSessions'));
         }
     }
 
@@ -809,9 +810,10 @@ class ParticipantController extends Controller
         $notifications = $participant->user->notifications()->latest()->get();
         $comments = $participant->comments()->with('user')->latest()->get();
         $travelDetail = $participant->travelDetails;
-        $hotels = Hotel::all();
+        $hotels = Hotel::with('rooms.roomType')->get();
+        $roomTypes = \App\Models\RoomType::where('is_active', true)->get();
         
-        return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels'));
+        return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'roomTypes'));
     }
 
     public function updateTravel(Request $request, Participant $participant)
@@ -821,8 +823,14 @@ class ParticipantController extends Controller
             'departure_date' => 'nullable|date|after_or_equal:arrival_date',
             'flight_info' => 'nullable|string',
             'hotel_id' => 'nullable|exists:hotels,id',
+            'room_id' => 'nullable|exists:rooms,id',
             'extra_nights' => 'nullable|integer|min:0',
+            'room_check_in' => 'nullable|date',
+            'room_check_out' => 'nullable|date|after:room_check_in',
             'travel_documents' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+        ], [
+            'departure_date.after_or_equal' => 'Departure date must be on or after arrival date.',
+            'room_check_out.after' => 'Room check-out date must be after check-in date.'
         ]);
 
         $travelDetail = $participant->travelDetails ?: $participant->travelDetails()->make();
@@ -831,7 +839,10 @@ class ParticipantController extends Controller
         $travelDetail->departure_date = $validated['departure_date'] ?? null;
         $travelDetail->flight_info = $validated['flight_info'] ?? null;
         $travelDetail->hotel_id = $validated['hotel_id'] ?? null;
+        $travelDetail->room_id = $validated['room_id'] ?? null;
         $travelDetail->extra_nights = $validated['extra_nights'] ?? 0;
+        $travelDetail->room_check_in = $validated['room_check_in'] ?? null;
+        $travelDetail->room_check_out = $validated['room_check_out'] ?? null;
 
         $hasDocuments = $request->hasFile('travel_documents');
         if ($hasDocuments) {
@@ -841,6 +852,11 @@ class ParticipantController extends Controller
 
         $travelDetail->participant_id = $participant->id;
         $travelDetail->save();
+
+        // Sync travel details to room allocation (if room check-in/out times are provided)
+        if ($validated['room_check_in'] || $validated['room_check_out']) {
+            $this->syncTravelDetailsToRoomAllocation($participant, $travelDetail);
+        }
 
         // Send travel notifications
         $travelNotificationService = new TravelNotificationService();
@@ -1635,5 +1651,51 @@ class ParticipantController extends Controller
             'available' => !$exists,
             'message' => $exists ? 'Email is already taken' : 'Email is available'
         ]);
+    }
+
+    /**
+     * Sync travel details to room allocation
+     * Updates room allocation with data from travel details
+     */
+    private function syncTravelDetailsToRoomAllocation($participant, $travelDetail)
+    {
+        try {
+            $roomAllocation = $participant->roomAllocations()->first();
+            
+            if (!$roomAllocation) {
+                $roomAllocation = new \App\Models\RoomAllocation();
+                $roomAllocation->participant_id = $participant->id;
+            }
+            
+            // Update hotel information from travel details
+            if ($travelDetail->hotel_id) {
+                $roomAllocation->hotel_id = $travelDetail->hotel_id;
+            }
+            
+            // Update check-in/check-out times from travel details
+            if ($travelDetail->room_check_in) {
+                $roomAllocation->check_in = $travelDetail->room_check_in;
+            }
+            if ($travelDetail->room_check_out) {
+                $roomAllocation->check_out = $travelDetail->room_check_out;
+            }
+            
+            $roomAllocation->save();
+            
+            \Log::info('Travel details synced to room allocation', [
+                'participant_id' => $participant->id,
+                'travel_detail_id' => $travelDetail->id,
+                'room_allocation_id' => $roomAllocation->id,
+                'check_in' => $travelDetail->room_check_in,
+                'check_out' => $travelDetail->room_check_out
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to sync travel details to room allocation', [
+                'participant_id' => $participant->id,
+                'travel_detail_id' => $travelDetail->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 } 

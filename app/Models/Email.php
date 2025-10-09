@@ -112,7 +112,8 @@ class Email extends Model
         }
 
         try {
-            return $this->relatedModel;
+            // Use the morphTo relationship directly
+            return $this->morphTo('related_model')->first();
         } catch (\Exception $e) {
             // Return null if the related model class doesn't exist
             return null;

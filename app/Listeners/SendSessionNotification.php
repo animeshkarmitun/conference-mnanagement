@@ -6,6 +6,7 @@ use App\Events\SessionEvent;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Participant;
+use App\Services\NotificationTemplateService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -14,12 +15,14 @@ class SendSessionNotification implements ShouldQueue
 {
     use InteractsWithQueue;
 
+    protected NotificationTemplateService $notificationTemplateService;
+
     /**
      * Create the event listener.
      */
-    public function __construct()
+    public function __construct(NotificationTemplateService $notificationTemplateService)
     {
-        //
+        $this->notificationTemplateService = $notificationTemplateService;
     }
 
     /**
@@ -140,10 +143,16 @@ class SendSessionNotification implements ShouldQueue
             return;
         }
 
+        // Prepare variables for template
+        $variables = $this->prepareSessionVariables($event, $user);
+
+        // Generate message using template
+        $message = $this->notificationTemplateService->processTemplate('SessionUpdate', $variables);
+
         Notification::create([
             'user_id' => $user->id,
             'conference_id' => $event->conferenceId,
-            'message' => $event->message,
+            'message' => $message,
             'type' => 'SessionUpdate',
             'related_model' => 'Session',
             'related_id' => $event->session->id,
@@ -151,5 +160,64 @@ class SendSessionNotification implements ShouldQueue
             'sent_at' => now(),
             'read_status' => false,
         ]);
+    }
+
+    /**
+     * Prepare variables for session notification template
+     */
+    private function prepareSessionVariables(SessionEvent $event, User $user): array
+    {
+        $session = $event->session;
+        $conference = $session->conference;
+
+        return [
+            'session_title' => $session->title,
+            'session_description' => $session->description ?? '',
+            'start_time' => $session->start_time ? \Carbon\Carbon::parse($session->start_time)->format('g:i A') : 'Not set',
+            'end_time' => $session->end_time ? \Carbon\Carbon::parse($session->end_time)->format('g:i A') : 'Not set',
+            'venue_name' => $session->venue ? $session->venue->name : 'TBD',
+            'participant_name' => $user->first_name . ' ' . $user->last_name,
+            'action' => $this->getActionDescription($event->eventType),
+            'additional_info' => $this->getAdditionalInfo($event),
+            'conference_name' => $conference->name ?? 'Unknown Conference',
+        ];
+    }
+
+    /**
+     * Get human-readable action description
+     */
+    private function getActionDescription(string $eventType): string
+    {
+        $actions = [
+            'session_created' => 'created',
+            'session_updated' => 'updated',
+            'session_deleted' => 'deleted',
+            'session_assigned' => 'assigned to you',
+            'session_removed' => 'removed from you',
+        ];
+
+        return $actions[$eventType] ?? 'modified';
+    }
+
+    /**
+     * Get additional information based on event type
+     */
+    private function getAdditionalInfo(SessionEvent $event): string
+    {
+        $info = [];
+
+        if (isset($event->changes['start_time'])) {
+            $info[] = 'Start time changed to ' . \Carbon\Carbon::parse($event->changes['start_time'])->format('g:i A');
+        }
+
+        if (isset($event->changes['end_time'])) {
+            $info[] = 'End time changed to ' . \Carbon\Carbon::parse($event->changes['end_time'])->format('g:i A');
+        }
+
+        if (isset($event->changes['venue_id'])) {
+            $info[] = 'Venue updated';
+        }
+
+        return implode('. ', $info) ?: 'No additional details';
     }
 }

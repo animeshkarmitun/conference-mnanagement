@@ -150,7 +150,7 @@ class SendSessionEmailNotification implements ShouldQueue
                 \App\Models\Email::TYPE_SESSION_NOTIFICATION,
                 auth()->user(), // Sender
                 $event->session->conference,
-                'session',
+                \App\Models\Session::class,
                 $event->session->id,
                 'session-notification',
                 [

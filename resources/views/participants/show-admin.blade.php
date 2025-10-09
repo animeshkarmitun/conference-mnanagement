@@ -82,7 +82,7 @@
                     @include('participants.partials.profile-info', ['participant' => $participant])
                 </div>
                 <div id="tab-travel" class="tab-content hidden">
-                    @include('participants.partials.profile-travel', ['participant' => $participant, 'travelDetail' => $travelDetail ?? null, 'hotels' => $hotels ?? []])
+                    @include('participants.partials.profile-travel', ['participant' => $participant, 'travelDetail' => $travelDetail ?? null, 'hotels' => $hotels ?? [], 'roomTypes' => $roomTypes ?? []])
                 </div>
                 <div id="tab-sessions" class="tab-content hidden">
                     @include('participants.partials.profile-sessions', ['sessions' => $sessions ?? [], 'participant' => $participant])

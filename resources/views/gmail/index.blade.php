@@ -34,6 +34,26 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+    
+    @if (isset($error) && $error)
+        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {{ $error }}
+            @if(strpos($error, 'authentication') !== false || strpos($error, 'expired') !== false)
+                <div class="mt-2">
+                    <a href="{{ route('gmail.disconnect') }}" class="btn btn-sm btn-outline-warning me-2">
+                        <i class="fas fa-unlink me-1"></i>
+                        Clear Connection
+                    </a>
+                    <a href="{{ route('google.redirect') }}" class="btn btn-sm btn-primary">
+                        <i class="fab fa-google me-1"></i>
+                        Reconnect Gmail
+                    </a>
+                </div>
+            @endif
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
     <!-- Gmail API cache note -->
     <div class="alert alert-warning mb-4" role="alert">
@@ -62,10 +82,15 @@
                                 <i class="fas fa-circle me-1"></i>
                                 Connected to Gmail
                             </span>
-                            <button onclick="window.location.href='{{ route('gmail.index') }}'" class="btn btn-primary btn-sm">
+                            <button onclick="window.location.href='{{ route('gmail.index') }}'" class="btn btn-primary btn-sm me-2">
                                 <i class="fas fa-sync-alt me-1"></i>
                                 Refresh
                             </button>
+                            <a href="{{ route('gmail.disconnect') }}" class="btn btn-outline-danger btn-sm" 
+                               onclick="return confirm('Are you sure you want to disconnect your Gmail account?')">
+                                <i class="fas fa-unlink me-1"></i>
+                                Disconnect
+                            </a>
                         @endif
                     </div>
                 </div>

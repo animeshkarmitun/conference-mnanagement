@@ -71,7 +71,7 @@ class PasswordlessLoginService
                 \App\Models\Email::TYPE_PASSWORDLESS_LOGIN,
                 null, // System sender
                 $conference,
-                'passwordless_login',
+                PasswordlessLogin::class,
                 $passwordlessLogin->id,
                 'passwordless-login',
                 [

@@ -389,6 +389,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/travel-conflicts', [\App\Http\Controllers\TravelController::class, 'travelConflicts'])->name('admin.travel-conflicts');
     Route::get('/admin/export-itinerary', [\App\Http\Controllers\TravelController::class, 'exportItinerary'])->name('admin.export-itinerary');
     Route::post('/admin/room-allocations/{participant}', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('admin.room-allocations.update');
+    Route::get('/admin/hotels/{hotel}/rooms', [\App\Http\Controllers\TravelController::class, 'getHotelRooms'])->name('admin.hotels.rooms');
     Route::post('/admin/participants/download-biographies', [\App\Http\Controllers\ParticipantController::class, 'downloadBiographies'])->name('admin.participants.download-biographies');
     
     // Email Tracking Routes (Admin Only)
@@ -417,6 +418,50 @@ Route::middleware('auth')->group(function () {
         Route::get('email/{type}/preview', [App\Http\Controllers\Admin\EmailSettingsController::class, 'preview'])->name('preview');
         Route::post('email/{type}/test', [App\Http\Controllers\Admin\EmailSettingsController::class, 'test'])->name('test');
         Route::post('email/{type}/reset', [App\Http\Controllers\Admin\EmailSettingsController::class, 'reset'])->name('reset');
+    });
+    
+    // Notification Template Routes (Admin Only)
+    Route::prefix('admin/notification-templates')->name('admin.notification-templates.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'store'])->name('store');
+        Route::get('/{notificationTemplate}', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'show'])->name('show');
+        Route::get('/{notificationTemplate}/edit', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'edit'])->name('edit');
+        Route::put('/{notificationTemplate}', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'update'])->name('update');
+        Route::delete('/{notificationTemplate}', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'destroy'])->name('destroy');
+        Route::patch('/{notificationTemplate}/toggle', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'toggle'])->name('toggle');
+        Route::get('/{notificationTemplate}/preview', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'preview'])->name('preview');
+        Route::get('/{notificationTemplate}/variables', [App\Http\Controllers\Admin\NotificationTemplateController::class, 'variables'])->name('variables');
+    });
+    
+    // Hotel Settings Routes (Admin Only)
+    Route::prefix('admin/hotels')->name('admin.hotels.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\HotelSettingsController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\HotelSettingsController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\HotelSettingsController::class, 'store'])->name('store');
+        Route::get('/{hotel}', [App\Http\Controllers\Admin\HotelSettingsController::class, 'show'])->name('show');
+        Route::get('/{hotel}/edit', [App\Http\Controllers\Admin\HotelSettingsController::class, 'edit'])->name('edit');
+        Route::put('/{hotel}', [App\Http\Controllers\Admin\HotelSettingsController::class, 'update'])->name('update');
+        Route::delete('/{hotel}', [App\Http\Controllers\Admin\HotelSettingsController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Room Type Routes (Admin Only)
+    Route::prefix('admin/room-types')->name('admin.room-types.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\RoomTypeController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\RoomTypeController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\RoomTypeController::class, 'store'])->name('store');
+        Route::get('/{roomType}', [App\Http\Controllers\Admin\RoomTypeController::class, 'show'])->name('show');
+        Route::get('/{roomType}/edit', [App\Http\Controllers\Admin\RoomTypeController::class, 'edit'])->name('edit');
+        Route::put('/{roomType}', [App\Http\Controllers\Admin\RoomTypeController::class, 'update'])->name('update');
+        Route::delete('/{roomType}', [App\Http\Controllers\Admin\RoomTypeController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Room Management Routes (Admin Only)
+    Route::prefix('admin/rooms')->name('admin.rooms.')->group(function () {
+        Route::post('/', [App\Http\Controllers\Admin\RoomController::class, 'store'])->name('store');
+        Route::get('/{room}', [App\Http\Controllers\Admin\RoomController::class, 'show'])->name('show');
+        Route::put('/{room}', [App\Http\Controllers\Admin\RoomController::class, 'update'])->name('update');
+        Route::delete('/{room}', [App\Http\Controllers\Admin\RoomController::class, 'destroy'])->name('destroy');
     });
     
     Route::post('/participants/bulk-update', [\App\Http\Controllers\ParticipantController::class, 'bulkUpdate'])->name('participants.bulk-update');
@@ -480,9 +525,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/google-callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
 });
 
-// Gmail routes - Admin and Super Admin only
-Route::middleware(['auth', 'admin.access'])->group(function () {
+// Gmail routes - Admin and Super Admin only (simplified middleware)
+Route::middleware(['auth'])->group(function () {
     Route::get('/gmail', [GoogleController::class, 'showGmailThreads'])->name('gmail.index');
+    Route::get('/gmail/disconnect', [GoogleController::class, 'disconnectGmail'])->name('gmail.disconnect');
     Route::get('/gmail/{threadId}/reply', [GoogleController::class, 'showReplyForm'])->name('gmail.reply');
     Route::post('/gmail/{threadId}/reply', [GoogleController::class, 'sendReply'])->name('gmail.send-reply');
     Route::get('/gmail/participants', [GoogleController::class, 'getParticipants'])->name('gmail.participants');

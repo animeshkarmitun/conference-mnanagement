@@ -105,7 +105,8 @@ class PasswordlessLoginController extends Controller
 
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
-            'expiration_hours' => 'integer|min:1|max:168', // Max 7 days
+            'conference_id' => 'nullable|exists:conferences,id',
+            'expiration_days' => 'integer|min:1|max:90', // Max 90 days
         ]);
 
         if ($validator->fails()) {
@@ -127,10 +128,12 @@ class PasswordlessLoginController extends Controller
                 ], 400);
             }
 
-            $expirationHours = $request->expiration_hours ?? 24;
+            $expirationDays = $request->expiration_days ?? 1;
+            $expirationHours = $expirationDays * 24; // Convert days to hours
             $passwordlessLogin = $this->passwordlessLoginService->generateLoginLink($user, $expirationHours);
             
-            $conference = Conference::latest()->first(); // Get latest conference
+            // Use provided conference_id or get latest conference
+            $conference = $request->conference_id ? Conference::find($request->conference_id) : Conference::latest()->first();
             $emailSent = $this->passwordlessLoginService->sendLoginEmail($user, $passwordlessLogin, $conference);
 
             return response()->json([
@@ -169,7 +172,8 @@ class PasswordlessLoginController extends Controller
         $validator = Validator::make($request->all(), [
             'user_ids' => 'required|array|min:1',
             'user_ids.*' => 'exists:users,id',
-            'expiration_hours' => 'integer|min:1|max:168',
+            'conference_id' => 'nullable|exists:conferences,id',
+            'expiration_days' => 'integer|min:1|max:90',
         ]);
 
         if ($validator->fails()) {
@@ -181,8 +185,11 @@ class PasswordlessLoginController extends Controller
         }
 
         try {
-            $expirationHours = $request->expiration_hours ?? 24;
-            $conference = Conference::latest()->first();
+            $expirationDays = $request->expiration_days ?? 1;
+            $expirationHours = $expirationDays * 24; // Convert days to hours
+            
+            // Use provided conference_id or get latest conference
+            $conference = $request->conference_id ? Conference::find($request->conference_id) : Conference::latest()->first();
             
             $results = $this->passwordlessLoginService->generateBulkLoginLinks(
                 $request->user_ids, 
@@ -297,8 +304,13 @@ class PasswordlessLoginController extends Controller
         }
 
         // Get all users who are participants (have participant records)
-        $participants = User::whereHas('participants')
-            ->with(['participants.participantType'])
+        $query = User::whereHas('participants', function ($q) use ($request) {
+            if ($request->conference_id) {
+                $q->where('conference_id', $request->conference_id);
+            }
+        });
+        
+        $participants = $query->with(['participants.participantType'])
             ->select('id', 'first_name', 'last_name', 'email')
             ->orderBy('first_name')
             ->get()

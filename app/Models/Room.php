@@ -11,12 +11,23 @@ class Room extends Model
 
     protected $fillable = [
         'hotel_id',
+        'room_type_id',
         'room_number',
         'room_type',
         'beds',
         'price_per_night',
         'description',
         'is_available',
+        'floor_number',
+        'max_occupancy',
+        'amenities',
+        'view_type',
+    ];
+
+    protected $casts = [
+        'amenities' => 'array',
+        'is_available' => 'boolean',
+        'price_per_night' => 'decimal:2',
     ];
 
     // Relationships
@@ -25,8 +36,15 @@ class Room extends Model
         return $this->belongsTo(Hotel::class);
     }
 
-    public function roomAllocations()
+    public function getRoomAllocationsCount()
     {
-        return $this->hasMany(RoomAllocation::class);
+        return RoomAllocation::where('hotel_id', $this->hotel_id)
+                            ->where('room_number', $this->room_number)
+                            ->count();
+    }
+
+    public function roomType()
+    {
+        return $this->belongsTo(RoomType::class);
     }
 }

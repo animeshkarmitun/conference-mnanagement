@@ -126,7 +126,7 @@ class SendTaskEmailNotification implements ShouldQueue
                 \App\Models\Email::TYPE_TASK_NOTIFICATION,
                 auth()->user(), // Sender
                 $event->task->conference,
-                'task',
+                \App\Models\Task::class,
                 $event->task->id,
                 'task-notification',
                 [

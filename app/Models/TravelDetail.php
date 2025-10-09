@@ -16,7 +16,10 @@ class TravelDetail extends Model
         'departure_date',
         'extra_nights',
         'hotel_id',
+        'room_id',
         'travel_documents',
+        'room_check_in',
+        'room_check_out',
     ];
 
     // Relationships
@@ -28,5 +31,10 @@ class TravelDetail extends Model
     public function hotel()
     {
         return $this->belongsTo(Hotel::class);
+    }
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
     }
 }

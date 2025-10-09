@@ -439,18 +439,46 @@
         <!-- Enhanced Secondary Filter Tabs -->
         <div class="flex gap-3 flex-shrink-0">
             <!-- Conference Filter -->
-            <form method="GET" action="{{ route('participants.index') }}" class="flex items-center gap-2">
-                @foreach(request()->except(['conference_id']) as $k => $v)
-                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-                @endforeach
-                <label for="conference_id" class="text-sm text-gray-600">Conference</label>
-                <select id="conference_id" name="conference_id" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-yellow-500 focus:border-yellow-500" onchange="this.form.submit()">
-                    <option value="">All Conferences</option>
-                    @foreach(($conferences ?? []) as $conf)
-                        <option value="{{ $conf->id }}" {{ (request('conference_id') == $conf->id) ? 'selected' : '' }}>{{ $conf->name }}</option>
-                    @endforeach
-                </select>
-            </form>
+            <div class="flex items-center gap-2">
+                <label for="conference_search" class="text-sm text-gray-600">Conference</label>
+                <div class="relative">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="conference_search" 
+                            placeholder="Search conferences..." 
+                            class="w-64 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-16"
+                            autocomplete="off"
+                        >
+                        <button 
+                            type="button" 
+                            id="clear_conference" 
+                            class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                            title="Clear selection"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <button 
+                            type="button" 
+                            id="dropdown_toggle" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            title="Show all conferences"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="conference_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
+                        <div id="conference_options" class="py-1">
+                            <!-- Options will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
+                </div>
+            </div>
             <!-- Visa Status Filter -->
             <div class="relative group">
                 <button class="filter-dropdown {{ request()->has('visa_filter') ? 'bg-blue-200 text-blue-800 border-blue-300' : 'bg-blue-100 hover:bg-blue-200 text-blue-700' }} px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm" onclick="toggleDropdown('visa-dropdown')">
@@ -896,6 +924,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedCountSpan = document.getElementById('selected-count');
     const formatSelect = document.getElementById('format-select');
     
+    // Conference search functionality
+    const conferenceSearch = document.getElementById('conference_search');
+    const conferenceDropdown = document.getElementById('conference_dropdown');
+    const conferenceOptions = document.getElementById('conference_options');
+    const conferenceIdInput = document.getElementById('conference_id');
+    const clearConferenceBtn = document.getElementById('clear_conference');
+    const dropdownToggle = document.getElementById('dropdown_toggle');
+    
+    let selectedConference = null;
+    let filteredConferences = [];
+    let isDropdownOpen = false;
+    let conferences = [];
+    
     // Sorting functionality
     const table = document.getElementById('participantsTable');
     const tbody = table.querySelector('tbody');
@@ -1207,6 +1248,216 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize state
     updateSelectionState();
+    
+    // ===================== Conference Search Functions =====================
+    
+    // Load conferences from the server
+    async function loadConferences() {
+        try {
+            const response = await fetch('/api/conferences');
+            const data = await response.json();
+            conferences = data.conferences || [];
+            filteredConferences = conferences;
+            return conferences;
+        } catch (error) {
+            console.error('Error loading conferences:', error);
+            return [];
+        }
+    }
+    
+    // Filter conferences based on search query
+    function filterConferences(query) {
+        if (!query.trim()) {
+            return conferences;
+        }
+        const lowerQuery = query.toLowerCase();
+        return conferences.filter(conference => 
+            conference.name.toLowerCase().includes(lowerQuery)
+        );
+    }
+    
+    // Render conference options in dropdown
+    function renderConferenceOptions(conferences) {
+        conferenceOptions.innerHTML = '';
+        
+        if (conferences.length === 0) {
+            conferenceOptions.innerHTML = `
+                <div class="px-4 py-2 text-sm text-gray-500">
+                    No conferences found
+                </div>
+            `;
+            return;
+        }
+        
+        conferences.forEach(conference => {
+            const option = document.createElement('div');
+            option.className = 'px-4 py-2 text-sm cursor-pointer hover:bg-yellow-50 transition-colors duration-150';
+            option.textContent = conference.name;
+            option.dataset.id = conference.id;
+            option.dataset.name = conference.name;
+            
+            option.addEventListener('click', () => {
+                selectConference(conference);
+            });
+            
+            conferenceOptions.appendChild(option);
+        });
+    }
+    
+    // Select a conference
+    function selectConference(conference) {
+        selectedConference = conference;
+        conferenceSearch.value = conference.name;
+        conferenceIdInput.value = conference.id;
+        clearConferenceBtn.classList.remove('hidden');
+        conferenceDropdown.classList.add('hidden');
+        isDropdownOpen = false;
+        
+        // Submit the form to filter participants
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = '{{ route("participants.index") }}';
+        
+        // Add all current query parameters except conference_id
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.delete('conference_id');
+        currentParams.set('conference_id', conference.id);
+        
+        // Add all parameters as hidden inputs
+        for (const [key, value] of currentParams.entries()) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+    
+    // Clear conference selection
+    function clearConference() {
+        selectedConference = null;
+        conferenceSearch.value = '';
+        conferenceIdInput.value = '';
+        clearConferenceBtn.classList.add('hidden');
+        conferenceDropdown.classList.add('hidden');
+        isDropdownOpen = false;
+        
+        // Submit the form to remove conference filter
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = '{{ route("participants.index") }}';
+        
+        // Add all current query parameters except conference_id
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.delete('conference_id');
+        
+        // Add all parameters as hidden inputs
+        for (const [key, value] of currentParams.entries()) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+    
+    // Toggle conference dropdown
+    function toggleConferenceDropdown() {
+        if (isDropdownOpen) {
+            conferenceDropdown.classList.add('hidden');
+            isDropdownOpen = false;
+        } else {
+            const query = conferenceSearch.value.trim();
+            if (query) {
+                // Show filtered results
+                filteredConferences = filterConferences(query);
+                renderConferenceOptions(filteredConferences);
+            } else {
+                // Show all conferences
+                renderConferenceOptions(conferences);
+            }
+            conferenceDropdown.classList.remove('hidden');
+            isDropdownOpen = true;
+        }
+    }
+    
+    // Initialize conference search
+    async function initConferenceSearch() {
+        await loadConferences();
+        
+        // Initialize with current selection
+        const currentConferenceId = conferenceIdInput.value;
+        if (currentConferenceId) {
+            const currentConference = conferences.find(c => c.id == currentConferenceId);
+            if (currentConference) {
+                selectedConference = currentConference;
+                conferenceSearch.value = currentConference.name;
+                clearConferenceBtn.classList.remove('hidden');
+            }
+        }
+        
+        // Event listeners
+        if (conferenceSearch) {
+            conferenceSearch.addEventListener('input', function() {
+                const query = this.value;
+                filteredConferences = filterConferences(query);
+                
+                if (query.trim() && filteredConferences.length > 0) {
+                    renderConferenceOptions(filteredConferences);
+                    conferenceDropdown.classList.remove('hidden');
+                    isDropdownOpen = true;
+                } else if (query.trim() && filteredConferences.length === 0) {
+                    renderConferenceOptions([]);
+                    conferenceDropdown.classList.remove('hidden');
+                    isDropdownOpen = true;
+                } else {
+                    conferenceDropdown.classList.add('hidden');
+                    isDropdownOpen = false;
+                }
+            });
+            
+            conferenceSearch.addEventListener('focus', function() {
+                if (this.value.trim()) {
+                    filteredConferences = filterConferences(this.value);
+                    renderConferenceOptions(filteredConferences);
+                    conferenceDropdown.classList.remove('hidden');
+                    isDropdownOpen = true;
+                }
+            });
+            
+            conferenceSearch.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    conferenceDropdown.classList.add('hidden');
+                    isDropdownOpen = false;
+                }
+            });
+        }
+        
+        if (clearConferenceBtn) {
+            clearConferenceBtn.addEventListener('click', clearConference);
+        }
+        
+        if (dropdownToggle) {
+            dropdownToggle.addEventListener('click', toggleConferenceDropdown);
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.relative')) {
+                conferenceDropdown.classList.add('hidden');
+                isDropdownOpen = false;
+            }
+        });
+    }
+    
+    // Initialize conference search
+    initConferenceSearch();
 });
 
 // Dropdown toggle function

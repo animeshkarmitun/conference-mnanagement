@@ -6,6 +6,7 @@ use App\Events\TaskEvent;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Role;
+use App\Services\NotificationTemplateService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -14,12 +15,14 @@ class SendTaskNotification implements ShouldQueue
 {
     use InteractsWithQueue;
 
+    protected NotificationTemplateService $notificationTemplateService;
+
     /**
      * Create the event listener.
      */
-    public function __construct()
+    public function __construct(NotificationTemplateService $notificationTemplateService)
     {
-        //
+        $this->notificationTemplateService = $notificationTemplateService;
     }
 
     /**
@@ -131,10 +134,16 @@ class SendTaskNotification implements ShouldQueue
             return;
         }
 
+        // Prepare variables for template
+        $variables = $this->prepareTaskVariables($event, $user);
+
+        // Generate message using template
+        $message = $this->notificationTemplateService->processTemplate('TaskUpdate', $variables);
+
         Notification::create([
             'user_id' => $user->id,
             'conference_id' => $event->conferenceId,
-            'message' => $event->message,
+            'message' => $message,
             'type' => 'TaskUpdate',
             'related_model' => 'Task',
             'related_id' => $event->task->id,
@@ -142,5 +151,43 @@ class SendTaskNotification implements ShouldQueue
             'sent_at' => now(),
             'read_status' => false,
         ]);
+    }
+
+    /**
+     * Prepare variables for task notification template
+     */
+    private function prepareTaskVariables(TaskEvent $event, User $user): array
+    {
+        $task = $event->task;
+        $conference = $task->conference;
+
+        return [
+            'task_title' => $task->title,
+            'task_description' => $task->description ?? '',
+            'priority' => ucfirst($task->priority),
+            'status' => ucfirst(str_replace('_', ' ', $task->status)),
+            'due_date' => $task->due_date ? $task->due_date->format('M d, Y') : 'Not set',
+            'action' => $this->getActionDescription($event->eventType),
+            'user_name' => $user->first_name . ' ' . $user->last_name,
+            'assigned_users' => $task->users->pluck('first_name')->join(', '),
+            'conference_name' => $conference->name ?? 'Unknown Conference',
+        ];
+    }
+
+    /**
+     * Get human-readable action description
+     */
+    private function getActionDescription(string $eventType): string
+    {
+        $actions = [
+            'task_assigned' => 'assigned',
+            'task_updated' => 'updated',
+            'task_completed' => 'completed',
+            'task_status_changed' => 'status changed',
+            'task_overdue' => 'marked as overdue',
+            'task_due_soon' => 'due soon',
+        ];
+
+        return $actions[$eventType] ?? 'modified';
     }
 }

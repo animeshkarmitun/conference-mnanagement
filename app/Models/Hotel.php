@@ -10,17 +10,27 @@ class Hotel extends Model
     use HasFactory;
 
     protected $fillable = [
-        'conference_id',
         'name',
         'address',
         'room_capacity',
+        'contact_email',
+        'contact_phone',
+        'website',
+        'amenities',
+        'check_in_time',
+        'check_out_time',
+        'is_active',
+        'description',
+    ];
+
+    protected $casts = [
+        'amenities' => 'array',
+        'is_active' => 'boolean',
+        'check_in_time' => 'datetime:H:i',
+        'check_out_time' => 'datetime:H:i',
     ];
 
     // Relationships
-    public function conference()
-    {
-        return $this->belongsTo(Conference::class);
-    }
 
     public function travelDetails()
     {

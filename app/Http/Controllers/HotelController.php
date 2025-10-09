@@ -71,4 +71,27 @@ class HotelController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Get hotel check-in/check-out times
+     */
+    public function getHotelTimes(Hotel $hotel): JsonResponse
+    {
+        try {
+            return response()->json([
+                'success' => true,
+                'hotel' => [
+                    'name' => $hotel->name,
+                    'check_in_time' => $hotel->check_in_time ?? '15:00',
+                    'check_out_time' => $hotel->check_out_time ?? '11:00'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load hotel times.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

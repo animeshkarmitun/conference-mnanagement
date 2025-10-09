@@ -199,7 +199,9 @@ class EmailTrackingService
 
         } catch (\Exception $e) {
             // If SMTP fails, try Gmail API as fallback
-            if (strpos($e->getMessage(), 'Failed to authenticate on SMTP server') !== false) {
+            if (strpos($e->getMessage(), 'Failed to authenticate on SMTP server') !== false || 
+                strpos($e->getMessage(), 'Connection could not be established') !== false ||
+                strpos($e->getMessage(), 'getaddrinfo') !== false) {
                 \Log::info('SMTP failed, trying Gmail API fallback for email: ' . $email->id);
                 
                 try {

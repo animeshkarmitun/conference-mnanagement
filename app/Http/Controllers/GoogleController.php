@@ -61,13 +61,31 @@ class GoogleController extends Controller
         return view('dashboard');
     }
 
+    /**
+     * Clear Gmail connection and redirect to reconnection
+     */
+    public function disconnectGmail()
+    {
+        try {
+            $user = Auth::user();
+            $user->google_token = null;
+            $user->save();
+            
+            \Log::info('Gmail disconnected for user: ' . $user->id);
+            
+            return redirect()->route('gmail.index')->with('success', 'Gmail account disconnected successfully. You can reconnect anytime.');
+        } catch (\Exception $e) {
+            \Log::error('Gmail disconnect error: ' . $e->getMessage());
+            return redirect()->route('gmail.index')->with('error', 'Failed to disconnect Gmail: ' . $e->getMessage());
+        }
+    }
+
     public function showGmailThreads(Request $request)
     {
         try {
-            // Note: Authentication and admin role checks are handled by middleware
             $user = Auth::user();
             
-            // Additional check for non-middleware routes
+            // Check if user has admin or superadmin role
             if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
                 return view('gmail.index', [
                     'threads' => [],
@@ -82,7 +100,6 @@ class GoogleController extends Controller
             
             // Check if user has Google token
             if (!$user->google_token) {
-                // Show the Gmail page with connect button instead of redirecting
                 return view('gmail.index', [
                     'threads' => [],
                     'nextPageToken' => null,
@@ -92,8 +109,51 @@ class GoogleController extends Controller
                 ]);
             }
 
-            $this->googleService->setAccessToken(json_decode($user->google_token, true));
-            $maxResults = $request->input('maxResults', 30); // Increased default
+            // Decode and validate the token
+            $token = json_decode($user->google_token, true);
+            if (!$token) {
+                \Log::error('Invalid token format for user: ' . $user->id);
+                return view('gmail.index', [
+                    'threads' => [],
+                    'nextPageToken' => null,
+                    'maxResults' => 30,
+                    'searchQuery' => $request->input('q'),
+                    'needsConnection' => true,
+                    'error' => 'Invalid Gmail token. Please reconnect your account.'
+                ]);
+            }
+
+            try {
+                // Ensure token is valid and refresh if needed
+                $validToken = $this->googleService->ensureValidToken($token);
+                
+                // If token was refreshed, save the new token
+                if ($validToken !== $token) {
+                    $user->google_token = json_encode($validToken);
+                    $user->save();
+                    \Log::info('Gmail token refreshed for user: ' . $user->id);
+                }
+                
+                $this->googleService->setAccessToken($validToken);
+                
+            } catch (\Exception $e) {
+                \Log::error('Gmail token validation failed for user ' . $user->id . ': ' . $e->getMessage());
+                
+                // Clear invalid token and show reconnection option
+                $user->google_token = null;
+                $user->save();
+                
+                return view('gmail.index', [
+                    'threads' => [],
+                    'nextPageToken' => null,
+                    'maxResults' => 30,
+                    'searchQuery' => $request->input('q'),
+                    'needsConnection' => true,
+                    'error' => 'Gmail authentication expired. Please reconnect your account.'
+                ]);
+            }
+
+            $maxResults = $request->input('maxResults', 30);
             $pageToken = $request->input('pageToken');
             $query = $request->input('q');
             $participant = $request->input('participant');
@@ -101,10 +161,8 @@ class GoogleController extends Controller
             // If participant is selected, modify the query to search for that participant's emails
             if ($participant) {
                 if ($query) {
-                    // If there's already a query, combine it with participant filter
                     $query = "(from:{$participant} OR to:{$participant}) {$query}";
                 } else {
-                    // If no query, just filter by participant (both sent and received)
                     $query = "from:{$participant} OR to:{$participant}";
                 }
             }
@@ -118,14 +176,40 @@ class GoogleController extends Controller
                 'threads' => $result['threads'],
                 'nextPageToken' => $result['nextPageToken'],
                 'maxResults' => $maxResults,
-                'searchQuery' => $request->input('q'), // Original query without participant filter
+                'searchQuery' => $request->input('q'),
                 'selectedParticipant' => $participant,
                 'needsConnection' => false,
                 'participants' => $participants,
             ]);
+            
         } catch (\Exception $e) {
             \Log::error('Gmail threads error: ' . $e->getMessage());
-            return redirect()->route('gmail.index')->with('error', 'Failed to load Gmail threads: ' . $e->getMessage());
+            
+            // Check if it's an authentication error
+            if (strpos($e->getMessage(), 'authentication') !== false || strpos($e->getMessage(), '401') !== false) {
+                // Clear the token and show reconnection option
+                $user = Auth::user();
+                $user->google_token = null;
+                $user->save();
+                
+                return view('gmail.index', [
+                    'threads' => [],
+                    'nextPageToken' => null,
+                    'maxResults' => 30,
+                    'searchQuery' => $request->input('q'),
+                    'needsConnection' => true,
+                    'error' => 'Gmail authentication failed. Please reconnect your account.'
+                ]);
+            }
+            
+            return view('gmail.index', [
+                'threads' => [],
+                'nextPageToken' => null,
+                'maxResults' => 30,
+                'searchQuery' => $request->input('q'),
+                'needsConnection' => false,
+                'error' => 'Failed to load Gmail threads: ' . $e->getMessage()
+            ]);
         }
     }
 

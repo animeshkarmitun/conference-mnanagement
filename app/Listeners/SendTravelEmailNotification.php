@@ -132,7 +132,7 @@ class SendTravelEmailNotification implements ShouldQueue
                 \App\Models\Email::TYPE_TRAVEL_NOTIFICATION,
                 auth()->user(), // Sender
                 $event->participant->conference,
-                'participant',
+                \App\Models\Participant::class,
                 $event->participant->id,
                 'travel-notification',
                 [

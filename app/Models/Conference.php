@@ -74,4 +74,10 @@ class Conference extends Model
     {
         return $this->belongsTo(\App\Models\Venue::class);
     }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->whereIn('status', ['planned', 'ongoing']);
+    }
 }

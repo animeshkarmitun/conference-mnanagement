@@ -17,6 +17,9 @@
         <!-- Font Awesome -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
+        <!-- Material Design Icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+        
         <!-- Select2 CSS -->
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
         <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
@@ -284,12 +287,75 @@
                         @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')))
                         <div class="border-t border-slate-800 my-2 sidebar-divider"></div>
                         <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider transition-opacity duration-300 sidebar-section-header" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Settings</div>
+                        
+                        <!-- Email Settings -->
                         <a href="{{ route('admin.email-settings.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.email-settings.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Email Settings' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                             </svg>
-                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Email Settings</span>
+                            <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Email</span>
                         </a>
+                        
+                        <!-- Hotel Settings Submenu -->
+                        <div x-data="{ open: {{ request()->routeIs('admin.hotels.*') || request()->routeIs('admin.room-types.*') ? 'true' : 'false' }} }" class="relative">
+                            <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.hotels.*') || request()->routeIs('admin.room-types.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Hotel Settings' : ''">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                    <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Hotel</span>
+                                </div>
+                                <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            
+                            <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="ml-8 mt-1 space-y-1">
+                                <a href="{{ route('admin.hotels.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-slate-800 font-medium text-slate-300 group transition-all duration-200 {{ request()->routeIs('admin.hotels.index') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Hotel Management' : ''">
+                                    <svg class="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                    <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Hotel Management</span>
+                                </a>
+                                <a href="{{ route('admin.room-types.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-slate-800 font-medium text-slate-300 group transition-all duration-200 {{ request()->routeIs('admin.room-types.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Room Types' : ''">
+                                    <svg class="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                    </svg>
+                                    <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Room Types</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Notification Templates Submenu -->
+                        <div x-data="{ open: {{ request()->routeIs('admin.notification-templates.*') ? 'true' : 'false' }} }" class="relative">
+                            <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('admin.notification-templates.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Notification Templates' : ''">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                    </svg>
+                                    <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notification</span>
+                                </div>
+                                <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Submenu Items -->
+                            <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="ml-8 mt-1 space-y-1" :class="sidebarCollapsed ? 'hidden' : ''">
+                                <a href="{{ route('admin.notification-templates.index') }}" class="flex items-center px-4 py-2 text-sm rounded-lg hover:bg-slate-800 text-slate-300 transition-all duration-200 {{ request()->routeIs('admin.notification-templates.index') ? 'bg-slate-700 text-white' : '' }}">
+                                    <svg class="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                    </svg>
+                                    All Templates
+                                </a>
+                                <a href="{{ route('admin.notification-templates.create') }}" class="flex items-center px-4 py-2 text-sm rounded-lg hover:bg-slate-800 text-slate-300 transition-all duration-200 {{ request()->routeIs('admin.notification-templates.create') ? 'bg-slate-700 text-white' : '' }}">
+                                    <svg class="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Create Template
+                                </a>
+                            </div>
+                        </div>
                         @endif
                         
                         <!-- Travel Management Section -->

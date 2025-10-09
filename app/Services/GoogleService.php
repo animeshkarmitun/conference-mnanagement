@@ -50,8 +50,12 @@ class GoogleService
         if ($this->client->isAccessTokenExpired()) {
             $refreshToken = $this->client->getRefreshToken();
             if ($refreshToken) {
-                $newToken = $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
-                return $newToken;
+                try {
+                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
+                    return $newToken;
+                } catch (\Exception $e) {
+                    throw new \Exception('Failed to refresh token. Please reconnect your Gmail account: ' . $e->getMessage());
+                }
             } else {
                 throw new \Exception('No refresh token available. Please reconnect your Gmail account.');
             }
@@ -60,34 +64,82 @@ class GoogleService
         return $token;
     }
 
+    /**
+     * Check if the current token is valid and refresh if needed
+     */
+    public function ensureValidToken($token)
+    {
+        try {
+            $this->client->setAccessToken($token);
+            
+            // Check if token is expired
+            if ($this->client->isAccessTokenExpired()) {
+                \Log::info('Gmail token expired, attempting refresh...');
+                return $this->refreshTokenIfNeeded($token);
+            }
+            
+            return $token;
+        } catch (\Exception $e) {
+            \Log::error('Token validation failed: ' . $e->getMessage());
+            throw new \Exception('Gmail authentication failed. Please reconnect your account.');
+        }
+    }
+
+    /**
+     * Test the current token by making a simple API call
+     */
+    public function testToken($token)
+    {
+        try {
+            $this->client->setAccessToken($token);
+            $service = new Gmail($this->client);
+            
+            // Make a simple API call to test the token
+            $profile = $service->users->getProfile('me');
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Token test failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function listThreads($userId = 'me', $maxResults = 10, $pageToken = null, $query = null)
     {
-        $service = new Gmail($this->client);
-        $params = ['maxResults' => $maxResults];
-        if ($pageToken) {
-            $params['pageToken'] = $pageToken;
-        }
-        if ($query) {
-            $params['q'] = $query;
-        }
-        $results = $service->users_threads->listUsersThreads($userId, $params);
-        $threads = [];
-
-        if ($results->getThreads()) {
-            foreach ($results->getThreads() as $thread) {
-                $threadData = $service->users_threads->get($userId, $thread->getId());
-                $threads[] = [
-                    'id' => $thread->getId(),
-                    'snippet' => $thread->getSnippet(),
-                    'messages' => $threadData->getMessages(),
-                ];
+        try {
+            $service = new Gmail($this->client);
+            $params = ['maxResults' => $maxResults];
+            if ($pageToken) {
+                $params['pageToken'] = $pageToken;
             }
-        }
+            if ($query) {
+                $params['q'] = $query;
+            }
+            $results = $service->users_threads->listUsersThreads($userId, $params);
+            $threads = [];
 
-        return [
-            'threads' => $threads,
-            'nextPageToken' => $results->getNextPageToken() ?? null,
-        ];
+            if ($results->getThreads()) {
+                foreach ($results->getThreads() as $thread) {
+                    $threadData = $service->users_threads->get($userId, $thread->getId());
+                    $threads[] = [
+                        'id' => $thread->getId(),
+                        'snippet' => $thread->getSnippet(),
+                        'messages' => $threadData->getMessages(),
+                    ];
+                }
+            }
+
+            return [
+                'threads' => $threads,
+                'nextPageToken' => $results->getNextPageToken() ?? null,
+            ];
+        } catch (\Google\Service\Exception $e) {
+            if ($e->getCode() == 401) {
+                throw new \Exception('Gmail authentication expired. Please reconnect your Gmail account.');
+            }
+            throw new \Exception('Gmail API error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to fetch Gmail threads: ' . $e->getMessage());
+        }
     }
 
     // Helper to extract header value

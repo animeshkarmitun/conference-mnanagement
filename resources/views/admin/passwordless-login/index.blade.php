@@ -207,14 +207,34 @@
                 <h3 class="text-lg font-semibold mb-4">Generate Login Link</h3>
                 <form id="generateForm">
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Participant</label>
-                        <select id="userSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            <option value="">Loading participants...</option>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Conference</label>
+                        <div class="relative">
+                            <select id="conferenceSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" required>
+                                <option value="">Search and select a conference...</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiration (hours)</label>
-                        <input type="number" id="expirationHours" value="24" min="1" max="168" 
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Participant</label>
+                        <div class="relative">
+                            <select id="userSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" required>
+                                <option value="">Search and select a participant...</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiration (days)</label>
+                        <input type="number" id="expirationDays" value="1" min="1" max="90" 
                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex justify-end space-x-3">
@@ -237,9 +257,22 @@
                 <h3 class="text-lg font-semibold mb-4">Generate Bulk Login Links</h3>
                 <form id="bulkForm">
                     <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Conference</label>
+                        <div class="relative">
+                            <select id="bulkConferenceSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="">Search and select a conference...</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Select Participants</label>
                         <div class="mb-2">
-                            <input type="text" id="participantSearch" placeholder="Search participants..." 
+                            <input type="text" id="bulkParticipantSearch" placeholder="Search participants..." 
                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div id="participantList" class="max-h-60 overflow-y-auto border border-gray-300 rounded-md p-3">
@@ -247,8 +280,8 @@
                         </div>
                     </div>
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiration (hours)</label>
-                        <input type="number" id="bulkExpirationHours" value="24" min="1" max="168" 
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiration (days)</label>
+                        <input type="number" id="bulkExpirationDays" value="1" min="1" max="90" 
                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex justify-end space-x-3">
@@ -346,10 +379,44 @@ function updateParticipantDisplay(participants) {
     renderBulkParticipants(participants);
 }
 
-// Load participants for single link generation
-async function loadParticipants() {
+// Load conferences for dropdown
+async function loadConferences() {
     try {
-        const response = await fetch('{{ route("passwordless-login.participants") }}');
+        const response = await fetch('{{ route("api.conferences") }}');
+        const data = await response.json();
+        
+        if (data.conferences) {
+            const select = document.getElementById('conferenceSelect');
+            select.innerHTML = '<option value="">Search and select a conference...</option>';
+            data.conferences.forEach(conference => {
+                const option = document.createElement('option');
+                option.value = conference.id;
+                option.textContent = conference.name;
+                select.appendChild(option);
+            });
+            
+            // Update searchable select if it exists
+            if (window.conferenceSelect) {
+                // Refresh the searchable select with new data
+                setTimeout(() => {
+                    setupConferenceSearchableSelect();
+                }, 50);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading conferences:', error);
+    }
+}
+
+// Load participants for single link generation
+async function loadParticipants(conferenceId = null) {
+    try {
+        let url = '{{ route("passwordless-login.participants") }}';
+        if (conferenceId) {
+            url = `{{ route("passwordless-login.participants") }}?conference_id=${conferenceId}`;
+        }
+        
+        const response = await fetch(url);
         const data = await response.json();
         
         if (data.success) {
@@ -361,6 +428,17 @@ async function loadParticipants() {
                 option.textContent = `${participant.first_name} ${participant.last_name} (${participant.email}) - ${participant.participant_types}`;
                 select.appendChild(option);
             });
+            
+            // Store participants for search functionality
+            window.allParticipants = data.data;
+            
+            // Update searchable select if it exists
+            if (window.userSelect) {
+                // Refresh the searchable select with new data
+                setTimeout(() => {
+                    setupParticipantSearchableSelect();
+                }, 50);
+            }
         }
     } catch (error) {
         console.error('Error loading participants:', error);
@@ -369,11 +447,233 @@ async function loadParticipants() {
 
 // Store participants data globally for search functionality
 let allParticipants = [];
+let allConferences = [];
+
+// Searchable select functionality for conferences
+function setupConferenceSearchableSelect() {
+    const select = document.getElementById('conferenceSelect');
+    const originalOptions = Array.from(select.options);
+    
+    // Create a custom searchable select
+    const searchableSelect = document.createElement('div');
+    searchableSelect.className = 'relative';
+    
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Search and select a conference...';
+    searchInput.className = 'w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden';
+    
+    const searchIcon = document.createElement('div');
+    searchIcon.className = 'absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none';
+    searchIcon.innerHTML = '<svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>';
+    
+    // Replace the select with our custom component
+    select.parentNode.replaceChild(searchableSelect, select);
+    searchableSelect.appendChild(searchInput);
+    searchableSelect.appendChild(searchIcon);
+    searchableSelect.appendChild(dropdown);
+    
+    // Populate dropdown with options
+    function populateDropdown(options) {
+        dropdown.innerHTML = '';
+        options.forEach(option => {
+            if (option.value === '') return;
+            
+            const item = document.createElement('div');
+            item.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+            item.textContent = option.textContent;
+            item.dataset.value = option.value;
+            
+            item.addEventListener('click', function() {
+                searchInput.value = this.textContent;
+                dropdown.classList.add('hidden');
+                select.value = this.dataset.value;
+                select.dispatchEvent(new Event('change'));
+            });
+            
+            dropdown.appendChild(item);
+        });
+    }
+    
+    // Show/hide dropdown
+    searchInput.addEventListener('focus', function() {
+        dropdown.classList.remove('hidden');
+    });
+    
+    searchInput.addEventListener('blur', function() {
+        setTimeout(() => dropdown.classList.add('hidden'), 200);
+    });
+    
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const filteredOptions = originalOptions.filter(option => 
+            option.value !== '' && option.textContent.toLowerCase().includes(searchTerm)
+        );
+        populateDropdown(filteredOptions);
+        dropdown.classList.remove('hidden');
+    });
+    
+    // Store reference to select for form submission
+    window.conferenceSelect = select;
+}
+
+// Searchable select functionality for participants
+function setupParticipantSearchableSelect() {
+    const select = document.getElementById('userSelect');
+    const originalOptions = Array.from(select.options);
+    
+    // Create a custom searchable select
+    const searchableSelect = document.createElement('div');
+    searchableSelect.className = 'relative';
+    
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Search and select a participant...';
+    searchInput.className = 'w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden';
+    
+    const searchIcon = document.createElement('div');
+    searchIcon.className = 'absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none';
+    searchIcon.innerHTML = '<svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>';
+    
+    // Replace the select with our custom component
+    select.parentNode.replaceChild(searchableSelect, select);
+    searchableSelect.appendChild(searchInput);
+    searchableSelect.appendChild(searchIcon);
+    searchableSelect.appendChild(dropdown);
+    
+    // Populate dropdown with options
+    function populateDropdown(options) {
+        dropdown.innerHTML = '';
+        options.forEach(option => {
+            if (option.value === '') return;
+            
+            const item = document.createElement('div');
+            item.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+            item.textContent = option.textContent;
+            item.dataset.value = option.value;
+            
+            item.addEventListener('click', function() {
+                searchInput.value = this.textContent;
+                dropdown.classList.add('hidden');
+                select.value = this.dataset.value;
+                select.dispatchEvent(new Event('change'));
+            });
+            
+            dropdown.appendChild(item);
+        });
+    }
+    
+    // Show/hide dropdown
+    searchInput.addEventListener('focus', function() {
+        dropdown.classList.remove('hidden');
+    });
+    
+    searchInput.addEventListener('blur', function() {
+        setTimeout(() => dropdown.classList.add('hidden'), 200);
+    });
+    
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const filteredOptions = originalOptions.filter(option => 
+            option.value !== '' && option.textContent.toLowerCase().includes(searchTerm)
+        );
+        populateDropdown(filteredOptions);
+        dropdown.classList.remove('hidden');
+    });
+    
+    // Store reference to select for form submission
+    window.userSelect = select;
+}
+
+// Searchable select functionality for bulk conference selection
+function setupBulkConferenceSearchableSelect() {
+    const select = document.getElementById('bulkConferenceSelect');
+    const originalOptions = Array.from(select.options);
+    
+    // Create a custom searchable select
+    const searchableSelect = document.createElement('div');
+    searchableSelect.className = 'relative';
+    
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Search and select a conference...';
+    searchInput.className = 'w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden';
+    
+    const searchIcon = document.createElement('div');
+    searchIcon.className = 'absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none';
+    searchIcon.innerHTML = '<svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>';
+    
+    // Replace the select with our custom component
+    select.parentNode.replaceChild(searchableSelect, select);
+    searchableSelect.appendChild(searchInput);
+    searchableSelect.appendChild(searchIcon);
+    searchableSelect.appendChild(dropdown);
+    
+    // Populate dropdown with options
+    function populateDropdown(options) {
+        dropdown.innerHTML = '';
+        options.forEach(option => {
+            if (option.value === '') return;
+            
+            const item = document.createElement('div');
+            item.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+            item.textContent = option.textContent;
+            item.dataset.value = option.value;
+            
+            item.addEventListener('click', function() {
+                searchInput.value = this.textContent;
+                dropdown.classList.add('hidden');
+                select.value = this.dataset.value;
+                select.dispatchEvent(new Event('change'));
+            });
+            
+            dropdown.appendChild(item);
+        });
+    }
+    
+    // Show/hide dropdown
+    searchInput.addEventListener('focus', function() {
+        dropdown.classList.remove('hidden');
+    });
+    
+    searchInput.addEventListener('blur', function() {
+        setTimeout(() => dropdown.classList.add('hidden'), 200);
+    });
+    
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const filteredOptions = originalOptions.filter(option => 
+            option.value !== '' && option.textContent.toLowerCase().includes(searchTerm)
+        );
+        populateDropdown(filteredOptions);
+        dropdown.classList.remove('hidden');
+    });
+    
+    // Store reference to select for form submission
+    window.bulkConferenceSelect = select;
+}
 
 // Load participants for bulk generation
-async function loadBulkParticipants() {
+async function loadBulkParticipants(conferenceId = null) {
     try {
-        const response = await fetch('{{ route("passwordless-login.participants") }}');
+        let url = '{{ route("passwordless-login.participants") }}';
+        if (conferenceId) {
+            url = `{{ route("passwordless-login.participants") }}?conference_id=${conferenceId}`;
+        }
+        
+        const response = await fetch(url);
         const data = await response.json();
         
         if (data.success) {
@@ -424,7 +724,13 @@ function setupSearch() {
 // Modal functions
 function openGenerateModal() {
     document.getElementById('generateModal').classList.remove('hidden');
+    loadConferences();
     loadParticipants();
+    // Setup searchable selects after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        setupConferenceSearchableSelect();
+        setupParticipantSearchableSelect();
+    }, 100);
 }
 
 function closeGenerateModal() {
@@ -433,7 +739,12 @@ function closeGenerateModal() {
 
 function openBulkModal() {
     document.getElementById('bulkModal').classList.remove('hidden');
+    loadConferences();
     loadBulkParticipants();
+    // Setup searchable select after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        setupBulkConferenceSearchableSelect();
+    }, 100);
 }
 
 function closeBulkModal() {
@@ -445,8 +756,9 @@ document.getElementById('generateForm').addEventListener('submit', async functio
     e.preventDefault();
     
     const formData = new FormData();
-    formData.append('user_id', document.getElementById('userSelect').value);
-    formData.append('expiration_hours', document.getElementById('expirationHours').value);
+    formData.append('user_id', window.userSelect ? window.userSelect.value : document.getElementById('userSelect').value);
+    formData.append('conference_id', window.conferenceSelect ? window.conferenceSelect.value : document.getElementById('conferenceSelect').value);
+    formData.append('expiration_days', document.getElementById('expirationDays').value);
     
     try {
         const response = await fetch('{{ route("passwordless-login.generate") }}', {
@@ -485,7 +797,8 @@ document.getElementById('bulkForm').addEventListener('submit', async function(e)
     
     const formData = new FormData();
     formData.append('user_ids', JSON.stringify(selectedParticipants));
-    formData.append('expiration_hours', document.getElementById('bulkExpirationHours').value);
+    formData.append('conference_id', window.bulkConferenceSelect ? window.bulkConferenceSelect.value : document.getElementById('bulkConferenceSelect').value);
+    formData.append('expiration_days', document.getElementById('bulkExpirationDays').value);
     
     try {
         const response = await fetch('{{ route("passwordless-login.generate.bulk") }}', {
@@ -553,6 +866,18 @@ function copyToClipboard(text) {
 document.addEventListener('DOMContentLoaded', function() {
     loadParticipantTypes();
     loadParticipants();
+    
+    // Add event listener for conference selection
+    document.addEventListener('change', function(e) {
+        if (e.target.id === 'conferenceSelect' || e.target === window.conferenceSelect) {
+            const conferenceId = e.target.value;
+            loadParticipants(conferenceId);
+        }
+        if (e.target.id === 'bulkConferenceSelect' || e.target === window.bulkConferenceSelect) {
+            const conferenceId = e.target.value;
+            loadBulkParticipants(conferenceId);
+        }
+    });
 });
 </script>
 @endpush
