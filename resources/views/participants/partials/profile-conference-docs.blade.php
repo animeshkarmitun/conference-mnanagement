@@ -1,27 +1,9 @@
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Conference Docs</h3>
-                <p class="text-gray-600">Access your conference materials, session links, and important information.</p>
-            </div>
-            <div class="flex items-center space-x-3">
-                <a href="{{ route('conference-docs.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                    View Full Kit
-                </a>
-            </div>
-        </div>
-    </div>
 
     @php
-        // Get participant's conference kit
+        // Get participant's conference kit (profile-specific)
         $conferenceDoc = \App\Models\ConferenceDoc::with(['conferenceDocItems'])
+            ->where('participant_id', $participant->id)
             ->where('conference_id', $participant->conference_id)
             ->first();
     @endphp

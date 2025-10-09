@@ -11,12 +11,18 @@ class ConferenceDoc extends Model
 
     protected $fillable = [
         'conference_id',
+        'participant_id',
     ];
 
     // Relationships
     public function conference()
     {
         return $this->belongsTo(Conference::class);
+    }
+
+    public function participant()
+    {
+        return $this->belongsTo(Participant::class);
     }
 
     public function conferenceDocItems()

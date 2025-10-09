@@ -1,18 +1,13 @@
-<div>
-    <!-- LOCAL DEBUG: Test if this partial is loading -->
-    <div class="mb-4 p-4 bg-red-200 border-2 border-red-400 rounded">
-        <p class="text-red-800 font-bold text-lg">LOCAL DEBUG: Sessions partial is loading!</p>
-        <p class="text-red-700">Time: {{ now() }}</p>
-    </div>
-    
+<div class="w-full min-h-96 bg-white p-6 rounded-lg shadow-sm border border-gray-200" style="width: 100% !important; min-height: 400px !important; background: white !important; padding: 24px !important; border: 2px solid #e5e7eb !important; border-radius: 8px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-lg font-semibold">My Sessions</h3>
-        <button type="button" id="openAssignSessions" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Assign Sessions</button>
+        @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('superadmin'))
+            <button type="button" id="openAssignSessions" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Assign Sessions</button>
+        @endif
     </div>
 
     @php
         $sessionCount = count($sessions ?? []);
-        echo "<script>console.log('Sessions count: $sessionCount');</script>";
     @endphp
     @if($sessionCount)
         <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">

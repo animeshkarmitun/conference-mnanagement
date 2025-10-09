@@ -1,10 +1,4 @@
-<div>
-    <!-- LOCAL DEBUG: Test if this partial is loading -->
-    <div class="mb-4 p-4 bg-green-200 border-2 border-green-400 rounded">
-        <p class="text-green-800 font-bold text-lg">LOCAL DEBUG: Status partial is loading!</p>
-        <p class="text-green-700">Time: {{ now() }}</p>
-    </div>
-    
+<div class="w-full min-h-96 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-semibold">Status</h3>
         @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('superadmin'))

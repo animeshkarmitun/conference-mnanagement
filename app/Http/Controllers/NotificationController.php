@@ -37,12 +37,20 @@ class NotificationController extends Controller
                     ->paginate(20);
             }
         } else {
-            // Show only user's own notifications for regular users (exclude those with missing users)
-            $notifications = Notification::where('user_id', auth()->id())
-                ->whereHas('user') // Only show notifications where user still exists
-                ->with(['conference', 'user.roles'])
-                ->latest()
-                ->paginate(20);
+            // Show only user's active participant profile notifications for regular users
+            $user = auth()->user();
+            $participant = $user->getActiveParticipantProfile();
+            
+            if ($participant) {
+                $notifications = Notification::where('user_id', auth()->id())
+                    ->where('participant_id', $participant->id)
+                    ->whereHas('user') // Only show notifications where user still exists
+                    ->with(['conference', 'user.roles'])
+                    ->latest()
+                    ->paginate(20);
+            } else {
+                $notifications = collect(); // Empty collection if no active participant
+            }
             $type = 'user';
         }
         
@@ -51,11 +59,20 @@ class NotificationController extends Controller
 
     public function participantIndex()
     {
-        $notifications = Notification::where('user_id', auth()->id())
-            ->whereHas('user') // Only show notifications where user still exists
-            ->with(['conference', 'user'])
-            ->latest()
-            ->paginate(20);
+        $user = auth()->user();
+        $participant = $user->getActiveParticipantProfile();
+        
+        if ($participant) {
+            $notifications = Notification::where('user_id', auth()->id())
+                ->where('participant_id', $participant->id)
+                ->whereHas('user') // Only show notifications where user still exists
+                ->with(['conference', 'user'])
+                ->latest()
+                ->paginate(20);
+        } else {
+            $notifications = collect(); // Empty collection if no active participant
+        }
+        
         return view('notifications.index', compact('notifications'));
     }
 
@@ -85,10 +102,16 @@ class NotificationController extends Controller
             Notification::where('read_status', false)
                 ->update(['read_status' => true]);
         } else {
-            // Mark only user's own notifications as read for regular users
-            Notification::where('user_id', auth()->id())
-                ->where('read_status', false)
-                ->update(['read_status' => true]);
+            // Mark only user's active participant profile notifications as read for regular users
+            $user = auth()->user();
+            $participant = $user->getActiveParticipantProfile();
+            
+            if ($participant) {
+                Notification::where('user_id', auth()->id())
+                    ->where('participant_id', $participant->id)
+                    ->where('read_status', false)
+                    ->update(['read_status' => true]);
+            }
         }
         
         return response()->json([
@@ -118,29 +141,45 @@ class NotificationController extends Controller
 
     public function getUnreadCount(): JsonResponse
     {
-        $count = Notification::where('user_id', auth()->id())
-            ->where('read_status', false)
-            ->count();
+        $user = auth()->user();
+        $participant = $user->getActiveParticipantProfile();
+        
+        if ($participant) {
+            $count = Notification::where('user_id', auth()->id())
+                ->where('participant_id', $participant->id)
+                ->where('read_status', false)
+                ->count();
+        } else {
+            $count = 0;
+        }
         
         return response()->json(['count' => $count]);
     }
 
     public function getRecentNotifications(): JsonResponse
     {
-        $notifications = Notification::where('user_id', auth()->id())
-            ->latest()
-            ->limit(5)
-            ->get()
-            ->map(function ($notification) {
-                return [
-                    'id' => $notification->id,
-                    'message' => $notification->message,
-                    'type' => $notification->type,
-                    'read_status' => $notification->read_status,
-                    'created_at' => $notification->created_at->diffForHumans(),
-                    'action_url' => $notification->action_url,
-                ];
-            });
+        $user = auth()->user();
+        $participant = $user->getActiveParticipantProfile();
+        
+        if ($participant) {
+            $notifications = Notification::where('user_id', auth()->id())
+                ->where('participant_id', $participant->id)
+                ->latest()
+                ->limit(5)
+                ->get()
+                ->map(function ($notification) {
+                    return [
+                        'id' => $notification->id,
+                        'message' => $notification->message,
+                        'type' => $notification->type,
+                        'read_status' => $notification->read_status,
+                        'created_at' => $notification->created_at->diffForHumans(),
+                        'action_url' => $notification->action_url,
+                    ];
+                });
+        } else {
+            $notifications = collect();
+        }
         
         return response()->json($notifications);
     }
@@ -160,6 +199,23 @@ class NotificationController extends Controller
             'type' => 'required|in:MissingDocuments,SessionUpdate,TravelUpdate,General,TaskUpdate,ConferenceUpdate,ProfileUpdate',
         ]);
         
+        // Get the user's primary participant for this conference
+        $user = \App\Models\User::find($validated['user_id']);
+        $participant = $user->participants()
+            ->where('conference_id', $validated['conference_id'])
+            ->where('status', 'active')
+            ->where('is_primary', true)
+            ->first();
+            
+        if (!$participant) {
+            // Fallback to first active participant
+            $participant = $user->participants()
+                ->where('conference_id', $validated['conference_id'])
+                ->where('status', 'active')
+                ->first();
+        }
+        
+        $validated['participant_id'] = $participant ? $participant->id : null;
         $validated['sent_at'] = now();
         $validated['read_status'] = false;
         

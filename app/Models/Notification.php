@@ -13,6 +13,7 @@ class Notification extends Model
 
     protected $fillable = [
         'user_id',
+        'participant_id',
         'conference_id',
         'message',
         'type',
@@ -32,6 +33,11 @@ class Notification extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function participant(): BelongsTo
+    {
+        return $this->belongsTo(Participant::class);
     }
 
     public function conference(): BelongsTo

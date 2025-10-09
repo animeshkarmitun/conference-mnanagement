@@ -44,12 +44,25 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
                     <label for="conference_id" class="block text-sm font-medium text-gray-700">Conference *</label>
-                    <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                        <option value="">Select Conference</option>
-                        @foreach($conferences as $conference)
-                            <option value="{{ $conference->id }}">{{ $conference->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="relative">
+                        <div class="relative">
+                            <input type="text" id="conference_search" placeholder="Search conferences..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pr-16" autocomplete="off" required>
+                            <button type="button" id="clear_conference" class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden" title="Clear selection">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            <button type="button" id="conference_dropdown_toggle" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" title="Show all conferences">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="conference_dropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto">
+                            <div id="conference_options"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="conference_id" name="conference_id" value="{{ old('conference_id') }}" required>
                     @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
@@ -594,6 +607,130 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ===================== Conference Searchable Dropdown =====================
+    
+    // Conference data
+    const conferences = @json($conferences);
+    
+    function initializeConferenceDropdown() {
+        const conferenceSearch = document.getElementById('conference_search');
+        const conferenceDropdown = document.getElementById('conference_dropdown');
+        const conferenceOptions = document.getElementById('conference_options');
+        const conferenceIdInput = document.getElementById('conference_id');
+        const clearConferenceBtn = document.getElementById('clear_conference');
+        const conferenceDropdownToggle = document.getElementById('conference_dropdown_toggle');
+        
+        let selectedConference = null;
+        let filteredConferences = [];
+        let isConferenceDropdownOpen = false;
+        
+        function filterConferences(query) {
+            if (!query.trim()) {
+                return conferences;
+            }
+            const lowerQuery = query.toLowerCase();
+            return conferences.filter(conference => 
+                conference.name.toLowerCase().includes(lowerQuery)
+            );
+        }
+        
+        function renderConferenceOptions(conferences) {
+            conferenceOptions.innerHTML = '';
+            
+            if (conferences.length === 0) {
+                conferenceOptions.innerHTML = `
+                    <div class="px-4 py-2 text-sm text-gray-500">
+                        No conferences found
+                    </div>
+                `;
+                return;
+            }
+            
+            conferences.forEach(conference => {
+                const option = document.createElement('div');
+                option.className = 'px-4 py-2 text-sm cursor-pointer hover:bg-yellow-50 transition-colors duration-150';
+                option.textContent = conference.name;
+                option.dataset.id = conference.id;
+                option.dataset.name = conference.name;
+                
+                option.addEventListener('click', () => {
+                    selectConference(conference);
+                });
+                
+                conferenceOptions.appendChild(option);
+            });
+        }
+        
+        function selectConference(conference) {
+            selectedConference = conference;
+            conferenceSearch.value = conference.name;
+            conferenceIdInput.value = conference.id;
+            clearConferenceBtn.classList.remove('hidden');
+            conferenceDropdown.classList.add('hidden');
+            isConferenceDropdownOpen = false;
+        }
+        
+        function clearConferenceSelection() {
+            selectedConference = null;
+            conferenceSearch.value = '';
+            conferenceIdInput.value = '';
+            clearConferenceBtn.classList.add('hidden');
+            conferenceDropdown.classList.add('hidden');
+            isConferenceDropdownOpen = false;
+        }
+        
+        function toggleConferenceDropdown() {
+            if (isConferenceDropdownOpen) {
+                conferenceDropdown.classList.add('hidden');
+                isConferenceDropdownOpen = false;
+            } else {
+                filteredConferences = filterConferences(conferenceSearch.value);
+                renderConferenceOptions(filteredConferences);
+                conferenceDropdown.classList.remove('hidden');
+                isConferenceDropdownOpen = true;
+            }
+        }
+        
+        // Event listeners
+        conferenceSearch.addEventListener('input', (e) => {
+            filteredConferences = filterConferences(e.target.value);
+            renderConferenceOptions(filteredConferences);
+            conferenceDropdown.classList.remove('hidden');
+            isConferenceDropdownOpen = true;
+        });
+        
+        conferenceSearch.addEventListener('focus', () => {
+            if (!isConferenceDropdownOpen) {
+                filteredConferences = filterConferences(conferenceSearch.value);
+                renderConferenceOptions(filteredConferences);
+                conferenceDropdown.classList.remove('hidden');
+                isConferenceDropdownOpen = true;
+            }
+        });
+        
+        clearConferenceBtn.addEventListener('click', clearConferenceSelection);
+        conferenceDropdownToggle.addEventListener('click', toggleConferenceDropdown);
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#conference_search') && !e.target.closest('#conference_dropdown')) {
+                conferenceDropdown.classList.add('hidden');
+                isConferenceDropdownOpen = false;
+            }
+        });
+        
+        // Initialize with existing value
+        const existingConferenceId = conferenceIdInput.value;
+        if (existingConferenceId) {
+            const existingConference = conferences.find(c => c.id == existingConferenceId);
+            if (existingConference) {
+                selectConference(existingConference);
+            }
+        }
+    }
+    
+    // Initialize conference dropdown
+    initializeConferenceDropdown();
     const visaStatusSelect = document.getElementById('visa_status');
     const visaIssueDescription = document.getElementById('visa-issue-description');
     const participantTypeSelect = document.getElementById('participant_type_id');

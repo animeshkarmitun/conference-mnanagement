@@ -524,6 +524,15 @@ class ParticipantController extends Controller
     {
         $participant->load(['user', 'conference', 'participantType']);
         $sessions = $participant->sessions()->withPivot('role')->get();
+        
+        // DEBUG: Log data loading
+        \Log::info('Participant Show Debug:', [
+            'participant_id' => $participant->id,
+            'sessions_count' => $sessions->count(),
+            'user_id' => $participant->user_id,
+            'conference_id' => $participant->conference_id
+        ]);
+        
         // Preload available sessions for modal (same conference if available)
         $availableSessions = collect();
         if ($participant->conference_id) {
@@ -531,11 +540,22 @@ class ParticipantController extends Controller
                 ->orderBy('start_time','asc')
                 ->get(['id','title','start_time','end_time','venue_id']);
         }
-        $notifications = $participant->user->notifications()->latest()->get();
+        $notifications = $participant->user->notifications()
+            ->where('participant_id', $participant->id)
+            ->latest()
+            ->get();
         $comments = $participant->comments()->with('user')->latest()->get();
         $travelDetail = $participant->travelDetails;
         $hotels = Hotel::with('rooms.roomType')->get();
         $roomTypes = \App\Models\RoomType::where('is_active', true)->get();
+        
+        // DEBUG: Log more data
+        \Log::info('Data loaded:', [
+            'notifications_count' => $notifications->count(),
+            'comments_count' => $comments->count(),
+            'hotels_count' => $hotels->count(),
+            'room_types_count' => $roomTypes->count()
+        ]);
         
         // Determine if the current user is an admin/superadmin viewing someone else's profile
         $isAdminViewing = (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')) && 
@@ -885,7 +905,10 @@ class ParticipantController extends Controller
         
         $sessions = $participant->sessions()->withPivot('role')->get();
         \Log::info('Sessions loaded for participant ' . $participant->id . ': ' . $sessions->count());
-        $notifications = $participant->user->notifications()->latest()->get();
+        $notifications = $participant->user->notifications()
+            ->where('participant_id', $participant->id)
+            ->latest()
+            ->get();
         \Log::info('Notifications loaded for participant ' . $participant->id . ': ' . $notifications->count());
         $comments = $participant->comments()->with('user')->latest()->get();
         \Log::info('Comments loaded for participant ' . $participant->id . ': ' . $comments->count());
@@ -1341,6 +1364,8 @@ class ParticipantController extends Controller
 
         try {
             $participant->user->notifications()->create([
+                'participant_id' => $participant->id,
+                'conference_id' => $participant->conference_id,
                 'message' => $validated['message'],
                 'type' => $validated['type'],
                 'read_status' => false,
@@ -1378,7 +1403,9 @@ class ParticipantController extends Controller
         }
 
         try {
-            $participant->user->notifications()->update(['read_status' => true]);
+            $participant->user->notifications()
+                ->where('participant_id', $participant->id)
+                ->update(['read_status' => true]);
 
             return response()->json([
                 'success' => true, 
@@ -1806,6 +1833,7 @@ class ParticipantController extends Controller
         // Create notification for the participant (if not the same user)
         if (auth()->id() !== $participant->user_id) {
             $participant->user->notifications()->create([
+                'participant_id' => $participant->id,
                 'conference_id' => $participant->conference_id,
                 'type' => 'comment_added',
                 'title' => 'New Comment Added',
@@ -1829,6 +1857,7 @@ class ParticipantController extends Controller
 
             foreach ($admins as $admin) {
                 $admin->notifications()->create([
+                    'participant_id' => $participant->id,
                     'conference_id' => $participant->conference_id,
                     'type' => 'participant_comment',
                     'title' => 'Participant Comment Added',

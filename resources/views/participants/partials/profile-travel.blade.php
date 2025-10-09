@@ -138,7 +138,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Room Check-in DateTime</label>
                 @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
-                <div id="room-dates-section" style="display: none;">
+                <div id="room-checkin-section" style="display: none;">
                     <input type="datetime-local" name="room_check_in" id="room_check_in" value="{{ old('room_check_in', optional($participant->roomAllocation)->check_in ? \Carbon\Carbon::parse($participant->roomAllocation->check_in)->format('Y-m-d\TH:i') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 check-in-input auto-save-input" data-participant-id="{{ $participant->id }}">
                     <p class="text-xs text-gray-500 mt-1">Must be between arrival and departure dates</p>
                 </div>
@@ -156,7 +156,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Room Check-out DateTime</label>
                 @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
-                <div id="room-dates-section" style="display: none;">
+                <div id="room-checkout-section" style="display: none;">
                     <input type="datetime-local" name="room_check_out" id="room_check_out" value="{{ old('room_check_out', optional($participant->roomAllocation)->check_out ? \Carbon\Carbon::parse($participant->roomAllocation->check_out)->format('Y-m-d\TH:i') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 check-out-input auto-save-input" data-participant-id="{{ $participant->id }}">
                     <p class="text-xs text-gray-500 mt-1">Must be between arrival and departure dates</p>
                 </div>
@@ -231,30 +231,6 @@
             </div>
         </div>
     </div>
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Travel Documents</label>
-        @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
-        <input type="file" name="travel_documents" class="mt-1 block w-full text-sm text-gray-500">
-        @else
-        <div class="mt-1 p-3 bg-gray-50 rounded-md border">
-            @if(optional($travelDetail)->travel_documents)
-                <a href="{{ asset('storage/' . $travelDetail->travel_documents) }}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    View Uploaded Document
-                </a>
-            @else
-                <span class="text-gray-400">No documents uploaded</span>
-            @endif
-        </div>
-        @endif
-        @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
-        @if(optional($travelDetail)->travel_documents)
-            <a href="{{ asset('storage/' . $travelDetail->travel_documents) }}" target="_blank" class="text-blue-600 hover:underline mt-2 block">View Current Document</a>
-        @endif
-        @endif
-        </div>
         
         @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
         <div class="flex justify-end">
@@ -632,14 +608,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle room selection to show/hide room dates and hotel times
     function toggleRoomDatesSection() {
         const roomSelect = document.getElementById('room-select');
-        const roomDatesSection = document.getElementById('room-dates-section');
+        const roomCheckinSection = document.getElementById('room-checkin-section');
+        const roomCheckoutSection = document.getElementById('room-checkout-section');
         const hotelTimesMessage = document.getElementById('hotel-times-message');
         
+        // Get the parent divs that contain both labels and input sections
+        const checkinParent = roomCheckinSection ? roomCheckinSection.closest('.grid > div') : null;
+        const checkoutParent = roomCheckoutSection ? roomCheckoutSection.closest('.grid > div') : null;
+        
         if (roomSelect.value) {
-            roomDatesSection.style.display = 'block';
+            // Show both label and input sections
+            if (checkinParent) checkinParent.style.display = 'block';
+            if (checkoutParent) checkoutParent.style.display = 'block';
+            if (roomCheckinSection) roomCheckinSection.style.display = 'block';
+            if (roomCheckoutSection) roomCheckoutSection.style.display = 'block';
             showHotelTimes(roomSelect.value);
         } else {
-            roomDatesSection.style.display = 'none';
+            // Hide both label and input sections
+            if (checkinParent) checkinParent.style.display = 'none';
+            if (checkoutParent) checkoutParent.style.display = 'none';
+            if (roomCheckinSection) roomCheckinSection.style.display = 'none';
+            if (roomCheckoutSection) roomCheckoutSection.style.display = 'none';
             hotelTimesMessage.classList.add('hidden');
         }
     }
@@ -694,7 +683,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Clear existing options and hide room dates
         roomSelect.empty().append('<option value="">Search and select room...</option>');
-        document.getElementById('room-dates-section').style.display = 'none';
+        const roomCheckinSection = document.getElementById('room-checkin-section');
+        const roomCheckoutSection = document.getElementById('room-checkout-section');
+        
+        // Hide both parent divs (labels + inputs) and input sections
+        const checkinParent = roomCheckinSection ? roomCheckinSection.closest('.grid > div') : null;
+        const checkoutParent = roomCheckoutSection ? roomCheckoutSection.closest('.grid > div') : null;
+        
+        if (checkinParent) checkinParent.style.display = 'none';
+        if (checkoutParent) checkoutParent.style.display = 'none';
+        if (roomCheckinSection) roomCheckinSection.style.display = 'none';
+        if (roomCheckoutSection) roomCheckoutSection.style.display = 'none';
         document.getElementById('hotel-times-message').classList.add('hidden');
         
         if (hotelId) {

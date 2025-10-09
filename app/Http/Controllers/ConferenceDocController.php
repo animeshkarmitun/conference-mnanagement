@@ -35,19 +35,16 @@ class ConferenceDocController extends Controller
     {
         $user = Auth::user();
         
-        // Get participant's conference
-        $participant = Participant::with(['conference', 'participantType'])
-            ->where('user_id', $user->id)
-            ->where('registration_status', 'approved')
-            ->latest()
-            ->first();
+        // Get active participant profile
+        $participant = $user->getActiveParticipantProfile();
             
         if (!$participant) {
-            return redirect()->route('participant-dashboard')->with('error', 'No approved conference registration found.');
+            return redirect()->route('participant-profiles.index')->with('error', 'No active participant profile found. Please create or select a participant profile.');
         }
         
-        // Get conference docs
+        // Get conference docs for this specific participant
         $conferenceDoc = ConferenceDoc::with(['conferenceDocItems'])
+            ->where('participant_id', $participant->id)
             ->where('conference_id', $participant->conference_id)
             ->first();
             
@@ -78,14 +75,16 @@ class ConferenceDocController extends Controller
     {
         $user = Auth::user();
         
-        // Verify participant has access to this doc
-        $participant = Participant::where('user_id', $user->id)
-            ->where('conference_id', $conferenceDoc->conference_id)
-            ->where('registration_status', 'approved')
-            ->first();
+        // Get active participant profile
+        $participant = $user->getActiveParticipantProfile();
             
         if (!$participant) {
-            abort(403, 'Access denied.');
+            abort(403, 'No active participant profile found.');
+        }
+        
+        // Verify participant has access to this doc
+        if ($conferenceDoc->participant_id !== $participant->id) {
+            abort(403, 'Access denied to this conference document.');
         }
         
         // Load doc items

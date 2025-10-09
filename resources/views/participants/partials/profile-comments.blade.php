@@ -1,10 +1,4 @@
-<div>
-    <!-- LOCAL DEBUG: Test if this partial is loading -->
-    <div class="mb-4 p-4 bg-yellow-200 border-2 border-yellow-400 rounded">
-        <p class="text-yellow-800 font-bold text-lg">LOCAL DEBUG: Comments partial is loading!</p>
-        <p class="text-yellow-700">Time: {{ now() }}</p>
-    </div>
-    
+<div class="w-full min-h-96 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
     <h3 class="text-lg font-semibold mb-4">Comments</h3>
     
     <!-- Add Comment Form -->
