@@ -44,7 +44,8 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                 'start_time' => $conferenceStartDate->copy()->setTime(9, 0),
                 'end_time' => $conferenceStartDate->copy()->setTime(10, 30),
                 'venue_id' => $venueId,
-                'seating_arrangement' => 'Theater style - 500 seats'
+                'seating_arrangement' => 'Theater style - 500 seats',
+                'status' => 'published'
             ]
         );
 
@@ -61,7 +62,8 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                 'start_time' => $conferenceStartDate->copy()->setTime(11, 0),
                 'end_time' => $conferenceStartDate->copy()->setTime(12, 30),
                 'venue_id' => $venueId,
-                'seating_arrangement' => 'Round table - 200 seats'
+                'seating_arrangement' => 'Round table - 200 seats',
+                'status' => 'published'
             ]
         );
 
@@ -85,7 +87,8 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                     'start_time' => $conferenceStartDate->copy()->addDay()->setTime(10, 0),
                     'end_time' => $conferenceStartDate->copy()->addDay()->setTime(12, 0),
                     'venue_id' => $venueId,
-                    'seating_arrangement' => 'Classroom style - 100 seats'
+                    'seating_arrangement' => 'Classroom style - 100 seats',
+                    'status' => 'published'
                 ]
             );
 
@@ -103,7 +106,8 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                 'start_time' => $conferenceEndDate->copy()->setTime(16, 0),
                 'end_time' => $conferenceEndDate->copy()->setTime(17, 30),
                 'venue_id' => $venueId,
-                'seating_arrangement' => 'Reception style - 300 seats'
+                'seating_arrangement' => 'Reception style - 300 seats',
+                'status' => 'published'
             ]
         );
 
@@ -133,10 +137,13 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                 'participant_type_id' => $speakerTypeId,
                 'bio' => 'Dr. Sarah Johnson is a renowned technology expert with over 15 years of experience in AI and machine learning. She has published over 50 research papers and holds multiple patents.',
                 'organization' => 'Tech Innovation Institute',
-                'dietary_needs' => 'vegetarian',
                 'travel_intent' => true,
+                'registration_status' => 'approved',
                 'approved' => true,
-                'registration_status' => 'approved'
+                'status' => 'active',
+                'is_primary' => true,
+                'profile_type' => 'speaker',
+                'profile_name' => 'Dr. Sarah Johnson - Tech Expert'
             ]
         );
         $speakers[] = $speaker1;
@@ -157,10 +164,13 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                 'participant_type_id' => $speakerTypeId,
                 'bio' => 'Michael Chen is a senior executive at Global Tech Solutions with expertise in digital transformation and business strategy.',
                 'organization' => 'Global Tech Solutions',
-                'dietary_needs' => 'none',
                 'travel_intent' => false,
+                'registration_status' => 'approved',
                 'approved' => true,
-                'registration_status' => 'approved'
+                'status' => 'active',
+                'is_primary' => true,
+                'profile_type' => 'speaker',
+                'profile_name' => 'Michael Chen - Executive'
             ]
         );
         $speakers[] = $speaker2;
@@ -181,10 +191,13 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                 'participant_type_id' => $speakerTypeId,
                 'bio' => 'Professor Emma Rodriguez leads the Advanced Research Lab at State University, specializing in sustainable technology solutions.',
                 'organization' => 'State University',
-                'dietary_needs' => 'vegan',
                 'travel_intent' => true,
+                'registration_status' => 'approved',
                 'approved' => true,
-                'registration_status' => 'approved'
+                'status' => 'active',
+                'is_primary' => true,
+                'profile_type' => 'speaker',
+                'profile_name' => 'Prof. Emma Rodriguez - Researcher'
             ]
         );
         $speakers[] = $speaker3;
@@ -205,10 +218,13 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                 'participant_type_id' => $speakerTypeId,
                 'bio' => 'Alex Thompson is the founder and CEO of InnovateTech, a successful startup focused on renewable energy solutions.',
                 'organization' => 'InnovateTech',
-                'dietary_needs' => 'gluten-free',
                 'travel_intent' => true,
+                'registration_status' => 'approved',
                 'approved' => true,
-                'registration_status' => 'approved'
+                'status' => 'active',
+                'is_primary' => true,
+                'profile_type' => 'speaker',
+                'profile_name' => 'Alex Thompson - CEO'
             ]
         );
         $speakers[] = $speaker4;
@@ -229,10 +245,13 @@ class UpcomingConferenceSessionsSeeder extends Seeder
                 'participant_type_id' => $speakerTypeId,
                 'bio' => 'Dr. James Wilson is a certified trainer and consultant with expertise in practical applications of emerging technologies.',
                 'organization' => 'Tech Training Institute',
-                'dietary_needs' => 'none',
                 'travel_intent' => false,
+                'registration_status' => 'approved',
                 'approved' => true,
-                'registration_status' => 'approved'
+                'status' => 'active',
+                'is_primary' => true,
+                'profile_type' => 'speaker',
+                'profile_name' => 'Dr. James Wilson - Trainer'
             ]
         );
         $speakers[] = $speaker5;

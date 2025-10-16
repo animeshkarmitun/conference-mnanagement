@@ -58,7 +58,6 @@ class HotelController extends Controller
                         'room_number' => $room->room_number,
                         'room_type' => $room->room_type,
                         'beds' => $room->beds,
-                        'price_per_night' => $room->price_per_night,
                         'description' => $room->description,
                     ];
                 })

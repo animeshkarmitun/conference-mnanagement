@@ -19,12 +19,14 @@ class Participant extends Model
         'organization',
         'travel_intent',
         'registration_status',
+        'approved',
         'category',
         'profile_name',
         'profile_type',
         'status',
         'profile_description',
         'is_primary',
+        'hashtags',
     ];
 
     // Relationships

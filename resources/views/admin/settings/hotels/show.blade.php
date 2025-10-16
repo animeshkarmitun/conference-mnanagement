@@ -191,7 +191,6 @@
                                             <th>Room Number</th>
                                             <th>Type</th>
                                             <th>Beds</th>
-                                            <th>Price/Night</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
@@ -202,13 +201,6 @@
                                                 <td>{{ $room->room_number }}</td>
                                                 <td>{{ $room->roomType->name ?? ($room->room_type ?? 'Standard') }}</td>
                                                 <td>{{ $room->beds ?? 1 }}</td>
-                                                <td>
-                                                    @if($room->price_per_night)
-                                                        ${{ number_format($room->price_per_night, 2) }}
-                                                    @else
-                                                        Not set
-                                                    @endif
-                                                </td>
                                                 <td>
                                                     @if($room->is_available)
                                                         <span class="badge bg-success">Available</span>
@@ -298,15 +290,6 @@
                                 <input type="number" name="beds" id="beds" class="form-control" min="1" max="10" value="1">
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="price_per_night" class="form-label">Price per Night</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" name="price_per_night" id="price_per_night" class="form-control" min="0" step="0.01">
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-12">
@@ -374,15 +357,6 @@
                             <div class="mb-3">
                                 <label for="edit_beds" class="form-label">Number of Beds</label>
                                 <input type="number" name="beds" id="edit_beds" class="form-control" min="1" max="10">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_price_per_night" class="form-label">Price per Night</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" name="price_per_night" id="edit_price_per_night" class="form-control" min="0" step="0.01">
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -453,7 +427,6 @@ function editRoom(roomId) {
                 document.getElementById('edit_room_number').value = room.room_number;
                 document.getElementById('edit_room_type_id').value = room.room_type_id || '';
                 document.getElementById('edit_beds').value = room.beds || 1;
-                document.getElementById('edit_price_per_night').value = room.price_per_night || '';
                 document.getElementById('edit_description').value = room.description || '';
                 document.getElementById('edit_is_available').checked = room.is_available;
                 

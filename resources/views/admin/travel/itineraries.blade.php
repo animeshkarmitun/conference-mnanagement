@@ -91,15 +91,24 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div>
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ $detail->participant->user->first_name ?? $detail->participant->user->name }} {{ $detail->participant->user->last_name ?? '' }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">{{ $detail->participant->user->email }}</div>
+                                    @if($detail->participant && $detail->participant->user)
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ $detail->participant->user->first_name ?? $detail->participant->user->name }} {{ $detail->participant->user->last_name ?? '' }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">{{ $detail->participant->user->email }}</div>
+                                    @else
+                                        <div class="text-sm font-medium text-gray-500 italic">
+                                            Participant not found
+                                        </div>
+                                        <div class="text-sm text-gray-400">
+                                            ID: {{ $detail->participant_id ?? 'N/A' }}
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    {{ $detail->participant->conference->name ?? 'N/A' }}
+                                    {{ $detail->participant && $detail->participant->conference ? $detail->participant->conference->name : 'N/A' }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -146,7 +155,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @php
                                     // Always use room allocation data as primary source for check-in/check-out times
-                                    $roomAllocation = $detail->participant->roomAllocations->first();
+                                    $roomAllocation = $detail->participant ? $detail->participant->roomAllocations->first() : null;
                                     $checkIn = $roomAllocation ? $roomAllocation->check_in : null;
                                     $checkOut = $roomAllocation ? $roomAllocation->check_out : null;
                                 @endphp

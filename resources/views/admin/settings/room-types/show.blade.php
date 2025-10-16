@@ -67,18 +67,6 @@
                                 </div>
                             </div>
 
-                            <div class="row mb-4">
-                                <div class="col-sm-3">
-                                    <strong>Base Price:</strong>
-                                </div>
-                                <div class="col-sm-9">
-                                    @if($roomType->base_price)
-                                        <span class="text-success fw-bold">${{ number_format($roomType->base_price, 2) }}</span>
-                                    @else
-                                        <span class="text-muted">Not set</span>
-                                    @endif
-                                </div>
-                            </div>
 
                             <div class="row mb-4">
                                 <div class="col-sm-3">
@@ -143,7 +131,6 @@
                                             <th>Hotel</th>
                                             <th>Room Number</th>
                                             <th>Beds</th>
-                                            <th>Price/Night</th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
@@ -153,13 +140,6 @@
                                                 <td>{{ $room->hotel->name ?? 'N/A' }}</td>
                                                 <td>{{ $room->room_number }}</td>
                                                 <td>{{ $room->beds ?? $roomType->default_beds }}</td>
-                                                <td>
-                                                    @if($room->price_per_night)
-                                                        ${{ number_format($room->price_per_night, 2) }}
-                                                    @else
-                                                        Not set
-                                                    @endif
-                                                </td>
                                                 <td>
                                                     @if($room->is_available)
                                                         <span class="badge bg-success">Available</span>

@@ -29,15 +29,17 @@ class Conference extends Model
         return $this->hasMany(Session::class);
     }
 
-    public function venues()
-    {
-        return $this->hasMany(Venue::class);
-    }
+    // Note: Conference belongs to a venue, doesn't have many venues
+    // public function venues()
+    // {
+    //     return $this->hasMany(Venue::class);
+    // }
 
-    public function hotels()
-    {
-        return $this->hasMany(Hotel::class);
-    }
+    // Hotels are no longer directly related to conferences
+    // public function hotels()
+    // {
+    //     return $this->hasMany(Hotel::class);
+    // }
 
     public function tasks()
     {

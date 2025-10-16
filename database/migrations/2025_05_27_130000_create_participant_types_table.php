@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('participant_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->string('name');
             $table->timestamps();
         });
+        
+        // Add unique index with length limit to avoid MySQL key length issues
+        \DB::statement('ALTER TABLE participant_types ADD UNIQUE participant_types_name_unique (name(191))');
     }
 
     /**

@@ -2,7 +2,7 @@
     <h3 class="text-lg font-semibold mb-4">Comments</h3>
     
     <!-- Add Comment Form -->
-    <form method="POST" action="{{ route('participants.comments.store', $participant) }}" class="mb-6">
+    <form method="POST" action="{{ route('participant-profiles.comments.store', $participant->id) }}" class="mb-6">
         @csrf
         <div class="bg-gray-50 p-4 rounded-lg">
             <textarea 

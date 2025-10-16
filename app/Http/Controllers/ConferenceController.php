@@ -407,10 +407,172 @@ class ConferenceController extends Controller
         });
     }
 
-    public function destroy(Conference $conference)
+    public function getDeletionInfo(Conference $conference)
     {
+        // Get counts of related data
+        $relatedData = [
+            'participants' => $conference->participants()->count(),
+            'sessions' => $conference->sessions()->count(),
+            'tasks' => $conference->tasks()->count(),
+            'notifications' => $conference->notifications()->count(),
+            'communications' => $conference->communications()->count(),
+            'checkins' => $conference->checkins()->count(),
+            'conference_docs' => $conference->conferenceDocs()->count(),
+        ];
+        
+        // Get participant user information for deletion option
+        $participantUsersInfo = null;
+        if ($relatedData['participants'] > 0) {
+            $participantUsers = $conference->participants()
+                ->with('user')
+                ->get()
+                ->groupBy('user_id')
+                ->map(function ($userParticipants) {
+                    $user = $userParticipants->first()->user;
+                    $totalParticipants = $user->participants()->count();
+                    $singleParticipant = $totalParticipants === 1;
+                    
+                    return [
+                        'user_id' => $user->id,
+                        'user_name' => $user->first_name . ' ' . $user->last_name,
+                        'user_email' => $user->email,
+                        'total_participants' => $totalParticipants,
+                        'single_participant' => $singleParticipant,
+                        'conference_participants' => $userParticipants->count()
+                    ];
+                });
+            
+            $singleParticipantUsers = $participantUsers->where('single_participant', true);
+            
+            $participantUsersInfo = [
+                'total_users' => $participantUsers->count(),
+                'single_participant_users' => $singleParticipantUsers->count(),
+                'single_participant_users_list' => $singleParticipantUsers->values()->toArray()
+            ];
+        }
+        
+        // Get venue information
+        $venueInfo = null;
+        if ($conference->venue) {
+            $venueInfo = [
+                'id' => $conference->venue->id,
+                'name' => $conference->venue->name,
+                'address' => $conference->venue->address,
+                'capacity' => $conference->venue->capacity,
+                'other_conferences_count' => $conference->venue->conferences()->where('id', '!=', $conference->id)->count(),
+                'other_conferences' => $conference->venue->conferences()->where('id', '!=', $conference->id)->get(['id', 'name', 'start_date', 'end_date'])
+            ];
+        }
+        
+        return response()->json([
+            'conference' => [
+                'id' => $conference->id,
+                'name' => $conference->name,
+                'start_date' => $conference->start_date,
+                'end_date' => $conference->end_date,
+            ],
+            'venue' => $venueInfo,
+            'related_data' => $relatedData,
+            'participant_users_info' => $participantUsersInfo,
+            'has_related_data' => array_sum($relatedData) > 0
+        ]);
+    }
+
+    public function destroy(Conference $conference, Request $request)
+    {
+        // Get counts of related data before deletion
+        $participantCount = $conference->participants()->count();
+        $sessionCount = $conference->sessions()->count();
+        $taskCount = $conference->tasks()->count();
+        $notificationCount = $conference->notifications()->count();
+        $communicationCount = $conference->communications()->count();
+        $checkinCount = $conference->checkins()->count();
+        $conferenceDocCount = $conference->conferenceDocs()->count();
+        
+        // Store related data counts for potential rollback
+        $relatedData = [
+            'participants' => $participantCount,
+            'sessions' => $sessionCount,
+            'tasks' => $taskCount,
+            'notifications' => $notificationCount,
+            'communications' => $communicationCount,
+            'checkins' => $checkinCount,
+            'conference_docs' => $conferenceDocCount,
+        ];
+        
+        // Handle venue deletion if requested
+        $venueDeleted = false;
+        $venueName = null;
+        if ($request->has('delete_venue') && $request->delete_venue == '1' && $conference->venue) {
+            // Check if venue is used by other conferences
+            $otherConferencesCount = $conference->venue->conferences()->where('id', '!=', $conference->id)->count();
+            
+            if ($otherConferencesCount == 0) {
+                $venueName = $conference->venue->name;
+                $conference->venue->delete();
+                $venueDeleted = true;
+            }
+        }
+        
+        // Handle participant user deletion if requested
+        $deletedUsersCount = 0;
+        if ($request->has('delete_participant_users') && $request->delete_participant_users == '1') {
+            // Get participants with their users
+            $participants = $conference->participants()->with('user')->get();
+            
+            // Group by user_id and check which users have only this conference's participants
+            $userParticipantCounts = $participants->groupBy('user_id')->map(function ($userParticipants) {
+                $user = $userParticipants->first()->user;
+                $totalParticipants = $user->participants()->count();
+                return [
+                    'user' => $user,
+                    'total_participants' => $totalParticipants,
+                    'conference_participants' => $userParticipants->count(),
+                    'single_participant' => $totalParticipants === $userParticipants->count()
+                ];
+            });
+            
+            // Delete users who have only this conference's participants
+            foreach ($userParticipantCounts as $userInfo) {
+                if ($userInfo['single_participant']) {
+                    // Delete the user (this will cascade to participants due to foreign key constraints)
+                    $userInfo['user']->delete();
+                    $deletedUsersCount++;
+                }
+            }
+        }
+        
+        // Log the deletion with related data counts
+        \Log::info('Conference deletion initiated', [
+            'conference_id' => $conference->id,
+            'conference_name' => $conference->name,
+            'related_data' => $relatedData,
+            'venue_deleted' => $venueDeleted,
+            'venue_name' => $venueName,
+            'participant_users_deleted' => $deletedUsersCount
+        ]);
+        
         $conference->delete();
-        return redirect()->route('conferences.index')->with('success', 'Conference deleted successfully.');
+        
+        // Create detailed success message
+        $message = 'Conference "' . $conference->name . '" deleted successfully.';
+        
+        $removedItems = [];
+        if ($participantCount > 0) $removedItems[] = "{$participantCount} participant(s)";
+        if ($sessionCount > 0) $removedItems[] = "{$sessionCount} session(s)";
+        if ($taskCount > 0) $removedItems[] = "{$taskCount} task(s)";
+        if ($notificationCount > 0) $removedItems[] = "{$notificationCount} notification(s)";
+        if ($communicationCount > 0) $removedItems[] = "{$communicationCount} communication(s)";
+        if ($checkinCount > 0) $removedItems[] = "{$checkinCount} checkin(s)";
+        if ($conferenceDocCount > 0) $removedItems[] = "{$conferenceDocCount} document(s)";
+        if ($venueDeleted) $removedItems[] = "venue '{$venueName}'";
+        if ($deletedUsersCount > 0) $removedItems[] = "{$deletedUsersCount} user account(s)";
+        
+        if (!empty($removedItems)) {
+            $message .= ' Related data also removed: ' . implode(', ', $removedItems) . '.';
+        }
+        
+        return redirect()->route('conferences.index')->with('success', $message);
     }
 
     public function export(Request $request)

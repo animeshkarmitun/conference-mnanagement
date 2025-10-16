@@ -15,10 +15,10 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             // These fields are still being used in forms
             if (!Schema::hasColumn('users', 'current_designation')) {
-                $table->string('current_designation')->nullable()->after('sector');
+                $table->string('current_designation')->nullable();
             }
             if (!Schema::hasColumn('users', 'resume')) {
-                $table->string('resume')->nullable()->after('profile_picture');
+                $table->string('resume')->nullable();
             }
         });
     }

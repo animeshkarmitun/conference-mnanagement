@@ -14,15 +14,31 @@ class RoomController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'hotel_id' => 'required|exists:hotels,id',
-            'room_number' => 'required|string|max:50',
-            'room_type_id' => 'nullable|exists:room_types,id',
-            'beds' => 'nullable|integer|min:1|max:10',
-            'price_per_night' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string',
-            'is_available' => 'boolean',
+        \Log::info('Room creation request received', [
+            'method' => $request->method(),
+            'url' => $request->url(),
+            'data' => $request->all(),
+            'headers' => $request->headers->all()
         ]);
+        
+        try {
+            $validated = $request->validate([
+                'hotel_id' => 'required|exists:hotels,id',
+                'room_number' => 'required|string|max:50',
+                'room_type_id' => 'nullable|exists:room_types,id',
+                'beds' => 'nullable|integer|min:1|max:10',
+                'description' => 'nullable|string',
+                'is_available' => 'nullable',
+            ]);
+            
+            \Log::info('Validation passed, validated data:', $validated);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
 
         // Check for unique room number within the hotel
         $existingRoom = Room::where('hotel_id', $validated['hotel_id'])
@@ -34,10 +50,23 @@ class RoomController extends Controller
         }
 
         $validated['is_available'] = $request->has('is_available');
+        
+        // Set room_type based on room_type_id if provided
+        if (!empty($validated['room_type_id'])) {
+            $roomType = \App\Models\RoomType::find($validated['room_type_id']);
+            $validated['room_type'] = $roomType ? $roomType->name : 'Standard';
+        } else {
+            $validated['room_type'] = 'Standard';
+        }
 
-        Room::create($validated);
-
-        return redirect()->back()->with('success', 'Room created successfully!');
+        try {
+            $room = Room::create($validated);
+            \Log::info('Room created successfully with ID:', ['room_id' => $room->id]);
+            return redirect()->back()->with('success', 'Room created successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Room creation failed:', ['error' => $e->getMessage(), 'data' => $validated]);
+            return redirect()->back()->withErrors(['error' => 'Failed to create room: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -60,9 +89,8 @@ class RoomController extends Controller
             'room_number' => 'required|string|max:50',
             'room_type_id' => 'nullable|exists:room_types,id',
             'beds' => 'nullable|integer|min:1|max:10',
-            'price_per_night' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
-            'is_available' => 'boolean',
+            'is_available' => 'nullable',
         ]);
 
         // Check for unique room number within the hotel (excluding current room)
@@ -76,6 +104,14 @@ class RoomController extends Controller
         }
 
         $validated['is_available'] = $request->has('is_available');
+        
+        // Set room_type based on room_type_id if provided
+        if (!empty($validated['room_type_id'])) {
+            $roomType = \App\Models\RoomType::find($validated['room_type_id']);
+            $validated['room_type'] = $roomType ? $roomType->name : 'Standard';
+        } else {
+            $validated['room_type'] = 'Standard';
+        }
 
         $room->update($validated);
 

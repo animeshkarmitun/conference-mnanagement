@@ -9,6 +9,7 @@ use App\Models\Venue;
 use App\Services\SessionNotificationService;
 use App\Events\SessionEvent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SessionController extends Controller
 {
@@ -28,6 +29,7 @@ class SessionController extends Controller
         $status = $request->get('status', 'all'); // Default to all sessions
         $conferenceId = $request->get('conference_id');
         $sessionStatus = $request->get('session_status'); // New parameter for draft/published
+        $sessionTitle = $request->get('session_title'); // New parameter for session title search
         $now = now();
         
         $query = Session::with(['conference', 'participants']);
@@ -40,6 +42,14 @@ class SessionController extends Controller
         // Filter by session status (draft/published) if specified
         if ($sessionStatus && in_array($sessionStatus, ['draft', 'published'])) {
             $query->where('status', $sessionStatus);
+        }
+        
+        // Filter by session title if specified
+        if ($sessionTitle && !empty(trim($sessionTitle))) {
+            $query->where(function($q) use ($sessionTitle) {
+                $q->where('title', 'like', '%' . $sessionTitle . '%')
+                  ->orWhere('description', 'like', '%' . $sessionTitle . '%');
+            });
         }
         
         // Filter sessions based on status
@@ -68,10 +78,16 @@ class SessionController extends Controller
         
         $sessions = $query->paginate(10);
         
-        // Get session counts for each category (with conference filter if applied)
+        // Get session counts for each category (with conference and title filters if applied)
         $countQuery = Session::query();
         if ($conferenceId) {
             $countQuery->where('conference_id', $conferenceId);
+        }
+        if ($sessionTitle && !empty(trim($sessionTitle))) {
+            $countQuery->where(function($q) use ($sessionTitle) {
+                $q->where('title', 'like', '%' . $sessionTitle . '%')
+                  ->orWhere('description', 'like', '%' . $sessionTitle . '%');
+            });
         }
         
         $sessionCounts = [
@@ -86,7 +102,7 @@ class SessionController extends Controller
         // Get all conferences for the filter dropdown
         $conferences = Conference::orderBy('name')->get();
         
-        return view('sessions.index', compact('sessions', 'sessionCounts', 'status', 'conferences'));
+        return view('sessions.index', compact('sessions', 'sessionCounts', 'status', 'conferences', 'sessionTitle'));
     }
 
     public function create()
@@ -334,6 +350,7 @@ class SessionController extends Controller
     {
         $status = $request->get('status', 'all');
         $conferenceId = $request->get('conference_id');
+        $sessionTitle = $request->get('session_title');
         $now = now();
         
         $query = Session::with(['conference', 'participants']);
@@ -341,6 +358,14 @@ class SessionController extends Controller
         // Filter by conference if specified
         if ($conferenceId) {
             $query->where('conference_id', $conferenceId);
+        }
+        
+        // Filter by session title if specified
+        if ($sessionTitle && !empty(trim($sessionTitle))) {
+            $query->where(function($q) use ($sessionTitle) {
+                $q->where('title', 'like', '%' . $sessionTitle . '%')
+                  ->orWhere('description', 'like', '%' . $sessionTitle . '%');
+            });
         }
         
         // Filter sessions based on status
@@ -433,22 +458,39 @@ class SessionController extends Controller
     public function getParticipantsByConference(Request $request)
     {
         $conferenceId = $request->get('conference_id');
+        $search = $request->get('search', '');
         
         if (!$conferenceId) {
             return response()->json(['participants' => []]);
         }
 
-        $participants = Participant::with(['user', 'participantType'])
-            ->where('conference_id', $conferenceId)
-            ->get()
+        $query = Participant::with(['user', 'participantType'])
+            ->where('conference_id', $conferenceId);
+
+        // Add search functionality including hashtags
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($userQuery) use ($search) {
+                    $userQuery->where('first_name', 'like', "%{$search}%")
+                              ->orWhere('last_name', 'like', "%{$search}%")
+                              ->orWhere('email', 'like', "%{$search}%")
+                              ->orWhere('organization_institution', 'like', "%{$search}%");
+                })
+                ->orWhere('organization', 'like', "%{$search}%")
+                ->orWhere('hashtags', 'like', "%{$search}%");
+            });
+        }
+
+        $participants = $query->get()
             ->map(function($participant) {
                 return [
                     'id' => $participant->id,
                     'name' => ($participant->user->first_name ?? $participant->user->name) . ' ' . ($participant->user->last_name ?? ''),
                     'email' => $participant->user->email,
-                    'organization' => $participant->user->organization ?? '',
+                    'organization' => $participant->user->organization_institution ?? $participant->user->organization ?? '',
                     'type' => $participant->participantType->name ?? '',
-                    'type_id' => $participant->participant_type_id
+                    'type_id' => $participant->participant_type_id,
+                    'hashtags' => $participant->hashtags ?? ''
                 ];
             });
 
@@ -580,13 +622,47 @@ class SessionController extends Controller
             }
         }
 
+        // Create passwordless login tokens for all participants
+        $passwordlessTokens = [];
+        $participants = $session->participants()->with('user')->get();
+        $conference = Conference::find($session->conference_id);
+        
+        foreach ($participants as $participant) {
+            if ($participant->user) {
+                $passwordlessLoginService = app(\App\Services\PasswordlessLoginService::class);
+                $token = $passwordlessLoginService->generateLoginLink($participant->user, 72, $conference);
+                $passwordlessTokens[] = [
+                    'user_id' => $participant->user->id,
+                    'token' => $token->token,
+                    'login_url' => $token->getLoginUrl()
+                ];
+            }
+        }
+
         // Send notifications to participants
         $conference = Conference::find($session->conference_id);
         $message = "A new session '{$session->title}' has been published in {$conference->name}";
         event(new SessionEvent($session, 'session_created', $message, [
             'created_by' => auth()->user()->id,
-            'conference_name' => $conference->name
+            'conference_name' => $conference->name,
+            'passwordless_tokens' => $passwordlessTokens
         ]));
+
+        // Update session email tracking
+        $session->increment('email_send_count');
+        $session->update([
+            'last_email_sent_at' => now(),
+            'email_recipients' => $participants->pluck('user.email')->toArray()
+        ]);
+
+        // Update individual participant email tracking for each participant
+        foreach ($participants as $participant) {
+            $tracking = \App\Models\ParticipantSessionEmailTracking::getOrCreateTracking($session->id, $participant->id);
+            $tracking->incrementEmailCount();
+            $tracking->update([
+                'email_recipients' => [$participant->user->email]
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -768,5 +844,169 @@ class SessionController extends Controller
             'overlapping_sessions' => $overlappingSessions,
             'has_conflicts' => count($overlappingSessions) > 0
         ]);
+    }
+
+    /**
+     * Resend session email to a specific participant
+     */
+    public function resendEmailToParticipant(Request $request, Session $session, $participant)
+    {
+        // Check permissions
+        $user = Auth::user();
+        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
+        }
+
+        try {
+            // Find the participant
+            $participantModel = $session->participants()->where('participant_id', $participant)->first();
+            
+            if (!$participantModel) {
+                return response()->json(['success' => false, 'message' => 'Participant not found in this session'], 404);
+            }
+
+            // Create passwordless login token for this participant
+            $passwordlessToken = null;
+            if ($participantModel->user) {
+                $passwordlessLoginService = app(\App\Services\PasswordlessLoginService::class);
+                $conference = $session->conference;
+                $token = $passwordlessLoginService->generateLoginLink($participantModel->user, 72, $conference);
+                $passwordlessToken = [
+                    'user_id' => $participantModel->user->id,
+                    'token' => $token->token,
+                    'login_url' => $token->getLoginUrl()
+                ];
+            }
+
+            // Send email notification with passwordless login link
+            $conference = $session->conference;
+            $message = "A session '{$session->title}' has been published in {$conference->name}";
+            
+            event(new SessionEvent($session, 'session_created', $message, [
+                'created_by' => auth()->user()->id,
+                'conference_name' => $conference->name,
+                'passwordless_tokens' => [$passwordlessToken],
+                'is_resend' => true,
+                'single_participant' => true,
+                'target_participant_id' => $participantModel->id
+            ]));
+
+            // Update individual participant email tracking
+            $tracking = \App\Models\ParticipantSessionEmailTracking::getOrCreateTracking($session->id, $participantModel->id);
+            $tracking->incrementEmailCount();
+            $tracking->update([
+                'email_recipients' => [$participantModel->user->email]
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Session email resent successfully to ' . $participantModel->user->first_name . ' ' . $participantModel->user->last_name,
+                'participant_id' => $participantModel->id,
+                'email_count' => $tracking->email_send_count,
+                'last_sent' => $tracking->last_email_sent_at->format('M d, Y H:i:s')
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to resend session email to participant', [
+                'session_id' => $session->id,
+                'participant_id' => $participant,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Resend session email to all participants
+     */
+    public function resendEmailToAll(Request $request, Session $session)
+    {
+        // Check permissions
+        $user = Auth::user();
+        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
+        }
+
+        try {
+            // Get participants assigned to this session
+            $participants = $session->participants()->with('user')->get();
+            
+            if ($participants->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No participants assigned to this session'], 400);
+            }
+
+            // Create passwordless login tokens for all participants
+            $passwordlessTokens = [];
+            $conference = $session->conference;
+            
+            foreach ($participants as $participant) {
+                if ($participant->user) {
+                    $passwordlessLoginService = app(\App\Services\PasswordlessLoginService::class);
+                    $token = $passwordlessLoginService->generateLoginLink($participant->user, 72, $conference);
+                    $passwordlessTokens[] = [
+                        'user_id' => $participant->user->id,
+                        'token' => $token->token,
+                        'login_url' => $token->getLoginUrl()
+                    ];
+                }
+            }
+
+            // Send email notifications with passwordless login links
+            $conference = $session->conference;
+            $message = "A session '{$session->title}' has been published in {$conference->name}";
+            
+            event(new SessionEvent($session, 'session_created', $message, [
+                'created_by' => auth()->user()->id,
+                'conference_name' => $conference->name,
+                'passwordless_tokens' => $passwordlessTokens,
+                'is_resend' => true,
+                'resend_all' => true
+            ]));
+
+            // Update individual participant email tracking for each participant
+            $results = [];
+            foreach ($participants as $participant) {
+                $tracking = \App\Models\ParticipantSessionEmailTracking::getOrCreateTracking($session->id, $participant->id);
+                $tracking->incrementEmailCount();
+                $tracking->update([
+                    'email_recipients' => [$participant->user->email]
+                ]);
+                $results[] = [
+                    'participant_id' => $participant->id,
+                    'email_count' => $tracking->email_send_count
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Session email resent successfully to ' . $participants->count() . ' participants',
+                'participant_count' => $participants->count(),
+                'results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to resend session email to all participants', [
+                'session_id' => $session->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend emails: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Resend session email to participants (legacy method for backward compatibility)
+     */
+    public function resendEmail(Request $request, Session $session)
+    {
+        // Redirect to the new resendEmailToAll method for backward compatibility
+        return $this->resendEmailToAll($request, $session);
     }
 } 

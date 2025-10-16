@@ -12,25 +12,31 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('participants', function (Blueprint $table) {
-            // Remove unused columns from participants table
-            $table->dropColumn([
-                'serial_number',
-                'approved',
-                'dietary_needs',
-                'dietary_needs_other',
-                'hashtags'
-            ]);
+            // Remove unused columns from participants table if they exist
+            $columnsToDrop = [];
+            if (Schema::hasColumn('participants', 'serial_number')) $columnsToDrop[] = 'serial_number';
+            if (Schema::hasColumn('participants', 'approved')) $columnsToDrop[] = 'approved';
+            if (Schema::hasColumn('participants', 'dietary_needs')) $columnsToDrop[] = 'dietary_needs';
+            if (Schema::hasColumn('participants', 'dietary_needs_other')) $columnsToDrop[] = 'dietary_needs_other';
+            if (Schema::hasColumn('participants', 'hashtags')) $columnsToDrop[] = 'hashtags';
+            
+            if (!empty($columnsToDrop)) {
+                $table->dropColumn($columnsToDrop);
+            }
         });
 
         Schema::table('users', function (Blueprint $table) {
-            // Remove unused columns from users table
-            $table->dropColumn([
-                'nationality',
-                'profession',
-                'current_designation',
-                'resume',
-                'dietary_needs'
-            ]);
+            // Remove unused columns from users table if they exist
+            $columnsToDrop = [];
+            if (Schema::hasColumn('users', 'nationality')) $columnsToDrop[] = 'nationality';
+            if (Schema::hasColumn('users', 'profession')) $columnsToDrop[] = 'profession';
+            if (Schema::hasColumn('users', 'current_designation')) $columnsToDrop[] = 'current_designation';
+            if (Schema::hasColumn('users', 'resume')) $columnsToDrop[] = 'resume';
+            if (Schema::hasColumn('users', 'dietary_needs')) $columnsToDrop[] = 'dietary_needs';
+            
+            if (!empty($columnsToDrop)) {
+                $table->dropColumn($columnsToDrop);
+            }
         });
     }
 

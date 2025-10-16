@@ -29,36 +29,36 @@ class EmailSettingsSeeder extends Seeder
             ['variable_name' => 'email', 'variable_description' => 'Recipient\'s email address', 'example_value' => 'john.doe@example.com', 'is_system_variable' => true],
             
             // Conference variables
-            ['variable_name' => 'conference_name', 'variable_description' => 'Name of the conference', 'example_value' => 'Tech Conference 2024', 'is_system_variable' => true],
-            ['variable_name' => 'conference_date', 'variable_description' => 'Conference start date', 'example_value' => 'March 15, 2024', 'is_system_variable' => true],
+            ['variable_name' => 'conference_name', 'variable_description' => 'Name of the conference', 'example_value' => 'Digital Marketing Summit 2025', 'is_system_variable' => true],
+            ['variable_name' => 'conference_date', 'variable_description' => 'Conference start date', 'example_value' => 'January 15, 2025', 'is_system_variable' => true],
             ['variable_name' => 'conference_location', 'variable_description' => 'Conference location/venue', 'example_value' => 'Convention Center', 'is_system_variable' => true],
             
             // Session variables
             ['variable_name' => 'session_title', 'variable_description' => 'Title of the session', 'example_value' => 'Introduction to AI', 'is_system_variable' => true],
-            ['variable_name' => 'session_date', 'variable_description' => 'Session date and time', 'example_value' => 'March 15, 2024 at 2:00 PM', 'is_system_variable' => true],
+            ['variable_name' => 'session_date', 'variable_description' => 'Session date and time', 'example_value' => 'January 15, 2025 at 2:00 PM', 'is_system_variable' => true],
             ['variable_name' => 'session_location', 'variable_description' => 'Session location/room', 'example_value' => 'Room A-101', 'is_system_variable' => true],
             ['variable_name' => 'session_description', 'variable_description' => 'Session description', 'example_value' => 'Learn the basics of artificial intelligence', 'is_system_variable' => true],
             
             // Task variables
             ['variable_name' => 'task_title', 'variable_description' => 'Title of the task', 'example_value' => 'Prepare presentation slides', 'is_system_variable' => true],
             ['variable_name' => 'task_description', 'variable_description' => 'Task description', 'example_value' => 'Create slides for the keynote presentation', 'is_system_variable' => true],
-            ['variable_name' => 'due_date', 'variable_description' => 'Task due date', 'example_value' => 'March 10, 2024', 'is_system_variable' => true],
+            ['variable_name' => 'due_date', 'variable_description' => 'Task due date', 'example_value' => 'January 10, 2025', 'is_system_variable' => true],
             ['variable_name' => 'priority', 'variable_description' => 'Task priority level', 'example_value' => 'High', 'is_system_variable' => true],
             ['variable_name' => 'status', 'variable_description' => 'Current status', 'example_value' => 'In Progress', 'is_system_variable' => true],
             
             // Travel variables
             ['variable_name' => 'travel_type', 'variable_description' => 'Type of travel', 'example_value' => 'Flight', 'is_system_variable' => true],
-            ['variable_name' => 'departure_date', 'variable_description' => 'Departure date', 'example_value' => 'March 14, 2024', 'is_system_variable' => true],
-            ['variable_name' => 'return_date', 'variable_description' => 'Return date', 'example_value' => 'March 16, 2024', 'is_system_variable' => true],
+            ['variable_name' => 'departure_date', 'variable_description' => 'Departure date', 'example_value' => 'January 14, 2025', 'is_system_variable' => true],
+            ['variable_name' => 'return_date', 'variable_description' => 'Return date', 'example_value' => 'January 16, 2025', 'is_system_variable' => true],
             ['variable_name' => 'hotel_name', 'variable_description' => 'Hotel name', 'example_value' => 'Grand Hotel', 'is_system_variable' => true],
             
             // System variables
             ['variable_name' => 'system_name', 'variable_description' => 'Name of the system', 'example_value' => 'Conference Management System', 'is_system_variable' => true],
             ['variable_name' => 'admin_email', 'variable_description' => 'Admin email address', 'example_value' => 'admin@example.com', 'is_system_variable' => true],
             ['variable_name' => 'support_email', 'variable_description' => 'Support email address', 'example_value' => 'support@example.com', 'is_system_variable' => true],
-            ['variable_name' => 'current_date', 'variable_description' => 'Current date', 'example_value' => 'March 1, 2024', 'is_system_variable' => true],
+            ['variable_name' => 'current_date', 'variable_description' => 'Current date', 'example_value' => 'January 1, 2025', 'is_system_variable' => true],
             ['variable_name' => 'current_time', 'variable_description' => 'Current time', 'example_value' => '2:30 PM', 'is_system_variable' => true],
-            ['variable_name' => 'current_year', 'variable_description' => 'Current year', 'example_value' => '2024', 'is_system_variable' => true],
+            ['variable_name' => 'current_year', 'variable_description' => 'Current year', 'example_value' => '2025', 'is_system_variable' => true],
         ];
 
         foreach ($variables as $variable) {

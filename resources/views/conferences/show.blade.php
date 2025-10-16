@@ -169,11 +169,7 @@
     </div>
     <div class="flex justify-end mt-6">
         <a href="{{ route('conferences.edit', $conference) }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold mr-2">Edit</a>
-        <form method="POST" action="{{ route('conferences.destroy', $conference) }}" onsubmit="return confirm('Are you sure you want to delete this conference?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">Delete</button>
-        </form>
+        <button onclick="confirmConferenceDeletion({{ $conference->id }}, '{{ addslashes($conference->name) }}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">Delete</button>
     </div>
     <div class="mt-4">
         <a href="{{ route('conferences.index') }}" class="text-gray-600 hover:text-gray-900">Back to list</a>
@@ -388,5 +384,246 @@ function updateSortIndicators(columnIndex, direction) {
     }
 }
 
+// Conference deletion confirmation functions
+function confirmConferenceDeletion(conferenceId, conferenceName) {
+    // Show loading state
+    const modal = document.getElementById('deleteConferenceModal');
+    const modalContent = modal.querySelector('.modal-content');
+    modalContent.innerHTML = `
+        <div class="flex items-center justify-center p-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+            <span class="ml-3 text-gray-600">Loading conference details...</span>
+        </div>
+    `;
+    modal.classList.remove('hidden');
+    
+    // Fetch deletion info
+    fetch(`/conferences/${conferenceId}/deletion-info`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        showDeletionConfirmation(data);
+    })
+    .catch(error => {
+        console.error('Error fetching deletion info:', error);
+        modalContent.innerHTML = `
+            <div class="p-6">
+                <div class="flex items-center justify-center text-red-600 mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Error Loading Details</h3>
+                <p class="text-gray-600 mb-2">Unable to load conference deletion details.</p>
+                <p class="text-sm text-gray-500 mb-6">Error: ${error.message}</p>
+                <div class="flex justify-end">
+                    <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function showDeletionConfirmation(data) {
+    const modalContent = document.getElementById('deleteConferenceModal').querySelector('.modal-content');
+    const { conference, venue, related_data, participant_users_info, has_related_data } = data;
+    
+    let relatedDataHtml = '';
+    if (has_related_data) {
+        const items = [];
+        if (related_data.participants > 0) items.push(`${related_data.participants} participant(s)`);
+        if (related_data.sessions > 0) items.push(`${related_data.sessions} session(s)`);
+        if (related_data.tasks > 0) items.push(`${related_data.tasks} task(s)`);
+        if (related_data.notifications > 0) items.push(`${related_data.notifications} notification(s)`);
+        if (related_data.communications > 0) items.push(`${related_data.communications} communication(s)`);
+        if (related_data.checkins > 0) items.push(`${related_data.checkins} checkin(s)`);
+        if (related_data.conference_docs > 0) items.push(`${related_data.conference_docs} document(s)`);
+        
+        relatedDataHtml = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <div>
+                        <h4 class="font-semibold text-yellow-800 mb-2">Warning: This action will also delete:</h4>
+                        <ul class="text-yellow-700 space-y-1">
+                            ${items.map(item => `<li>• ${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    modalContent.innerHTML = `
+        <div class="p-6">
+            <div class="flex items-center justify-center text-red-600 mb-4">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Delete Conference</h3>
+            <p class="text-gray-600 mb-4">
+                Are you sure you want to delete the conference <strong>"${conference.name}"</strong>?
+            </p>
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-700">Start Date:</span>
+                        <span class="text-gray-600">${new Date(conference.start_date).toLocaleDateString()}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">End Date:</span>
+                        <span class="text-gray-600">${new Date(conference.end_date).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            </div>
+            ${venue ? `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-blue-800 mb-2">Venue Information</h4>
+                            <div class="space-y-1 text-sm">
+                                <div><span class="font-medium text-blue-700">Venue:</span> <span class="text-blue-600">${venue.name}</span></div>
+                                <div><span class="font-medium text-blue-700">Address:</span> <span class="text-blue-600">${venue.address || 'Not specified'}</span></div>
+                                <div><span class="font-medium text-blue-700">Capacity:</span> <span class="text-blue-600">${venue.capacity || 'Not specified'}</span></div>
+                                ${venue.other_conferences_count > 0 ? `
+                                    <div class="mt-2 p-2 bg-blue-100 rounded">
+                                        <div class="font-medium text-blue-800">⚠️ This venue is also used by ${venue.other_conferences_count} other conference(s):</div>
+                                        <ul class="mt-1 text-blue-700 text-xs">
+                                            ${venue.other_conferences.map(conf => `<li>• ${conf.name} (${new Date(conf.start_date).toLocaleDateString()} - ${new Date(conf.end_date).toLocaleDateString()})</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : `
+                                    <div class="mt-2 p-2 bg-green-100 rounded">
+                                        <div class="font-medium text-green-800">✓ This venue is only used by this conference</div>
+                                        <div class="mt-2">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" id="deleteVenueCheckbox" name="delete_venue" value="1" class="rounded border-gray-300 text-red-600 shadow-sm focus:border-red-500 focus:ring-red-500">
+                                                <span class="ml-2 text-sm text-green-700 font-medium">Also delete this venue</span>
+                                            </label>
+                                            <p class="text-xs text-green-600 mt-1">⚠️ This will permanently delete the venue and cannot be undone.</p>
+                                        </div>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+            ${participant_users_info && participant_users_info.single_participant_users > 0 ? `
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-orange-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-orange-800 mb-2">Participant User Deletion</h4>
+                            <div class="text-sm text-orange-700 mb-3">
+                                ${participant_users_info.single_participant_users} user(s) have only one participant profile (this conference only):
+                            </div>
+                            <div class="space-y-2 mb-3">
+                                ${participant_users_info.single_participant_users_list.map(user => `
+                                    <div class="text-xs bg-orange-100 p-2 rounded">
+                                        <span class="font-medium">${user.user_name}</span> (${user.user_email})
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="deleteParticipantUsersCheckbox" name="delete_participant_users" value="1" class="rounded border-gray-300 text-red-600 shadow-sm focus:border-red-500 focus:ring-red-500">
+                                <span class="ml-2 text-sm text-orange-700 font-medium">Also delete these user accounts</span>
+                            </label>
+                            <p class="text-xs text-orange-600 mt-1">⚠️ This will permanently delete the user accounts and cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+            ${relatedDataHtml}
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="deleteConference(${conference.id})" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Delete Conference
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function deleteConference(conferenceId) {
+    // Create and submit the form
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/conferences/${conferenceId}`;
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = '_token';
+    csrfToken.value = '{{ csrf_token() }}';
+    
+    const methodField = document.createElement('input');
+    methodField.type = 'hidden';
+    methodField.name = '_method';
+    methodField.value = 'DELETE';
+    
+    // Add venue deletion checkbox value if checked
+    const deleteVenueCheckbox = document.getElementById('deleteVenueCheckbox');
+    if (deleteVenueCheckbox && deleteVenueCheckbox.checked) {
+        const deleteVenueField = document.createElement('input');
+        deleteVenueField.type = 'hidden';
+        deleteVenueField.name = 'delete_venue';
+        deleteVenueField.value = '1';
+        form.appendChild(deleteVenueField);
+    }
+    
+    // Add participant user deletion checkbox value if checked
+    const deleteParticipantUsersCheckbox = document.getElementById('deleteParticipantUsersCheckbox');
+    if (deleteParticipantUsersCheckbox && deleteParticipantUsersCheckbox.checked) {
+        const deleteParticipantUsersField = document.createElement('input');
+        deleteParticipantUsersField.type = 'hidden';
+        deleteParticipantUsersField.name = 'delete_participant_users';
+        deleteParticipantUsersField.value = '1';
+        form.appendChild(deleteParticipantUsersField);
+    }
+    
+    form.appendChild(csrfToken);
+    form.appendChild(methodField);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteConferenceModal').classList.add('hidden');
+}
+
 </script>
+
+<!-- Conference Deletion Confirmation Modal -->
+<div id="deleteConferenceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="modal-content">
+            <!-- Content will be dynamically loaded here -->
+        </div>
+    </div>
+</div>
+
 @endsection 

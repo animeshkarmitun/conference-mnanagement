@@ -16,13 +16,16 @@ class PasswordlessLogin extends Model
         'token',
         'expires_at',
         'used_at',
+        'use_count',
         'ip_address',
         'user_agent',
+        'data',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
         'used_at' => 'datetime',
+        'data' => 'array',
     ];
 
     /**
@@ -47,6 +50,7 @@ class PasswordlessLogin extends Model
             'user_id' => $user->id,
             'token' => self::generateToken(),
             'expires_at' => now()->addHours($expirationHours),
+            'use_count' => 0,
         ]);
     }
 
@@ -55,7 +59,15 @@ class PasswordlessLogin extends Model
      */
     public function isValid(): bool
     {
-        return $this->expires_at->isFuture() && is_null($this->used_at);
+        return $this->expires_at->isFuture();
+    }
+
+    /**
+     * Check if token has been used at least once
+     */
+    public function hasBeenUsed(): bool
+    {
+        return !is_null($this->used_at);
     }
 
     /**
@@ -63,11 +75,22 @@ class PasswordlessLogin extends Model
      */
     public function markAsUsed(string $ipAddress = null, string $userAgent = null): void
     {
-        $this->update([
-            'used_at' => now(),
-            'ip_address' => $ipAddress,
-            'user_agent' => $userAgent,
-        ]);
+        $this->increment('use_count');
+        
+        // Set used_at only on first use
+        if (is_null($this->used_at)) {
+            $this->update([
+                'used_at' => now(),
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+            ]);
+        } else {
+            // Update IP and user agent on subsequent uses
+            $this->update([
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+            ]);
+        }
     }
 
     /**
@@ -95,12 +118,19 @@ class PasswordlessLogin extends Model
     }
 
     /**
-     * Scope for valid tokens
+     * Scope for valid tokens (not expired)
      */
     public function scopeValid($query)
     {
-        return $query->where('expires_at', '>', now())
-                    ->whereNull('used_at');
+        return $query->where('expires_at', '>', now());
+    }
+
+    /**
+     * Scope for active tokens (not expired, regardless of use)
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('expires_at', '>', now());
     }
 
     /**

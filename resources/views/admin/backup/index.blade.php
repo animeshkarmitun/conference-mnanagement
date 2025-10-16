@@ -14,7 +14,7 @@
     
     .progress-bar {
         transition: width 0.6s ease;
-        background: linear-gradient(45deg, #28a745, #20c997);
+        background-color: #28a745;
         position: relative;
         overflow: hidden;
     }
@@ -26,15 +26,12 @@
         left: 0;
         bottom: 0;
         right: 0;
-        background-image: linear-gradient(
+        background-image: repeating-linear-gradient(
             -45deg,
-            rgba(255, 255, 255, .2) 25%,
-            transparent 25%,
-            transparent 50%,
-            rgba(255, 255, 255, .2) 50%,
-            rgba(255, 255, 255, .2) 75%,
-            transparent 75%,
-            transparent
+            rgba(255, 255, 255, .2) 0px,
+            rgba(255, 255, 255, .2) 10px,
+            transparent 10px,
+            transparent 20px
         );
         background-size: 50px 50px;
         animation: move 2s linear infinite;
@@ -64,23 +61,23 @@
     }
     
     .status-completed {
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background-color: #28a745;
         color: white;
     }
     
     .status-in-progress {
-        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        background-color: #ffc107;
         color: white;
         animation: pulse 2s infinite;
     }
     
     .status-failed {
-        background: linear-gradient(135deg, #dc3545, #e83e8c);
+        background-color: #dc3545;
         color: white;
     }
     
     .status-pending {
-        background: linear-gradient(135deg, #6c757d, #495057);
+        background-color: #6c757d;
         color: white;
     }
     
@@ -99,7 +96,7 @@
     }
     
     .table th {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        background-color: #f8f9fa;
         border: none;
         font-weight: 600;
         text-transform: uppercase;
@@ -115,117 +112,101 @@
         border-color: #e9ecef;
     }
     
-    /* Enhanced Cards */
+    /* Modern Cards */
     .card {
         border: none;
-        border-radius: 15px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
         overflow: hidden;
     }
     
     .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
     
     .card-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1rem 1.5rem;
         font-weight: 600;
     }
     
-    /* Enhanced Buttons */
+    /* Modern Buttons */
     .btn {
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: 500;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-    
-    .btn:hover::before {
-        left: 100%;
+        transition: all 0.2s ease;
+        border-width: 1px;
     }
     
     .btn:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
     }
     
     .btn-success {
-        background: linear-gradient(135deg, #28a745, #20c997);
-        border: none;
+        background-color: #28a745;
+        border-color: #28a745;
     }
     
     .btn-warning {
-        background: linear-gradient(135deg, #ffc107, #fd7e14);
-        border: none;
-        color: white;
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #212529;
     }
     
     .btn-info {
-        background: linear-gradient(135deg, #17a2b8, #6f42c1);
-        border: none;
+        background-color: #17a2b8;
+        border-color: #17a2b8;
     }
     
     .btn-secondary {
-        background: linear-gradient(135deg, #6c757d, #495057);
-        border: none;
+        background-color: #6c757d;
+        border-color: #6c757d;
     }
     
-    /* Quick Actions Enhancement */
-    .quick-actions {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .quick-actions .btn {
-        margin: 0.25rem;
-        min-width: 0;
-    }
-    
-    /* Storage Info Cards */
-    .storage-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .storage-metric {
-        text-align: center;
+    /* Compact Layout */
+    .container-fluid {
         padding: 1rem;
     }
     
-    .storage-metric h6 {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        opacity: 0.8;
-        margin-bottom: 0.5rem;
+    .row {
+        margin-bottom: 1rem;
     }
     
-    .storage-metric h4 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 0;
+    .row.g-3 {
+        --bs-gutter-x: 1rem;
+        --bs-gutter-y: 1rem;
+    }
+    
+    /* Modern Table */
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #495057;
+    }
+    
+    .table td {
+        padding: 0.75rem;
+        vertical-align: middle;
+        border-color: #e9ecef;
+        font-size: 0.875rem;
     }
     
     /* Mobile Responsiveness */
@@ -254,7 +235,14 @@
     
     /* Loading States */
     .loading-skeleton {
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-color: #f0f0f0;
+        background-image: repeating-linear-gradient(
+            90deg,
+            #f0f0f0 0px,
+            #f0f0f0 40px,
+            #e0e0e0 40px,
+            #e0e0e0 80px
+        );
         background-size: 200% 100%;
         animation: loading 1.5s infinite;
     }
@@ -264,69 +252,18 @@
         100% { background-position: -200% 0; }
     }
     
-    /* Floating Action Button Enhancement */
-    .fab {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #28a745, #20c997);
-        border: none;
-        color: white;
-        font-size: 1.5rem;
-        box-shadow: 0 4px 20px rgba(40, 167, 69, 0.4);
-        transition: all 0.3s ease;
-        animation: float 3s ease-in-out infinite;
-    }
-    
-    .fab:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 25px rgba(40, 167, 69, 0.6);
-    }
-    
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-    
-    /* FAB Tooltip */
-    .fab-container {
-        position: relative;
-    }
-    
-    .fab-tooltip {
-        position: absolute;
-        right: 70px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 0.5rem 1rem;
+    /* Status Indicators */
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
         border-radius: 6px;
-        font-size: 0.875rem;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        pointer-events: none;
     }
     
-    .fab-tooltip::after {
-        content: '';
-        position: absolute;
-        left: 100%;
-        top: 50%;
-        transform: translateY(-50%);
-        border: 5px solid transparent;
-        border-left-color: rgba(0, 0, 0, 0.8);
-    }
-    
-    .fab-container:hover .fab-tooltip {
-        opacity: 1;
-        visibility: visible;
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
     }
 </style>
 @endpush
@@ -338,153 +275,102 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">
+                    <h3 class="card-title mb-0">
                         <i class="fas fa-database me-2"></i>Backup Management
                     </h3>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-success" onclick="createInstantBackup()" title="Create a quick full backup">
-                            <i class="fas fa-bolt me-1"></i>Instant Backup
-                        </button>
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createBackupModal">
                             <i class="fas fa-plus me-1"></i>Create Backup
                         </button>
-                        <button type="button" class="btn btn-info" onclick="refreshStats()">
+                        <button type="button" class="btn btn-outline-secondary" onclick="refreshStats()">
                             <i class="fas fa-sync-alt me-1"></i>Refresh
                         </button>
                     </div>
                 </div>
                 <div class="card-body">
                     <!-- Statistics Cards -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="card bg-primary text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h4 class="mb-0" id="totalBackups">{{ $stats['total_backups'] }}</h4>
-                                            <p class="mb-0">Total Backups</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <i class="fas fa-database fa-2x"></i>
-                                        </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-primary text-white h-100">
+                                <div class="card-body d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1" id="totalBackups">{{ $stats['total_backups'] }}</h5>
+                                        <small class="opacity-75">Total Backups</small>
                                     </div>
+                                    <i class="fas fa-database fa-2x opacity-75"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="card bg-success text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h4 class="mb-0" id="completedBackups">{{ $stats['completed_backups'] }}</h4>
-                                            <p class="mb-0">Completed</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <i class="fas fa-check-circle fa-2x"></i>
-                                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-success text-white h-100">
+                                <div class="card-body d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1" id="completedBackups">{{ $stats['completed_backups'] }}</h5>
+                                        <small class="opacity-75">Completed</small>
                                     </div>
+                                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="card bg-warning text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h4 class="mb-0" id="successRate">{{ $stats['success_rate'] }}%</h4>
-                                            <p class="mb-0">Success Rate</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <i class="fas fa-chart-line fa-2x"></i>
-                                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-warning text-white h-100">
+                                <div class="card-body d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1" id="successRate">{{ $stats['success_rate'] }}%</h5>
+                                        <small class="opacity-75">Success Rate</small>
                                     </div>
+                                    <i class="fas fa-chart-line fa-2x opacity-75"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="card bg-info text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h4 class="mb-0" id="totalSize">{{ $stats['formatted_size'] }}</h4>
-                                            <p class="mb-0">Total Size</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <i class="fas fa-hdd fa-2x"></i>
-                                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-info text-white h-100">
+                                <div class="card-body d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1" id="totalSize">{{ $stats['formatted_size'] }}</h5>
+                                        <small class="opacity-75">Total Size</small>
                                     </div>
+                                    <i class="fas fa-hdd fa-2x opacity-75"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Enhanced Quick Actions -->
+                    <!-- Quick Actions -->
                     <div class="row mb-4">
                         <div class="col-12">
-                            <div class="quick-actions">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-rocket me-2"></i>Quick Actions
-                                    </h5>
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge bg-primary me-2" id="statusIndicator">
-                                            <i class="fas fa-circle me-1"></i>System Ready
+                            <div class="card border-0 bg-light">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0 text-muted">
+                                            <i class="fas fa-bolt me-2"></i>Quick Actions
+                                        </h6>
+                                        <span class="badge bg-success" id="statusIndicator">
+                                            <i class="fas fa-circle me-1"></i>Ready
                                         </span>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="refreshStats()" title="Refresh all data">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
                                     </div>
-                                </div>
-                                
-                                <div class="row g-2">
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
-                                        <button type="button" class="btn btn-success w-100" onclick="createInstantBackup()" title="Create a quick full backup">
-                                            <i class="fas fa-bolt me-2"></i>
-                                            <span class="d-none d-md-inline">Instant Backup</span>
-                                            <span class="d-md-none">Backup</span>
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
-                                        <button type="button" class="btn btn-warning w-100" onclick="showCleanupModal()" title="Clean up old backups">
-                                            <i class="fas fa-broom me-2"></i>
-                                            <span class="d-none d-md-inline">Cleanup</span>
-                                            <span class="d-md-none">Clean</span>
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
-                                        <button type="button" class="btn btn-info w-100" onclick="testConnection()" title="Test backup system">
-                                            <i class="fas fa-stethoscope me-2"></i>
-                                            <span class="d-none d-md-inline">System Test</span>
-                                            <span class="d-md-none">Test</span>
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
-                                        <button type="button" class="btn btn-secondary w-100" onclick="testSimpleBackup()" title="Test simple backup">
-                                            <i class="fas fa-vial me-2"></i>
-                                            <span class="d-none d-md-inline">Simple Test</span>
-                                            <span class="d-md-none">Simple</span>
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
-                                        <button type="button" class="btn btn-outline-primary w-100" onclick="showCreateBackupModal()" title="Create custom backup">
-                                            <i class="fas fa-plus me-2"></i>
-                                            <span class="d-none d-md-inline">New Backup</span>
-                                            <span class="d-md-none">New</span>
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
-                                        <button type="button" class="btn btn-outline-info w-100" onclick="exportBackupList()" title="Export backup list">
-                                            <i class="fas fa-download me-2"></i>
-                                            <span class="d-none d-md-inline">Export</span>
-                                            <span class="d-md-none">Export</span>
-                                        </button>
-                                    </div>
-                                    <div class="col-lg-2 col-md-4 col-sm-6">
-                                        <button type="button" class="btn btn-outline-warning w-100" onclick="fixBackupPaths()" title="Fix backup file paths">
-                                            <i class="fas fa-wrench me-2"></i>
-                                            <span class="d-none d-md-inline">Fix Paths</span>
-                                            <span class="d-md-none">Fix</span>
-                                        </button>
+                                    
+                                    <div class="row g-2">
+                                        <div class="col-lg-3 col-md-4 col-sm-6">
+                                            <button type="button" class="btn btn-success w-100 btn-sm" onclick="createInstantBackup()" title="Create a quick full backup">
+                                                <i class="fas fa-bolt me-1"></i>Instant Backup
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-3 col-md-4 col-sm-6">
+                                            <button type="button" class="btn btn-warning w-100 btn-sm" onclick="showCleanupModal()" title="Clean up old backups">
+                                                <i class="fas fa-broom me-1"></i>Cleanup
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-3 col-md-4 col-sm-6">
+                                            <button type="button" class="btn btn-info w-100 btn-sm" onclick="testConnection()" title="Test backup system">
+                                                <i class="fas fa-stethoscope me-1"></i>System Test
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-3 col-md-4 col-sm-6">
+                                            <button type="button" class="btn btn-outline-secondary w-100 btn-sm" onclick="exportBackupList()" title="Export backup list">
+                                                <i class="fas fa-download me-1"></i>Export
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -526,79 +412,45 @@
                         </div>
                     </div>
 
-                    <!-- Enhanced Storage Information -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h5 class="card-title mb-0">
-                                            <i class="fas fa-database me-2"></i>Storage Information
-                                        </h5>
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-success me-2" id="storageStatus">
-                                                <i class="fas fa-check-circle me-1"></i>Healthy
-                                            </span>
-                                            <button type="button" class="btn btn-outline-light btn-sm" onclick="refreshStorageInfo()" title="Refresh storage info">
-                                                <i class="fas fa-sync-alt"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                    <!-- Storage Information -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-hdd text-primary fa-2x mb-2"></i>
+                                    <h6 class="mb-1">Used Space</h6>
+                                    <h5 class="text-primary mb-1" id="usedSpace">{{ $storageInfo['formatted_used_space'] }}</h5>
+                                    <small class="text-muted" id="usedSpacePercent">0% of available</small>
                                 </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        <div class="col-lg-3 col-md-6">
-                                            <div class="storage-metric">
-                                                <div class="d-flex align-items-center justify-content-center mb-2">
-                                                    <i class="fas fa-hdd text-primary me-2"></i>
-                                                    <h6 class="mb-0">Used Space</h6>
-                                                </div>
-                                                <h4 id="usedSpace" class="text-primary">{{ $storageInfo['formatted_used_space'] }}</h4>
-                                                <small class="text-muted" id="usedSpacePercent">0% of available</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-3 col-md-6">
-                                            <div class="storage-metric">
-                                                <div class="d-flex align-items-center justify-content-center mb-2">
-                                                    <i class="fas fa-files text-info me-2"></i>
-                                                    <h6 class="mb-0">File Count</h6>
-                                                </div>
-                                                <h4 id="fileCount" class="text-info">{{ $storageInfo['file_count'] }}</h4>
-                                                <small class="text-muted" id="fileCountTrend">No change</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-3 col-md-6">
-                                            <div class="storage-metric">
-                                                <div class="d-flex align-items-center justify-content-center mb-2">
-                                                    <i class="fas fa-clock text-warning me-2"></i>
-                                                    <h6 class="mb-0">Last Backup</h6>
-                                                </div>
-                                                <h4 id="lastBackup" class="text-warning">{{ $stats['last_backup'] ? $stats['last_backup']->format('M d, Y') : 'Never' }}</h4>
-                                                <small class="text-muted" id="lastBackupTime">{{ $stats['last_backup'] ? $stats['last_backup']->format('H:i:s') : 'No backups yet' }}</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-3 col-md-6">
-                                            <div class="storage-metric">
-                                                <div class="d-flex align-items-center justify-content-center mb-2">
-                                                    <i class="fas fa-weight text-success me-2"></i>
-                                                    <h6 class="mb-0">Last Size</h6>
-                                                </div>
-                                                <h4 id="lastBackupSize" class="text-success">{{ $stats['last_backup_size'] ?? 'N/A' }}</h4>
-                                                <small class="text-muted" id="sizeTrend">No data</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Storage Usage Bar -->
-                                    <div class="mt-4">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="mb-0">Storage Usage</h6>
-                                            <span class="text-muted" id="storageUsageText">0% used</span>
-                                        </div>
-                                        <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-gradient" id="storageUsageBar" role="progressbar" style="width: 0%"></div>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-files text-info fa-2x mb-2"></i>
+                                    <h6 class="mb-1">File Count</h6>
+                                    <h5 class="text-info mb-1" id="fileCount">{{ $storageInfo['file_count'] }}</h5>
+                                    <small class="text-muted" id="fileCountTrend">No change</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-clock text-warning fa-2x mb-2"></i>
+                                    <h6 class="mb-1">Last Backup</h6>
+                                    <h5 class="text-warning mb-1" id="lastBackup">{{ $stats['last_backup'] ? $stats['last_backup']->format('M d, Y') : 'Never' }}</h5>
+                                    <small class="text-muted" id="lastBackupTime">{{ $stats['last_backup'] ? $stats['last_backup']->format('H:i:s') : 'No backups yet' }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-weight text-success fa-2x mb-2"></i>
+                                    <h6 class="mb-1">Last Size</h6>
+                                    <h5 class="text-success mb-1" id="lastBackupSize">{{ $stats['last_backup_size'] ?? 'N/A' }}</h5>
+                                    <small class="text-muted" id="sizeTrend">No data</small>
                                 </div>
                             </div>
                         </div>
@@ -610,20 +462,15 @@
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="card-title mb-0">Recent Backups</h5>
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showRestoreHistory()">
-                                            <i class="fas fa-history me-1"></i>Restore History
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="showCleanupModal()">
-                                            <i class="fas fa-broom me-1"></i>Cleanup
-                                        </button>
-                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showRestoreHistory()">
+                                        <i class="fas fa-history me-1"></i>Restore History
+                                    </button>
                                 </div>
                                 <div class="card-body">
                                     <!-- Desktop Table View -->
                                     <div class="table-responsive d-none d-lg-block">
-                                        <table class="table table-striped table-hover" id="backupsTable">
-                                            <thead class="table-dark">
+                                        <table class="table table-hover" id="backupsTable">
+                                            <thead>
                                                 <tr>
                                                     <th>ID</th>
                                                     <th>Type</th>
@@ -846,30 +693,124 @@
     </div>
 </div>
 
-<!-- Cleanup Modal -->
+<!-- Enhanced Cleanup Modal -->
 <div class="modal fade" id="cleanupModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Cleanup Old Backups</h5>
+                <h5 class="modal-title">
+                    <i class="fas fa-broom me-2"></i>Cleanup Backups
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="cleanupForm">
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="retentionDays" class="form-label">Retention Period (Days)</label>
-                        <input type="number" class="form-control" id="retentionDays" name="days" value="30" min="1" max="365" required>
-                        <div class="form-text">Backups older than this number of days will be deleted</div>
+                    <!-- Cleanup Type Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">What would you like to clean up?</label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="cleanupFiles" name="cleanup_types[]" value="files">
+                                            <label class="form-check-label fw-bold" for="cleanupFiles">
+                                                <i class="fas fa-file me-2 text-primary"></i>Backup Files
+                                            </label>
+                                        </div>
+                                        <small class="text-muted">Remove physical backup files from storage</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="cleanupDatabase" name="cleanup_types[]" value="database">
+                                            <label class="form-check-label fw-bold" for="cleanupDatabase">
+                                                <i class="fas fa-database me-2 text-info"></i>Database Records
+                                            </label>
+                                        </div>
+                                        <small class="text-muted">Remove backup records from database</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> This action cannot be undone. Make sure you have important backups stored elsewhere.
+
+                    <!-- Retention Period -->
+                    <div class="mb-4">
+                        <label for="retentionDays" class="form-label fw-bold">Retention Period</label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <select class="form-select" id="retentionPeriod" name="retention_period" onchange="updateRetentionDays()">
+                                    <option value="custom">Custom Period</option>
+                                    <option value="7">Last 7 days</option>
+                                    <option value="14">Last 2 weeks</option>
+                                    <option value="30" selected>Last month</option>
+                                    <option value="90">Last 3 months</option>
+                                    <option value="180">Last 6 months</option>
+                                    <option value="365">Last year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="number" class="form-control" id="retentionDays" name="days" value="30" min="1" max="365" placeholder="Enter days">
+                            </div>
+                        </div>
+                        <div class="form-text">Backups older than this period will be deleted</div>
+                    </div>
+
+                    <!-- Additional Options -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Additional Options</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="cleanupFailed" name="cleanup_failed" value="1">
+                            <label class="form-check-label" for="cleanupFailed">
+                                <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Include failed backups
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="cleanupInProgress" name="cleanup_in_progress" value="1">
+                            <label class="form-check-label" for="cleanupInProgress">
+                                <i class="fas fa-spinner me-2 text-info"></i>Include incomplete backups
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createSafetyBackup" name="create_safety_backup" value="1" checked>
+                            <label class="form-check-label" for="createSafetyBackup">
+                                <i class="fas fa-shield-alt me-2 text-success"></i>Create safety backup before cleanup
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div class="mb-4" id="cleanupPreview" style="display: none;">
+                        <label class="form-label fw-bold">Cleanup Preview</label>
+                        <div class="alert alert-light border">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Backups to be deleted:</span>
+                                <span class="badge bg-danger" id="previewCount">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span>Total size to be freed:</span>
+                                <span class="badge bg-info" id="previewSize">0 MB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warning -->
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone. Make sure you have important backups stored elsewhere.
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info" onclick="previewCleanup()">
+                        <i class="fas fa-eye me-1"></i>Preview
+                    </button>
                     <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-broom me-1"></i>Cleanup
+                        <i class="fas fa-broom me-1"></i>Execute Cleanup
                     </button>
                 </div>
             </form>
@@ -1272,6 +1213,19 @@ function executeRestore() {
         } else {
             console.log('Restore failed, showing error alert');
             showAlert('error', data.message);
+            
+            // Close modal on error too
+            const modalElement = document.getElementById('restoreModal');
+            if (modalElement) {
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                    console.log('Modal hidden after error');
+                } else {
+                    const newModalInstance = new bootstrap.Modal(modalElement);
+                    newModalInstance.hide();
+                }
+            }
         }
     })
     .catch(error => {
@@ -1282,6 +1236,19 @@ function executeRestore() {
         console.error('Error stack:', error.stack);
         console.error('=============================');
         showAlert('error', 'An error occurred while restoring backup. Check console for details.');
+        
+        // Close modal on error too
+        const modalElement = document.getElementById('restoreModal');
+        if (modalElement) {
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+                console.log('Modal hidden after catch error');
+            } else {
+                const newModalInstance = new bootstrap.Modal(modalElement);
+                newModalInstance.hide();
+            }
+        }
     });
 }
 
@@ -1316,7 +1283,74 @@ function deleteBackup(id) {
 
 // Show cleanup modal
 function showCleanupModal() {
-    bootstrap.Modal.getInstance(document.getElementById('cleanupModal')).show();
+    // Reset form to default values
+    document.getElementById('cleanupForm').reset();
+    document.getElementById('retentionPeriod').value = '30';
+    document.getElementById('retentionDays').value = '30';
+    document.getElementById('cleanupFiles').checked = true;
+    document.getElementById('cleanupDatabase').checked = true;
+    document.getElementById('createSafetyBackup').checked = true;
+    document.getElementById('cleanupPreview').style.display = 'none';
+    
+    const modal = new bootstrap.Modal(document.getElementById('cleanupModal'));
+    modal.show();
+}
+
+// Update retention days based on selection
+function updateRetentionDays() {
+    const select = document.getElementById('retentionPeriod');
+    const input = document.getElementById('retentionDays');
+    
+    if (select.value !== 'custom') {
+        input.value = select.value;
+        input.disabled = true;
+    } else {
+        input.disabled = false;
+        input.focus();
+    }
+}
+
+// Preview cleanup operation
+function previewCleanup() {
+    const form = document.getElementById('cleanupForm');
+    const formData = new FormData(form);
+    
+    // Validate form
+    const cleanupTypes = formData.getAll('cleanup_types[]');
+    if (cleanupTypes.length === 0) {
+        showAlert('warning', 'Please select at least one cleanup type (Files or Database)');
+        return;
+    }
+    
+    showLoading('Analyzing backups for cleanup...');
+    
+    fetch('{{ route("admin.backup.cleanup.preview") }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            document.getElementById('previewCount').textContent = data.backup_count || '0';
+            document.getElementById('previewSize').textContent = data.total_size || '0 MB';
+            document.getElementById('cleanupPreview').style.display = 'block';
+            
+            if (data.backup_count === 0) {
+                showAlert('info', 'No backups found matching the cleanup criteria');
+            }
+        } else {
+            showAlert('error', data.message || 'Failed to preview cleanup');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showAlert('error', 'An error occurred while previewing cleanup');
+        console.error('Error:', error);
+    });
 }
 
 // Execute cleanup
@@ -1324,8 +1358,20 @@ function executeCleanup() {
     const form = document.getElementById('cleanupForm');
     const formData = new FormData(form);
     
-    if (confirm('Are you sure you want to delete old backups? This action cannot be undone.')) {
-        showLoading('Cleaning up old backups...');
+    // Validate form
+    const cleanupTypes = formData.getAll('cleanup_types[]');
+    if (cleanupTypes.length === 0) {
+        showAlert('warning', 'Please select at least one cleanup type (Files or Database)');
+        return;
+    }
+    
+    // Create confirmation message
+    const types = cleanupTypes.join(' and ');
+    const days = document.getElementById('retentionDays').value;
+    const confirmMessage = `Are you sure you want to clean up ${types} older than ${days} days? This action cannot be undone.`;
+    
+    if (confirm(confirmMessage)) {
+        showLoading('Executing cleanup operation...');
         
         fetch('{{ route("admin.backup.cleanup") }}', {
             method: 'POST',
@@ -1339,7 +1385,10 @@ function executeCleanup() {
             hideLoading();
             if (data.success) {
                 showAlert('success', data.message);
-                bootstrap.Modal.getInstance(document.getElementById('cleanupModal')).hide();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('cleanupModal'));
+                if (modal) {
+                    modal.hide();
+                }
                 location.reload();
             } else {
                 showAlert('error', data.message);
@@ -1820,6 +1869,27 @@ function fixBackupPaths() {
     }
 }
 
+// Load statistics
+function loadStats() {
+    fetch('{{ route("admin.backup.stats") }}')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateStats(data.backup_stats, data.storage_info);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading stats:', error);
+    });
+}
+
+// Load backup list
+function loadBackups() {
+    // This function can be used to refresh the backup list if needed
+    // For now, the backup list is loaded with the page
+    console.log('Backup list loaded');
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
     loadStats();
@@ -1846,11 +1916,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Enhanced Floating Action Button -->
-<div class="fab-container">
-    <button type="button" class="fab" onclick="createInstantBackup()" title="Create Instant Backup">
-        <i class="fas fa-bolt"></i>
-    </button>
-    <div class="fab-tooltip">Create Instant Backup</div>
-</div>
 @endpush

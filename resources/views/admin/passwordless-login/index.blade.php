@@ -157,14 +157,19 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($login->used_at)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Used
-                                    </span>
-                                @elseif($login->expires_at->isPast())
+                                @if($login->expires_at->isPast())
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                         Expired
                                     </span>
+                                @elseif($login->used_at)
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Used
+                                        </span>
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ $login->use_count }}x
+                                        </span>
+                                    </div>
                                 @else
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         Active
@@ -178,7 +183,7 @@
                                 {{ $login->expires_at->format('M d, Y H:i') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                @if(!$login->used_at && $login->expires_at->isFuture())
+                                @if($login->expires_at->isFuture())
                                     <button onclick="copyToClipboard('{{ route('passwordless-login.verify', $login->token) }}')" 
                                             class="text-indigo-600 hover:text-indigo-900 mr-3">
                                         Copy Link

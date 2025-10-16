@@ -34,7 +34,6 @@ class RoomTypeController extends Controller
             'name' => 'required|string|max:50|unique:room_types,name',
             'description' => 'nullable|string',
             'default_beds' => 'required|integer|min:1|max:10',
-            'base_price' => 'nullable|numeric|min:0',
             'amenities' => 'nullable|array',
             'amenities.*' => 'string|max:100',
         ]);
@@ -73,7 +72,6 @@ class RoomTypeController extends Controller
             'name' => 'required|string|max:50|unique:room_types,name,' . $roomType->id,
             'description' => 'nullable|string',
             'default_beds' => 'required|integer|min:1|max:10',
-            'base_price' => 'nullable|numeric|min:0',
             'amenities' => 'nullable|array',
             'amenities.*' => 'string|max:100',
         ]);

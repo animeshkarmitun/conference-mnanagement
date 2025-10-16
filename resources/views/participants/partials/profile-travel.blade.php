@@ -390,13 +390,6 @@
                         <input type="number" id="number_of_beds" name="number_of_beds" min="1" max="10" value="{{ old('number_of_beds', optional($participant->roomAllocation)->number_of_beds) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="1">
                     </div>
                     
-                    <div>
-                        <label for="price_per_night" class="block text-sm font-medium text-gray-700">Price per Night</label>
-                        <div class="mt-1 flex rounded-md shadow-sm">
-                            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">$</span>
-                            <input type="number" id="price_per_night" name="price_per_night" min="0" step="0.01" class="flex-1 rounded-none rounded-r-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="0.00">
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- Description -->

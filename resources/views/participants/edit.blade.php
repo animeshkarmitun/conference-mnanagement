@@ -17,7 +17,7 @@
 </div>
 
 <div class="bg-white rounded-xl shadow p-6">
-    <form method="POST" action="{{ route('participants.update', $participant) }}" enctype="multipart/form-data" onsubmit="return validateEditForm(event)">
+    <form method="POST" action="{{ route('participants.update', $participant) }}" enctype="multipart/form-data" onsubmit="return validateForm(event)">
         @csrf
         @method('PUT')
         <input type="hidden" name="user_id" value="{{ $participant->user_id }}">
@@ -26,15 +26,15 @@
             <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Participant Information</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
+                <div class="mb-4">
                     <label for="conference_id" class="block text-sm font-medium text-gray-700">Conference *</label>
-            <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                <option value="">Select Conference</option>
-                @foreach($conferences as $conference)
-                    <option value="{{ $conference->id }}" {{ old('conference_id', $participant->conference_id) == $conference->id ? 'selected' : '' }}>{{ $conference->name }}</option>
-                @endforeach
-            </select>
-            @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    <select name="conference_id" id="conference_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                        <option value="">Select Conference</option>
+                        @foreach($conferences as $conference)
+                            <option value="{{ $conference->id }}" {{ old('conference_id', $participant->conference_id) == $conference->id ? 'selected' : '' }}>{{ $conference->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('conference_id')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
                 <div class="mb-4">
@@ -118,9 +118,24 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="whatsapp_no" class="block text-sm font-medium text-gray-700">WhatsApp No (Optional)</label>
-                    <input type="tel" name="whatsapp_no" id="whatsapp_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="+8801234567890" value="{{ old('whatsapp_no', $participant->user->whatsapp_no) }}">
-                    @error('whatsapp_no')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Messaging Platform (Optional)</label>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex items-center">
+                            <input type="radio" name="messaging_type" id="messaging_whatsapp" value="whatsapp" class="form-radio text-blue-600" {{ old('messaging_type', $participant->user->messaging_type) == 'whatsapp' ? 'checked' : '' }}>
+                            <label for="messaging_whatsapp" class="ml-2 text-sm text-gray-700">WhatsApp</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" name="messaging_type" id="messaging_signal" value="signal" class="form-radio text-blue-600" {{ old('messaging_type', $participant->user->messaging_type) == 'signal' ? 'checked' : '' }}>
+                            <label for="messaging_signal" class="ml-2 text-sm text-gray-700">Signal</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" name="messaging_type" id="messaging_telegram" value="telegram" class="form-radio text-blue-600" {{ old('messaging_type', $participant->user->messaging_type) == 'telegram' ? 'checked' : '' }}>
+                            <label for="messaging_telegram" class="ml-2 text-sm text-gray-700">Telegram</label>
+                        </div>
+                    </div>
+                    <input type="tel" name="messaging_number" id="messaging_number" class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="+8801234567890" value="{{ old('messaging_number', $participant->user->messaging_number) }}">
+                    @error('messaging_type')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    @error('messaging_number')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
                 <div class="mb-4">
@@ -153,6 +168,18 @@
                     <input type="text" name="organization_institution" id="organization_institution" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Your current organization or institution" value="{{ old('organization_institution', $participant->user->organization_institution) }}">
                     @error('organization_institution')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
+                
+                <div class="mb-4">
+                    <label for="country" class="block text-sm font-medium text-gray-700">Country (Optional)</label>
+                    <input type="text" name="country" id="country" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Bangladesh, USA, UK" value="{{ old('country', $participant->user->country) }}">
+                    @error('country')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                </div>
+                
+                <div class="mb-4">
+                    <label for="profile_picture" class="block text-sm font-medium text-gray-700">Profile Picture (Optional)</label>
+                    <input type="file" name="profile_picture" id="profile_picture" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
+                    @error('profile_picture')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                </div>
             </div>
         </div>
 
@@ -179,20 +206,6 @@
                 <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Speaker Additional Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="mb-4">
-                        <label for="other_contact_type" class="block text-sm font-medium text-gray-700">Other Contact Number (Optional)</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <select name="other_contact_type" id="other_contact_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 @error('other_contact_type') border-red-300 @enderror">
-                                <option value="">Select</option>
-                                <option value="whatsapp" {{ old('other_contact_type', $participant->user->other_contact_type) == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
-                                <option value="telegram" {{ old('other_contact_type', $participant->user->other_contact_type) == 'telegram' ? 'selected' : '' }}>Telegram</option>
-                                <option value="signal" {{ old('other_contact_type', $participant->user->other_contact_type) == 'signal' ? 'selected' : '' }}>Signal</option>
-                            </select>
-                            <input type="text" name="other_contact_no" id="other_contact_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 @error('other_contact_no') border-red-300 @enderror" placeholder="Number" value="{{ old('other_contact_no', $participant->user->other_contact_no) }}">
-                        </div>
-                        @error('other_contact_type')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                        @error('other_contact_no')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                    </div>
-                    <div class="mb-4">
                         <label for="dietary_requirements" class="block text-sm font-medium text-gray-700">Dietary Requirements (Optional)</label>
                         <select name="dietary_requirements" id="dietary_requirements" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 @error('dietary_requirements') border-red-300 @enderror">
                             <option value="">Select</option>
@@ -214,25 +227,6 @@
             <div class="mb-8 p-6 bg-green-50 rounded-lg">
                 <h3 class="text-lg font-semibold mb-4 text-green-800 border-b border-green-200 pb-2">Professional Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label for="sector" class="block text-sm font-medium text-gray-700">Sector (Optional)</label>
-                        <select name="sector" id="sector" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                            <option value="">Select Sector</option>
-                            <option value="academia" {{ old('sector', $participant->user->sector) == 'academia' ? 'selected' : '' }}>Academia</option>
-                            <option value="government" {{ old('sector', $participant->user->sector) == 'government' ? 'selected' : '' }}>Government</option>
-                            <option value="international_organization" {{ old('sector', $participant->user->sector) == 'international_organization' ? 'selected' : '' }}>International Organization</option>
-                            <option value="media" {{ old('sector', $participant->user->sector) == 'media' ? 'selected' : '' }}>Media</option>
-                            <option value="ngo" {{ old('sector', $participant->user->sector) == 'ngo' ? 'selected' : '' }}>NGO</option>
-                            <option value="private" {{ old('sector', $participant->user->sector) == 'private' ? 'selected' : '' }}>Private</option>
-                            <option value="think_tank" {{ old('sector', $participant->user->sector) == 'think_tank' ? 'selected' : '' }}>Think-Tank</option>
-                        </select>
-                        @error('sector')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                    </div>
-                    <div class="mb-4 md:col-span-2">
-                        <label for="areas_of_expertise" class="block text-sm font-medium text-gray-700">Areas of Expertise (Optional)</label>
-                        <textarea name="areas_of_expertise" id="areas_of_expertise" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">{{ old('areas_of_expertise', $participant->user->areas_of_expertise) }}</textarea>
-                        @error('areas_of_expertise')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                    </div>
                     <div class="mb-4 md:col-span-2">
                         <label for="preferred_topic" class="block text-sm font-medium text-gray-700">Preferred topic to speak (Optional)</label>
                         <input type="text" name="preferred_topic" id="preferred_topic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('preferred_topic', $participant->user->preferred_topic) }}">
@@ -245,17 +239,17 @@
                 <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Additional Details</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="mb-4">
-                        <label for="linkedin_link" class="block text-sm font-medium text-gray-700">LinkedIn Link</label>
+                        <label for="linkedin_link" class="block text-sm font-medium text-gray-700">LinkedIn Link (Optional)</label>
                         <input type="url" name="linkedin_link" id="linkedin_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('linkedin_link', $participant->user->linkedin_link) }}">
                         @error('linkedin_link')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div class="mb-4">
-                        <label for="twitter_link" class="block text-sm font-medium text-gray-700">Twitter Link</label>
+                        <label for="twitter_link" class="block text-sm font-medium text-gray-700">Twitter Link (Optional)</label>
                         <input type="url" name="twitter_link" id="twitter_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('twitter_link', $participant->user->twitter_link) }}">
                         @error('twitter_link')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div class="mb-4">
-                        <label for="facebook_link" class="block text-sm font-medium text-gray-700">Facebook Link</label>
+                        <label for="facebook_link" class="block text-sm font-medium text-gray-700">Facebook Link (Optional)</label>
                         <input type="url" name="facebook_link" id="facebook_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('facebook_link', $participant->user->facebook_link) }}">
                         @error('facebook_link')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
@@ -292,8 +286,8 @@
             </div>
         </div>
 
-        <!-- Student Information Section -->
-        <div class="mb-8 p-6 bg-blue-50 rounded-lg">
+        <!-- Student Information Section - HIDDEN -->
+        <div class="mb-8 p-6 bg-blue-50 rounded-lg hidden">
             <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Student Information</h3>
             <p class="text-sm text-gray-600 mb-4">Skip this section if you are not a student.</p>
             
@@ -345,7 +339,7 @@
             
             <div class="grid grid-cols-1 gap-4">
                 <div class="mb-4">
-                    <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Address (Optional)</label>
                     <textarea name="address" id="address" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Your full address">{{ old('address', $participant->user->address) }}</textarea>
                     @error('address')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
@@ -362,79 +356,65 @@
         <div class="mb-8 p-6 bg-yellow-50 rounded-lg">
             <h3 class="text-lg font-semibold mb-4 text-yellow-800 border-b border-yellow-200 pb-2">Document Upload</h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mb-4">
-                    <label for="nid_passport_birth_certificate" class="block text-sm font-medium text-gray-700">NID/Passport/Birth Certificate (Optional)</label>
-                    <input type="file" name="nid_passport_birth_certificate" id="nid_passport_birth_certificate" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
-                    <p class="text-xs text-gray-500 mt-1">Photo max 300kb</p>
-                    @error('nid_passport_birth_certificate')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
+            <div class="mb-4">
+                <label for="nid_passport_birth_certificate" class="block text-sm font-medium text-gray-700">NID/Passport/Birth Certificate (Optional)</label>
+                <input type="file" name="nid_passport_birth_certificate" id="nid_passport_birth_certificate" accept="image/*" class="mt-1 block w-full text-sm text-gray-500">
+                <p class="text-xs text-gray-500 mt-1">Photo max 300kb</p>
+                @error('nid_passport_birth_certificate')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
         </div>
 
-        <!-- Additional Information Section -->
+        <!-- Conference Information Section -->
         <div class="mb-8 p-6 bg-purple-50 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Additional Information</h3>
+            <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Conference Information</h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mb-4">
-                    <label for="how_found_bobc" class="block text-sm font-medium text-gray-700">How did you find out about BOB-C? (Optional)</label>
-                    <select name="how_found_bobc" id="how_found_bobc" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                        <option value="">Select</option>
-                        <option value="social_media" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'social_media' ? 'selected' : '' }}>Social Media</option>
-                        <option value="bobc_cgs_website" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'bobc_cgs_website' ? 'selected' : '' }}>BOB-C CGS Website</option>
-                        <option value="friend_teacher_department" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'friend_teacher_department' ? 'selected' : '' }}>Friend/Teacher/Department</option>
-                        <option value="traditional_media" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'traditional_media' ? 'selected' : '' }}>Traditional Media</option>
-                        <option value="other" {{ old('how_found_bobc', $participant->user->how_found_bobc) == 'other' ? 'selected' : '' }}>Other</option>
-                    </select>
-                    @error('how_found_bobc')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                
-        <div class="mb-4">
-                    <label for="attended_previous_bobc" class="block text-sm font-medium text-gray-700">Have you attended BOB-C before? (Optional)</label>
-                    <select name="attended_previous_bobc" id="attended_previous_bobc" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                        <option value="">Select</option>
-                        <option value="1" {{ old('attended_previous_bobc', $participant->user->attended_previous_bobc) == '1' ? 'selected' : '' }}>Yes</option>
-                        <option value="0" {{ old('attended_previous_bobc', $participant->user->attended_previous_bobc) == '0' ? 'selected' : '' }}>No</option>
-            </select>
-                    @error('attended_previous_bobc')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-            </div>
             
             <div class="mb-4">
-                <label for="expertise_interests" class="block text-sm font-medium text-gray-700">Expertise and Interests (Optional)</label>
+                <label for="expertise_interests" class="block text-sm font-medium text-gray-700">Provide your expertise/interests aligning with the theme of BoBC (Optional)</label>
                 <textarea name="expertise_interests" id="expertise_interests" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Please provide your expertise and interests (200 words max)" maxlength="1000">{{ old('expertise_interests', $participant->user->expertise_interests) }}</textarea>
+                <p class="text-xs text-gray-500 mt-1">Any use of AI in the answers would be banned from the conference in the future</p>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Word count: <span id="word-count">0</span>/200</span>
+                    <span>Character count: <span id="char-count">0</span>/1000</span>
+                </div>
                 @error('expertise_interests')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
         </div>
 
-        <!-- Professional Information Section -->
-        <div class="mb-8 p-6 bg-green-50 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4 text-green-800 border-b border-green-200 pb-2">Professional Information</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mb-4">
-                    <label for="organization" class="block text-sm font-medium text-gray-700">Organization (Optional)</label>
-                    <input type="text" name="organization" id="organization" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Your organization or company" value="{{ old('organization', $participant->organization) }}">
-                    @error('organization')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+        <!-- Modern Hashtag Input Section -->
+        <div class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+            <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Hashtags</h3>
+            <div class="mb-4">
+                <label for="hashtag-input" class="block text-sm font-medium text-gray-700 mb-2">Add Hashtags (Optional)</label>
+                <div class="relative">
+                    <input type="text" 
+                           id="hashtag-input" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200" 
+                           placeholder="Type hashtags and press Enter or comma..."
+                           autocomplete="off">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                        </svg>
+                    </div>
                 </div>
-                
-                <div class="mb-4">
-                    <label for="dietary_needs" class="block text-sm font-medium text-gray-700">Dietary Needs (Optional)</label>
-                    <input type="text" name="dietary_needs" id="dietary_needs" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Vegetarian, Halal, Gluten-free" value="{{ old('dietary_needs', $participant->dietary_needs) }}">
-                    @error('dietary_needs')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
+                <p class="text-xs text-gray-500 mt-1">Press Enter or comma to add hashtags. Click on tags to remove them.</p>
             </div>
-        </div>
-
-        <!-- System Information Section -->
-        <div class="mb-8 p-6 bg-purple-50 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">System Information</h3>
             
+            <!-- Hashtag Display Area -->
+            <div id="hashtag-container" class="flex flex-wrap gap-2 min-h-[40px] p-3 bg-white rounded-lg border border-gray-200">
+                <span class="text-gray-400 text-sm italic">No hashtags added yet</span>
+            </div>
+            
+            <!-- Hidden input for form submission -->
+            <input type="hidden" id="hashtags" name="hashtags_input" value="{{ old('hashtags', $participant->hashtags) }}">
+            @error('hashtags')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+        </div>
+        <!-- Conference registration details continue -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
+                <div class="mb-4">
                     <label for="visa_status" class="block text-sm font-medium text-gray-700">Visa Status *</label>
-            <select name="visa_status" id="visa_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <select name="visa_status" id="visa_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
                         <option value="">Select Status</option>
                 <option value="required" {{ old('visa_status', $participant->visa_status) == 'required' ? 'selected' : '' }}>Required</option>
                 <option value="not_required" {{ old('visa_status', $participant->visa_status) == 'not_required' ? 'selected' : '' }}>Not Required</option>
@@ -459,21 +439,9 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
-                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-                    <select name="category" id="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                        <option value="">Select Category</option>
-                        <option value="student" {{ old('category', $participant->category) == 'student' ? 'selected' : '' }}>Student</option>
-                        <option value="academic" {{ old('category', $participant->category) == 'academic' ? 'selected' : '' }}>Academic</option>
-                        <option value="industry" {{ old('category', $participant->category) == 'industry' ? 'selected' : '' }}>Industry</option>
-                        <option value="government" {{ old('category', $participant->category) == 'government' ? 'selected' : '' }}>Government</option>
-                        <option value="ngo" {{ old('category', $participant->category) == 'ngo' ? 'selected' : '' }}>NGO</option>
-                        <option value="other" {{ old('category', $participant->category) == 'other' ? 'selected' : '' }}>Other</option>
-                    </select>
-                    @error('category')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-                <div class="mb-4">
                     <label for="travel_intent" class="block text-sm font-medium text-gray-700">Travel Intent (Optional)</label>
                     <select name="travel_intent" id="travel_intent" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" onchange="toggleTravelDates()">
+                        <option value="none" {{ old('travel_intent', $participant->travel_intent) == 'none' ? 'selected' : '' }}>None</option>
                         <option value="national" {{ old('travel_intent', $participant->travel_intent) == 'national' ? 'selected' : '' }}>National</option>
                         <option value="international" {{ old('travel_intent', $participant->travel_intent) == 'international' ? 'selected' : '' }}>International</option>
                     </select>
@@ -481,18 +449,20 @@
                 </div>
             </div>
             
-            <!-- Travel Dates Section (shown when International is selected) -->
+            <!-- Travel Dates Section (shown when National or International is selected) -->
             <div id="travel-dates-section" class="hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="mb-4">
-                        <label for="arrival_date" class="block text-sm font-medium text-gray-700">Arrival Date (Optional)</label>
-                        <input type="datetime-local" name="arrival_date" id="arrival_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('arrival_date', optional($participant->travelDetails)->arrival_date ? \Carbon\Carbon::parse($participant->travelDetails->arrival_date)->format('Y-m-d\TH:i') : '') }}">
+                        <label for="arrival_date" class="block text-sm font-medium text-gray-700">Arrival Date <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" name="arrival_date" id="arrival_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('arrival_date', optional($participant->travelDetails)->arrival_date ? \Carbon\Carbon::parse($participant->travelDetails->arrival_date)->format('Y-m-d\TH:i') : '') }}" placeholder="YYYY-MM-DDTHH:MM">
+                        <p class="text-xs text-gray-500 mt-1">Format: YYYY-MM-DDTHH:MM (e.g., 2024-01-15T14:30)</p>
                         @error('arrival_date')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                     
                     <div class="mb-4">
-                        <label for="departure_date" class="block text-sm font-medium text-gray-700">Departure Date (Optional)</label>
-                        <input type="datetime-local" name="departure_date" id="departure_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('departure_date', optional($participant->travelDetails)->departure_date ? \Carbon\Carbon::parse($participant->travelDetails->departure_date)->format('Y-m-d\TH:i') : '') }}">
+                        <label for="departure_date" class="block text-sm font-medium text-gray-700">Departure Date <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" name="departure_date" id="departure_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('departure_date', optional($participant->travelDetails)->departure_date ? \Carbon\Carbon::parse($participant->travelDetails->departure_date)->format('Y-m-d\TH:i') : '') }}" placeholder="YYYY-MM-DDTHH:MM">
+                        <p class="text-xs text-gray-500 mt-1">Format: YYYY-MM-DDTHH:MM (e.g., 2024-01-17T10:00)</p>
                         @error('departure_date')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                 </div>
@@ -508,7 +478,6 @@
             <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
                 <textarea name="bio" id="bio" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Brief biography or description...">{{ old('bio', $participant->bio) }}</textarea>
             @error('bio')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-        </div>
         </div>
         
         <!-- Action Buttons Section -->
@@ -538,69 +507,130 @@ document.addEventListener('DOMContentLoaded', function() {
     // Visa status handling
     const visaStatusSelect = document.getElementById('visa_status');
     const visaIssueDescription = document.getElementById('visa-issue-description');
+    const participantTypeSelect = document.getElementById('participant_type_id');
+    const participantTypeDescription = document.getElementById('participant-type-description');
+    const expertiseTextarea = document.getElementById('expertise_interests');
+    const wordCountSpan = document.getElementById('word-count');
+    const charCountSpan = document.getElementById('char-count');
     
     function toggleVisaIssueDescription() {
-        if (visaStatusSelect.value === 'issue') {
+        if (visaStatusSelect && visaStatusSelect.value === 'issue') {
             visaIssueDescription.style.display = 'block';
-        } else {
+        } else if (visaIssueDescription) {
             visaIssueDescription.style.display = 'none';
         }
     }
-    
-    // Initial state
-    toggleVisaIssueDescription();
-    
-    // Listen for changes
-    visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
-    
-    // Participant type description handling
-    const participantTypeSelect = document.getElementById('participant_type_id');
-    const participantTypeDescription = document.getElementById('participant-type-description');
-    
+
     function updateParticipantTypeDescription() {
-        const selectedOption = participantTypeSelect.options[participantTypeSelect.selectedIndex];
-        if (selectedOption && selectedOption.dataset.description) {
-            const requiresApproval = selectedOption.dataset.requiresApproval === 'true' ? 'Yes' : 'No';
-            const hasPrivileges = selectedOption.dataset.hasPrivileges === 'true' ? 'Yes' : 'No';
-            
-            participantTypeDescription.innerHTML = `
-                <div>Requires Approval: ${requiresApproval}</div>
-                <div>Has Special Privileges: ${hasPrivileges}</div>
-            `;
-        } else {
-            participantTypeDescription.innerHTML = `
-                <div>Requires Approval: No</div>
-                <div>Has Special Privileges: No</div>
-            `;
-        }
-    }
-    
-    // Initial state
-    updateParticipantTypeDescription();
-    
-    // Listen for changes
-    participantTypeSelect.addEventListener('change', updateParticipantTypeDescription);
-    
-    // Student fields handling
-    function toggleStudentFields() {
-        const isStudentYes = document.getElementById('is_student_yes');
-        const studentFields = document.getElementById('student-fields');
+        if (!participantTypeSelect || !participantTypeDescription) return;
         
-        if (isStudentYes.checked) {
-            studentFields.classList.remove('hidden');
+        const selectedOption = participantTypeSelect.options[participantTypeSelect.selectedIndex];
+        const description = selectedOption.getAttribute('data-description');
+        const category = selectedOption.getAttribute('data-category');
+        const requiresApproval = selectedOption.getAttribute('data-requires-approval');
+        const hasPrivileges = selectedOption.getAttribute('data-has-privileges');
+        const participantTypeName = selectedOption.textContent.toLowerCase().trim();
+
+        let descriptionText = '';
+        if (description) {
+            descriptionText += description + '<br>';
+        }
+        if (requiresApproval === 'true') {
+            descriptionText += 'Requires Approval: Yes<br>';
         } else {
-            studentFields.classList.add('hidden');
+            descriptionText += 'Requires Approval: No<br>';
+        }
+        if (hasPrivileges === 'true') {
+            descriptionText += 'Has Special Privileges: Yes<br>';
+        } else {
+            descriptionText += 'Has Special Privileges: No<br>';
+        }
+
+        participantTypeDescription.innerHTML = descriptionText;
+        participantTypeDescription.style.display = 'block';
+
+        // Toggle Media/Speaker sections
+        const mediaSection = document.getElementById('media-section');
+        const speakerSection = document.getElementById('speaker-section');
+        
+        if (mediaSection && speakerSection) {
+            if (category === 'press') {
+                mediaSection.classList.remove('hidden');
+                speakerSection.classList.add('hidden');
+            } else if (category === 'presenter') {
+                speakerSection.classList.remove('hidden');
+                mediaSection.classList.add('hidden');
+            } else {
+                mediaSection.classList.add('hidden');
+                speakerSection.classList.add('hidden');
+            }
+        }
+
+        // Handle student radio button logic
+        const studentYesRadio = document.getElementById('is_student_yes');
+        const studentNoRadio = document.getElementById('is_student_no');
+        
+        if (studentYesRadio && studentNoRadio) {
+            // Check if the selected participant type is "student"
+            if (participantTypeName === 'student') {
+                // Auto-select "Yes" for student
+                studentYesRadio.checked = true;
+                studentNoRadio.checked = false;
+                // Show student fields
+                toggleStudentFields();
+            } else {
+                // For all other types, default to "No"
+                studentYesRadio.checked = false;
+                studentNoRadio.checked = true;
+                // Hide student fields
+                toggleStudentFields();
+            }
         }
     }
     
-    // Travel dates handling
-    function toggleTravelDates() {
+    // Student fields toggle
+    window.toggleStudentFields = function() {
+        const studentFields = document.getElementById('student-fields');
+        const isStudentRadios = document.querySelectorAll('input[name="is_student"]');
+        const isStudent = Array.from(isStudentRadios).find(radio => radio.checked);
+        
+        if (studentFields) {
+            if (isStudent && isStudent.value === '1') {
+                studentFields.classList.remove('hidden');
+                // Make student fields required
+                const yearSelect = document.getElementById('year');
+                const deptInput = document.getElementById('department_name');
+                const instInput = document.getElementById('institution_name');
+                
+                if (yearSelect) yearSelect.required = true;
+                if (deptInput) deptInput.required = true;
+                if (instInput) instInput.required = true;
+            } else {
+                studentFields.classList.add('hidden');
+                // Make student fields not required
+                const yearSelect = document.getElementById('year');
+                const deptInput = document.getElementById('department_name');
+                const instInput = document.getElementById('institution_name');
+                
+                if (yearSelect) yearSelect.required = false;
+                if (deptInput) deptInput.required = false;
+                if (instInput) instInput.required = false;
+            }
+        }
+    };
+    
+    // Travel dates toggle
+    window.toggleTravelDates = function() {
         const travelIntentSelect = document.getElementById('travel_intent');
         const travelDatesSection = document.getElementById('travel-dates-section');
         
         if (travelIntentSelect && travelDatesSection) {
-            if (travelIntentSelect.value === 'international') {
+            if (travelIntentSelect.value === 'national' || travelIntentSelect.value === 'international') {
                 travelDatesSection.classList.remove('hidden');
+                // Set default values if fields are empty
+                setDefaultTravelDates();
+                // Make fields required
+                makeTravelDatesRequired(true);
             } else {
                 travelDatesSection.classList.add('hidden');
                 // Clear the date fields when hidden
@@ -608,86 +638,144 @@ document.addEventListener('DOMContentLoaded', function() {
                 const departureDate = document.getElementById('departure_date');
                 if (arrivalDate) arrivalDate.value = '';
                 if (departureDate) departureDate.value = '';
+                // Make fields not required
+                makeTravelDatesRequired(false);
             }
+        }
+    };
+    
+    // Set default travel dates based on conference dates
+    function setDefaultTravelDates() {
+        const arrivalDate = document.getElementById('arrival_date');
+        const departureDate = document.getElementById('departure_date');
+        
+        // Only set defaults if fields are empty
+        if (arrivalDate && !arrivalDate.value) {
+            arrivalDate.value = '{{ $participant->conference->start_date ? \Carbon\Carbon::parse($participant->conference->start_date)->subDay()->format('Y-m-d\TH:i') : '' }}';
+        }
+        if (departureDate && !departureDate.value) {
+            departureDate.value = '{{ $participant->conference->end_date ? \Carbon\Carbon::parse($participant->conference->end_date)->addDay()->format('Y-m-d\TH:i') : '' }}';
         }
     }
     
+    // Make travel date fields required or not
+    function makeTravelDatesRequired(required) {
+        const arrivalDate = document.getElementById('arrival_date');
+        const departureDate = document.getElementById('departure_date');
+        
+        if (arrivalDate) {
+            arrivalDate.required = required;
+        }
+        if (departureDate) {
+            departureDate.required = required;
+        }
+    }
+    
+    // Word and character counting
+    function updateWordCount() {
+        if (!expertiseTextarea || !wordCountSpan || !charCountSpan) return;
+        
+        const text = expertiseTextarea.value;
+        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+        const wordCount = words.length;
+        const charCount = text.length;
+        
+        wordCountSpan.textContent = wordCount;
+        charCountSpan.textContent = charCount;
+        
+        // Add visual feedback for limits
+        if (wordCount > 200) {
+            wordCountSpan.style.color = 'red';
+        } else if (wordCount > 180) {
+            wordCountSpan.style.color = 'orange';
+        } else {
+            wordCountSpan.style.color = 'inherit';
+        }
+        
+        if (charCount > 1000) {
+            charCountSpan.style.color = 'red';
+        } else if (charCount > 900) {
+            charCountSpan.style.color = 'orange';
+        } else {
+            charCountSpan.style.color = 'inherit';
+        }
+    }
+    
+    // Age calculation
+    function calculateAge() {
+        const dobInput = document.getElementById('date_of_birth');
+        if (!dobInput || !dobInput.value) return;
+        
+        const dob = new Date(dobInput.value);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+            age--;
+        }
+        
+        // You can display the age somewhere if needed
+        console.log('Calculated age:', age);
+    }
+    
     // Initial state
+    toggleVisaIssueDescription();
+    updateParticipantTypeDescription();
     toggleStudentFields();
     toggleTravelDates();
+    updateWordCount();
     
-    // Listen for changes
-    const isStudentRadios = document.querySelectorAll('input[name="is_student"]');
-    isStudentRadios.forEach(radio => {
-        radio.addEventListener('change', toggleStudentFields);
-    });
+    // Event listeners
+    if (visaStatusSelect) {
+    visaStatusSelect.addEventListener('change', toggleVisaIssueDescription);
+    }
+    if (participantTypeSelect) {
+    participantTypeSelect.addEventListener('change', updateParticipantTypeDescription);
+    }
+    if (expertiseTextarea) {
+        expertiseTextarea.addEventListener('input', updateWordCount);
+    }
     
     const travelIntentSelect = document.getElementById('travel_intent');
     if (travelIntentSelect) {
         travelIntentSelect.addEventListener('change', toggleTravelDates);
     }
     
-    // Dietary requirements handling
-    const dietaryRequirements = document.getElementById('dietary_requirements');
+    const dobInput = document.getElementById('date_of_birth');
+    if (dobInput) {
+        dobInput.addEventListener('change', calculateAge);
+    }
+
+    // Dietary requirements other toggle
+    const dietaryReq = document.getElementById('dietary_requirements');
     const dietaryReqOtherWrap = document.getElementById('dietary_req_other_wrap');
-    
-    function toggleDietaryReqOther() {
-        if (dietaryRequirements.value === 'others') {
-            dietaryReqOtherWrap.style.display = 'block';
+    if (dietaryReq && dietaryReqOtherWrap) {
+        const toggleDietaryReqOther = () => {
+            if (dietaryReq.value === 'others') {
+                dietaryReqOtherWrap.style.display = '';
+            } else {
+                dietaryReqOtherWrap.style.display = 'none';
+            }
+        };
+        toggleDietaryReqOther();
+        dietaryReq.addEventListener('change', toggleDietaryReqOther);
+    }
+
+    // Visa issue explanation toggle
+    const hadVisaIssue = document.getElementById('had_visa_issue_bd');
+    const visaIssueWrap = document.getElementById('visa_issue_explanation_wrap');
+    if (hadVisaIssue && visaIssueWrap) {
+        const toggleVisaIssue = () => {
+            if (hadVisaIssue.value === '1') {
+                visaIssueWrap.style.display = '';
         } else {
-            dietaryReqOtherWrap.style.display = 'none';
+                visaIssueWrap.style.display = 'none';
         }
+        };
+        toggleVisaIssue();
+        hadVisaIssue.addEventListener('change', toggleVisaIssue);
     }
-    
-    // Initial state
-    toggleDietaryReqOther();
-    
-    // Listen for changes
-    dietaryRequirements.addEventListener('change', toggleDietaryReqOther);
-    
-    // Visa issue explanation handling
-    const hadVisaIssueBd = document.getElementById('had_visa_issue_bd');
-    const visaIssueExplanationWrap = document.getElementById('visa_issue_explanation_wrap');
-    
-    function toggleVisaIssueExplanation() {
-        if (hadVisaIssueBd.value === '1') {
-            visaIssueExplanationWrap.style.display = 'block';
-        } else {
-            visaIssueExplanationWrap.style.display = 'none';
-        }
-    }
-    
-    // Initial state
-    toggleVisaIssueExplanation();
-    
-    // Listen for changes
-    hadVisaIssueBd.addEventListener('change', toggleVisaIssueExplanation);
-    
-    // Category-based section visibility
-    const categorySelect = document.getElementById('category');
-    const mediaSection = document.getElementById('media-section');
-    const speakerSection = document.getElementById('speaker-section');
-    
-    function toggleCategorySections() {
-        const category = categorySelect.value;
-        
-        // Hide all sections first
-        mediaSection.classList.add('hidden');
-        speakerSection.classList.add('hidden');
-        
-        // Show relevant section based on category
-        if (category === 'press') {
-            mediaSection.classList.remove('hidden');
-        } else if (category === 'presenter') {
-            speakerSection.classList.remove('hidden');
-        }
-    }
-    
-    // Initial state
-    toggleCategorySections();
-    
-    // Listen for changes
-    categorySelect.addEventListener('change', toggleCategorySections);
 
     // Email validation with AJAX
     const emailInput = document.getElementById('email');
@@ -745,16 +833,170 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Form validation is handled by the onsubmit attribute on the form element
+    // Initialize form state on page load (for validation errors)
+    function initializeFormState() {
+        const participantTypeSelect = document.getElementById('participant_type_id');
+        if (participantTypeSelect && participantTypeSelect.value) {
+            // Trigger the change event to show appropriate sections
+            participantTypeSelect.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // Initialize form state
+    initializeFormState();
+    
+    // Messaging platform selection handler
+    const messagingRadios = document.querySelectorAll('input[name="messaging_type"]');
+    const messagingNumberInput = document.getElementById('messaging_number');
+    
+    function updateMessagingPlaceholder() {
+        const selectedPlatform = document.querySelector('input[name="messaging_type"]:checked');
+        if (selectedPlatform && messagingNumberInput) {
+            switch(selectedPlatform.value) {
+                case 'whatsapp':
+                    messagingNumberInput.placeholder = '+8801234567890';
+                    break;
+                case 'signal':
+                    messagingNumberInput.placeholder = '+8801234567890';
+                    break;
+                case 'telegram':
+                    messagingNumberInput.placeholder = '@username or +8801234567890';
+                    break;
+                default:
+                    messagingNumberInput.placeholder = '+8801234567890';
+            }
+        }
+    }
+    
+    // Add event listeners to messaging platform radios
+    messagingRadios.forEach(radio => {
+        radio.addEventListener('change', updateMessagingPlaceholder);
+    });
+    
+    // Initialize placeholder
+    updateMessagingPlaceholder();
+    
+    // Modern Hashtag Input Handling
+    const hashtagInput = document.getElementById('hashtag-input');
+    const hashtagContainer = document.getElementById('hashtag-container');
+    const hiddenInput = document.getElementById('hashtags');
+    let hashtags = [];
+
+    if (hashtagInput && hashtagContainer && hiddenInput) {
+        // Initialize hashtags from existing value
+        const existingHashtags = hiddenInput.value;
+        if (existingHashtags) {
+            hashtags = existingHashtags.split(',').map(tag => tag.trim().replace(/^#+/, '')).filter(tag => tag);
+        }
+
+        // Function to create hashtag element
+        function createHashtagElement(tag) {
+            const tagElement = document.createElement('div');
+            tagElement.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border border-purple-200 hover:from-purple-200 hover:to-pink-200 transition-all duration-200 cursor-pointer group';
+            tagElement.innerHTML = `
+                <span class="mr-1">#</span>
+                <span>${tag}</span>
+                <button type="button" class="ml-2 text-purple-600 hover:text-purple-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+            
+            // Add click to remove functionality
+            tagElement.addEventListener('click', function() {
+                removeHashtag(tag);
+            });
+            
+            return tagElement;
+        }
+
+        // Function to add hashtag
+        function addHashtag(tag) {
+            const cleanTag = tag.trim().replace(/^#+/, ''); // Remove existing # symbols
+            if (cleanTag && !hashtags.includes(cleanTag)) {
+                hashtags.push(cleanTag);
+                updateDisplay();
+                updateHiddenInput();
+            }
+        }
+
+        // Function to remove hashtag
+        function removeHashtag(tag) {
+            hashtags = hashtags.filter(t => t !== tag);
+            updateDisplay();
+            updateHiddenInput();
+        }
+
+        // Function to update display
+        function updateDisplay() {
+            hashtagContainer.innerHTML = '';
+            if (hashtags.length === 0) {
+                hashtagContainer.innerHTML = '<span class="text-gray-400 text-sm italic">No hashtags added yet</span>';
+            } else {
+                hashtags.forEach(tag => {
+                    hashtagContainer.appendChild(createHashtagElement(tag));
+                });
+            }
+        }
+
+        // Function to update hidden input
+        function updateHiddenInput() {
+            hiddenInput.value = hashtags.join(', ');
+        }
+
+        // Handle input events
+        hashtagInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const value = this.value.trim();
+                if (value) {
+                    addHashtag(value);
+                    this.value = '';
+                }
+            }
+        });
+
+        // Handle paste events
+        hashtagInput.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                const value = this.value.trim();
+                if (value) {
+                    // Split by comma and add each hashtag
+                    value.split(',').forEach(tag => {
+                        if (tag.trim()) {
+                            addHashtag(tag.trim());
+                        }
+                    });
+                    this.value = '';
+                }
+            }, 0);
+        });
+
+        // Handle blur event
+        hashtagInput.addEventListener('blur', function() {
+            const value = this.value.trim();
+            if (value) {
+                addHashtag(value);
+                this.value = '';
+            }
+        });
+
+        // Initialize display
+        updateDisplay();
+    }
 });
 
-// Global form validation function for edit form
-function validateEditForm(event) {
+// Global form validation function
+function validateForm(event) {
     // Get all required elements
     const participantTypeSelect = document.getElementById('participant_type_id');
     const mediaTypeSelect = document.getElementById('media_type');
     const dietaryRequirements = document.getElementById('dietary_requirements');
     const dietaryRequirementsOther = document.getElementById('dietary_requirements_other');
+    const travelIntentSelect = document.getElementById('travel_intent');
+    const arrivalDate = document.getElementById('arrival_date');
+    const departureDate = document.getElementById('departure_date');
     
     // Check if participant type is selected
     if (participantTypeSelect && participantTypeSelect.value) {
@@ -780,6 +1022,31 @@ function validateEditForm(event) {
                     dietaryRequirementsOther.focus();
                     return false;
                 }
+            }
+        }
+    }
+    
+    // Check travel dates validation
+    if (travelIntentSelect && (travelIntentSelect.value === 'national' || travelIntentSelect.value === 'international')) {
+        if (!arrivalDate || !arrivalDate.value) {
+            alert('Please select an arrival date when travel intent is selected.');
+            if (arrivalDate) arrivalDate.focus();
+            return false;
+        }
+        if (!departureDate || !departureDate.value) {
+            alert('Please select a departure date when travel intent is selected.');
+            if (departureDate) departureDate.focus();
+            return false;
+        }
+        
+        // Check if departure date is after arrival date
+        if (arrivalDate && departureDate && arrivalDate.value && departureDate.value) {
+            const arrival = new Date(arrivalDate.value);
+            const departure = new Date(departureDate.value);
+            if (departure <= arrival) {
+                alert('Departure date must be after arrival date.');
+                departureDate.focus();
+                return false;
             }
         }
     }

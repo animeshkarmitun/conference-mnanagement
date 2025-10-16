@@ -50,19 +50,6 @@
                                 </div>
                             </div>
                             
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="base_price" class="form-label">Base Price</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" name="base_price" id="base_price" class="form-control @error('base_price') is-invalid @enderror" 
-                                               value="{{ old('base_price') }}" min="0" step="0.01">
-                                    </div>
-                                    @error('base_price')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
                         </div>
 
                         <div class="row">

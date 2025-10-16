@@ -343,17 +343,33 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('conferences', \App\Http\Controllers\ConferenceController::class);
     Route::get('/conferences-export', [\App\Http\Controllers\ConferenceController::class, 'export'])->name('conferences.export');
+    Route::get('/conferences/{conference}/deletion-info', [\App\Http\Controllers\ConferenceController::class, 'getDeletionInfo'])->name('conferences.deletion-info');
     
     // Conference conflict management routes
     Route::post('/conferences/check-conflicts', [\App\Http\Controllers\ConferenceController::class, 'checkConflicts'])->name('conferences.check-conflicts');
     Route::get('/conferences/{conferenceId}/conflicts', [\App\Http\Controllers\ConferenceController::class, 'getConferenceConflicts'])->name('conferences.conflicts');
     Route::post('/conferences/conflicts/{conflictId}/resolve', [\App\Http\Controllers\ConferenceController::class, 'resolveConflict'])->name('conferences.resolve-conflict');
-    Route::resource('participants', \App\Http\Controllers\ParticipantController::class);
+    // Participant routes (excluding edit and update which are admin-only)
+    Route::resource('participants', \App\Http\Controllers\ParticipantController::class)->except(['edit', 'update']);
+    
+    // Comment routes
+    Route::post('/participants/{participant}/comments', [\App\Http\Controllers\ParticipantController::class, 'storeComment'])->name('participants.comments.store');
+    Route::delete('/participants/{participant}/comments/{comment}', [\App\Http\Controllers\ParticipantController::class, 'destroyComment'])->name('participants.comments.destroy');
+    
+    // Admin-only participant routes
+    Route::middleware('admin.access')->group(function () {
+        Route::get('/participants/{participant}/edit', [\App\Http\Controllers\ParticipantController::class, 'edit'])->name('participants.edit');
+        Route::put('/participants/{participant}', [\App\Http\Controllers\ParticipantController::class, 'update'])->name('participants.update');
+    });
+
     Route::resource('sessions', \App\Http\Controllers\SessionController::class);
     Route::get('/sessions/participants/by-conference', [\App\Http\Controllers\SessionController::class, 'getParticipantsByConference'])->name('sessions.participants.by-conference');
     Route::get('/sessions/export', [\App\Http\Controllers\SessionController::class, 'export'])->name('sessions.export');
     Route::post('/sessions/auto-save-draft', [\App\Http\Controllers\SessionController::class, 'autoSaveDraft'])->name('sessions.auto-save-draft');
     Route::post('/sessions/{session}/publish', [\App\Http\Controllers\SessionController::class, 'publish'])->name('sessions.publish');
+    Route::post('/sessions/{session}/resend-email', [\App\Http\Controllers\SessionController::class, 'resendEmail'])->name('sessions.resend-email');
+    Route::post('/sessions/{session}/resend-email-to-participant/{participant}', [\App\Http\Controllers\SessionController::class, 'resendEmailToParticipant'])->name('sessions.resend-email-to-participant');
+    Route::post('/sessions/{session}/resend-email-to-all', [\App\Http\Controllers\SessionController::class, 'resendEmailToAll'])->name('sessions.resend-email-to-all');
     Route::post('/sessions/check-conflicts', [\App\Http\Controllers\SessionController::class, 'checkParticipantConflicts'])->name('sessions.check-conflicts');
     Route::get('/sessions/test-conflicts', [\App\Http\Controllers\SessionController::class, 'testConflictDetection'])->name('sessions.test-conflicts');
     
@@ -362,8 +378,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks/test-export', function() { return 'Test export route works'; })->name('tasks.test-export');
     Route::resource('notifications', \App\Http\Controllers\NotificationController::class);
     Route::get('/speakers', [\App\Http\Controllers\SpeakerController::class, 'index'])->name('speakers.index');
-    Route::get('/my-profile', [\App\Http\Controllers\ParticipantController::class, 'profile'])->name('participants.profile');
-    Route::post('/participants/{participant}/comments', [\App\Http\Controllers\ParticipantController::class, 'storeComment'])->name('participants.comments.store');
+    Route::get('/my-profile', [\App\Http\Controllers\ParticipantController::class, 'profile'])->name('my-profile');
+    Route::get('/my-profile/{participant}', [\App\Http\Controllers\ParticipantController::class, 'switchProfile'])->name('my-profile.switch');
     Route::put('/participants/{participant}/travel', [\App\Http\Controllers\ParticipantController::class, 'updateTravel'])->name('participants.travel.update');
     Route::post('/participants/{participant}/room-allocation', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('room.allocation.update');
     Route::get('/api/hotels/{hotel}/rooms', [\App\Http\Controllers\HotelController::class, 'getRooms'])->name('api.hotels.rooms');
@@ -376,7 +392,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/{participant}/send-notification', [\App\Http\Controllers\ParticipantController::class, 'sendNotification'])->name('participants.send-notification');
     Route::post('/participants/{participant}/mark-notifications-read', [\App\Http\Controllers\ParticipantController::class, 'markNotificationsRead'])->name('participants.mark-notifications-read');
     Route::delete('/participants/{participant}/delete-notification/{notification}', [\App\Http\Controllers\ParticipantController::class, 'deleteNotification'])->name('participants.delete-notification');
-    Route::delete('/participants/{participant}/comments/{comment}', [\App\Http\Controllers\ParticipantController::class, 'destroyComment'])->name('participants.comments.destroy');
+    
     Route::post('/participants/send-email', [\App\Http\Controllers\ParticipantController::class, 'sendEmail'])->name('participants.send-email');
     Route::post('/participants/check-email', [\App\Http\Controllers\ParticipantController::class, 'checkEmail'])->name('participants.check-email');
     
@@ -389,6 +405,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/participant-profiles/{participantId}/archive', [\App\Http\Controllers\ParticipantProfileController::class, 'archive'])->name('participant-profiles.archive');
     Route::post('/participant-profiles/{participantId}/restore', [\App\Http\Controllers\ParticipantProfileController::class, 'restore'])->name('participant-profiles.restore');
     Route::delete('/participant-profiles/{participantId}', [\App\Http\Controllers\ParticipantProfileController::class, 'destroy'])->name('participant-profiles.destroy');
+    Route::post('/participant-profiles/bulk-delete', [\App\Http\Controllers\ParticipantProfileController::class, 'bulkDelete'])->name('participant-profiles.bulk-delete');
+    Route::post('/participant-profiles/bulk-archive', [\App\Http\Controllers\ParticipantProfileController::class, 'bulkArchive'])->name('participant-profiles.bulk-archive');
+    Route::post('/participant-profiles/bulk-restore', [\App\Http\Controllers\ParticipantProfileController::class, 'bulkRestore'])->name('participant-profiles.bulk-restore');
+    
+    // Comment routes for participant-profiles
+    Route::post('/participant-profiles/{participant}/comments', [\App\Http\Controllers\ParticipantController::class, 'storeComment'])->name('participant-profiles.comments.store');
+    Route::delete('/participant-profiles/{participant}/comments/{comment}', [\App\Http\Controllers\ParticipantController::class, 'destroyComment'])->name('participant-profiles.comments.destroy');
     
     // Profile switching in participant dashboard
     Route::post('/participants/{participantId}/switch-profile', [\App\Http\Controllers\ParticipantController::class, 'switchProfile'])->name('participants.switch-profile');
@@ -493,6 +516,8 @@ Route::middleware('auth')->group(function () {
     });
     
     Route::post('/participants/bulk-update', [\App\Http\Controllers\ParticipantController::class, 'bulkUpdate'])->name('participants.bulk-update');
+    Route::post('/participants/bulk-delete', [\App\Http\Controllers\ParticipantController::class, 'bulkDelete'])->name('participants.bulk-delete');
+    Route::post('/participants/deletion-data', [\App\Http\Controllers\ParticipantController::class, 'getDeletionData'])->name('participants.deletion-data');
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
     Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');
     Route::resource('users', \App\Http\Controllers\UserController::class);
@@ -521,18 +546,23 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin/backup')->name('admin.backup.')->group(function () {
         Route::get('/', [\App\Http\Controllers\BackupController::class, 'index'])->name('index');
         Route::post('/create', [\App\Http\Controllers\BackupController::class, 'create'])->name('create');
-        Route::get('/{id}', [\App\Http\Controllers\BackupController::class, 'show'])->name('show');
-        Route::delete('/{id}', [\App\Http\Controllers\BackupController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/restore', [\App\Http\Controllers\BackupController::class, 'restore'])->name('restore');
-        Route::get('/{id}/preview', [\App\Http\Controllers\BackupController::class, 'preview'])->name('preview');
+        
+        // Specific routes must come before parameterized routes
         Route::get('/restore/history', [\App\Http\Controllers\BackupController::class, 'restoreHistory'])->name('restore.history');
         Route::get('/tables', [\App\Http\Controllers\BackupController::class, 'getTables'])->name('tables');
         Route::get('/stats', [\App\Http\Controllers\BackupController::class, 'stats'])->name('stats');
         Route::post('/cleanup', [\App\Http\Controllers\BackupController::class, 'cleanup'])->name('cleanup');
+        Route::post('/cleanup/preview', [\App\Http\Controllers\BackupController::class, 'cleanupPreview'])->name('cleanup.preview');
         Route::get('/test/connection', [\App\Http\Controllers\BackupController::class, 'testConnection'])->name('test.connection');
         Route::get('/test/simple', [\App\Http\Controllers\BackupController::class, 'testSimpleBackup'])->name('test.simple');
         Route::post('/fix-paths', [\App\Http\Controllers\BackupController::class, 'fixBackupPaths'])->name('fix.paths');
         Route::get('/test/details/{id}', [\App\Http\Controllers\BackupController::class, 'testBackupDetails'])->name('test.details');
+        
+        // Parameterized routes must come last
+        Route::get('/{id}', [\App\Http\Controllers\BackupController::class, 'show'])->name('show');
+        Route::delete('/{id}', [\App\Http\Controllers\BackupController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/restore', [\App\Http\Controllers\BackupController::class, 'restore'])->name('restore');
+        Route::get('/{id}/preview', [\App\Http\Controllers\BackupController::class, 'preview'])->name('preview');
     });
 });
 

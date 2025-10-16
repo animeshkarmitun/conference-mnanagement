@@ -648,6 +648,12 @@
             <button id="bulk-update-btn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg font-semibold text-sm">
                 Update Selected
             </button>
+            <button id="bulk-delete-btn" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg font-semibold text-sm">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Delete Selected
+            </button>
         </div>
     </div>
     
@@ -865,18 +871,15 @@
                             </button>
                             @endif
                             
-                            <form action="{{ route('participants.destroy', $participant) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this participant?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" 
-                                        class="quick-action-btn inline-flex items-center p-2 bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 rounded-lg transition-all duration-200 border border-red-200 shadow-sm"
-                                        title="Delete Participant"
-                                        aria-label="Delete participant">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                            </form>
+                            <button type="button" 
+                                    onclick="showParticipantDeletionConfirmation({{ $participant->id }})"
+                                    class="quick-action-btn inline-flex items-center p-2 bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 rounded-lg transition-all duration-200 border border-red-200 shadow-sm"
+                                    title="Delete Participant"
+                                    aria-label="Delete participant">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -1221,6 +1224,20 @@ document.addEventListener('DOMContentLoaded', function() {
             form.submit();
             document.body.removeChild(form);
         }
+    });
+    
+    // Bulk delete functionality
+    document.getElementById('bulk-delete-btn').addEventListener('click', function() {
+        const selectedIds = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
+            .map(checkbox => checkbox.value);
+        
+        if (selectedIds.length === 0) {
+            alert('Please select at least one participant to delete.');
+            return;
+        }
+        
+        // Show confirmation modal
+        showBulkParticipantDeletionConfirmation(selectedIds);
     });
     
     // CSV Export functionality
@@ -2011,7 +2028,217 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
 });
+</script>
+
+<!-- Participant Deletion Functions -->
+<script>
+// ===================== Participant Deletion Confirmation Functions =====================
+
+// Show participant deletion confirmation modal
+async function showParticipantDeletionConfirmation(participantId) {
+    try {
+        const response = await fetch('{{ route("participants.deletion-data") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                participant_ids: [participantId]
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showDeletionConfirmationModal(data.data, [participantId]);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error fetching deletion data:', error);
+        alert('Error loading deletion confirmation data');
+    }
+}
+
+// Show bulk participant deletion confirmation modal
+async function showBulkParticipantDeletionConfirmation(participantIds) {
+    try {
+        const response = await fetch('{{ route("participants.deletion-data") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                participant_ids: participantIds
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showDeletionConfirmationModal(data.data, participantIds);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error fetching deletion data:', error);
+        alert('Error loading deletion confirmation data');
+    }
+}
+
+// Show the deletion confirmation modal
+function showDeletionConfirmationModal(data, participantIds) {
+    const modalContent = document.getElementById('deleteParticipantModal').querySelector('.modal-content');
+    const { participants, single_participant_users, multi_participant_users, has_single_participant_users, has_multi_participant_users } = data;
+    
+    let singleParticipantUsersHtml = '';
+    if (has_single_participant_users) {
+        singleParticipantUsersHtml = `
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-orange-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-orange-800 mb-2">Participant User Deletion</h4>
+                        <div class="text-sm text-orange-700 mb-3">
+                            ${single_participant_users.length} user(s) have only one participant profile:
+                        </div>
+                        <div class="space-y-2 mb-3">
+                            ${single_participant_users.map(user => `
+                                <div class="text-xs bg-orange-100 p-2 rounded">
+                                    <span class="font-medium">${user.user_name}</span> (${user.user_email}) - ${user.conference_name}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="deleteUserCheckbox" name="delete_user" value="1" class="rounded border-gray-300 text-red-600 shadow-sm focus:border-red-500 focus:ring-red-500">
+                            <span class="ml-2 text-sm text-orange-700 font-medium">Also delete these user accounts</span>
+                        </label>
+                        <p class="text-xs text-orange-600 mt-1">⚠️ This will permanently delete the user accounts and cannot be undone.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    let multiParticipantUsersHtml = '';
+    if (has_multi_participant_users) {
+        multiParticipantUsersHtml = `
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-blue-800 mb-2">Multiple Participant Accounts</h4>
+                        <div class="text-sm text-blue-700 mb-3">
+                            The following users have multiple participant accounts and will NOT be deleted:
+                        </div>
+                        <div class="space-y-2">
+                            ${multi_participant_users.map(user => `
+                                <div class="text-xs bg-blue-100 p-2 rounded">
+                                    <span class="font-medium">${user.user_name}</span> (${user.user_email}) - ${user.total_participants} participant account(s)
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    modalContent.innerHTML = `
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900">Delete Participant${participantIds.length > 1 ? 's' : ''}</h3>
+            </div>
+            
+            <div class="mb-6">
+                <p class="text-gray-700 mb-4">
+                    Are you sure you want to delete the following participant${participantIds.length > 1 ? 's' : ''}?
+                </p>
+                <div class="space-y-2">
+                    ${participants.map(participant => `
+                        <div class="text-sm bg-gray-100 p-2 rounded">
+                            <span class="font-medium">${participant.profile_name}</span> - ${participant.conference_name}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            ${singleParticipantUsersHtml}
+            ${multiParticipantUsersHtml}
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeParticipantDeleteModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="deleteParticipants(${JSON.stringify(participantIds)})" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Delete Participant${participantIds.length > 1 ? 's' : ''}
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('deleteParticipantModal').classList.remove('hidden');
+}
+
+// Delete participants
+function deleteParticipants(participantIds) {
+    const isBulk = participantIds.length > 1;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = isBulk ? '{{ route("participants.bulk-delete") }}' : `/participants/${participantIds[0]}`;
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = '_token';
+    csrfToken.value = '{{ csrf_token() }}';
+    
+    const methodField = document.createElement('input');
+    methodField.type = 'hidden';
+    methodField.name = '_method';
+    methodField.value = 'DELETE';
+    
+    // Add participant IDs
+    if (isBulk) {
+        participantIds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'participant_ids[]';
+            input.value = id;
+            form.appendChild(input);
+        });
+    }
+    
+    // Add user deletion checkbox value if checked
+    const deleteUserCheckbox = document.getElementById('deleteUserCheckbox');
+    if (deleteUserCheckbox && deleteUserCheckbox.checked) {
+        const deleteUserField = document.createElement('input');
+        deleteUserField.type = 'hidden';
+        deleteUserField.name = 'delete_user';
+        deleteUserField.value = '1';
+        form.appendChild(deleteUserField);
+    }
+    
+    form.appendChild(csrfToken);
+    form.appendChild(methodField);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Close participant delete modal
+function closeParticipantDeleteModal() {
+    document.getElementById('deleteParticipantModal').classList.add('hidden');
+}
 </script>
 
 <!-- Email Modal -->
@@ -2115,6 +2342,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     Reject
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Participant Deletion Confirmation Modal -->
+<div id="deleteParticipantModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="modal-content">
+            <!-- Content will be dynamically loaded here -->
         </div>
     </div>
 </div>

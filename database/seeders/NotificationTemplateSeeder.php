@@ -87,7 +87,7 @@ class NotificationTemplateSeeder extends Seeder
                 'variable_name' => 'current_date',
                 'notification_type' => '*',
                 'variable_description' => 'Current date',
-                'example_value' => 'Dec 10, 2024',
+                'example_value' => 'Jan 10, 2025',
                 'is_system_variable' => true,
             ],
             [
@@ -101,7 +101,7 @@ class NotificationTemplateSeeder extends Seeder
                 'variable_name' => 'conference_name',
                 'notification_type' => '*',
                 'variable_description' => 'Name of the conference',
-                'example_value' => 'Tech Conference 2024',
+                'example_value' => 'Digital Marketing Summit 2025',
                 'is_system_variable' => true,
             ],
 
@@ -138,7 +138,7 @@ class NotificationTemplateSeeder extends Seeder
                 'variable_name' => 'due_date',
                 'notification_type' => NotificationTemplate::TYPE_TASK_UPDATE,
                 'variable_description' => 'Due date of the task',
-                'example_value' => 'Dec 15, 2024',
+                'example_value' => 'Jan 15, 2025',
                 'is_system_variable' => false,
             ],
             [
@@ -240,14 +240,14 @@ class NotificationTemplateSeeder extends Seeder
                 'variable_name' => 'check_in',
                 'notification_type' => NotificationTemplate::TYPE_TRAVEL_UPDATE,
                 'variable_description' => 'Check-in date and time',
-                'example_value' => 'Dec 10, 2024 3:00 PM',
+                'example_value' => 'Jan 10, 2025 3:00 PM',
                 'is_system_variable' => false,
             ],
             [
                 'variable_name' => 'check_out',
                 'notification_type' => NotificationTemplate::TYPE_TRAVEL_UPDATE,
                 'variable_description' => 'Check-out date and time',
-                'example_value' => 'Dec 12, 2024 11:00 AM',
+                'example_value' => 'Jan 12, 2025 11:00 AM',
                 'is_system_variable' => false,
             ],
 

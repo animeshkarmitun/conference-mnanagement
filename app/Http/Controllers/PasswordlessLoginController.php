@@ -34,17 +34,10 @@ class PasswordlessLoginController extends Controller
         }
 
         if (!$passwordlessLogin->isValid()) {
-            if ($passwordlessLogin->used_at) {
-                return view('auth.passwordless-login.invalid', [
-                    'message' => 'This login link has already been used.',
-                    'error_type' => 'already_used'
-                ]);
-            } else {
-                return view('auth.passwordless-login.invalid', [
-                    'message' => 'This login link has expired.',
-                    'error_type' => 'expired'
-                ]);
-            }
+            return view('auth.passwordless-login.invalid', [
+                'message' => 'This login link has expired.',
+                'error_type' => 'expired'
+            ]);
         }
 
         return view('auth.passwordless-login.verify', [
@@ -68,8 +61,8 @@ class PasswordlessLoginController extends Controller
             ]);
         }
 
-        // Redirect to participant dashboard
-        return redirect()->route('participant-dashboard')
+        // Redirect to my-profile
+        return redirect()->route('my-profile')
                         ->with('success', 'Welcome! You have successfully logged in.');
     }
 
@@ -130,10 +123,11 @@ class PasswordlessLoginController extends Controller
 
             $expirationDays = $request->expiration_days ?? 1;
             $expirationHours = $expirationDays * 24; // Convert days to hours
-            $passwordlessLogin = $this->passwordlessLoginService->generateLoginLink($user, $expirationHours);
             
             // Use provided conference_id or get latest conference
             $conference = $request->conference_id ? Conference::find($request->conference_id) : Conference::latest()->first();
+            $passwordlessLogin = $this->passwordlessLoginService->generateLoginLink($user, $expirationHours, $conference);
+            
             $emailSent = $this->passwordlessLoginService->sendLoginEmail($user, $passwordlessLogin, $conference);
 
             return response()->json([

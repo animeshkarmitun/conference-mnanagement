@@ -456,6 +456,92 @@ class BackupService
     }
 
     /**
+     * Preview cleanup operation
+     */
+    public function previewCleanup(array $cleanupTypes, int $retentionDays, bool $includeFailed = false, bool $includeInProgress = false): array
+    {
+        $cutoffDate = Carbon::now()->subDays($retentionDays);
+        
+        $query = BackupRecord::where('created_at', '<', $cutoffDate);
+        
+        if (!$includeFailed) {
+            $query->where('status', '!=', 'failed');
+        }
+        
+        if (!$includeInProgress) {
+            $query->where('status', '!=', 'in_progress');
+        }
+        
+        $backups = $query->get();
+        $totalSize = $backups->sum('file_size');
+        
+        return [
+            'count' => $backups->count(),
+            'size' => $this->formatBytes($totalSize)
+        ];
+    }
+
+    /**
+     * Cleanup backups with options
+     */
+    public function cleanupBackups(array $cleanupTypes, int $retentionDays, bool $includeFailed = false, bool $includeInProgress = false): array
+    {
+        $cutoffDate = Carbon::now()->subDays($retentionDays);
+        $deletedCount = 0;
+        $freedSpace = 0;
+        
+        $query = BackupRecord::where('created_at', '<', $cutoffDate);
+        
+        if (!$includeFailed) {
+            $query->where('status', '!=', 'failed');
+        }
+        
+        if (!$includeInProgress) {
+            $query->where('status', '!=', 'in_progress');
+        }
+        
+        $backups = $query->get();
+        
+        foreach ($backups as $backup) {
+            $fileSize = $backup->file_size ?? 0;
+            
+            // Delete files if requested
+            if (in_array('files', $cleanupTypes) && $backup->file_path && file_exists($backup->file_path)) {
+                unlink($backup->file_path);
+            }
+            
+            // Delete database record if requested
+            if (in_array('database', $cleanupTypes)) {
+                $backup->delete();
+                $deletedCount++;
+                $freedSpace += $fileSize;
+            } else if (in_array('files', $cleanupTypes) && !in_array('database', $cleanupTypes)) {
+                // If only files are being cleaned, still count the record as processed
+                $deletedCount++;
+                $freedSpace += $fileSize;
+            }
+        }
+        
+        $message = "Successfully cleaned up {$deletedCount} backup(s)";
+        if ($freedSpace > 0) {
+            $message .= " and freed {$this->formatBytes($freedSpace)} of storage space";
+        }
+        
+        Log::info("Enhanced backup cleanup completed", [
+            'deleted_count' => $deletedCount,
+            'freed_space' => $freedSpace,
+            'cleanup_types' => $cleanupTypes,
+            'retention_days' => $retentionDays,
+        ]);
+        
+        return [
+            'message' => $message,
+            'deleted_count' => $deletedCount,
+            'freed_space' => $this->formatBytes($freedSpace)
+        ];
+    }
+
+    /**
      * Verify backup integrity
      */
     public function verifyBackup(int $id): bool
@@ -468,7 +554,52 @@ class BackupService
 
         $currentChecksum = hash_file('sha256', $backup->getFullFilePath());
         
-        return $currentChecksum === $backup->checksum;
+        // Check file integrity
+        if ($currentChecksum !== $backup->checksum) {
+            return false;
+        }
+        
+        // Check if file contains valid SQL content
+        return $this->validateBackupContent($backup->getFullFilePath());
+    }
+    
+    /**
+     * Validate backup file content
+     */
+    public function validateBackupContent(string $filePath): bool
+    {
+        if (!file_exists($filePath)) {
+            return false;
+        }
+        
+        $content = file_get_contents($filePath);
+        if ($content === false) {
+            return false;
+        }
+        
+        // Check if content contains valid SQL statements
+        $sqlStatements = array_filter(
+            array_map('trim', explode(';', $content)),
+            function($stmt) {
+                return !empty($stmt) && 
+                       !preg_match('/^--/', $stmt) && // Skip comments
+                       !preg_match('/^\/\*/', $stmt) && // Skip block comments
+                       !preg_match('/^max-width:/', $stmt) && // Skip CSS content
+                       !preg_match('/^[a-zA-Z-]+:\s*[a-zA-Z0-9\s]+$/', $stmt) && // Skip CSS properties
+                       !preg_match('/^<[^>]+>$/', $stmt); // Skip HTML tags
+            }
+        );
+        
+        // Check if we have any valid SQL statements
+        $validSqlCount = 0;
+        foreach ($sqlStatements as $statement) {
+            if (preg_match('/^(CREATE|INSERT|UPDATE|DELETE|DROP|ALTER|SET|USE|LOCK|UNLOCK)/i', $statement)) {
+                $validSqlCount++;
+            }
+        }
+        
+        // File is valid if it contains at least some SQL statements
+        return $validSqlCount > 0;
     }
 
     /**

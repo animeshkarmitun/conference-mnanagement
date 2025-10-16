@@ -9,6 +9,8 @@ class ConferenceDoc extends Model
 {
     use HasFactory;
 
+    protected $table = 'conference_kits';
+
     protected $fillable = [
         'conference_id',
         'participant_id',
@@ -27,7 +29,7 @@ class ConferenceDoc extends Model
 
     public function conferenceDocItems()
     {
-        return $this->hasMany(ConferenceDocItem::class, 'doc_id');
+        return $this->hasMany(ConferenceDocItem::class, 'kit_id');
     }
 
     // Legacy relationship for backward compatibility

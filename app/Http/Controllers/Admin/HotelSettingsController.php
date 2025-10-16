@@ -41,8 +41,6 @@ class HotelSettingsController extends Controller
             'contact_phone' => 'nullable|string|max:20',
             'website' => 'nullable|url|max:255',
             'amenities' => 'nullable|array',
-            'check_in_time' => 'nullable|date_format:H:i',
-            'check_out_time' => 'nullable|date_format:H:i|after:check_in_time',
             'description' => 'nullable|string',
         ]);
 
@@ -85,8 +83,6 @@ class HotelSettingsController extends Controller
             'contact_phone' => 'nullable|string|max:20',
             'website' => 'nullable|url|max:255',
             'amenities' => 'nullable|array',
-            'check_in_time' => 'nullable|date_format:H:i',
-            'check_out_time' => 'nullable|date_format:H:i|after:check_in_time',
             'description' => 'nullable|string',
         ]);
 

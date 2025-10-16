@@ -275,11 +275,12 @@
     </div>
 </div>
 
-<!-- Conference Filter -->
+<!-- Conference and Session Title Filters -->
 <div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-3">
     <div class="p-4 border-b border-gray-200">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="flex items-center space-x-4">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <!-- Conference Filter -->
                 <div class="flex items-center space-x-2">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
@@ -322,6 +323,34 @@
                         </div>
                     </div>
                     <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
+                </div>
+                
+                <!-- Session Title Filter -->
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <label for="session_title_search" class="text-sm font-medium text-gray-700">Filter by Session Title:</label>
+                </div>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="session_title_search" 
+                        placeholder="Search session titles..." 
+                        value="{{ request('session_title') }}"
+                        class="w-64 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-8"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="button" 
+                        id="clear_session_title" 
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 {{ request('session_title') ? '' : 'hidden' }}"
+                        title="Clear session title search"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
             <div class="flex items-center space-x-4">
@@ -571,7 +600,7 @@
     </div>
     
     <div class="mt-6">
-        {{ $sessions->appends(['status' => $status, 'conference_id' => request('conference_id')])->links() }}
+        {{ $sessions->appends(['status' => $status, 'conference_id' => request('conference_id'), 'session_title' => request('session_title')])->links() }}
     </div>
 </div>
 
@@ -775,6 +804,18 @@ document.addEventListener('DOMContentLoaded', function() {
             currentUrl.searchParams.set('status', statusParam);
         }
         
+        // Preserve existing session title parameter
+        const sessionTitleParam = currentUrl.searchParams.get('session_title');
+        if (sessionTitleParam) {
+            currentUrl.searchParams.set('session_title', sessionTitleParam);
+        }
+        
+        // Preserve existing session status parameter
+        const sessionStatusParam = currentUrl.searchParams.get('session_status');
+        if (sessionStatusParam) {
+            currentUrl.searchParams.set('session_status', sessionStatusParam);
+        }
+        
         window.location.href = currentUrl.toString();
     }
     
@@ -794,6 +835,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const statusParam = currentUrl.searchParams.get('status');
         if (statusParam) {
             currentUrl.searchParams.set('status', statusParam);
+        }
+        
+        // Preserve existing session title parameter
+        const sessionTitleParam = currentUrl.searchParams.get('session_title');
+        if (sessionTitleParam) {
+            currentUrl.searchParams.set('session_title', sessionTitleParam);
+        }
+        
+        // Preserve existing session status parameter
+        const sessionStatusParam = currentUrl.searchParams.get('session_status');
+        if (sessionStatusParam) {
+            currentUrl.searchParams.set('session_status', sessionStatusParam);
         }
         
         window.location.href = currentUrl.toString();
@@ -895,8 +948,90 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentUrl.searchParams.set('conference_id', conferenceId);
             }
             
+            // Preserve session title filter if it exists
+            const sessionTitle = currentUrl.searchParams.get('session_title');
+            if (sessionTitle) {
+                currentUrl.searchParams.set('session_title', sessionTitle);
+            }
+            
             window.location.href = currentUrl.toString();
         });
+    }
+
+    // Session title search functionality
+    const sessionTitleSearch = document.getElementById('session_title_search');
+    const clearSessionTitleBtn = document.getElementById('clear_session_title');
+    
+    if (sessionTitleSearch) {
+        let searchTimeout;
+        
+        sessionTitleSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Show/hide clear button
+            if (query) {
+                clearSessionTitleBtn.classList.remove('hidden');
+            } else {
+                clearSessionTitleBtn.classList.add('hidden');
+            }
+            
+            // Debounce search to avoid too many requests
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSessionTitleSearch(query);
+            }, 500); // 500ms delay
+        });
+        
+        sessionTitleSearch.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                performSessionTitleSearch(this.value.trim());
+            } else if (e.key === 'Escape') {
+                this.value = '';
+                clearSessionTitleBtn.classList.add('hidden');
+                clearTimeout(searchTimeout);
+                performSessionTitleSearch('');
+            }
+        });
+    }
+    
+    if (clearSessionTitleBtn) {
+        clearSessionTitleBtn.addEventListener('click', function() {
+            sessionTitleSearch.value = '';
+            this.classList.add('hidden');
+            performSessionTitleSearch('');
+        });
+    }
+    
+    function performSessionTitleSearch(query) {
+        const currentUrl = new URL(window.location);
+        
+        if (query) {
+            currentUrl.searchParams.set('session_title', query);
+        } else {
+            currentUrl.searchParams.delete('session_title');
+        }
+        
+        // Preserve conference filter if it exists
+        const conferenceId = currentUrl.searchParams.get('conference_id');
+        if (conferenceId) {
+            currentUrl.searchParams.set('conference_id', conferenceId);
+        }
+        
+        // Preserve status filter if it exists
+        const status = currentUrl.searchParams.get('status');
+        if (status) {
+            currentUrl.searchParams.set('status', status);
+        }
+        
+        // Preserve session status filter if it exists
+        const sessionStatus = currentUrl.searchParams.get('session_status');
+        if (sessionStatus) {
+            currentUrl.searchParams.set('session_status', sessionStatus);
+        }
+        
+        window.location.href = currentUrl.toString();
     }
 
     // Export sessions functionality
@@ -924,6 +1059,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (conferenceId) {
             exportUrl += 'conference_id=' + encodeURIComponent(conferenceId) + '&';
+        }
+        
+        const sessionTitle = currentUrl.searchParams.get('session_title') || '';
+        if (sessionTitle) {
+            exportUrl += 'session_title=' + encodeURIComponent(sessionTitle) + '&';
         }
         
         // Remove trailing & if present

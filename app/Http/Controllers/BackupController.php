@@ -311,21 +311,73 @@ class BackupController extends Controller
     }
 
     /**
+     * Preview cleanup operation
+     */
+    public function cleanupPreview(Request $request): JsonResponse
+    {
+        $request->validate([
+            'cleanup_types' => 'required|array|min:1',
+            'cleanup_types.*' => 'in:files,database',
+            'days' => 'required|integer|min:1|max:365',
+            'cleanup_failed' => 'boolean',
+            'cleanup_in_progress' => 'boolean'
+        ]);
+
+        try {
+            $preview = $this->backupService->previewCleanup(
+                $request->cleanup_types,
+                $request->days,
+                $request->boolean('cleanup_failed', false),
+                $request->boolean('cleanup_in_progress', false)
+            );
+
+            return response()->json([
+                'success' => true,
+                'backup_count' => $preview['count'],
+                'total_size' => $preview['size'],
+                'message' => "Found {$preview['count']} backup(s) matching cleanup criteria"
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Preview failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Clean up old backups
      */
     public function cleanup(Request $request): JsonResponse
     {
         $request->validate([
-            'days' => 'required|integer|min:1|max:365'
+            'cleanup_types' => 'required|array|min:1',
+            'cleanup_types.*' => 'in:files,database',
+            'days' => 'required|integer|min:1|max:365',
+            'cleanup_failed' => 'boolean',
+            'cleanup_in_progress' => 'boolean',
+            'create_safety_backup' => 'boolean'
         ]);
 
         try {
-            $deletedCount = $this->backupService->cleanupOldBackups($request->days);
+            // Create safety backup if requested
+            if ($request->boolean('create_safety_backup', true)) {
+                $this->backupService->createBackup('safety', auth()->user());
+            }
+
+            $result = $this->backupService->cleanupBackups(
+                $request->cleanup_types,
+                $request->days,
+                $request->boolean('cleanup_failed', false),
+                $request->boolean('cleanup_in_progress', false)
+            );
 
             return response()->json([
                 'success' => true,
-                'message' => "Successfully deleted {$deletedCount} old backup(s)",
-                'deleted_count' => $deletedCount
+                'message' => $result['message'],
+                'deleted_count' => $result['deleted_count'],
+                'freed_space' => $result['freed_space']
             ]);
 
         } catch (Exception $e) {

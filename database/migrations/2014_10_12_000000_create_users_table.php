@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('email')->unique();
+            $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('first_name');
@@ -25,6 +25,9 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
         });
+        
+        // Add unique index with length limit to avoid MySQL key length issues
+        \DB::statement('ALTER TABLE users ADD UNIQUE users_email_unique (email(191))');
     }
 
     /**

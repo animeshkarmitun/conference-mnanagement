@@ -60,7 +60,8 @@ class EventCoordinatorController extends Controller
             return redirect()->back()->with('error', 'Access denied. Event Coordinator privileges required.');
         }
 
-        $query = TravelDetail::with(['participant.user', 'hotel', 'participant.conference']);
+        $query = TravelDetail::with(['participant.user', 'hotel', 'participant.conference'])
+            ->whereHas('participant'); // Only include travel details with valid participants
 
         // Apply filters
         if ($request->filled('conference_id')) {
@@ -97,7 +98,8 @@ class EventCoordinatorController extends Controller
             return redirect()->back()->with('error', 'Access denied. Event Coordinator privileges required.');
         }
 
-        $query = TravelDetail::with(['participant.user', 'hotel', 'participant.conference']);
+        $query = TravelDetail::with(['participant.user', 'hotel', 'participant.conference'])
+            ->whereHas('participant'); // Only include travel details with valid participants
 
         // Apply same filters as list view
         if ($request->filled('conference_id')) {

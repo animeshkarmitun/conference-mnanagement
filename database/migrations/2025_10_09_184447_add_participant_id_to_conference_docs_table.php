@@ -11,13 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('conference_docs', function (Blueprint $table) {
-            // Add participant_id column
-            $table->foreignId('participant_id')->nullable()->after('conference_id')->constrained()->onDelete('cascade');
-            
-            // Add index for better performance
-            $table->index(['participant_id', 'conference_id']);
-        });
+        if (Schema::hasTable('conference_kits')) {
+            Schema::table('conference_kits', function (Blueprint $table) {
+                // Add participant_id column if it doesn't exist
+                if (!Schema::hasColumn('conference_kits', 'participant_id')) {
+                    $table->foreignId('participant_id')->nullable()->constrained()->onDelete('cascade');
+                }
+                
+                // Add index for better performance if it doesn't exist
+                if (!Schema::hasIndex('conference_kits', 'conference_kits_participant_id_conference_id_index')) {
+                    $table->index(['participant_id', 'conference_id']);
+                }
+            });
+        }
     }
 
     /**
@@ -25,7 +31,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('conference_docs', function (Blueprint $table) {
+        Schema::table('conference_kits', function (Blueprint $table) {
             $table->dropIndex(['participant_id', 'conference_id']);
             $table->dropForeign(['participant_id']);
             $table->dropColumn('participant_id');

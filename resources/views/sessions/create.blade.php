@@ -100,8 +100,8 @@
             </div>
 
             <div class="mt-4">
-                <label for="description" class="block text-sm font-medium text-gray-700">Description *</label>
-                <textarea name="description" id="description" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">{{ old('description') }}</textarea>
+                <label for="description" class="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                <textarea name="description" id="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">{{ old('description') }}</textarea>
                 @error('description')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
         </div>
@@ -117,7 +117,7 @@
                     <div class="md:col-span-2">
                         <label for="participant_search" class="block text-sm font-medium text-gray-700 mb-2">Search Participants</label>
                         <div class="relative">
-                            <input type="text" id="participant_search" placeholder="Search by name, email, or organization..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pl-10">
+                            <input type="text" id="participant_search" placeholder="Search by name, email, organization, or hashtag..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pl-10">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -176,13 +176,23 @@
                     <div class="max-h-96 overflow-y-auto">
                         <div id="available_participants" class="p-4 space-y-2">
                             @foreach($participants as $participant)
-                                <div class="participant-item available-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50" data-id="{{ $participant->id }}" data-name="{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}" data-email="{{ $participant->user->email }}" data-organization="{{ $participant->user->organization ?? '' }}" data-type="{{ $participant->participantType->name ?? '' }}">
+                                <div class="participant-item available-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50" data-id="{{ $participant->id }}" data-name="{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}" data-email="{{ $participant->user->email }}" data-organization="{{ $participant->user->organization_institution ?? $participant->user->organization ?? '' }}" data-type="{{ $participant->participantType->name ?? '' }}" data-hashtags="{{ $participant->hashtags ?? '' }}">
                                     <input type="checkbox" class="participant-checkbox mr-3 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
                                     <div class="flex-1">
                                         <div class="font-medium text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</div>
                                         <div class="text-sm text-gray-500">{{ $participant->user->email }}</div>
-                                        @if($participant->user->organization)
-                                            <div class="text-xs text-gray-400">{{ $participant->user->organization }}</div>
+                                        @if($participant->user->organization_institution ?? $participant->user->organization)
+                                            <div class="text-xs text-gray-400">{{ $participant->user->organization_institution ?? $participant->user->organization }}</div>
+                                        @endif
+                                        @if($participant->hashtags)
+                                            <div class="text-xs text-purple-600 mt-1">
+                                                @foreach(explode(',', $participant->hashtags) as $hashtag)
+                                                    @php $clean = ltrim(trim($hashtag), '#'); @endphp
+                                                    @if($clean)
+                                                        <span class="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs mr-1 mb-1">#{{ $clean }}</span>
+                                                    @endif
+                                                @endforeach
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
@@ -750,9 +760,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const name = item.dataset.name.toLowerCase();
             const email = item.dataset.email.toLowerCase();
             const organization = (item.dataset.organization || '').toLowerCase();
+            const hashtags = (item.dataset.hashtags || '').toLowerCase();
             const type = item.dataset.type;
 
-            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || organization.includes(searchTerm);
+            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || organization.includes(searchTerm) || hashtags.includes(searchTerm);
             const matchesType = !typeFilterValue || type === typeFilterValue;
             const matchesOrg = !orgFilterValue || organization === orgFilterValue.toLowerCase();
 
@@ -851,7 +862,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event listeners
-    searchInput.addEventListener('input', filterParticipants);
+    searchInput.addEventListener('input', function() {
+        // Debounce the search to avoid too many requests
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(() => {
+            const conferenceId = document.getElementById('conference_id').value;
+            if (conferenceId) {
+                loadParticipantsForConference(conferenceId);
+            } else {
+                filterParticipants();
+            }
+        }, 300);
+    });
     typeFilter.addEventListener('change', filterParticipants);
     orgFilter.addEventListener('change', filterParticipants);
 
@@ -964,7 +986,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = csrfTokenElement.getAttribute('content');
             console.log('CSRF Token:', csrfToken);
             
-            const response = await fetch(`/sessions/participants/by-conference?conference_id=${conferenceId}`, {
+            const searchTerm = document.getElementById('participant_search').value;
+            const url = `/sessions/participants/by-conference?conference_id=${conferenceId}${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ''}`;
+            
+            const response = await fetch(url, {
                 method: 'GET',
                 credentials: 'same-origin',
                 headers: {
@@ -1013,10 +1038,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update total count
             document.getElementById('total_available').textContent = data.participants.length;
             
-            // Reset filters and search
-            document.getElementById('participant_search').value = '';
-            document.getElementById('participant_type_filter').value = '';
-            document.getElementById('organization_filter').value = '';
+            // Only reset filters and search if this is initial load (no search term)
+            if (!searchTerm) {
+                document.getElementById('participant_type_filter').value = '';
+                document.getElementById('organization_filter').value = '';
+            }
             
             // Apply initial filtering
             filterParticipants();
@@ -1046,6 +1072,18 @@ document.addEventListener('DOMContentLoaded', function() {
         div.setAttribute('data-email', participant.email);
         div.setAttribute('data-organization', participant.organization);
         div.setAttribute('data-type', participant.type);
+        div.setAttribute('data-hashtags', participant.hashtags || '');
+        
+        // Create hashtags HTML
+        let hashtagsHtml = '';
+        if (participant.hashtags) {
+            const hashtags = participant.hashtags.split(',').map(tag => tag.trim().replace(/^#+/, '')).filter(tag => tag);
+            hashtagsHtml = `
+                <div class="text-xs text-purple-600 mt-1">
+                    ${hashtags.map(tag => `<span class="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs mr-1 mb-1">#${tag}</span>`).join('')}
+                </div>
+            `;
+        }
         
         div.innerHTML = `
             <input type="checkbox" class="participant-checkbox mr-3 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
@@ -1053,6 +1091,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="font-medium text-gray-900">${participant.name}</div>
                 <div class="text-sm text-gray-500">${participant.email}</div>
                 ${participant.organization ? `<div class="text-xs text-gray-400">${participant.organization}</div>` : ''}
+                ${hashtagsHtml}
             </div>
         `;
         

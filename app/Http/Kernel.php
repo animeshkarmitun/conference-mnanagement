@@ -37,6 +37,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\UseRemoteLayout::class,
+            \App\Http\Middleware\RestrictParticipantAccess::class,
         ],
 
         'api' => [
@@ -66,5 +67,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
         'admin.access' => \App\Http\Middleware\AdminAccess::class,
+        'participant.access' => \App\Http\Middleware\RestrictParticipantAccess::class,
     ];
 }

@@ -100,27 +100,6 @@
                                 </div>
                             </div>
                             
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="check_in_time" class="form-label">Check-in Time</label>
-                                    <input type="time" name="check_in_time" id="check_in_time" class="form-control @error('check_in_time') is-invalid @enderror" 
-                                           value="{{ old('check_in_time', '15:00') }}">
-                                    @error('check_in_time')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="check_out_time" class="form-label">Check-out Time</label>
-                                    <input type="time" name="check_out_time" id="check_out_time" class="form-control @error('check_out_time') is-invalid @enderror" 
-                                           value="{{ old('check_out_time', '11:00') }}">
-                                    @error('check_out_time')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
                         </div>
 
                         <div class="row">

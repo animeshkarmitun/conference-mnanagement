@@ -12,25 +12,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Fix passwordless_login related_model_type
-        DB::table('emails')
-            ->where('related_model_type', 'passwordless_login')
-            ->update(['related_model_type' => 'App\\Models\\PasswordlessLogin']);
+        // Only run if the related_model_type column exists and there's data
+        if (Schema::hasColumn('emails', 'related_model_type') && DB::table('emails')->count() > 0) {
+            // Fix passwordless_login related_model_type
+            DB::table('emails')
+                ->where('related_model_type', 'passwordless_login')
+                ->update(['related_model_type' => 'App\\Models\\PasswordlessLogin']);
 
-        // Fix participant related_model_type
-        DB::table('emails')
-            ->where('related_model_type', 'participant')
-            ->update(['related_model_type' => 'App\\Models\\Participant']);
+            // Fix participant related_model_type
+            DB::table('emails')
+                ->where('related_model_type', 'participant')
+                ->update(['related_model_type' => 'App\\Models\\Participant']);
 
-        // Fix task related_model_type
-        DB::table('emails')
-            ->where('related_model_type', 'task')
-            ->update(['related_model_type' => 'App\\Models\\Task']);
+            // Fix task related_model_type
+            DB::table('emails')
+                ->where('related_model_type', 'task')
+                ->update(['related_model_type' => 'App\\Models\\Task']);
 
-        // Fix session related_model_type
-        DB::table('emails')
-            ->where('related_model_type', 'session')
-            ->update(['related_model_type' => 'App\\Models\\Session']);
+            // Fix session related_model_type
+            DB::table('emails')
+                ->where('related_model_type', 'session')
+                ->update(['related_model_type' => 'App\\Models\\Session']);
+        }
     }
 
     /**

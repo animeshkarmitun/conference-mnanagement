@@ -17,8 +17,6 @@ class Hotel extends Model
         'contact_phone',
         'website',
         'amenities',
-        'check_in_time',
-        'check_out_time',
         'is_active',
         'description',
     ];
@@ -26,8 +24,6 @@ class Hotel extends Model
     protected $casts = [
         'amenities' => 'array',
         'is_active' => 'boolean',
-        'check_in_time' => 'datetime:H:i',
-        'check_out_time' => 'datetime:H:i',
     ];
 
     // Relationships

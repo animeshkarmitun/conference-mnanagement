@@ -77,9 +77,9 @@ class ConferenceTasksSeeder extends Seeder
 
         // Define tasks for each conference
         $conferenceTasks = [
-            // Digital Marketing Summit 2024 (ongoing)
+            // Digital Marketing Summit 2025 (ongoing)
             [
-                'conference_name' => 'Digital Marketing Summit 2024',
+                'conference_name' => 'Digital Marketing Summit 2025',
                 'tasks' => [
                     [
                         'title' => 'Setup Registration Desk',
@@ -87,7 +87,7 @@ class ConferenceTasksSeeder extends Seeder
                         'theme' => 'Logistics',
                         'status' => 'completed',
                         'priority' => 'high',
-                        'due_date' => now()->subDays(1),
+                        'due_date' => now()->subDays(2),
                     ],
                     [
                         'title' => 'Coordinate Speaker Arrivals',
@@ -112,6 +112,30 @@ class ConferenceTasksSeeder extends Seeder
                         'status' => 'pending',
                         'priority' => 'medium',
                         'due_date' => now()->addDays(3),
+                    ],
+                    [
+                        'title' => 'Setup Digital Marketing Demo Stations',
+                        'description' => 'Install and test marketing automation tools and analytics dashboards',
+                        'theme' => 'Technical Setup',
+                        'status' => 'completed',
+                        'priority' => 'high',
+                        'due_date' => now()->subDays(1),
+                    ],
+                    [
+                        'title' => 'Coordinate Social Media Coverage',
+                        'description' => 'Manage live social media updates and engagement during sessions',
+                        'theme' => 'Marketing',
+                        'status' => 'in_progress',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(1),
+                    ],
+                    [
+                        'title' => 'Prepare Marketing Case Study Materials',
+                        'description' => 'Print and distribute case study booklets for workshop participants',
+                        'theme' => 'Materials',
+                        'status' => 'pending',
+                        'priority' => 'low',
+                        'due_date' => now()->addDays(2),
                     ],
                 ]
             ],
@@ -151,6 +175,30 @@ class ConferenceTasksSeeder extends Seeder
                         'priority' => 'medium',
                         'due_date' => now()->addDays(3),
                     ],
+                    [
+                        'title' => 'Setup Telemedicine Demo Stations',
+                        'description' => 'Install and test telemedicine equipment for live demonstrations',
+                        'theme' => 'Technical Setup',
+                        'status' => 'completed',
+                        'priority' => 'high',
+                        'due_date' => now()->subDays(1),
+                    ],
+                    [
+                        'title' => 'Coordinate Medical Device Vendors',
+                        'description' => 'Manage vendor setup and equipment demonstrations',
+                        'theme' => 'Vendor Management',
+                        'status' => 'in_progress',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(1),
+                    ],
+                    [
+                        'title' => 'Prepare Healthcare Compliance Materials',
+                        'description' => 'Create and distribute HIPAA compliance and regulatory materials',
+                        'theme' => 'Compliance',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(2),
+                    ],
                 ]
             ],
             // AI & Machine Learning Expo (starting in 2 days)
@@ -185,6 +233,22 @@ class ConferenceTasksSeeder extends Seeder
                         'title' => 'Setup Networking App',
                         'description' => 'Configure AI-powered networking app for attendees',
                         'theme' => 'Technology',
+                        'status' => 'pending',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(2),
+                    ],
+                    [
+                        'title' => 'Setup GPU Computing Clusters',
+                        'description' => 'Install and test high-performance computing clusters for ML demos',
+                        'theme' => 'Technical Setup',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(1),
+                    ],
+                    [
+                        'title' => 'Coordinate AI Ethics Panel',
+                        'description' => 'Arrange panel discussion on AI ethics and responsible development',
+                        'theme' => 'Session Setup',
                         'status' => 'pending',
                         'priority' => 'medium',
                         'due_date' => now()->addDays(2),
@@ -226,6 +290,120 @@ class ConferenceTasksSeeder extends Seeder
                         'status' => 'pending',
                         'priority' => 'low',
                         'due_date' => now()->addDays(3),
+                    ],
+                ]
+            ],
+            // FinTech Revolution Summit (starting in 7 days)
+            [
+                'conference_name' => 'FinTech Revolution Summit',
+                'tasks' => [
+                    [
+                        'title' => 'Setup Financial Technology Demos',
+                        'description' => 'Install and test fintech applications and blockchain demonstrations',
+                        'theme' => 'Technical Setup',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(5),
+                    ],
+                    [
+                        'title' => 'Coordinate Banking Executive Arrivals',
+                        'description' => 'Arrange transportation and accommodation for financial industry speakers',
+                        'theme' => 'Speaker Management',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(6),
+                    ],
+                    [
+                        'title' => 'Prepare Regulatory Compliance Materials',
+                        'description' => 'Create materials on financial regulations and compliance requirements',
+                        'theme' => 'Compliance',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(6),
+                    ],
+                    [
+                        'title' => 'Setup Digital Payment Stations',
+                        'description' => 'Install contactless payment and cryptocurrency demo stations',
+                        'theme' => 'Technology',
+                        'status' => 'pending',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(6),
+                    ],
+                ]
+            ],
+            // Climate Change & Sustainability Forum (starting in 14 days)
+            [
+                'conference_name' => 'Climate Change & Sustainability Forum',
+                'tasks' => [
+                    [
+                        'title' => 'Setup Environmental Monitoring Equipment',
+                        'description' => 'Install air quality monitors and sustainability tracking displays',
+                        'theme' => 'Technical Setup',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(12),
+                    ],
+                    [
+                        'title' => 'Coordinate Environmental Expert Arrivals',
+                        'description' => 'Arrange transportation for climate scientists and sustainability experts',
+                        'theme' => 'Speaker Management',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(13),
+                    ],
+                    [
+                        'title' => 'Prepare Carbon Footprint Calculator',
+                        'description' => 'Set up interactive carbon footprint calculation tools for attendees',
+                        'theme' => 'Technology',
+                        'status' => 'pending',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(13),
+                    ],
+                    [
+                        'title' => 'Arrange Sustainable Catering',
+                        'description' => 'Coordinate with local organic and sustainable food vendors',
+                        'theme' => 'Catering',
+                        'status' => 'pending',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(12),
+                    ],
+                ]
+            ],
+            // EdTech Innovation Conference (starting in 21 days)
+            [
+                'conference_name' => 'EdTech Innovation Conference',
+                'tasks' => [
+                    [
+                        'title' => 'Setup Educational Technology Labs',
+                        'description' => 'Install VR/AR equipment and online learning platforms for demos',
+                        'theme' => 'Technical Setup',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(19),
+                    ],
+                    [
+                        'title' => 'Coordinate Educator Speaker Arrivals',
+                        'description' => 'Arrange transportation for teachers, professors, and EdTech experts',
+                        'theme' => 'Speaker Management',
+                        'status' => 'pending',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(20),
+                    ],
+                    [
+                        'title' => 'Prepare Interactive Learning Materials',
+                        'description' => 'Create hands-on learning modules and educational content',
+                        'theme' => 'Materials',
+                        'status' => 'pending',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(20),
+                    ],
+                    [
+                        'title' => 'Setup Student Showcase Area',
+                        'description' => 'Prepare exhibition space for student projects and innovations',
+                        'theme' => 'Session Setup',
+                        'status' => 'pending',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(19),
                     ],
                 ]
             ],

@@ -15,7 +15,6 @@ class Room extends Model
         'room_number',
         'room_type',
         'beds',
-        'price_per_night',
         'description',
         'is_available',
         'floor_number',
@@ -27,7 +26,6 @@ class Room extends Model
     protected $casts = [
         'amenities' => 'array',
         'is_available' => 'boolean',
-        'price_per_night' => 'decimal:2',
     ];
 
     // Relationships

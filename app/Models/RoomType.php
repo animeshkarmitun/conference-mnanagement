@@ -13,7 +13,6 @@ class RoomType extends Model
         'name',
         'description',
         'default_beds',
-        'base_price',
         'amenities',
         'is_active',
     ];
@@ -21,7 +20,6 @@ class RoomType extends Model
     protected $casts = [
         'amenities' => 'array',
         'is_active' => 'boolean',
-        'base_price' => 'decimal:2',
     ];
 
     // Relationships

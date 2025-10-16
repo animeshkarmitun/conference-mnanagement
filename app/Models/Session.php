@@ -20,11 +20,16 @@ class Session extends Model
         'capacity',
         'seating_arrangement',
         'status',
+        'email_send_count',
+        'last_email_sent_at',
+        'email_recipients',
     ];
 
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'last_email_sent_at' => 'datetime',
+        'email_recipients' => 'array',
     ];
 
     // Relationships

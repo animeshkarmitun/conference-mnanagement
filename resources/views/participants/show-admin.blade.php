@@ -1,131 +1,643 @@
 @extends('layouts.app')
 
+@section('title', 'View Participant')
+
 @section('content')
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-            <div class="p-6">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">
-                            {{ isset($participant->user->first_name) ? $participant->user->first_name : $participant->user->name }} {{ isset($participant->user->last_name) ? $participant->user->last_name : '' }}
-                        </h1>
-                        <p class="text-gray-600">
-                            {{ isset($participant->participantType->name) ? $participant->participantType->name : '' }} - {{ isset($participant->conference->name) ? $participant->conference->name : 'Conference' }}
-                        </p>
+<!-- Professional Page Header -->
+<div class="rounded-2xl bg-gradient-to-r from-blue-100 via-blue-50 to-white shadow flex items-center px-8 py-6 mb-6 border border-blue-200">
+    <div class="flex items-center justify-center w-16 h-16 bg-blue-200 rounded-full mr-6 shadow">
+        <svg class="w-8 h-8 text-blue-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+    </div>
+    <div class="flex-1">
+        <h1 class="text-3xl font-extrabold text-blue-800 tracking-tight mb-1">
+            {{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}
+        </h1>
+        <div class="text-gray-600 text-lg font-medium">
+            {{ ucwords(str_replace('_', ' ', $participant->participantType->name ?? '')) }} - {{ $participant->conference->name ?? 'No Conference' }}
+        </div>
+    </div>
+    <div class="flex space-x-4">
+        <a href="{{ route('participants.index') }}" 
+           class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-all duration-200 font-medium">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            ← Back to Participants
+        </a>
+        <a href="{{ route('participants.edit', $participant) }}" 
+           class="inline-flex items-center px-8 py-3 modern-primary rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Edit Participant
+        </a>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow p-6">
+    <!-- Participant Information Section -->
+    <div class="mb-8 p-6 bg-blue-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Participant Information</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Conference</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->conference->name ?? 'Not specified' }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Participant Type</label>
+                <div class="mt-1 text-sm text-gray-900">{{ ucwords(str_replace('_', ' ', $participant->participantType->name ?? 'Not specified')) }}</div>
+                @if($participant->participantType)
+                    <div class="mt-1 text-xs text-gray-500">
+                        <div>Requires Approval: {{ $participant->participantType->requires_approval ? 'Yes' : 'No' }}</div>
+                        <div>Has Special Privileges: {{ $participant->participantType->has_special_privileges ? 'Yes' : 'No' }}</div>
                     </div>
-                    <div class="flex space-x-4">
-                        <a href="{{ route('participants.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                            <i class="fas fa-arrow-left mr-2"></i>Back to Participants
-                        </a>
-                        <a href="{{ route('participants.edit', $participant) }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            <i class="fas fa-edit mr-2"></i>Edit Participant
-                        </a>
-                    </div>
-                </div>
+                @endif
             </div>
         </div>
+    </div>
 
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-                <!-- Single Page Layout - All Sections -->
-                <div class="space-y-8">
-                    
-                    <!-- Personal Information Section -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                                <i class="fas fa-user mr-3 text-blue-600"></i>
-                                Personal Information
-                            </h2>
-                        </div>
-                        <div class="p-6">
-                            @include('participants.partials.profile-info', ['participant' => $participant])
-                        </div>
-                    </div>
+    <!-- Profile/Bio Section -->
+    @if($participant->bio)
+    <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Profile</h3>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Bio</label>
+            <div class="mt-1 text-sm text-gray-900">{{ $participant->bio }}</div>
+        </div>
+    </div>
+    @endif
 
-                    <!-- Travel & Accommodation Section -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                                <i class="fas fa-plane mr-3 text-green-600"></i>
-                                Travel & Accommodation
-                            </h2>
-                        </div>
-                        <div class="p-6">
-                            @include('participants.partials.profile-travel', ['participant' => $participant, 'travelDetail' => $travelDetail, 'hotels' => $hotels, 'roomTypes' => $roomTypes])
-                        </div>
-                    </div>
+    <!-- Personal Information Section -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Personal Information</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Name</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Gender</label>
+                <div class="mt-1 text-sm text-gray-900">{{ ucfirst($participant->user->gender ?? 'Not specified') }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Pronoun</label>
+                <div class="mt-1 text-sm text-gray-900">{{ ucfirst(str_replace('_', '/', $participant->user->pronoun ?? 'Not specified')) }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Contact No</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->contact_no ?? 'Not provided' }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Messaging Platform</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    {{ ucfirst($participant->user->messaging_type ?? 'Not specified') }}
+                    @if($participant->user->messaging_number)
+                        - {{ $participant->user->messaging_number }}
+                    @endif
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->email }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->date_of_birth ? \Carbon\Carbon::parse($participant->user->date_of_birth)->format('M d, Y') : 'Not specified' }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Field of Work/Study</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->field_of_work_study ?? 'Not specified' }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Designation</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->designation ?? 'Not specified' }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Organization/Institution</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->organization_institution ?? 'Not specified' }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Country</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->country ?? 'Not specified' }}</div>
+            </div>
+            
+            @if($participant->user->profile_picture)
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Profile Picture</label>
+                <div class="mt-1">
+                    @php
+                        $picPath = $participant->user->profile_picture;
+                        $picUrl = \Illuminate\Support\Str::startsWith($picPath, ['http://','https://']) 
+                            ? $picPath 
+                            : \Illuminate\Support\Facades\Storage::url($picPath);
+                    @endphp
+                    <img src="{{ $picUrl }}" alt="Profile Picture" class="w-20 h-20 rounded-full object-cover">
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
 
-                    <!-- Sessions Section -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="bg-gradient-to-r from-purple-50 to-violet-50 px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                                <i class="fas fa-calendar-alt mr-3 text-purple-600"></i>
-                                Sessions Management
-                            </h2>
-                        </div>
-                        <div class="p-6">
-                            @include('participants.partials.profile-sessions', ['sessions' => $sessions, 'participant' => $participant])
-                        </div>
-                    </div>
+    @if($participant->participantType && $participant->participantType->category === 'press')
+    <!-- Media Registration Section -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Media Registration</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Type of Media</label>
+                <div class="mt-1 text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $participant->user->media_type ?? 'Not specified')) }}</div>
+            </div>
+        </div>
+    </div>
+    @endif
 
-                    <!-- Status Section -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="bg-gradient-to-r from-yellow-50 to-amber-50 px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                                <i class="fas fa-check-circle mr-3 text-yellow-600"></i>
-                                Status Management
-                            </h2>
-                        </div>
-                        <div class="p-6">
-                            @include('participants.partials.profile-status', ['participant' => $participant])
-                        </div>
-                    </div>
+    @if($participant->participantType && $participant->participantType->category === 'presenter')
+    <!-- Speaker Additional Information Section -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Speaker Additional Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Dietary Requirements</label>
+                <div class="mt-1 text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $participant->user->dietary_requirements ?? 'Not specified')) }}</div>
+                @if($participant->user->dietary_requirements === 'others' && $participant->user->dietary_requirements_other)
+                    <div class="mt-1 text-xs text-gray-500">Details: {{ $participant->user->dietary_requirements_other }}</div>
+                @endif
+            </div>
+        </div>
+    </div>
 
-                    <!-- Conference Documents Section -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                                <i class="fas fa-file-alt mr-3 text-indigo-600"></i>
-                                Conference Documents
-                            </h2>
-                        </div>
-                        <div class="p-6">
-                            @include('participants.partials.profile-conference-docs', ['participant' => $participant])
-                        </div>
-                    </div>
+    <!-- Professional Information Section -->
+    <div class="mb-8 p-6 bg-green-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-green-800 border-b border-green-200 pb-2">Professional Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4 md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Preferred topic to speak</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->preferred_topic ?? 'Not specified' }}</div>
+            </div>
+        </div>
+    </div>
 
-                    <!-- Notifications Section -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="bg-gradient-to-r from-red-50 to-pink-50 px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                                <i class="fas fa-bell mr-3 text-red-600"></i>
-                                Notifications
-                            </h2>
-                        </div>
-                        <div class="p-6">
-                            @include('participants.partials.profile-notifications', ['notifications' => $notifications, 'participant' => $participant])
-                        </div>
-                    </div>
-
-                    <!-- Comments Section -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div class="bg-gradient-to-r from-teal-50 to-cyan-50 px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                                <i class="fas fa-comments mr-3 text-teal-600"></i>
-                                Comments
-                            </h2>
-                        </div>
-                        <div class="p-6">
-                            @include('participants.partials.profile-comments', ['comments' => $comments, 'participant' => $participant])
-                        </div>
-                    </div>
-
+    <!-- Additional Details Section -->
+    <div class="mb-8 p-6 bg-purple-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Additional Details</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">LinkedIn Link</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->user->linkedin_link)
+                        <a href="{{ $participant->user->linkedin_link }}" target="_blank" class="text-blue-600 hover:underline">{{ $participant->user->linkedin_link }}</a>
+                    @else
+                        Not provided
+                    @endif
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Twitter Link</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->user->twitter_link)
+                        <a href="{{ $participant->user->twitter_link }}" target="_blank" class="text-blue-600 hover:underline">{{ $participant->user->twitter_link }}</a>
+                    @else
+                        Not provided
+                    @endif
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Facebook Link</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->user->facebook_link)
+                        <a href="{{ $participant->user->facebook_link }}" target="_blank" class="text-blue-600 hover:underline">{{ $participant->user->facebook_link }}</a>
+                    @else
+                        Not provided
+                    @endif
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Supporting Documents Section -->
+    <div class="mb-8 p-6 bg-yellow-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-yellow-800 border-b border-yellow-200 pb-2">Supporting Documents</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Valid Passport</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->has_valid_passport ? 'Yes' : ($participant->user->has_valid_passport === '0' ? 'No' : 'Not specified') }}</div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Previous Visa Issues to Bangladesh</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->had_visa_issue_bd ? 'Yes' : ($participant->user->had_visa_issue_bd === '0' ? 'No' : 'Not specified') }}</div>
+            </div>
+        </div>
+        @if($participant->user->had_visa_issue_bd && $participant->user->visa_issue_explanation)
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Visa Issue Explanation</label>
+            <div class="mt-1 text-sm text-gray-900">{{ $participant->user->visa_issue_explanation }}</div>
+        </div>
+        @endif
+    </div>
+    @endif
+
+    <!-- Student Information Section -->
+    @if($participant->user->is_student)
+    <div class="mb-8 p-6 bg-blue-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-blue-800 border-b border-blue-200 pb-2">Student Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Year</label>
+                <div class="mt-1 text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $participant->user->year ?? 'Not specified')) }}</div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Department Name</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->department_name ?? 'Not specified' }}</div>
+            </div>
+            <div class="mb-4 md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Institution Name</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->institution_name ?? 'Not specified' }}</div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Address Information Section -->
+    <div class="mb-8 p-6 bg-green-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-green-800 border-b border-green-200 pb-2">Address Information</h3>
+        <div class="grid grid-cols-1 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Address</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->address ?? 'Not provided' }}</div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Home District</label>
+                <div class="mt-1 text-sm text-gray-900">{{ $participant->user->home_district ?? 'Not specified' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Upload Section -->
+    @if($participant->user->nid_passport_birth_certificate)
+    <div class="mb-8 p-6 bg-yellow-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-yellow-800 border-b border-yellow-200 pb-2">Document Upload</h3>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">NID/Passport/Birth Certificate</label>
+            <div class="mt-1">
+                <img src="{{ asset('storage/' . $participant->user->nid_passport_birth_certificate) }}" alt="Document" class="w-32 h-32 object-cover rounded-lg border">
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Conference Information Section -->
+    <div class="mb-8 p-6 bg-purple-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Conference Information</h3>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Expertise/Interests</label>
+            <div class="mt-1 text-sm text-gray-900">{{ $participant->user->expertise_interests ?? 'Not provided' }}</div>
+        </div>
+    </div>
+
+    <!-- Hashtags Section -->
+    @if($participant->hashtags)
+    <div class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+        <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Hashtags</h3>
+        <div class="flex flex-wrap gap-2">
+            @foreach(explode(',', $participant->hashtags) as $hashtag)
+                @if(trim($hashtag))
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border border-purple-200">
+                        {{ trim($hashtag) }}
+                    </span>
+                @endif
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    <!-- Registration Details Section -->
+    <div class="mb-8 p-6 bg-purple-50 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Registration Details</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Visa Status</label>
+                <div class="mt-1">
+                    @php
+                        $visaStatus = $participant->visa_status ?? 'not_specified';
+                        $statusColors = [
+                            'required' => 'bg-yellow-100 text-yellow-800',
+                            'not_required' => 'bg-green-100 text-green-800',
+                            'pending' => 'bg-blue-100 text-blue-800',
+                            'approved' => 'bg-green-100 text-green-800',
+                            'issue' => 'bg-red-100 text-red-800',
+                        ];
+                        $colorClass = $statusColors[$visaStatus] ?? 'bg-gray-100 text-gray-800';
+                    @endphp
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colorClass }}">
+                        {{ ucfirst(str_replace('_', ' ', $visaStatus)) }}
+                    </span>
+                </div>
+                @if($participant->visa_status === 'issue' && $participant->visa_issue_description)
+                    <div class="mt-2 text-sm text-gray-700">{{ $participant->visa_issue_description }}</div>
+                @endif
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Registration Status</label>
+                <div class="mt-1">
+                    @php
+                        $regStatus = $participant->registration_status ?? 'pending';
+                        $statusColors = [
+                            'pending' => 'bg-yellow-100 text-yellow-800',
+                            'approved' => 'bg-green-100 text-green-800',
+                            'rejected' => 'bg-red-100 text-red-800',
+                        ];
+                        $colorClass = $statusColors[$regStatus] ?? 'bg-gray-100 text-gray-800';
+                    @endphp
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colorClass }}">
+                        {{ ucfirst($regStatus) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Travel Intent</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @php
+                        $travelIntent = $participant->travel_intent ?? 'none';
+                        $travelIntentMap = [
+                            'none' => 'None',
+                            'national' => 'National',
+                            'international' => 'International',
+                            '0' => 'None',
+                            '1' => 'National', 
+                            '2' => 'International'
+                        ];
+                        $displayValue = $travelIntentMap[$travelIntent] ?? 'None';
+                    @endphp
+                    {{ $displayValue }}
+                </div>
+            </div>
+        </div>
+        
+        @if(in_array($participant->travel_intent, ['national', 'international', '1', '2']))
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Arrival Date</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->travelDetails && $participant->travelDetails->arrival_date)
+                        {{ \Carbon\Carbon::parse($participant->travelDetails->arrival_date)->format('M d, Y g:i A') }}
+                    @else
+                        Not specified
+                    @endif
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Departure Date</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->travelDetails && $participant->travelDetails->departure_date)
+                        {{ \Carbon\Carbon::parse($participant->travelDetails->departure_date)->format('M d, Y g:i A') }}
+                    @else
+                        Not specified
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+        
+    </div>
 </div>
+
+<!-- Comments Section -->
+<div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <i class="fas fa-comments text-purple-500 mr-3"></i>
+        Comments & Notes
+    </h2>
+    
+    <!-- Add Comment Form -->
+    <div class="mb-6">
+        <form id="commentForm" class="space-y-4">
+            @csrf
+            <div>
+                <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">Add a comment</label>
+                <textarea id="comment" name="content" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Write your comment here..." required></textarea>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Post Comment
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Comments List -->
+    <div id="commentsList" class="space-y-4">
+        @if(isset($comments) && count($comments) > 0)
+            @foreach($comments as $comment)
+                <div class="border-l-4 border-blue-500 pl-4 py-2 comment-item" data-comment-id="{{ $comment->id }}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="text-sm font-medium text-gray-900">
+                                    @php
+                                        $userName = trim(($comment->user->first_name ?? '') . ' ' . ($comment->user->last_name ?? ''));
+                                        $displayName = $userName ?: ($comment->user->email ?? 'Unknown User');
+                                    @endphp
+                                    {{ $displayName }}
+                                </span>
+                                <span class="text-xs text-gray-500">{{ $comment->created_at->format('M d, Y H:i') }}</span>
+                            </div>
+                            <p class="text-gray-700">{{ $comment->content }}</p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0">
+                            <button onclick="deleteComment({{ $comment->id }})" 
+                                    class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
+                                    title="Delete comment">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        @else
+            <div class="text-center py-8">
+                <i class="fas fa-comment-slash text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500">No comments yet</p>
+            </div>
+        @endif
+    </div>
+</div>
+
 @endsection
+
+<style>
+    /* Modern color scheme overrides */
+    .modern-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+    
+    .modern-primary:hover {
+        background: linear-gradient(135deg, #5855eb, #7c3aed);
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Comments form submission
+    document.getElementById('commentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const commentText = formData.get('content');
+        
+        if (!commentText.trim()) {
+            alert('Please enter a comment');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Posting...';
+        submitBtn.disabled = true;
+        
+        // Submit comment via AJAX
+        fetch('{{ route("participants.comments.store", $participant) }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || formData.get('_token'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Add comment to the list
+                addCommentToList(data.comment);
+                // Clear form
+                this.reset();
+            } else {
+                alert('Error posting comment: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error posting comment. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+    
+    // Function to add comment to the list
+    function addCommentToList(comment) {
+        const commentsList = document.getElementById('commentsList');
+        const emptyState = commentsList.querySelector('.text-center');
+        
+        // Remove empty state if it exists
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        // Create new comment element
+        const commentElement = document.createElement('div');
+        commentElement.className = 'border-l-4 border-blue-500 pl-4 py-2 comment-item';
+        commentElement.setAttribute('data-comment-id', comment.id);
+        commentElement.innerHTML = `
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="text-sm font-medium text-gray-900">${comment.user_name || 'Unknown User'}</span>
+                            <span class="text-xs text-gray-500">${comment.created_at}</span>
+                        </div>
+                    <p class="text-gray-700">${comment.content}</p>
+                </div>
+                <div class="ml-4 flex-shrink-0">
+                    <button onclick="deleteComment(${comment.id})" 
+                            class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
+                            title="Delete comment">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add to the top of the comments list
+        commentsList.insertBefore(commentElement, commentsList.firstChild);
+    }
+    
+    // Function to delete a comment
+    window.deleteComment = function(commentId) {
+        if (!confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
+            return;
+        }
+        
+        // Show loading state on the delete button
+        const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+        const deleteBtn = commentElement.querySelector('button');
+        const originalContent = deleteBtn.innerHTML;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
+        deleteBtn.disabled = true;
+        
+        // Send delete request
+        fetch(`{{ route('participants.comments.destroy', [$participant, 'COMMENT_ID']) }}`.replace('COMMENT_ID', commentId), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the comment element from the DOM
+                commentElement.remove();
+                
+                // Check if there are no more comments and show empty state
+                const commentsList = document.getElementById('commentsList');
+                const remainingComments = commentsList.querySelectorAll('.comment-item');
+                if (remainingComments.length === 0) {
+                    commentsList.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-comment-slash text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">No comments yet</p>
+                        </div>
+                    `;
+                }
+            } else {
+                alert('Error deleting comment: ' + (data.message || 'Unknown error'));
+                // Reset button state
+                deleteBtn.innerHTML = originalContent;
+                deleteBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting comment. Please try again.');
+            // Reset button state
+            deleteBtn.innerHTML = originalContent;
+            deleteBtn.disabled = false;
+        });
+    };
+});
+</script>

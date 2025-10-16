@@ -10,8 +10,10 @@ class ConferenceDocItem extends Model
 {
     use HasFactory;
 
+    protected $table = 'conference_kit_items';
+
     protected $fillable = [
-        'doc_id',
+        'kit_id',
         'type',
         'content',
         'file_path',
@@ -31,7 +33,7 @@ class ConferenceDocItem extends Model
     // Relationships
     public function conferenceDoc()
     {
-        return $this->belongsTo(ConferenceDoc::class, 'doc_id');
+        return $this->belongsTo(ConferenceDoc::class, 'kit_id');
     }
 
     // Legacy relationship for backward compatibility

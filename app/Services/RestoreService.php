@@ -229,7 +229,20 @@ class RestoreService
             $statements = array_filter(
                 array_map('trim', explode(';', $sqlContent)),
                 function($stmt) {
-                    return !empty($stmt) && !preg_match('/^--/', $stmt);
+                    return !empty($stmt) && 
+                           !preg_match('/^--/', $stmt) && // Skip comments
+                           !preg_match('/^\/\*/', $stmt) && // Skip block comments
+                           !preg_match('/^max-width:/', $stmt) && // Skip CSS content
+                           !preg_match('/^[a-zA-Z-]+:\s*[a-zA-Z0-9\s]+$/', $stmt) && // Skip CSS properties
+                           !preg_match('/^<[^>]+>$/', $stmt) && // Skip HTML tags
+                           !preg_match('/Mozilla\/5\.0/', $stmt) && // Skip browser user agent strings
+                           !preg_match('/Windows NT 10\.0/', $stmt) && // Skip OS strings
+                           !preg_match('/Chrome\/\d+\.\d+\.\d+\.\d+/', $stmt) && // Skip browser version strings
+                           !preg_match('/Safari\/\d+\.\d+/', $stmt) && // Skip Safari version strings
+                           !preg_match('/^\s*$/', $stmt) && // Skip empty statements
+                           (preg_match('/^(CREATE|INSERT|UPDATE|DELETE|DROP|ALTER|SET|USE|LOCK|UNLOCK)/i', $stmt) || // SQL commands
+                            preg_match('/^\/\*.*\*\/$/', $stmt) || // Block comments
+                            preg_match('/^--/', $stmt)); // Line comments
                 }
             );
             
@@ -256,11 +269,26 @@ class RestoreService
                         } catch (Exception $e) {
                             // Log the error but continue with other statements
                             Log::warning("SQL statement failed: " . $e->getMessage());
-                            Log::debug("Failed statement: " . $statement);
+                            Log::debug("Failed statement: " . substr($statement, 0, 200) . (strlen($statement) > 200 ? '...' : ''));
                             
-                            // If it's a "table already exists" error, we can ignore it
-                            if (strpos($e->getMessage(), 'already exists') !== false) {
+                            // If it's a "table already exists" error, ignore and continue
+                            if (
+                                strpos($e->getMessage(), 'already exists') !== false ||
+                                strpos($e->getMessage(), 'SQLSTATE[42S01]') !== false ||
+                                strpos($e->getMessage(), 'errno: 1050') !== false
+                            ) {
                                 Log::info("Ignoring 'table already exists' error");
+                                continue;
+                            }
+                            // If it's a syntax error with non-SQL content, skip it
+                            else if (strpos($e->getMessage(), 'syntax error') !== false && 
+                                    (preg_match('/max-width:/', $statement) || 
+                                     preg_match('/^[a-zA-Z-]+:\s*[a-zA-Z0-9\s]+$/', $statement) ||
+                                     preg_match('/Mozilla\/5\.0/', $statement) ||
+                                     preg_match('/Windows NT 10\.0/', $statement) ||
+                                     preg_match('/Chrome\/\d+\.\d+\.\d+\.\d+/', $statement) ||
+                                     preg_match('/Safari\/\d+\.\d+/', $statement))) {
+                                Log::info("Skipping non-SQL content: " . substr($statement, 0, 50) . "...");
                                 continue;
                             }
                             

@@ -31,9 +31,8 @@
             <!-- Conference Selection -->
             <div class="mb-6">
                 <label for="conference-select" class="block text-sm font-medium text-gray-700 mb-2">Select Conference</label>
-                <!-- Debug info -->
-                <div class="text-xs text-gray-500 mb-2">
-                    Debug: {{ $conferences->count() }} conferences, {{ $hotels->count() }} hotels, {{ $participants->count() }} participants
+                <div class="text-sm text-blue-600 mb-2">
+                    <i class="fas fa-info-circle"></i> Only participants with "National" or "International" travel intent are shown
                 </div>
                 <select id="conference-select" name="conference_id" class="w-full max-w-md form-select">
                     <option value="">All Conferences</option>
@@ -51,13 +50,27 @@
                 <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
                 <div id="info-message" class="hidden bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded"></div>
             </div>
-                
+            
+            @if($participants->count() == 0)
+                <div class="text-center py-12">
+                    <div class="text-gray-500 text-lg mb-4">
+                        <i class="fas fa-bed text-4xl mb-4"></i>
+                        <p>No participants with travel intent found</p>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        Only participants with "National" or "International" travel intent are shown in room allocations.
+                    </p>
+                </div>
+            @else
                 <div class="overflow-x-auto">
                 <table class="w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Participant
+                                </th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Travel Intent
                                 </th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Hotel <span class="text-red-500">*</span>
@@ -88,6 +101,16 @@
                                 <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}
                                     </td>
+                                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                                    @if($participant->travel_intent)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            {{ $participant->travel_intent === 'international' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                            {{ ucfirst($participant->travel_intent) }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <form id="room-allocation-form-{{ $participant->id }}" class="room-allocation-form" data-participant-id="{{ $participant->id }}">
                                         @csrf
@@ -119,10 +142,10 @@
                                     </select>
                                         </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                                            {{ optional($participant->travelDetails)->arrival_date ? \Carbon\Carbon::parse($participant->travelDetails->arrival_date)->format('M d, Y H:i') : '-' }}
+                                            {{ optional($participant->travelDetails)->arrival_date ? \Carbon\Carbon::parse($participant->travelDetails->arrival_date)->format('M d, Y g:i A') : '-' }}
                                         </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                                            {{ optional($participant->travelDetails)->departure_date ? \Carbon\Carbon::parse($participant->travelDetails->departure_date)->format('M d, Y H:i') : '-' }}
+                                            {{ optional($participant->travelDetails)->departure_date ? \Carbon\Carbon::parse($participant->travelDetails->departure_date)->format('M d, Y g:i A') : '-' }}
                                         </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <input type="datetime-local" name="check_in" form="room-allocation-form-{{ $participant->id }}" value="{{ optional($participant->roomAllocation)->check_in ? \Carbon\Carbon::parse($participant->roomAllocation->check_in)->format('Y-m-d\TH:i') : '' }}" class="w-full text-sm rounded-md border-gray-300 focus:border-yellow-500 focus:ring-yellow-500 check-in-input auto-save-input" data-participant-id="{{ $participant->id }}">
@@ -135,6 +158,7 @@
                         </tbody>
                     </table>
                 </div>
+            @endif
             </div>
         </div>
     </div>
@@ -277,9 +301,6 @@
                         if (data.success && data.rooms.length > 0) {
                             data.rooms.forEach(room => {
                                 let optionText = `${room.room_number} - ${room.room_type} (${room.beds} bed${room.beds > 1 ? 's' : ''})`;
-                                if (room.price_per_night) {
-                                    optionText += ` - $${room.price_per_night}/night`;
-                                }
                                 roomSelect.append(`<option value="${room.room_number}">${optionText}</option>`);
                             });
                             
@@ -549,12 +570,15 @@
                 }
             }
             
-            // Check travel intent for international participants
+            // Check travel dates for participants (regardless of travel intent)
             const participantRow = document.getElementById(`participant-row-${participantId}`);
             if (participantRow) {
-                const travelIntent = participantRow.dataset.travelIntent;
-                if (travelIntent === 'international') {
-                    return validateInternationalTravel(participantId, checkInValue, checkOutValue);
+                const arrivalDate = participantRow.dataset.arrivalDate;
+                const departureDate = participantRow.dataset.departureDate;
+                
+                // If participant has travel dates, validate against them
+                if (arrivalDate || departureDate) {
+                    return validateTravelTimes(participantId, checkInValue, checkOutValue);
                 }
             }
             
@@ -661,34 +685,81 @@
             return true;
         }
         
-        function validateInternationalTravel(participantId, checkInValue, checkOutValue) {
+        function validateTravelTimes(participantId, checkInValue, checkOutValue) {
             const participantRow = document.getElementById(`participant-row-${participantId}`);
             if (!participantRow) return true;
             
             const arrivalDate = participantRow.dataset.arrivalDate;
             const departureDate = participantRow.dataset.departureDate;
+            const travelIntent = participantRow.dataset.travelIntent;
             const checkInInput = document.querySelector(`input[name="check_in"][data-participant-id="${participantId}"]`);
             const checkOutInput = document.querySelector(`input[name="check_out"][data-participant-id="${participantId}"]`);
+            
+            console.log('Validating travel times for participant:', participantId);
+            console.log('Travel intent:', travelIntent);
+            console.log('Arrival date:', arrivalDate);
+            console.log('Departure date:', departureDate);
+            console.log('Check-in value:', checkInValue);
+            console.log('Check-out value:', checkOutValue);
+            
+            // Validate if participant has travel dates (regardless of travel intent)
+            if (!arrivalDate && !departureDate) {
+                console.log('No travel dates available, skipping travel validation');
+                return true;
+            }
             
             // Validate check-in against arrival
             if (arrivalDate && checkInValue) {
                 const arrival = new Date(arrivalDate);
                 const checkIn = new Date(checkInValue);
                 
+                console.log('Arrival date object:', arrival);
+                console.log('Check-in date object:', checkIn);
+                
+                // Check if dates are valid
+                if (isNaN(arrival.getTime()) || isNaN(checkIn.getTime())) {
+                    console.log('Invalid date format detected');
+                    return true; // Let other validation handle invalid dates
+                }
+                
                 // Check-in should be on or after arrival date
                 if (checkIn < arrival) {
                     checkInInput.style.borderColor = '#ef4444';
-                    showError('For international travel, check-in cannot be before arrival date.');
+                    showError('Check-in time cannot be before arrival date.');
                     return false;
                 }
                 
-                // Check-in should be within 24 hours of arrival
-                const timeDiff = Math.abs(checkIn - arrival);
-                const hoursDiff = timeDiff / (1000 * 60 * 60);
+                // For international travel, check-in should be within 24 hours of arrival
+                if (travelIntent === 'international') {
+                    const timeDiff = Math.abs(checkIn - arrival);
+                    const hoursDiff = timeDiff / (1000 * 60 * 60);
+                    
+                    if (hoursDiff > 24) {
+                        checkInInput.style.borderColor = '#ef4444';
+                        showError('For international travel, check-in should be within 24 hours of arrival time.');
+                        return false;
+                    }
+                }
+            }
+            
+            // Validate check-in against departure date
+            if (departureDate && checkInValue) {
+                const departure = new Date(departureDate);
+                const checkIn = new Date(checkInValue);
                 
-                if (hoursDiff > 24) {
+                console.log('Departure date object:', departure);
+                console.log('Check-in date object:', checkIn);
+                
+                // Check if dates are valid
+                if (isNaN(departure.getTime()) || isNaN(checkIn.getTime())) {
+                    console.log('Invalid date format detected for departure/check-in');
+                    return true; // Let other validation handle invalid dates
+                }
+                
+                // Check-in should be on or before departure date
+                if (checkIn > departure) {
                     checkInInput.style.borderColor = '#ef4444';
-                    showError('For international travel, check-in should be within 24 hours of arrival time.');
+                    showError('Check-in time cannot be after departure time.');
                     return false;
                 }
             }
@@ -698,21 +769,32 @@
                 const departure = new Date(departureDate);
                 const checkOut = new Date(checkOutValue);
                 
+                console.log('Departure date object:', departure);
+                console.log('Check-out date object:', checkOut);
+                
+                // Check if dates are valid
+                if (isNaN(departure.getTime()) || isNaN(checkOut.getTime())) {
+                    console.log('Invalid date format detected for departure/check-out');
+                    return true; // Let other validation handle invalid dates
+                }
+                
                 // Check-out should be on or before departure date
                 if (checkOut > departure) {
                     checkOutInput.style.borderColor = '#ef4444';
-                    showError('For international travel, check-out cannot be after departure date.');
+                    showError('Check-out time cannot be after departure date.');
                     return false;
                 }
                 
-                // Check-out should be within 24 hours of departure
-                const timeDiff = Math.abs(checkOut - departure);
-                const hoursDiff = timeDiff / (1000 * 60 * 60);
-                
-                if (hoursDiff > 24) {
-                    checkOutInput.style.borderColor = '#ef4444';
-                    showError('For international travel, check-out should be within 24 hours of departure time.');
-                    return false;
+                // For international travel, check-out should be within 24 hours of departure
+                if (travelIntent === 'international') {
+                    const timeDiff = Math.abs(checkOut - departure);
+                    const hoursDiff = timeDiff / (1000 * 60 * 60);
+                    
+                    if (hoursDiff > 24) {
+                        checkOutInput.style.borderColor = '#ef4444';
+                        showError('For international travel, check-out should be within 24 hours of departure time.');
+                        return false;
+                    }
                 }
             }
             
@@ -720,6 +802,15 @@
             if (checkInValue && checkOutValue) {
                 const checkIn = new Date(checkInValue);
                 const checkOut = new Date(checkOutValue);
+                
+                console.log('Check-in date object:', checkIn);
+                console.log('Check-out date object:', checkOut);
+                
+                // Check if dates are valid
+                if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+                    console.log('Invalid date format detected for check-in/check-out');
+                    return true; // Let other validation handle invalid dates
+                }
                 
                 if (checkIn >= checkOut) {
                     checkInInput.style.borderColor = '#ef4444';
@@ -730,6 +821,11 @@
             }
             
             return true;
+        }
+        
+        // Keep the old function name for backward compatibility
+        function validateInternationalTravel(participantId, checkInValue, checkOutValue) {
+            return validateTravelTimes(participantId, checkInValue, checkOutValue);
         }
         
         function saveParticipantData(participantId) {

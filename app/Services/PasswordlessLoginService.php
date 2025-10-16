@@ -23,7 +23,7 @@ class PasswordlessLoginService
     /**
      * Generate a login link for a user
      */
-    public function generateLoginLink(User $user, int $expirationHours = 24): PasswordlessLogin
+    public function generateLoginLink(User $user, int $expirationHours = 24, Conference $conference = null): PasswordlessLogin
     {
         // Rate limiting check
         $key = 'passwordless-login:' . $user->id;
@@ -36,10 +36,21 @@ class PasswordlessLoginService
         // Create the passwordless login token
         $passwordlessLogin = PasswordlessLogin::createForUser($user, $expirationHours);
 
+        // Store conference information if provided
+        if ($conference) {
+            $passwordlessLogin->update([
+                'data' => [
+                    'conference_id' => $conference->id,
+                    'conference_name' => $conference->name,
+                ]
+            ]);
+        }
+
         Log::info('Passwordless login link generated', [
             'user_id' => $user->id,
             'token_id' => $passwordlessLogin->id,
             'expires_at' => $passwordlessLogin->expires_at,
+            'conference_id' => $conference ? $conference->id : null,
         ]);
 
         return $passwordlessLogin;
@@ -114,19 +125,11 @@ class PasswordlessLoginService
         }
 
         if (!$passwordlessLogin->isValid()) {
-            if ($passwordlessLogin->used_at) {
-                return [
-                    'success' => false,
-                    'message' => 'This login link has already been used.',
-                    'error_type' => 'already_used'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'message' => 'This login link has expired.',
-                    'error_type' => 'expired'
-                ];
-            }
+            return [
+                'success' => false,
+                'message' => 'This login link has expired.',
+                'error_type' => 'expired'
+            ];
         }
 
         // Check if user is a participant (has participant records)
@@ -148,10 +151,20 @@ class PasswordlessLoginService
         // Log the user in
         auth()->login($user);
 
+        // Get conference from the passwordless login data or request
+        $conference = null;
+        if (isset($passwordlessLogin->data['conference_id'])) {
+            $conference = Conference::find($passwordlessLogin->data['conference_id']);
+        }
+
+        // Set the default active participant profile for the user
+        $this->setDefaultActiveProfile($user, $conference);
+
         Log::info('Passwordless login successful', [
             'user_id' => $user->id,
             'token_id' => $passwordlessLogin->id,
             'ip_address' => $request->ip(),
+            'conference_id' => $conference ? $conference->id : null,
         ]);
 
         return [
@@ -175,7 +188,7 @@ class PasswordlessLoginService
 
         foreach ($users as $user) {
             try {
-                $passwordlessLogin = $this->generateLoginLink($user, $expirationHours);
+                $passwordlessLogin = $this->generateLoginLink($user, $expirationHours, $conference);
                 $emailSent = $this->sendLoginEmail($user, $passwordlessLogin, $conference);
                 
                 $results[] = [
@@ -222,6 +235,59 @@ class PasswordlessLoginService
     }
 
     /**
+     * Set the default active participant profile for a user
+     */
+    private function setDefaultActiveProfile(User $user, Conference $conference = null): void
+    {
+        $defaultParticipant = null;
+
+        // If conference is specified, try to find participant for that conference
+        if ($conference) {
+            $defaultParticipant = $user->participants()
+                ->where('status', 'active')
+                ->where('conference_id', $conference->id)
+                ->first();
+        }
+
+        // If no conference-specific participant found, get the primary participant or first active participant
+        if (!$defaultParticipant) {
+            $defaultParticipant = $user->participants()
+                ->where('status', 'active')
+                ->where('is_primary', true)
+                ->first() ?? $user->participants()
+                ->where('status', 'active')
+                ->orderBy('created_at', 'desc')
+                ->first();
+        }
+
+        if ($defaultParticipant) {
+            // Set the active profile in session
+            $sessionId = session()->getId();
+            
+            // Remove any existing profile session for this user
+            \App\Models\ParticipantProfileSession::where('user_id', $user->id)
+                ->where('session_id', $sessionId)
+                ->delete();
+            
+            // Create new profile session
+            \App\Models\ParticipantProfileSession::create([
+                'user_id' => $user->id,
+                'participant_id' => $defaultParticipant->id,
+                'session_id' => $sessionId,
+            ]);
+            
+            Log::info('Set default active profile for user', [
+                'user_id' => $user->id,
+                'participant_id' => $defaultParticipant->id,
+                'conference_id' => $defaultParticipant->conference_id,
+                'conference_name' => $defaultParticipant->conference->name ?? 'No Conference',
+                'requested_conference_id' => $conference ? $conference->id : null,
+                'requested_conference_name' => $conference ? $conference->name : null,
+            ]);
+        }
+    }
+
+    /**
      * Clean up expired tokens
      */
     public function cleanupExpiredTokens(): int
@@ -240,17 +306,16 @@ class PasswordlessLoginService
      */
     public function getLoginStats(): array
     {
-        $participantTokens = PasswordlessLogin::whereHas('user.roles', function ($query) {
-            $query->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker']);
-        });
+        $participantTokens = PasswordlessLogin::whereHas('user.participants');
 
         return [
             'total_tokens' => $participantTokens->count(),
-            'active_tokens' => (clone $participantTokens)->valid()->count(),
+            'active_tokens' => (clone $participantTokens)->active()->count(),
             'used_tokens' => (clone $participantTokens)->used()->count(),
             'expired_tokens' => (clone $participantTokens)->expired()->count(),
             'tokens_created_today' => (clone $participantTokens)->whereDate('created_at', today())->count(),
             'tokens_used_today' => (clone $participantTokens)->whereDate('used_at', today())->count(),
+            'total_uses' => (clone $participantTokens)->sum('use_count'),
         ];
     }
 }

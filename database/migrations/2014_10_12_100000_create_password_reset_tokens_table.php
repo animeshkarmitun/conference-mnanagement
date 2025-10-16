@@ -12,10 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
+            $table->string('email');
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
+        
+        // Add primary key with length limit to avoid MySQL key length issues
+        \DB::statement('ALTER TABLE password_reset_tokens ADD PRIMARY KEY (email(191))');
     }
 
     /**

@@ -23,6 +23,9 @@ class TravelController extends Controller
             $query->where('conference_id', $selectedConferenceId);
         }
         
+        // Filter participants to only show those with travel intent 'national' or 'international'
+        $query->whereIn('travel_intent', ['national', 'international']);
+        
         $participants = $query->get();
         $hotels = Hotel::with(['rooms'])->where('is_active', true)->orderBy('name')->get();
         
@@ -39,7 +42,12 @@ class TravelController extends Controller
             'room',
             'room.roomType',
             'participant.roomAllocations'
-        ])->get();
+        ])
+        ->whereHas('participant', function($query) {
+            // Only include travel details for participants with travel intent 'national' or 'international'
+            $query->whereIn('travel_intent', ['national', 'international']);
+        })
+        ->get();
         
         $conferences = \App\Models\Conference::all();
         return view('admin.travel.itineraries', compact('travelDetails', 'conferences'));
@@ -49,7 +57,12 @@ class TravelController extends Controller
     public function travelConflicts()
     {
         $conflicts = [];
-        $travelDetails = TravelDetail::with(['participant.user', 'hotel'])->get();
+        $travelDetails = TravelDetail::with(['participant.user', 'hotel'])
+            ->whereHas('participant', function($query) {
+                // Only include travel details for participants with travel intent 'national' or 'international'
+                $query->whereIn('travel_intent', ['national', 'international']);
+            })
+            ->get();
         $travelNotificationService = new TravelNotificationService();
 
         // Detect duplicate room assignments for overlapping dates
@@ -193,6 +206,52 @@ class TravelController extends Controller
             'check_out.after' => 'Check-out time must be after check-in time.',
         ]);
 
+        // Additional validation: Check-in time cannot be after departure time
+        if (!empty($validated['check_in'])) {
+            $travelDetails = $participant->travelDetails()->first();
+            if ($travelDetails && $travelDetails->departure_date) {
+                $checkInDate = \Carbon\Carbon::parse($validated['check_in']);
+                $departureDate = \Carbon\Carbon::parse($travelDetails->departure_date);
+                
+                if ($checkInDate->gt($departureDate)) {
+                    $errorMessage = 'Check-in time cannot be after departure time (' . $departureDate->format('M d, Y g:i A') . ').';
+                    
+                    if ($request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => $errorMessage,
+                            'errors' => ['check_in' => [$errorMessage]]
+                        ], 422);
+                    }
+                    
+                    return redirect()->back()->withErrors(['check_in' => $errorMessage])->withInput();
+                }
+            }
+        }
+
+        // Additional validation: Check-out time cannot be after departure time
+        if (!empty($validated['check_out'])) {
+            $travelDetails = $participant->travelDetails()->first();
+            if ($travelDetails && $travelDetails->departure_date) {
+                $checkOutDate = \Carbon\Carbon::parse($validated['check_out']);
+                $departureDate = \Carbon\Carbon::parse($travelDetails->departure_date);
+                
+                if ($checkOutDate->gt($departureDate)) {
+                    $errorMessage = 'Check-out time cannot be after departure time (' . $departureDate->format('M d, Y g:i A') . ').';
+                    
+                    if ($request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => $errorMessage,
+                            'errors' => ['check_out' => [$errorMessage]]
+                        ], 422);
+                    }
+                    
+                    return redirect()->back()->withErrors(['check_out' => $errorMessage])->withInput();
+                }
+            }
+        }
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Room allocation validation failed', [
                 'participant_id' => $participant->id,
@@ -283,7 +342,9 @@ class TravelController extends Controller
             'room',
             'room.roomType',
             'participant.roomAllocations'
-        ])->get();
+        ])
+        ->whereHas('participant') // Only include travel details with valid participants
+        ->get();
 
         $filename = 'itinerary_' . date('Y-m-d_H-i-s') . '.csv';
         
@@ -346,7 +407,7 @@ class TravelController extends Controller
         $rooms = $hotel->rooms()
             ->where('is_available', true)
             ->orderBy('room_number')
-            ->get(['id', 'room_number', 'room_type', 'beds', 'max_occupancy', 'price_per_night']);
+            ->get(['id', 'room_number', 'room_type', 'beds', 'max_occupancy']);
 
         return response()->json([
             'success' => true,

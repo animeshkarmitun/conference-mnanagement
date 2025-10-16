@@ -276,7 +276,7 @@
                             <label class="block text-sm font-medium text-gray-700">Arrival Date</label>
                             <p class="text-gray-900">
                                 @if($participant->travelDetails->arrival_date)
-                                    {{ \Carbon\Carbon::parse($participant->travelDetails->arrival_date)->format('M d, Y H:i') }}
+                                    {{ \Carbon\Carbon::parse($participant->travelDetails->arrival_date)->format('M d, Y g:i A') }}
                                 @else
                                     <span class="text-gray-400">Not specified</span>
                                 @endif
@@ -287,7 +287,7 @@
                             <label class="block text-sm font-medium text-gray-700">Departure Date</label>
                             <p class="text-gray-900">
                                 @if($participant->travelDetails->departure_date)
-                                    {{ \Carbon\Carbon::parse($participant->travelDetails->departure_date)->format('M d, Y H:i') }}
+                                    {{ \Carbon\Carbon::parse($participant->travelDetails->departure_date)->format('M d, Y g:i A') }}
                                 @else
                                     <span class="text-gray-400">Not specified</span>
                                 @endif

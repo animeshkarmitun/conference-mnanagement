@@ -75,7 +75,6 @@
                                     <th>Name</th>
                                     <th>Description</th>
                                     <th>Default Beds</th>
-                                    <th>Base Price</th>
                                     <th>Amenities</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -99,13 +98,6 @@
                                         </td>
                                         <td>
                                             <span class="badge bg-secondary">{{ $roomType->default_beds }} bed{{ $roomType->default_beds > 1 ? 's' : '' }}</span>
-                                        </td>
-                                        <td>
-                                            @if($roomType->base_price)
-                                                <span class="text-success fw-bold">${{ number_format($roomType->base_price, 2) }}</span>
-                                            @else
-                                                <span class="text-muted">Not set</span>
-                                            @endif
                                         </td>
                                         <td>
                                             @if($roomType->amenities && count($roomType->amenities) > 0)
@@ -148,7 +140,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4">
+                                        <td colspan="6" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="fas fa-bed" style="font-size: 48px;"></i>
                                                 <p class="mt-2">No room types found</p>

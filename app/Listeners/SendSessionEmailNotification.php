@@ -64,6 +64,15 @@ class SendSessionEmailNotification implements ShouldQueue
     {
         $users = [];
 
+        // For single participant resend, only notify that specific participant
+        if (isset($event->changes['single_participant']) && isset($event->changes['target_participant_id'])) {
+            $participant = \App\Models\Participant::with('user')->find($event->changes['target_participant_id']);
+            if ($participant && $participant->user) {
+                $users[] = $participant->user;
+            }
+            return $users;
+        }
+
         // For session removal, only notify the specific participant who was removed
         if ($event->eventType === 'session_removed' && isset($event->changes['participant_id'])) {
             $participant = \App\Models\Participant::with('user')->find($event->changes['participant_id']);
@@ -121,7 +130,22 @@ class SendSessionEmailNotification implements ShouldQueue
     private function sendEmailNotification(User $user, SessionEvent $event): void
     {
         try {
+            // Get passwordless login URL for this user
+            $passwordlessLoginUrl = null;
+            if (isset($event->changes['passwordless_tokens'])) {
+                foreach ($event->changes['passwordless_tokens'] as $tokenData) {
+                    if ($tokenData['user_id'] == $user->id) {
+                        $passwordlessLoginUrl = $tokenData['login_url'];
+                        break;
+                    }
+                }
+            }
+
             // Prepare variables for template
+            $isResend = $event->changes['is_resend'] ?? false;
+            $sessionAction = $isResend ? 'session notification (resent)' : 'new session';
+            $emailTitle = $isResend ? 'Session Notification (Resent)' : 'New Session Added';
+            
             $variables = [
                 'first_name' => $user->first_name ?? 'User',
                 'last_name' => $user->last_name ?? '',
@@ -130,7 +154,11 @@ class SendSessionEmailNotification implements ShouldQueue
                 'session_date' => $event->session->start_time ? $event->session->start_time->format('M d, Y \a\t g:i A') : 'TBD',
                 'session_location' => $event->session->venue->name ?? 'TBD',
                 'session_description' => $event->session->description ?? 'No description provided',
+                'session_action' => $sessionAction,
+                'email_title' => $emailTitle,
                 'event_type' => $event->eventType,
+                'passwordless_login_url' => $passwordlessLoginUrl,
+                'is_resend' => $isResend,
             ];
 
             // Get template from service
@@ -139,8 +167,8 @@ class SendSessionEmailNotification implements ShouldQueue
                 $variables
             );
 
-            // Build full email body
-            $fullBody = $this->buildFullEmailBody($template);
+            // Build full email body with special sections
+            $fullBody = $this->buildFullEmailBody($template, $variables);
 
             // Send tracked email
             $this->emailTrackingService->sendTrackedEmailViaGmail(
@@ -172,24 +200,57 @@ class SendSessionEmailNotification implements ShouldQueue
     /**
      * Build full email body from template parts
      */
-    private function buildFullEmailBody(array $template): string
+    private function buildFullEmailBody(array $template, array $variables = []): string
     {
+        $body = $template['body'];
+        
+        // Add resend notice if it's a resend
+        if ($variables['is_resend'] ?? false) {
+            $resendNotice = "
+            <div style='background-color: #dbeafe; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #3b82f6;'>
+                <p style='margin: 0; color: #1e40af; font-weight: bold;'>📧 This is a resend of the session notification email.</p>
+            </div>";
+            
+            // Insert resend notice after the first paragraph
+            $body = preg_replace('/(<p>.*?<\/p>)/', '$1' . $resendNotice, $body, 1);
+        }
+        
+        // Add passwordless login section if URL is provided
+        if (!empty($variables['passwordless_login_url'])) {
+            $passwordlessSection = "
+            <div style='background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;'>
+                <h3 style='color: #374151; margin-top: 0;'>Quick Access:</h3>
+                <p>You can access your account directly using the secure link below (no password required):</p>
+                <div style='margin: 15px 0; text-align: center;'>
+                    <a href='{$variables['passwordless_login_url']}' 
+                       style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                        Access Your Account
+                    </a>
+                </div>
+                <p style='color: #6b7280; font-size: 12px; margin: 0;'>
+                    This link will expire in 72 hours for security purposes.
+                </p>
+            </div>";
+            
+            // Insert passwordless section before the closing paragraph
+            $body = str_replace(
+                '<p style="color: #6b7280; font-size: 14px; margin-top: 30px;">',
+                $passwordlessSection . '<p style="color: #6b7280; font-size: 14px; margin-top: 30px;">',
+                $body
+            );
+        }
+        
         return "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;'>
             <div style='background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
                 <p>{$template['greeting']}</p>
                 
                 <div style='margin: 20px 0;'>
-                    {$template['body']}
+                    {$body}
                 </div>
                 
                 <p style='margin: 20px 0;'>{$template['closing']}</p>
                 <p style='margin: 20px 0;'>{$template['signature']}</p>
-                
-                <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
-                <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
-                    This is an automated notification from the Conference Management System.
-                </p>
             </div>
         </div>
         ";
@@ -225,7 +286,7 @@ class SendSessionEmailNotification implements ShouldQueue
     /**
      * Get email message based on event type and user
      */
-    private function getEmailMessage(User $user, SessionEvent $event): string
+    private function getEmailMessage(User $user, SessionEvent $event, string $passwordlessLoginUrl = null): string
     {
         $sessionTitle = $event->session->title;
         $conferenceName = $event->session->conference->name ?? 'Conference';
@@ -238,13 +299,38 @@ class SendSessionEmailNotification implements ShouldQueue
         
         switch ($event->eventType) {
             case 'session_created':
+                $passwordlessLoginSection = '';
+                if ($passwordlessLoginUrl) {
+                    $passwordlessLoginSection = "
+                    <div style='background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;'>
+                        <h3 style='color: #374151; margin-top: 0;'>Quick Access:</h3>
+                        <p>You can access your account directly using the secure link below (no password required):</p>
+                        <div style='margin: 15px 0; text-align: center;'>
+                            <a href='{$passwordlessLoginUrl}' 
+                               style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
+                                Access Your Account
+                            </a>
+                        </div>
+                        <p style='color: #6b7280; font-size: 12px; margin: 0;'>
+                            This link will expire in 72 hours for security purposes.
+                        </p>
+                    </div>";
+                }
+
+                $resendNotice = $event->changes['is_resend'] ?? false ? 
+                    "<div style='background-color: #dbeafe; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #3b82f6;'>
+                        <p style='margin: 0; color: #1e40af; font-weight: bold;'>📧 This is a resend of the session notification email.</p>
+                    </div>" : '';
+
                 return "
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
-                    <h2 style='color: #1f2937; margin-bottom: 20px;'>New Session Added</h2>
+                    <h2 style='color: #1f2937; margin-bottom: 20px;'>" . ($event->changes['is_resend'] ?? false ? 'Session Notification (Resent)' : 'New Session Added') . "</h2>
                     
                     <p>Dear {$user->first_name} {$user->last_name},</p>
                     
                     <p>A new session has been added to <strong>{$conferenceName}</strong>:</p>
+                    
+                    {$resendNotice}
                     
                     <div style='background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;'>
                         <h3 style='color: #374151; margin-top: 0;'>New Session Details:</h3>
@@ -253,6 +339,8 @@ class SendSessionEmailNotification implements ShouldQueue
                         <p><strong>Location:</strong> {$sessionLocation}</p>
                         <p><strong>Description:</strong> " . ($event->session->description ?? 'No description provided') . "</p>
                     </div>
+                    
+                    {$passwordlessLoginSection}
                     
                     <p>Please check the session details and register if you're interested in participating.</p>
                     

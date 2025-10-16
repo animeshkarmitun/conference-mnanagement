@@ -241,6 +241,232 @@ class ParticipantProfileController extends Controller
     }
 
     /**
+     * Bulk delete participant profiles with user cleanup
+     */
+    public function bulkDelete(Request $request)
+    {
+        // Check permissions - allow admin, super_admin, and superadmin roles
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->back()->with('error', 'Access denied. Please log in.');
+        }
+        
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || 
+                        in_array('super_admin', $userRoles) || 
+                        in_array('superadmin', $userRoles);
+        
+        if (!$hasPermission) {
+            return redirect()->back()->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        // Validate request
+        $validated = $request->validate([
+            'participant_ids' => 'required|array|min:1',
+            'participant_ids.*' => 'exists:participants,id',
+            'confirm_user_deletion' => 'boolean'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Get participants to be deleted with their users
+            $participants = Participant::whereIn('id', $validated['participant_ids'])
+                ->with(['user', 'conference'])
+                ->get();
+
+            if ($participants->isEmpty()) {
+                return redirect()->back()->with('error', 'No valid participants found for deletion.');
+            }
+
+            // Check for primary profiles in selection
+            $primaryParticipants = $participants->where('is_primary', true);
+            if ($primaryParticipants->isNotEmpty()) {
+                return redirect()->back()->with('error', 'Cannot delete primary participant profiles in bulk operation.');
+            }
+
+            $deletedCount = 0;
+            $usersToCleanup = collect();
+
+            // Delete participants and collect users for cleanup
+            foreach ($participants as $participant) {
+                $userId = $participant->user_id;
+                
+                // Delete the participant (this will cascade to related data)
+                $participant->delete();
+                $deletedCount++;
+
+                // Check if user has any remaining active participants
+                $remainingParticipants = Participant::where('user_id', $userId)
+                    ->where('status', 'active')
+                    ->count();
+
+                if ($remainingParticipants === 0) {
+                    $usersToCleanup->push($userId);
+                }
+            }
+
+            // Cleanup users who have no remaining participants
+            $cleanupCount = 0;
+            foreach ($usersToCleanup->unique() as $userId) {
+                $this->cleanupUserData($userId);
+                $cleanupCount++;
+            }
+
+            DB::commit();
+
+            $message = "Successfully deleted {$deletedCount} participant profile(s).";
+            if ($cleanupCount > 0) {
+                $message .= " Also deleted {$cleanupCount} user(s) who had no remaining participant profiles.";
+            }
+
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Bulk delete failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete participants: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cleanup user data when user has no remaining participants
+     */
+    private function cleanupUserData($userId)
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            return;
+        }
+
+        try {
+            // Delete user-related data in correct order to avoid foreign key constraints
+            $user->roles()->detach(); // Remove role associations
+            $user->tasks()->detach(); // Remove task assignments
+            
+            // Delete related records
+            $user->assignedTasks()->delete();
+            $user->createdTasks()->delete();
+            $user->notifications()->delete();
+            $user->communications()->delete();
+            $user->comments()->delete();
+            $user->passwordlessLogins()->delete();
+            $user->emails()->delete();
+            $user->conferenceConflicts()->delete();
+            $user->participantProfileSessions()->delete();
+
+            // Finally delete the user
+            $user->delete();
+
+            \Log::info("User cleanup completed for user ID: {$userId}");
+        } catch (\Exception $e) {
+            \Log::error("User cleanup failed for user ID {$userId}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Bulk archive participant profiles
+     */
+    public function bulkArchive(Request $request)
+    {
+        // Check permissions - allow admin, super_admin, and superadmin roles
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->back()->with('error', 'Access denied. Please log in.');
+        }
+        
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || 
+                        in_array('super_admin', $userRoles) || 
+                        in_array('superadmin', $userRoles);
+        
+        if (!$hasPermission) {
+            return redirect()->back()->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        // Validate request
+        $validated = $request->validate([
+            'participant_ids' => 'required|array|min:1',
+            'participant_ids.*' => 'exists:participants,id'
+        ]);
+
+        try {
+            // Get participants to be archived
+            $participants = Participant::whereIn('id', $validated['participant_ids'])
+                ->where('status', 'active')
+                ->get();
+
+            if ($participants->isEmpty()) {
+                return redirect()->back()->with('error', 'No active participants found for archiving.');
+            }
+
+            // Check for primary profiles in selection
+            $primaryParticipants = $participants->where('is_primary', true);
+            if ($primaryParticipants->isNotEmpty()) {
+                return redirect()->back()->with('error', 'Cannot archive primary participant profiles in bulk operation.');
+            }
+
+            $archivedCount = $participants->each(function($participant) {
+                $participant->update(['status' => 'archived']);
+            })->count();
+
+            return redirect()->back()->with('success', "Successfully archived {$archivedCount} participant profile(s).");
+
+        } catch (\Exception $e) {
+            \Log::error('Bulk archive failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to archive participants: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Bulk restore participant profiles
+     */
+    public function bulkRestore(Request $request)
+    {
+        // Check permissions - allow admin, super_admin, and superadmin roles
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->back()->with('error', 'Access denied. Please log in.');
+        }
+        
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $hasPermission = in_array('admin', $userRoles) || 
+                        in_array('super_admin', $userRoles) || 
+                        in_array('superadmin', $userRoles);
+        
+        if (!$hasPermission) {
+            return redirect()->back()->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        // Validate request
+        $validated = $request->validate([
+            'participant_ids' => 'required|array|min:1',
+            'participant_ids.*' => 'exists:participants,id'
+        ]);
+
+        try {
+            // Get participants to be restored
+            $participants = Participant::whereIn('id', $validated['participant_ids'])
+                ->where('status', 'archived')
+                ->get();
+
+            if ($participants->isEmpty()) {
+                return redirect()->back()->with('error', 'No archived participants found for restoration.');
+            }
+
+            $restoredCount = $participants->each(function($participant) {
+                $participant->update(['status' => 'active']);
+            })->count();
+
+            return redirect()->back()->with('success', "Successfully restored {$restoredCount} participant profile(s).");
+
+        } catch (\Exception $e) {
+            \Log::error('Bulk restore failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to restore participants: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Check conflicts for a specific conference
      */
     public function checkConflicts(Request $request)
