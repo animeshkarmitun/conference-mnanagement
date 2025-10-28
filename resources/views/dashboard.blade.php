@@ -292,11 +292,82 @@
             </div>
         </div>
 
+        <!-- Enhanced Country Statistics Section -->
+        <div class="max-w-7xl mx-auto mb-8 animate-fade-in-up animate-delay-4">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-400 card-hover">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shadow-lg">
+                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </span>
+                    <div class="flex-1">
+                        <div class="text-lg font-bold text-blue-700">Country Distribution</div>
+                        <div class="text-sm text-gray-500">Participants by Country</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-blue-700">{{ $dashboardData['country_statistics']['total_countries'] }}</div>
+                        <div class="text-xs text-gray-500">{{ $dashboardData['country_statistics']['total_countries'] === 1 ? 'Country' : 'Countries' }}</div>
+                    </div>
+                </div>
+                
+                @if($dashboardData['country_statistics']['total_countries'] > 0)
+                    <div class="mt-4 max-h-64 overflow-y-auto">
+                        <div class="space-y-2">
+                            @foreach($dashboardData['country_statistics']['countries']->take(10) as $country)
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        <span class="font-medium text-gray-700">{{ $country['country'] }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div class="h-2 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" 
+                                                 style="width: {{ ($country['count'] / max($dashboardData['country_statistics']['total_participants_with_country'], 1)) * 100 }}%">
+                                            </div>
+                                        </div>
+                                        <span class="text-sm font-bold text-blue-700 min-w-[3rem] text-right">{{ $country['count'] }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        
+                        @if($dashboardData['country_statistics']['countries']->count() > 10)
+                            <div class="mt-3 text-center text-sm text-gray-500">
+                                ... and {{ $dashboardData['country_statistics']['countries']->count() - 10 }} more {{ $dashboardData['country_statistics']['countries']->count() - 10 === 1 ? 'country' : 'countries' }}
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-500">No country data available for participants</p>
+                    </div>
+                @endif
+
+                @if($dashboardData['country_statistics']['participants_without_country'] > 0)
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between text-sm text-gray-600">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                Participants without country data
+                            </span>
+                            <span class="font-semibold">{{ $dashboardData['country_statistics']['participants_without_country'] }}</span>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <!-- Enhanced Summary Stats Section -->
         <div class="max-w-7xl mx-auto mb-10">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 <!-- Invited -->
-                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-indigo-400 stat-card card-hover animate-fade-in-up animate-delay-1">
+                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-indigo-400 stat-card card-hover animate-fade-in-up animate-delay-5">
                     <span class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-3 shadow-lg">
                         <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
@@ -306,7 +377,7 @@
             </div>
             
             <!-- Accepted -->
-            <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-emerald-400 stat-card card-hover animate-fade-in-up animate-delay-2">
+            <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-emerald-400 stat-card card-hover animate-fade-in-up animate-delay-5">
                 <span class="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full mb-3 shadow-lg">
                     <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
                 </svg>
@@ -316,7 +387,7 @@
         </div>
         
         <!-- Flying -->
-        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-amber-400 stat-card card-hover animate-fade-in-up animate-delay-3">
+        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-amber-400 stat-card card-hover animate-fade-in-up animate-delay-5">
             <span class="inline-flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full mb-3 shadow-lg">
                 <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
@@ -327,7 +398,7 @@
         </div>
         
         <!-- Status Breakdown -->
-        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-rose-400 stat-card card-hover animate-fade-in-up animate-delay-4">
+        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-rose-400 stat-card card-hover animate-fade-in-up animate-delay-5">
             <span class="inline-flex items-center justify-center w-12 h-12 bg-rose-100 rounded-full mb-3 shadow-lg">
                 <svg class="w-7 h-7 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -355,7 +426,7 @@
 </div>
 
         <!-- Quick Actions Section -->
-        <div class="max-w-7xl mx-auto mb-8 animate-fade-in-up animate-delay-4">
+        <div class="max-w-7xl mx-auto mb-8 animate-fade-in-up">
             <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-xl font-bold text-gray-800">Quick Actions</h3>
@@ -415,7 +486,7 @@
         </div>
 
         <!-- Enhanced Activity Feed Section -->
-        <div class="max-w-7xl mx-auto mb-10 animate-fade-in-up animate-delay-5">
+        <div class="max-w-7xl mx-auto mb-10 animate-fade-in-up">
             <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-xl font-bold text-gray-800">Recent Activities</h3>

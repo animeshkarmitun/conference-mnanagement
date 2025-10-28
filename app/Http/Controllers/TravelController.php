@@ -100,23 +100,41 @@ class TravelController extends Controller
             $validated = $request->validate([
                 'visa_status' => 'nullable|in:required,not_required,pending,approved,issue',
                 'itineraries_status' => 'nullable|in:pending,approved,n_a',
+                'arrival_date' => 'nullable|date_format:Y-m-d\TH:i',
+                'departure_date' => 'nullable|date_format:Y-m-d\TH:i|after:arrival_date',
                 'takeoff_airport' => 'nullable|string|max:255',
                 'flight_info_details' => 'nullable|string|max:1000',
                 'hotel_info' => 'nullable|string|max:2000',
                 'room_check_in' => 'nullable|date_format:Y-m-d\TH:i',
                 'room_check_out' => 'nullable|date_format:Y-m-d\TH:i|after:room_check_in',
             ], [
+                'arrival_date.date_format' => 'Arrival time must be in valid date and time format.',
+                'departure_date.date_format' => 'Departure time must be in valid date and time format.',
+                'departure_date.after' => 'Departure date must be after arrival date.',
                 'room_check_in.date_format' => 'Check-in time must be in valid date and time format.',
                 'room_check_out.date_format' => 'Check-out time must be in valid date and time format.',
                 'room_check_out.after' => 'Room check-out date must be after check-in date.',
             ]);
 
             // Additional validation: Check-in and check-out times must be between arrival and departure times
-            $travelDetails = $participant->travelDetails;
-            if ($travelDetails && ($travelDetails->arrival_date || $travelDetails->departure_date)) {
-                $arrivalDate = $travelDetails->arrival_date ? \Carbon\Carbon::parse($travelDetails->arrival_date) : null;
-                $departureDate = $travelDetails->departure_date ? \Carbon\Carbon::parse($travelDetails->departure_date) : null;
-                
+            // Use the newly submitted arrival/departure dates if provided, otherwise use existing ones
+            $arrivalDate = null;
+            $departureDate = null;
+            
+            if (!empty($validated['arrival_date'])) {
+                $arrivalDate = \Carbon\Carbon::parse($validated['arrival_date']);
+            } elseif ($participant->travelDetails && $participant->travelDetails->arrival_date) {
+                $arrivalDate = \Carbon\Carbon::parse($participant->travelDetails->arrival_date);
+            }
+            
+            if (!empty($validated['departure_date'])) {
+                $departureDate = \Carbon\Carbon::parse($validated['departure_date']);
+            } elseif ($participant->travelDetails && $participant->travelDetails->departure_date) {
+                $departureDate = \Carbon\Carbon::parse($participant->travelDetails->departure_date);
+            }
+            
+            // Only validate if we have arrival or departure dates
+            if ($arrivalDate || $departureDate) {
                 // Validate check-in time
                 if (!empty($validated['room_check_in'])) {
                     $checkInDate = \Carbon\Carbon::parse($validated['room_check_in']);
@@ -150,17 +168,17 @@ class TravelController extends Controller
                         ])->withInput();
                     }
                 }
+            }
+            
+            // Validate that check-in is before check-out if both are provided
+            if (!empty($validated['room_check_in']) && !empty($validated['room_check_out'])) {
+                $checkInDate = \Carbon\Carbon::parse($validated['room_check_in']);
+                $checkOutDate = \Carbon\Carbon::parse($validated['room_check_out']);
                 
-                // Validate that check-in is before check-out if both are provided
-                if (!empty($validated['room_check_in']) && !empty($validated['room_check_out'])) {
-                    $checkInDate = \Carbon\Carbon::parse($validated['room_check_in']);
-                    $checkOutDate = \Carbon\Carbon::parse($validated['room_check_out']);
-                    
-                    if ($checkInDate->gte($checkOutDate)) {
-                        return redirect()->back()->withErrors([
-                            'room_check_out' => 'Room check-out time must be after check-in time.'
-                        ])->withInput();
-                    }
+                if ($checkInDate->gte($checkOutDate)) {
+                    return redirect()->back()->withErrors([
+                        'room_check_out' => 'Room check-out time must be after check-in time.'
+                    ])->withInput();
                 }
             }
 
@@ -171,7 +189,8 @@ class TravelController extends Controller
             }
 
             // Update or create travel details
-            if (isset($validated['itineraries_status']) || isset($validated['takeoff_airport']) || isset($validated['flight_info_details']) || 
+            if (isset($validated['itineraries_status']) || isset($validated['arrival_date']) || isset($validated['departure_date']) || 
+                isset($validated['takeoff_airport']) || isset($validated['flight_info_details']) || 
                 isset($validated['hotel_info']) || isset($validated['room_check_in']) || isset($validated['room_check_out'])) {
                 
                 // Get or create travel details
@@ -184,6 +203,12 @@ class TravelController extends Controller
                 // Update fields
                 if (isset($validated['itineraries_status'])) {
                     $travelDetail->itineraries_status = $validated['itineraries_status'];
+                }
+                if (isset($validated['arrival_date'])) {
+                    $travelDetail->arrival_date = $validated['arrival_date'];
+                }
+                if (isset($validated['departure_date'])) {
+                    $travelDetail->departure_date = $validated['departure_date'];
                 }
                 if (isset($validated['takeoff_airport'])) {
                     $travelDetail->takeoff_airport = $validated['takeoff_airport'];

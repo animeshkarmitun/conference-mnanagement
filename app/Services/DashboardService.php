@@ -162,6 +162,52 @@ class DashboardService
     }
 
     /**
+     * Get country statistics for participants in a conference
+     */
+    public function getCountryStatistics($conferenceId)
+    {
+        // Get participants with their user's country information
+        $participants = Participant::with('user')
+            ->where('conference_id', $conferenceId)
+            ->get();
+
+        // Group by country and count participants
+        $countryStats = $participants
+            ->filter(function ($participant) {
+                // Filter out participants without users or countries
+                return $participant->user && !empty($participant->user->country);
+            })
+            ->groupBy(function ($participant) {
+                return $participant->user->country;
+            })
+            ->map(function ($group) {
+                return [
+                    'country' => $group->first()->user->country,
+                    'count' => $group->count(),
+                ];
+            })
+            ->sortByDesc('count')
+            ->values();
+
+        // Count total unique countries
+        $totalCountries = $countryStats->count();
+        
+        // Count participants without country data
+        $participantsWithoutCountry = $participants
+            ->filter(function ($participant) {
+                return !$participant->user || empty($participant->user->country);
+            })
+            ->count();
+
+        return [
+            'countries' => $countryStats,
+            'total_countries' => $totalCountries,
+            'participants_without_country' => $participantsWithoutCountry,
+            'total_participants_with_country' => $participants->count() - $participantsWithoutCountry,
+        ];
+    }
+
+    /**
      * Get recent activities
      */
     public function getRecentActivities($conferenceId, $limit = 5)
@@ -270,6 +316,7 @@ class DashboardService
             'participant_statistics' => $this->getParticipantStatistics($conferenceId),
             'speaker_statistics' => $this->getSpeakerStatistics($conferenceId),
             'summary_stats' => $this->getSummaryStats($conferenceId),
+            'country_statistics' => $this->getCountryStatistics($conferenceId),
             'recent_activities' => $this->getRecentActivities($conferenceId),
             'upcoming_deadlines' => $this->getUpcomingDeadlines($conferenceId),
         ];

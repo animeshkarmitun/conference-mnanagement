@@ -200,7 +200,25 @@
                 
                 <div class="mb-4">
                     <label for="country" class="block text-sm font-medium text-gray-700">Country (Optional)</label>
-                    <input type="text" name="country" id="country" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Bangladesh, USA, UK">
+                    <div class="relative">
+                        <div class="relative">
+                            <input type="text" id="country_search" placeholder="Search countries..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pr-16" autocomplete="off">
+                            <button type="button" id="clear_country" class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden" title="Clear selection">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            <button type="button" id="country_dropdown_toggle" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" title="Show all countries">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="country_dropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            <div id="country_options"></div>
+                        </div>
+                        <input type="hidden" name="country" id="country">
+                    </div>
                     @error('country')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
@@ -688,6 +706,151 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize conference dropdown
     initializeConferenceDropdown();
+    
+    // ===================== Country Searchable Dropdown =====================
+    
+    // Comprehensive list of countries
+    const countries = [
+        "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", 
+        "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", 
+        "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", 
+        "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+        "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", 
+        "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", 
+        "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", 
+        "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", 
+        "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", 
+        "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", 
+        "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", 
+        "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", 
+        "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", 
+        "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", 
+        "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", 
+        "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", 
+        "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+        "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", 
+        "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", 
+        "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", 
+        "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", 
+        "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", 
+        "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+    ];
+    
+    function initializeCountryDropdown() {
+        const countrySearch = document.getElementById('country_search');
+        const countryDropdown = document.getElementById('country_dropdown');
+        const countryOptions = document.getElementById('country_options');
+        const countryInput = document.getElementById('country');
+        const clearCountryBtn = document.getElementById('clear_country');
+        const countryDropdownToggle = document.getElementById('country_dropdown_toggle');
+        
+        let selectedCountry = null;
+        let filteredCountries = [];
+        let isCountryDropdownOpen = false;
+        
+        function filterCountries(query) {
+            if (!query.trim()) {
+                return countries;
+            }
+            const lowerQuery = query.toLowerCase();
+            return countries.filter(country => 
+                country.toLowerCase().includes(lowerQuery)
+            );
+        }
+        
+        function renderCountryOptions(countryList) {
+            countryOptions.innerHTML = '';
+            
+            if (countryList.length === 0) {
+                countryOptions.innerHTML = `
+                    <div class="px-4 py-2 text-sm text-gray-500">
+                        No countries found
+                    </div>
+                `;
+                return;
+            }
+            
+            countryList.forEach(country => {
+                const option = document.createElement('div');
+                option.className = 'px-4 py-2 text-sm cursor-pointer hover:bg-yellow-50 transition-colors duration-150';
+                option.textContent = country;
+                
+                option.addEventListener('click', () => {
+                    selectCountry(country);
+                });
+                
+                countryOptions.appendChild(option);
+            });
+        }
+        
+        function selectCountry(country) {
+            selectedCountry = country;
+            countrySearch.value = country;
+            countryInput.value = country;
+            clearCountryBtn.classList.remove('hidden');
+            countryDropdown.classList.add('hidden');
+            isCountryDropdownOpen = false;
+        }
+        
+        function clearCountrySelection() {
+            selectedCountry = null;
+            countrySearch.value = '';
+            countryInput.value = '';
+            clearCountryBtn.classList.add('hidden');
+            countryDropdown.classList.add('hidden');
+            isCountryDropdownOpen = false;
+        }
+        
+        function toggleCountryDropdown() {
+            if (isCountryDropdownOpen) {
+                countryDropdown.classList.add('hidden');
+                isCountryDropdownOpen = false;
+            } else {
+                filteredCountries = filterCountries(countrySearch.value);
+                renderCountryOptions(filteredCountries);
+                countryDropdown.classList.remove('hidden');
+                isCountryDropdownOpen = true;
+            }
+        }
+        
+        // Event listeners
+        countrySearch.addEventListener('input', (e) => {
+            filteredCountries = filterCountries(e.target.value);
+            renderCountryOptions(filteredCountries);
+            countryDropdown.classList.remove('hidden');
+            isCountryDropdownOpen = true;
+        });
+        
+        countrySearch.addEventListener('focus', () => {
+            if (!isCountryDropdownOpen) {
+                filteredCountries = filterCountries(countrySearch.value);
+                renderCountryOptions(filteredCountries);
+                countryDropdown.classList.remove('hidden');
+                isCountryDropdownOpen = true;
+            }
+        });
+        
+        clearCountryBtn.addEventListener('click', clearCountrySelection);
+        countryDropdownToggle.addEventListener('click', toggleCountryDropdown);
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#country_search') && !e.target.closest('#country_dropdown')) {
+                countryDropdown.classList.add('hidden');
+                isCountryDropdownOpen = false;
+            }
+        });
+        
+        // Initialize with existing value if any
+        const existingCountry = countryInput.value;
+        if (existingCountry) {
+            selectCountry(existingCountry);
+        }
+    }
+    
+    // Initialize country dropdown
+    initializeCountryDropdown();
+    
     const visaStatusSelect = document.getElementById('visa_status');
     const visaIssueDescription = document.getElementById('visa-issue-description');
     const participantTypeSelect = document.getElementById('participant_type_id');

@@ -301,19 +301,30 @@
             
             <div class="mb-4">
                 <p class="text-sm text-gray-600">Participant: <span id="modalParticipantName" class="font-medium"></span></p>
-                <div id="travel-dates-info" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md hidden">
-                    <p class="text-sm text-blue-800">
-                        <strong>Travel Dates:</strong> 
-                        <span id="arrival-date-display"></span> - 
-                        <span id="departure-date-display"></span>
-                    </p>
-                    <p class="text-xs text-blue-600 mt-1">Check-in and check-out times must be within these travel dates.</p>
-                </div>
             </div>
             
             <form id="editTravelForm" method="POST">
                 @csrf
                 @method('PUT')
+                
+                <!-- Arrival and Departure Dates -->
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p class="text-sm text-blue-800 font-medium mb-3">Travel Dates</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="arrival_date" class="block text-sm font-medium text-gray-700 mb-2">Arrival</label>
+                            <input type="datetime-local" name="arrival_date" id="arrival_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="validateTravelDates()">
+                            <div id="arrival_error" class="text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+                        
+                        <div>
+                            <label for="departure_date" class="block text-sm font-medium text-gray-700 mb-2">Departure</label>
+                            <input type="datetime-local" name="departure_date" id="departure_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="validateTravelDates()">
+                            <div id="departure_error" class="text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-blue-600 mt-2">Check-in and check-out times must be within these travel dates.</p>
+                </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
@@ -408,6 +419,11 @@ function closeEditModal() {
 // Handle form submission
 document.getElementById('editTravelForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    
+    // Validate travel dates first
+    if (!validateTravelDates()) {
+        return; // Stop submission if validation fails
+    }
     
     // Validate check-in/check-out times before submission
     if (!validateCheckInOut()) {
@@ -546,8 +562,6 @@ function loadParticipantData(participantId) {
             if (data.success) {
                 // Debug: Log received data
                 console.log('Received travel details data:', data.travel_details);
-                console.log('Room check-in raw:', data.travel_details.room_check_in);
-                console.log('Room check-out raw:', data.travel_details.room_check_out);
                 
                 document.getElementById('visa_status').value = data.participant.visa_status || '';
                 document.getElementById('itineraries_status').value = data.travel_details.itineraries_status || '';
@@ -555,53 +569,32 @@ function loadParticipantData(participantId) {
                 document.getElementById('flight_info_details').value = data.travel_details.flight_info_details || '';
                 document.getElementById('hotel_info').value = data.travel_details.hotel_info || '';
                 
-                // Format datetime-local inputs
-                if (data.travel_details.room_check_in) {
-                    const checkInDate = new Date(data.travel_details.room_check_in);
-                    // Format for datetime-local input (YYYY-MM-DDTHH:MM)
-                    const year = checkInDate.getFullYear();
-                    const month = String(checkInDate.getMonth() + 1).padStart(2, '0');
-                    const day = String(checkInDate.getDate()).padStart(2, '0');
-                    const hours = String(checkInDate.getHours()).padStart(2, '0');
-                    const minutes = String(checkInDate.getMinutes()).padStart(2, '0');
-                    const formattedValue = `${year}-${month}-${day}T${hours}:${minutes}`;
-                    console.log('Formatted check-in value:', formattedValue);
-                    document.getElementById('room_check_in').value = formattedValue;
+                // Helper function to format datetime for datetime-local input
+                const formatDatetimeLocal = (dateStr) => {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+                };
+                
+                // Populate arrival and departure dates
+                if (data.travel_details.arrival_date) {
+                    document.getElementById('arrival_date').value = formatDatetimeLocal(data.travel_details.arrival_date);
                 }
-                if (data.travel_details.room_check_out) {
-                    const checkOutDate = new Date(data.travel_details.room_check_out);
-                    // Format for datetime-local input (YYYY-MM-DDTHH:MM)
-                    const year = checkOutDate.getFullYear();
-                    const month = String(checkOutDate.getMonth() + 1).padStart(2, '0');
-                    const day = String(checkOutDate.getDate()).padStart(2, '0');
-                    const hours = String(checkOutDate.getHours()).padStart(2, '0');
-                    const minutes = String(checkOutDate.getMinutes()).padStart(2, '0');
-                    const formattedValue = `${year}-${month}-${day}T${hours}:${minutes}`;
-                    console.log('Formatted check-out value:', formattedValue);
-                    document.getElementById('room_check_out').value = formattedValue;
+                if (data.travel_details.departure_date) {
+                    document.getElementById('departure_date').value = formatDatetimeLocal(data.travel_details.departure_date);
                 }
                 
-                // Show travel dates if available
-                if (data.travel_details.arrival_date || data.travel_details.departure_date) {
-                    const travelDatesInfo = document.getElementById('travel-dates-info');
-                    const arrivalDisplay = document.getElementById('arrival-date-display');
-                    const departureDisplay = document.getElementById('departure-date-display');
-                    
-                    if (data.travel_details.arrival_date) {
-                        const arrivalDate = new Date(data.travel_details.arrival_date);
-                        arrivalDisplay.textContent = arrivalDate.toLocaleDateString() + ' ' + arrivalDate.toLocaleTimeString();
-                    } else {
-                        arrivalDisplay.textContent = 'Not set';
-                    }
-                    
-                    if (data.travel_details.departure_date) {
-                        const departureDate = new Date(data.travel_details.departure_date);
-                        departureDisplay.textContent = departureDate.toLocaleDateString() + ' ' + departureDate.toLocaleTimeString();
-                    } else {
-                        departureDisplay.textContent = 'Not set';
-                    }
-                    
-                    travelDatesInfo.classList.remove('hidden');
+                // Populate room check-in and check-out
+                if (data.travel_details.room_check_in) {
+                    document.getElementById('room_check_in').value = formatDatetimeLocal(data.travel_details.room_check_in);
+                }
+                if (data.travel_details.room_check_out) {
+                    document.getElementById('room_check_out').value = formatDatetimeLocal(data.travel_details.room_check_out);
                 }
             }
         })
@@ -610,8 +603,47 @@ function loadParticipantData(participantId) {
         });
 }
 
+// Validation for travel dates (arrival and departure)
+function validateTravelDates() {
+    const arrivalInput = document.getElementById('arrival_date');
+    const departureInput = document.getElementById('departure_date');
+    const arrivalError = document.getElementById('arrival_error');
+    const departureError = document.getElementById('departure_error');
+    
+    // Clear previous errors
+    arrivalError.classList.add('hidden');
+    departureError.classList.add('hidden');
+    arrivalInput.classList.remove('border-red-500');
+    departureInput.classList.remove('border-red-500');
+    
+    const arrivalValue = arrivalInput.value;
+    const departureValue = departureInput.value;
+    
+    let hasErrors = false;
+    
+    // Validate that departure is after arrival
+    if (arrivalValue && departureValue) {
+        const arrivalDate = new Date(arrivalValue);
+        const departureDate = new Date(departureValue);
+        
+        if (departureDate <= arrivalDate) {
+            departureError.textContent = 'Departure time must be after arrival time';
+            departureError.classList.remove('hidden');
+            departureInput.classList.add('border-red-500');
+            hasErrors = true;
+        }
+    }
+    
+    // Also validate check-in/check-out when travel dates change
+    validateCheckInOut();
+    
+    return !hasErrors;
+}
+
 // Client-side validation for check-in/check-out times
 function validateCheckInOut() {
+    const arrivalInput = document.getElementById('arrival_date');
+    const departureInput = document.getElementById('departure_date');
     const checkInInput = document.getElementById('room_check_in');
     const checkOutInput = document.getElementById('room_check_out');
     const checkInError = document.getElementById('check_in_error');
@@ -623,29 +655,28 @@ function validateCheckInOut() {
     checkInInput.classList.remove('border-red-500');
     checkOutInput.classList.remove('border-red-500');
     
+    const arrivalValue = arrivalInput.value;
+    const departureValue = departureInput.value;
     const checkInValue = checkInInput.value;
     const checkOutValue = checkOutInput.value;
     
     if (!checkInValue && !checkOutValue) {
-        return; // No validation needed if both are empty
+        return true; // No validation needed if both are empty
     }
     
-    // Get travel dates from the display
-    const arrivalDisplay = document.getElementById('arrival-date-display').textContent;
-    const departureDisplay = document.getElementById('departure-date-display').textContent;
-    
-    if (arrivalDisplay === 'Not set' && departureDisplay === 'Not set') {
-        return; // No validation possible without travel dates
+    // If no travel dates are set, we can't validate
+    if (!arrivalValue && !departureValue) {
+        return true;
     }
     
     let hasErrors = false;
     
-    // Validate check-in
+    // Validate check-in against arrival and departure
     if (checkInValue) {
         const checkInDate = new Date(checkInValue);
         
-        if (arrivalDisplay !== 'Not set') {
-            const arrivalDate = new Date(arrivalDisplay);
+        if (arrivalValue) {
+            const arrivalDate = new Date(arrivalValue);
             if (checkInDate < arrivalDate) {
                 checkInError.textContent = 'Check-in time cannot be before arrival time';
                 checkInError.classList.remove('hidden');
@@ -654,8 +685,8 @@ function validateCheckInOut() {
             }
         }
         
-        if (departureDisplay !== 'Not set') {
-            const departureDate = new Date(departureDisplay);
+        if (departureValue && !hasErrors) {
+            const departureDate = new Date(departureValue);
             if (checkInDate > departureDate) {
                 checkInError.textContent = 'Check-in time cannot be after departure time';
                 checkInError.classList.remove('hidden');
@@ -665,12 +696,12 @@ function validateCheckInOut() {
         }
     }
     
-    // Validate check-out
+    // Validate check-out against arrival and departure
     if (checkOutValue) {
         const checkOutDate = new Date(checkOutValue);
         
-        if (arrivalDisplay !== 'Not set') {
-            const arrivalDate = new Date(arrivalDisplay);
+        if (arrivalValue) {
+            const arrivalDate = new Date(arrivalValue);
             if (checkOutDate < arrivalDate) {
                 checkOutError.textContent = 'Check-out time cannot be before arrival time';
                 checkOutError.classList.remove('hidden');
@@ -679,8 +710,8 @@ function validateCheckInOut() {
             }
         }
         
-        if (departureDisplay !== 'Not set') {
-            const departureDate = new Date(departureDisplay);
+        if (departureValue) {
+            const departureDate = new Date(departureValue);
             if (checkOutDate > departureDate) {
                 checkOutError.textContent = 'Check-out time cannot be after departure time';
                 checkOutError.classList.remove('hidden');
@@ -691,7 +722,7 @@ function validateCheckInOut() {
     }
     
     // Validate check-in vs check-out
-    if (checkInValue && checkOutValue) {
+    if (checkInValue && checkOutValue && !hasErrors) {
         const checkInDate = new Date(checkInValue);
         const checkOutDate = new Date(checkOutValue);
         
