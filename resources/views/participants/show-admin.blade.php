@@ -99,9 +99,11 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Messaging Platform</label>
                 <div class="mt-1 text-sm text-gray-900">
-                    {{ ucfirst($participant->user->messaging_type ?? 'Not specified') }}
+                    {{ ucfirst($participant->user->messaging_type ?? trim($participant->user->whatsapp_no ?? 'Not specified')) }}
                     @if($participant->user->messaging_number)
                         - {{ $participant->user->messaging_number }}
+                    @elseif($participant->user->whatsapp_no)
+                        - {{ $participant->user->whatsapp_no }}
                     @endif
                 </div>
             </div>
@@ -117,7 +119,7 @@
             </div>
             
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Field of Work/Study</label>
+                <label class="block text-sm font-medium text-gray-700">Field of Work/Study/Expertise/Interests</label>
                 <div class="mt-1 text-sm text-gray-900">{{ $participant->user->field_of_work_study ?? 'Not specified' }}</div>
             </div>
             
@@ -300,14 +302,6 @@
     </div>
     @endif
 
-    <!-- Conference Information Section -->
-    <div class="mb-8 p-6 bg-purple-50 rounded-lg">
-        <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Conference Information</h3>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Expertise/Interests</label>
-            <div class="mt-1 text-sm text-gray-900">{{ $participant->user->expertise_interests ?? 'Not provided' }}</div>
-        </div>
-    </div>
 
     <!-- Hashtags Section -->
     @if($participant->hashtags)
@@ -325,9 +319,9 @@
     </div>
     @endif
 
-    <!-- Registration Details Section -->
+    <!-- Travel Info Section -->
     <div class="mb-8 p-6 bg-purple-50 rounded-lg">
-        <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Registration Details</h3>
+        <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Travel Info</h3>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="mb-4">
@@ -416,6 +410,111 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Additional Travel Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Itineraries Status</label>
+                <div class="mt-1">
+                    @if($participant->travelDetails && $participant->travelDetails->itineraries_status)
+                        @php
+                            $status = $participant->travelDetails->itineraries_status;
+                            $statusColors = [
+                                'approved' => 'bg-green-100 text-green-800',
+                                'n_a' => 'bg-gray-100 text-gray-800',
+                                'pending' => 'bg-yellow-100 text-yellow-800',
+                            ];
+                            $colorClass = $statusColors[$status] ?? 'bg-gray-100 text-gray-800';
+                        @endphp
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colorClass }}">
+                            @if($status === 'n_a')
+                                N/A
+                            @else
+                                {{ ucfirst($status) }}
+                            @endif
+                        </span>
+                    @else
+                        <span class="text-gray-400">Not set</span>
+                    @endif
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Takeoff Airport</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->travelDetails && $participant->travelDetails->takeoff_airport)
+                        {{ $participant->travelDetails->takeoff_airport }}
+                    @else
+                        Not provided
+                    @endif
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Flight Info Details</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->travelDetails && $participant->travelDetails->flight_info_details)
+                        {{ $participant->travelDetails->flight_info_details }}
+                    @elseif($participant->travelDetails && $participant->travelDetails->flight_info)
+                        {{ $participant->travelDetails->flight_info }}
+                    @else
+                        Not provided
+                    @endif
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Travel Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Room Check-in</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->travelDetails && $participant->travelDetails->room_check_in)
+                        {{ \Carbon\Carbon::parse($participant->travelDetails->room_check_in)->format('M d, Y g:i A') }}
+                    @else
+                        Not specified
+                    @endif
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Room Check-out</label>
+                <div class="mt-1 text-sm text-gray-900">
+                    @if($participant->travelDetails && $participant->travelDetails->room_check_out)
+                        {{ \Carbon\Carbon::parse($participant->travelDetails->room_check_out)->format('M d, Y g:i A') }}
+                    @else
+                        Not specified
+                    @endif
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hotel Information -->
+        @if($participant->travelDetails && $participant->travelDetails->hotel_info)
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Hotel Information</label>
+            <div class="mt-1 text-sm text-gray-900">
+                {{ $participant->travelDetails->hotel_info }}
+            </div>
+        </div>
+        @endif
+        
+        <!-- Travel Documents -->
+        @if($participant->travelDetails && $participant->travelDetails->travel_documents)
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Travel Documents</label>
+            <div class="mt-1">
+                <a href="{{ asset('storage/' . $participant->travelDetails->travel_documents) }}" 
+                   target="_blank" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    View Travel Document
+                </a>
+            </div>
+        </div>
+        @endif
         @endif
         
     </div>

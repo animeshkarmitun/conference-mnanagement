@@ -265,10 +265,16 @@
                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeGenerateModal()" 
+                        <button type="button" onclick="closeGenerateModal()" id="singleCancelBtn"
                                 class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Generate</button>
+                        <button type="submit" id="singleSubmitBtn"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
+                            <span id="singleSubmitText">Generate</span>
+                            <svg id="singleLoadingSpinner" class="hidden animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -277,11 +283,29 @@
 </div>
 
 <!-- Bulk Generate Modal -->
-<div id="bulkModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-            <div class="p-6">
-                <h3 class="text-lg font-semibold mb-4">Generate Bulk Login Links</h3>
+<div id="bulkModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+    <div class="flex items-start justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8 flex flex-col max-h-[calc(100vh-4rem)] relative">
+            <!-- Progress Overlay -->
+            <div id="bulkProgressOverlay" class="hidden absolute inset-0 bg-white bg-opacity-95 z-10 rounded-lg flex flex-col items-center justify-center">
+                <div class="text-center">
+                    <svg class="animate-spin h-16 w-16 text-green-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Generating Login Links...</h3>
+                    <p class="text-gray-600 mb-4">Please wait while we create passwordless login links for the selected participants.</p>
+                    <div class="bg-gray-200 rounded-full h-2 w-64 mx-auto overflow-hidden">
+                        <div id="bulkProgressBar" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="bulkProgressText" class="text-sm text-gray-500 mt-2">Preparing...</p>
+                </div>
+            </div>
+            
+            <div class="flex-shrink-0 p-6 border-b">
+                <h3 class="text-lg font-semibold">Generate Bulk Login Links</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 <form id="bulkForm">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Select Conference</label>
@@ -308,13 +332,33 @@
                         <input type="hidden" id="bulk_conference_id" name="conference_id" required>
                     </div>
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Participants</label>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Select Sessions</label>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="selectAllSessions" class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500" onchange="toggleSelectAllSessions()">
+                                <label for="selectAllSessions" class="text-sm text-gray-600 cursor-pointer">Select All</label>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div id="sessionList" class="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3">
+                                <div class="text-center text-gray-500">Select a conference first...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Select Participants</label>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="selectAllParticipants" class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500" onchange="toggleSelectAllParticipants()">
+                                <label for="selectAllParticipants" class="text-sm text-gray-600 cursor-pointer">Select All</label>
+                            </div>
+                        </div>
                         <div class="mb-2">
                             <input type="text" id="bulkParticipantSearch" placeholder="Search participants..." 
                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div id="participantList" class="max-h-60 overflow-y-auto border border-gray-300 rounded-md p-3">
-                            <div class="text-center text-gray-500">Loading participants...</div>
+                            <div class="text-center text-gray-500">Select sessions first...</div>
                         </div>
                     </div>
                     <div class="mb-4">
@@ -322,13 +366,21 @@
                         <input type="number" id="bulkExpirationDays" value="1" min="1" max="90" 
                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeBulkModal()" 
-                                class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Generate All</button>
-                    </div>
                 </form>
+            </div>
+            <div class="flex-shrink-0 p-6 border-t bg-gray-50 rounded-b-lg">
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeBulkModal()" id="bulkCancelBtn"
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button type="submit" form="bulkForm" id="bulkSubmitBtn"
+                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
+                        <span id="bulkSubmitText">Generate All</span>
+                        <svg id="bulkLoadingSpinner" class="hidden animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -342,6 +394,9 @@
 let allConferences = [];
 let allParticipants = [];
 let filteredParticipants = [];
+let allSessions = [];
+let selectedSessions = [];
+let sessionParticipants = [];
 
 // Global function to render participant options
 function renderParticipantOptions(participants) {
@@ -490,7 +545,14 @@ function updateParticipantDisplay(participants) {
 // Load conferences for dropdown
 async function loadConferences() {
     try {
-        const response = await fetch('{{ route("api.conferences") }}');
+        const response = await fetch('{{ route("api.conferences") }}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            credentials: 'same-origin'
+        });
         const data = await response.json();
         
         if (data.conferences) {
@@ -734,8 +796,11 @@ function initializeBulkConferenceDropdown() {
         conferenceDropdown.classList.add('hidden');
         isConferenceDropdownOpen = false;
         
-        // Load participants for the selected conference
-        loadBulkParticipants(conference.id);
+        // Load sessions for the selected conference
+        loadSessions(conference.id);
+        
+        // Clear participant list until sessions are selected
+        document.getElementById('participantList').innerHTML = '<div class="text-center text-gray-500">Select sessions first...</div>';
         
         // Trigger conference change event for existing functionality
         const event = new Event('change');
@@ -891,6 +956,149 @@ function initializeParticipantDropdown() {
 }
 
 
+// Load sessions for selected conference
+async function loadSessions(conferenceId) {
+    try {
+        const response = await fetch(`/api/sessions?conference_id=${conferenceId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            credentials: 'same-origin'
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            allSessions = data.data;
+            renderSessions(allSessions);
+        }
+    } catch (error) {
+        console.error('Error loading sessions:', error);
+    }
+}
+
+// Render sessions in bulk modal
+function renderSessions(sessions) {
+    const container = document.getElementById('sessionList');
+    container.innerHTML = '';
+    
+    if (sessions.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500">No sessions found for this conference</div>';
+        return;
+    }
+    
+    sessions.forEach(session => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center mb-2 session-item';
+        div.innerHTML = `
+            <input type="checkbox" id="session_${session.id}" value="${session.id}" 
+                   class="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500 session-checkbox">
+            <label for="session_${session.id}" class="text-sm text-gray-700 flex-1">
+                <div class="font-medium">${session.title}</div>
+                <div class="text-xs text-gray-500">${new Date(session.start_time).toLocaleString()}</div>
+            </label>
+        `;
+        container.appendChild(div);
+    });
+    
+    // Add event listeners for session selection
+    const sessionCheckboxes = container.querySelectorAll('.session-checkbox');
+    sessionCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', handleSessionSelection);
+    });
+    
+    // Update select all checkbox state
+    updateSelectAllSessionsState();
+}
+
+// Toggle select all sessions
+function toggleSelectAllSessions() {
+    const selectAllCheckbox = document.getElementById('selectAllSessions');
+    const sessionCheckboxes = document.querySelectorAll('.session-checkbox');
+    
+    sessionCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    // Trigger session selection handler for each checkbox
+    sessionCheckboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            handleSessionSelection({ target: checkbox });
+        } else {
+            // Remove from selected sessions
+            const sessionId = parseInt(checkbox.value);
+            selectedSessions = selectedSessions.filter(id => id !== sessionId);
+        }
+    });
+}
+
+// Update select all sessions checkbox state
+function updateSelectAllSessionsState() {
+    const selectAllCheckbox = document.getElementById('selectAllSessions');
+    const sessionCheckboxes = document.querySelectorAll('.session-checkbox');
+    
+    if (sessionCheckboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+        return;
+    }
+    
+    const checkedCount = Array.from(sessionCheckboxes).filter(cb => cb.checked).length;
+    
+    if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedCount === sessionCheckboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
+}
+
+// Handle session selection
+function handleSessionSelection() {
+    selectedSessions = Array.from(document.querySelectorAll('.session-checkbox:checked'))
+        .map(checkbox => parseInt(checkbox.value));
+    
+    // Update select all checkbox state
+    updateSelectAllSessionsState();
+    
+    if (selectedSessions.length > 0) {
+        loadSessionParticipants(selectedSessions);
+    } else {
+        document.getElementById('participantList').innerHTML = '<div class="text-center text-gray-500">Select sessions first...</div>';
+    }
+}
+
+// Load participants for selected sessions
+async function loadSessionParticipants(sessionIds) {
+    try {
+        const response = await fetch(`/api/sessions/participants`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ session_ids: sessionIds })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            sessionParticipants = data.data;
+            renderBulkParticipants(sessionParticipants);
+            setupSearch();
+        }
+    } catch (error) {
+        console.error('Error loading session participants:', error);
+    }
+}
+
 // Load participants for bulk generation
 async function loadBulkParticipants(conferenceId = null) {
     try {
@@ -916,35 +1124,93 @@ async function loadBulkParticipants(conferenceId = null) {
 function renderBulkParticipants(participants) {
     const container = document.getElementById('participantList');
     container.innerHTML = '';
+    
+    if (participants.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500">No participants found for selected sessions</div>';
+        updateSelectAllParticipantsState();
+        return;
+    }
+    
     participants.forEach(participant => {
         const div = document.createElement('div');
         div.className = 'flex items-center mb-2 participant-item';
+        
+        // Get email count for this participant across selected sessions
+        const emailCount = participant.email_send_count || 0;
+        const lastEmailSent = participant.last_email_sent_at ? new Date(participant.last_email_sent_at).toLocaleDateString() : 'Never';
+        
         div.innerHTML = `
             <input type="checkbox" id="participant_${participant.id}" value="${participant.id}" 
-                   class="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                   class="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500 participant-checkbox">
             <label for="participant_${participant.id}" class="text-sm text-gray-700 flex-1">
                 <div class="font-medium">${participant.first_name} ${participant.last_name}</div>
                 <div class="text-xs text-gray-500">${participant.email}</div>
                 <div class="text-xs text-blue-600">${participant.participant_types}</div>
+                <div class="text-xs text-green-600">Emails sent: ${emailCount} | Last: ${lastEmailSent}</div>
             </label>
         `;
         container.appendChild(div);
     });
+    
+    // Update select all checkbox state
+    updateSelectAllParticipantsState();
+}
+
+// Toggle select all participants
+function toggleSelectAllParticipants() {
+    const selectAllCheckbox = document.getElementById('selectAllParticipants');
+    const participantCheckboxes = document.querySelectorAll('.participant-checkbox');
+    
+    participantCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+}
+
+// Update select all participants checkbox state
+function updateSelectAllParticipantsState() {
+    const selectAllCheckbox = document.getElementById('selectAllParticipants');
+    const participantCheckboxes = document.querySelectorAll('.participant-checkbox');
+    
+    if (participantCheckboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+        return;
+    }
+    
+    const checkedCount = Array.from(participantCheckboxes).filter(cb => cb.checked).length;
+    
+    if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedCount === participantCheckboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
 }
 
 // Setup search functionality
 function setupSearch() {
-    const searchInput = document.getElementById('participantSearch');
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const filteredParticipants = allParticipants.filter(participant => 
-            participant.first_name.toLowerCase().includes(searchTerm) ||
-            participant.last_name.toLowerCase().includes(searchTerm) ||
-            participant.email.toLowerCase().includes(searchTerm) ||
-            participant.participant_types.toLowerCase().includes(searchTerm)
-        );
-        renderBulkParticipants(filteredParticipants);
-    });
+    const searchInput = document.getElementById('bulkParticipantSearch');
+    if (!searchInput) return;
+    
+    // Remove existing event listeners
+    searchInput.removeEventListener('input', handleParticipantSearch);
+    searchInput.addEventListener('input', handleParticipantSearch);
+}
+
+function handleParticipantSearch(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const participantsToSearch = selectedSessions.length > 0 ? sessionParticipants : allParticipants;
+    const filteredParticipants = participantsToSearch.filter(participant => 
+        participant.first_name.toLowerCase().includes(searchTerm) ||
+        participant.last_name.toLowerCase().includes(searchTerm) ||
+        participant.email.toLowerCase().includes(searchTerm) ||
+        participant.participant_types.toLowerCase().includes(searchTerm)
+    );
+    renderBulkParticipants(filteredParticipants);
 }
 
 // Modal functions
@@ -961,10 +1227,32 @@ function openGenerateModal() {
 
 function closeGenerateModal() {
     document.getElementById('generateModal').classList.add('hidden');
+    
+    // Reset button state
+    const submitBtn = document.getElementById('singleSubmitBtn');
+    const submitText = document.getElementById('singleSubmitText');
+    const loadingSpinner = document.getElementById('singleLoadingSpinner');
+    const cancelBtn = document.getElementById('singleCancelBtn');
+    
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+    }
+    if (cancelBtn) {
+        cancelBtn.disabled = false;
+        cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    if (submitText) submitText.textContent = 'Generate';
+    if (loadingSpinner) loadingSpinner.classList.add('hidden');
 }
 
 async function openBulkModal() {
-    document.getElementById('bulkModal').classList.remove('hidden');
+    const modal = document.getElementById('bulkModal');
+    modal.classList.remove('hidden');
+    
+    // Scroll modal to top when opening
+    modal.scrollTop = 0;
+    
     await loadConferences();
     loadBulkParticipants();
     // Setup searchable select after conferences are loaded
@@ -974,12 +1262,52 @@ async function openBulkModal() {
 }
 
 function closeBulkModal() {
-    document.getElementById('bulkModal').classList.add('hidden');
+    const modal = document.getElementById('bulkModal');
+    modal.classList.add('hidden');
+    
+    // Reset scroll position when closing
+    modal.scrollTop = 0;
+    
+    // Reset button state
+    const submitBtn = document.getElementById('bulkSubmitBtn');
+    const submitText = document.getElementById('bulkSubmitText');
+    const loadingSpinner = document.getElementById('bulkLoadingSpinner');
+    const cancelBtn = document.getElementById('bulkCancelBtn');
+    const progressOverlay = document.getElementById('bulkProgressOverlay');
+    const progressBar = document.getElementById('bulkProgressBar');
+    const progressText = document.getElementById('bulkProgressText');
+    
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+    }
+    if (cancelBtn) {
+        cancelBtn.disabled = false;
+        cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    if (submitText) submitText.textContent = 'Generate All';
+    if (loadingSpinner) loadingSpinner.classList.add('hidden');
+    if (progressOverlay) progressOverlay.classList.add('hidden');
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressText) progressText.textContent = 'Preparing...';
 }
 
 // Form submissions
 document.getElementById('generateForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    // Show loading state
+    const submitBtn = document.getElementById('singleSubmitBtn');
+    const submitText = document.getElementById('singleSubmitText');
+    const loadingSpinner = document.getElementById('singleLoadingSpinner');
+    const cancelBtn = document.getElementById('singleCancelBtn');
+    
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+    cancelBtn.disabled = true;
+    cancelBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    submitText.textContent = 'Generating...';
+    loadingSpinner.classList.remove('hidden');
     
     const formData = new FormData();
     formData.append('user_id', document.getElementById('participant_id').value);
@@ -998,13 +1326,43 @@ document.getElementById('generateForm').addEventListener('submit', async functio
         const data = await response.json();
         
         if (data.success) {
-            alert('Login link generated successfully!');
-            closeGenerateModal();
-            location.reload();
+            // Show success state briefly
+            submitText.textContent = 'Complete!';
+            loadingSpinner.classList.add('hidden');
+            
+            setTimeout(() => {
+                alert('Login link generated successfully!');
+                closeGenerateModal();
+                location.reload();
+            }, 500);
         } else {
-            alert('Error: ' + data.message);
+            // Reset button state on error
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            cancelBtn.disabled = false;
+            cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            submitText.textContent = 'Generate';
+            loadingSpinner.classList.add('hidden');
+            
+            // Show detailed error messages if validation errors exist
+            let errorMessage = data.message || 'An error occurred';
+            if (data.errors) {
+                errorMessage += '\n\nValidation Errors:\n';
+                Object.keys(data.errors).forEach(key => {
+                    errorMessage += `- ${key}: ${data.errors[key].join(', ')}\n`;
+                });
+            }
+            alert('Error: ' + errorMessage);
         }
     } catch (error) {
+        // Reset button state on error
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        cancelBtn.disabled = false;
+        cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitText.textContent = 'Generate';
+        loadingSpinner.classList.add('hidden');
+        
         console.error('Error:', error);
         alert('An error occurred while generating the link.');
     }
@@ -1021,30 +1379,106 @@ document.getElementById('bulkForm').addEventListener('submit', async function(e)
         return;
     }
     
-    const formData = new FormData();
-    formData.append('user_ids', JSON.stringify(selectedParticipants));
-    formData.append('conference_id', document.getElementById('bulk_conference_id').value);
-    formData.append('expiration_days', document.getElementById('bulkExpirationDays').value);
+    if (selectedSessions.length === 0) {
+        alert('Please select at least one session.');
+        return;
+    }
+    
+    // Show loading state and progress overlay
+    const submitBtn = document.getElementById('bulkSubmitBtn');
+    const submitText = document.getElementById('bulkSubmitText');
+    const loadingSpinner = document.getElementById('bulkLoadingSpinner');
+    const cancelBtn = document.getElementById('bulkCancelBtn');
+    const progressOverlay = document.getElementById('bulkProgressOverlay');
+    const progressBar = document.getElementById('bulkProgressBar');
+    const progressText = document.getElementById('bulkProgressText');
+    
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+    cancelBtn.disabled = true;
+    cancelBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    submitText.textContent = 'Generating...';
+    loadingSpinner.classList.remove('hidden');
+    
+    // Show progress overlay
+    progressOverlay.classList.remove('hidden');
+    progressBar.style.width = '10%';
+    progressText.textContent = `Generating links for ${selectedParticipants.length} participant(s)...`;
+    
+    // Use JSON request instead of FormData for proper array handling
+    const requestData = {
+        user_ids: selectedParticipants,
+        session_ids: selectedSessions,
+        conference_id: document.getElementById('bulk_conference_id').value,
+        expiration_days: document.getElementById('bulkExpirationDays').value
+    };
     
     try {
+        // Update progress
+        progressBar.style.width = '30%';
+        progressText.textContent = 'Sending request...';
+        
         const response = await fetch('{{ route("passwordless-login.generate.bulk") }}', {
             method: 'POST',
-            body: formData,
+            body: JSON.stringify(requestData),
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
             }
         });
         
+        // Update progress
+        progressBar.style.width = '70%';
+        progressText.textContent = 'Processing response...';
+        
         const data = await response.json();
         
+        // Update progress
+        progressBar.style.width = '100%';
+        progressText.textContent = 'Complete!';
+        
         if (data.success) {
-            alert(data.message);
-            closeBulkModal();
-            location.reload();
+            // Show success state briefly
+            submitText.textContent = 'Complete!';
+            loadingSpinner.classList.add('hidden');
+            
+            setTimeout(() => {
+                alert(data.message);
+                progressOverlay.classList.add('hidden');
+                closeBulkModal();
+                location.reload();
+            }, 800);
         } else {
-            alert('Error: ' + data.message);
+            // Reset button state on error
+            progressOverlay.classList.add('hidden');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            cancelBtn.disabled = false;
+            cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            submitText.textContent = 'Generate All';
+            loadingSpinner.classList.add('hidden');
+            
+            // Show detailed error messages if validation errors exist
+            let errorMessage = data.message || 'An error occurred';
+            if (data.errors) {
+                errorMessage += '\n\nValidation Errors:\n';
+                Object.keys(data.errors).forEach(key => {
+                    errorMessage += `- ${key}: ${data.errors[key].join(', ')}\n`;
+                });
+            }
+            alert('Error: ' + errorMessage);
         }
     } catch (error) {
+        // Reset button state on error
+        progressOverlay.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        cancelBtn.disabled = false;
+        cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitText.textContent = 'Generate All';
+        loadingSpinner.classList.add('hidden');
+        
         console.error('Error:', error);
         alert('An error occurred while generating the links.');
     }

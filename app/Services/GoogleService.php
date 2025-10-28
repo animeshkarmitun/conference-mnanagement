@@ -119,7 +119,8 @@ class GoogleService
 
             if ($results->getThreads()) {
                 foreach ($results->getThreads() as $thread) {
-                    $threadData = $service->users_threads->get($userId, $thread->getId());
+                    // Fetch thread with full format to get complete message bodies
+                    $threadData = $service->users_threads->get($userId, $thread->getId(), ['format' => 'full']);
                     $threads[] = [
                         'id' => $thread->getId(),
                         'snippet' => $thread->getSnippet(),
@@ -260,8 +261,9 @@ class GoogleService
         }
         $emailContent .= "\r\n" . $body;
 
-        // Encode the message
-        $encodedMessage = base64_encode($emailContent);
+        // Encode the message using URL-safe base64 encoding (required by Gmail API)
+        // Gmail API requires base64url encoding: replace + with -, / with _, and remove padding =
+        $encodedMessage = rtrim(strtr(base64_encode($emailContent), '+/', '-_'), '=');
         $message->setRaw($encodedMessage);
 
         return $message;
@@ -271,7 +273,8 @@ class GoogleService
     public function getThread($threadId, $userId = 'me')
     {
         $service = new Gmail($this->client);
-        return $service->users_threads->get($userId, $threadId);
+        // Fetch with full format to get complete message bodies
+        return $service->users_threads->get($userId, $threadId, ['format' => 'full']);
     }
 
     // Extract email address from "Name <email>" format
@@ -334,25 +337,125 @@ class GoogleService
         ];
     }
 
-    // Extract message body from payload
-    private function extractMessageBody($payload)
+    // Extract message body from payload (public for view access)
+    public function extractMessageBody($payload)
     {
         $body = '';
         
+        // Try to get body directly
         if ($payload->getBody() && $payload->getBody()->getData()) {
             $body = base64_decode(str_replace(['-', '_'], ['+', '/'], $payload->getBody()->getData()));
-        } elseif ($payload->getParts()) {
+        } 
+        // If no direct body, look in parts (multipart email)
+        elseif ($payload->getParts()) {
+            // First, try to get HTML version (more complete)
             foreach ($payload->getParts() as $part) {
-                if ($part->getMimeType() === 'text/plain' || $part->getMimeType() === 'text/html') {
+                if ($part->getMimeType() === 'text/html') {
                     if ($part->getBody() && $part->getBody()->getData()) {
                         $body = base64_decode(str_replace(['-', '_'], ['+', '/'], $part->getBody()->getData()));
                         break;
+                    }
+                    // Check nested parts for HTML
+                    if ($part->getParts()) {
+                        $body = $this->extractMessageBody($part);
+                        if (!empty($body)) break;
+                    }
+                }
+            }
+            
+            // If no HTML found, try plain text
+            if (empty($body)) {
+                foreach ($payload->getParts() as $part) {
+                    if ($part->getMimeType() === 'text/plain') {
+                        if ($part->getBody() && $part->getBody()->getData()) {
+                            $body = base64_decode(str_replace(['-', '_'], ['+', '/'], $part->getBody()->getData()));
+                            break;
+                        }
+                        // Check nested parts for plain text
+                        if ($part->getParts()) {
+                            $body = $this->extractMessageBody($part);
+                            if (!empty($body)) break;
+                        }
                     }
                 }
             }
         }
         
         return $body;
+    }
+
+    // Get full message body from a message object
+    public function getMessageBody($message)
+    {
+        if (!$message || !$message->getPayload()) {
+            return '';
+        }
+        
+        return $this->extractMessageBody($message->getPayload());
+    }
+
+    // Format HTML email body to readable plain text with proper line breaks
+    public function formatEmailBody($htmlBody)
+    {
+        if (empty($htmlBody)) {
+            return '';
+        }
+
+        // Check if content is HTML
+        $isHtml = preg_match('/<(?:html|body|div|p|br)/i', $htmlBody);
+        
+        if ($isHtml) {
+            // FIRST: Remove style tags and their contents (CSS)
+            $text = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $htmlBody);
+            
+            // Remove script tags and their contents (JavaScript)
+            $text = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $text);
+            
+            // Remove head section entirely (contains meta, title, etc.)
+            $text = preg_replace('/<head[^>]*>.*?<\/head>/is', '', $text);
+            
+            // Convert HTML to formatted text while preserving structure
+            // Convert common block elements to line breaks
+            $text = preg_replace('/<br\s*\/?>/i', "\n", $text);
+            $text = preg_replace('/<\/p>/i', "\n\n", $text);
+            $text = preg_replace('/<\/div>/i', "\n", $text);
+            $text = preg_replace('/<\/h[1-6]>/i', "\n\n", $text);
+            $text = preg_replace('/<\/li>/i', "\n", $text);
+            $text = preg_replace('/<\/tr>/i', "\n", $text);
+            $text = preg_replace('/<\/blockquote>/i', "\n\n", $text);
+            $text = preg_replace('/<hr\s*\/?>/i', "\n---\n", $text);
+            
+            // Strip all remaining HTML tags
+            $text = strip_tags($text);
+            
+            // Remove lines that contain only whitespace
+            $text = preg_replace('/^[ \t]+$/m', '', $text);
+        } else {
+            $text = $htmlBody;
+        }
+        
+        // Decode HTML entities
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        
+        // Remove any remaining whitespace-only lines
+        $text = preg_replace('/^[ \t]+$/m', '', $text);
+        
+        // Clean up excessive blank lines (reduce multiple blank lines to max 1)
+        $text = preg_replace('/\n\s*\n\s*\n/', "\n\n", $text);
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+        
+        // Remove excessive spaces (multiple spaces to single space)
+        $text = preg_replace('/ {2,}/', ' ', $text);
+        
+        // Trim each line
+        $lines = explode("\n", $text);
+        $lines = array_map('trim', $lines);
+        $text = implode("\n", $lines);
+        
+        // Remove blank lines at start and end, and reduce multiple consecutive blank lines
+        $text = trim($text);
+        
+        return $text;
     }
 
     // Search for messages by participant email

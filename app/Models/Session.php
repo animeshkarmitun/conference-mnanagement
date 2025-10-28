@@ -20,16 +20,11 @@ class Session extends Model
         'capacity',
         'seating_arrangement',
         'status',
-        'email_send_count',
-        'last_email_sent_at',
-        'email_recipients',
     ];
 
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
-        'last_email_sent_at' => 'datetime',
-        'email_recipients' => 'array',
     ];
 
     // Relationships
@@ -45,12 +40,14 @@ class Session extends Model
 
     public function participants()
     {
-        return $this->belongsToMany(Participant::class, 'participant_session')->withPivot('role');
+        return $this->belongsToMany(Participant::class, 'participant_session')
+                    ->withPivot('role')
+                    ->withTimestamps();
     }
 
     public function participantSessions()
     {
-        return $this->hasMany(ParticipantSession::class);
+        return $this->participants(); // Alias for consistency
     }
 
     // Scope: Upcoming sessions

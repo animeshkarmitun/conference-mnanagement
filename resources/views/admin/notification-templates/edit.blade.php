@@ -53,7 +53,7 @@
                         
                         <div class="flex items-center">
                             <div class="flex items-center h-5">
-                                <input type="checkbox" name="is_active" id="is_active" 
+                                <input type="checkbox" name="is_active" id="is_active" value="1"
                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" 
                                        {{ old('is_active', $notificationTemplate->is_active) ? 'checked' : '' }}>
                             </div>

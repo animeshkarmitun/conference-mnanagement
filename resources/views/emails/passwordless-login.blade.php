@@ -188,8 +188,8 @@
         <div class="footer">
             <p>If you have any questions or need assistance, please don't hesitate to contact us.</p>
             <p>
-                <a href="mailto:support@conference.com">📧 support@conference.com</a> | 
-                <a href="tel:+1234567890">📞 +1 (234) 567-890</a>
+            <a href="mailto:support@conference.com">📧 support@cgseventmanagement.com</a> | 
+            <a href="tel:+8801675012590">📞 +880 1675-012590</a>
             </p>
             <div class="divider"></div>
             <p style="font-size: 12px; color: #adb5bd;">

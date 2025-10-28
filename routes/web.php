@@ -20,6 +20,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
 // Debug route for testing (no auth required)
 Route::get('/debug/participants/{conferenceId}', function($conferenceId) {
     $participants = \App\Models\Participant::with(['user', 'participantType'])
@@ -273,15 +274,27 @@ Route::get('/api/conferences/{conference}/users', function(\App\Models\Conferenc
 })->name('api.conferences.users');
 
 // API endpoints for conferences and venues (for session forms)
-Route::get('/api/conferences', function() {
-    $conferences = \App\Models\Conference::select('id', 'name', 'start_date', 'end_date')->get();
-    return response()->json(['conferences' => $conferences]);
-})->name('api.conferences');
-
-Route::get('/api/venues', function() {
-    $venues = \App\Models\Venue::select('id', 'name', 'address', 'capacity')->get();
-    return response()->json(['venues' => $venues]);
-})->name('api.venues');
+Route::middleware(['auth', 'admin.access'])->group(function () {
+    Route::get('/api/venues', function() {
+        $venues = \App\Models\Venue::select('id', 'name', 'address', 'capacity')->get();
+        return response()->json(['venues' => $venues]);
+    })->name('api.venues');
+    
+    // Debug route for testing API endpoints
+    Route::get('/debug/api-test', function() {
+        $conferences = \App\Models\Conference::select('id', 'name', 'start_date', 'end_date')->get();
+        $venues = \App\Models\Venue::select('id', 'name', 'address', 'capacity')->get();
+        
+        return response()->json([
+            'user' => auth()->user()->email,
+            'roles' => auth()->user()->roles->pluck('name'),
+            'conferences_count' => $conferences->count(),
+            'venues_count' => $venues->count(),
+            'conferences' => $conferences,
+            'venues' => $venues
+        ]);
+    });
+});
     
 // Add route for notification actions (clicking on notifications)
 Route::get('/notifications/{notification}/action', function (\App\Models\Notification $notification) {
@@ -396,11 +409,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/send-email', [\App\Http\Controllers\ParticipantController::class, 'sendEmail'])->name('participants.send-email');
     Route::post('/participants/check-email', [\App\Http\Controllers\ParticipantController::class, 'checkEmail'])->name('participants.check-email');
     
+    // Comment routes for participant-profiles (must come first to avoid route conflicts)
+    Route::post('/participant-comments/{participantId}/store', [\App\Http\Controllers\ParticipantController::class, 'storeCommentFromProfile'])->name('participant-profiles.comments.store');
+    
+    
+    Route::delete('/participant-profiles/{participant}/delete-comment/{comment}', [\App\Http\Controllers\ParticipantController::class, 'destroyComment'])->name('participant-profiles.comments.destroy');
+    
+    
     // Multi-participant profile management routes
     Route::get('/participant-profiles', [\App\Http\Controllers\ParticipantProfileController::class, 'index'])->name('participant-profiles.index');
     Route::get('/participant-profiles/create', [\App\Http\Controllers\ParticipantProfileController::class, 'create'])->name('participant-profiles.create');
     Route::post('/participant-profiles', [\App\Http\Controllers\ParticipantProfileController::class, 'store'])->name('participant-profiles.store');
-    Route::post('/participant-profiles/{participantId}/switch', [\App\Http\Controllers\ParticipantProfileController::class, 'switch'])->name('participant-profiles.switch');
+    Route::post('/participant-profiles/{participantId}/switch-profile', [\App\Http\Controllers\ParticipantProfileController::class, 'switch'])->name('participant-profiles.switch');
     Route::post('/participant-profiles/{participantId}/set-primary', [\App\Http\Controllers\ParticipantProfileController::class, 'setPrimary'])->name('participant-profiles.set-primary');
     Route::post('/participant-profiles/{participantId}/archive', [\App\Http\Controllers\ParticipantProfileController::class, 'archive'])->name('participant-profiles.archive');
     Route::post('/participant-profiles/{participantId}/restore', [\App\Http\Controllers\ParticipantProfileController::class, 'restore'])->name('participant-profiles.restore');
@@ -408,10 +428,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/participant-profiles/bulk-delete', [\App\Http\Controllers\ParticipantProfileController::class, 'bulkDelete'])->name('participant-profiles.bulk-delete');
     Route::post('/participant-profiles/bulk-archive', [\App\Http\Controllers\ParticipantProfileController::class, 'bulkArchive'])->name('participant-profiles.bulk-archive');
     Route::post('/participant-profiles/bulk-restore', [\App\Http\Controllers\ParticipantProfileController::class, 'bulkRestore'])->name('participant-profiles.bulk-restore');
-    
-    // Comment routes for participant-profiles
-    Route::post('/participant-profiles/{participant}/comments', [\App\Http\Controllers\ParticipantController::class, 'storeComment'])->name('participant-profiles.comments.store');
-    Route::delete('/participant-profiles/{participant}/comments/{comment}', [\App\Http\Controllers\ParticipantController::class, 'destroyComment'])->name('participant-profiles.comments.destroy');
     
     // Profile switching in participant dashboard
     Route::post('/participants/{participantId}/switch-profile', [\App\Http\Controllers\ParticipantController::class, 'switchProfile'])->name('participants.switch-profile');
@@ -441,6 +457,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/export-itinerary', [\App\Http\Controllers\TravelController::class, 'exportItinerary'])->name('admin.export-itinerary');
     Route::post('/admin/room-allocations/{participant}', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('admin.room-allocations.update');
     Route::get('/admin/hotels/{hotel}/rooms', [\App\Http\Controllers\TravelController::class, 'getHotelRooms'])->name('admin.hotels.rooms');
+    
+    // New routes for travel details modal
+    Route::get('/admin/travel/get-participant-data/{participantId}', [\App\Http\Controllers\TravelController::class, 'getParticipantData'])->name('admin.travel.get-participant-data');
+    Route::put('/admin/travel/update-participant-details/{participantId}', [\App\Http\Controllers\TravelController::class, 'updateParticipantDetails'])->name('admin.travel.update-participant-details');
     Route::post('/admin/participants/download-biographies', [\App\Http\Controllers\ParticipantController::class, 'downloadBiographies'])->name('admin.participants.download-biographies');
     
     // Email Tracking Routes (Admin Only)
@@ -658,6 +678,13 @@ Route::get('/test-roles', function() {
 });
 
 // Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');
+
+// Passwordless Login API Routes
+Route::middleware(['auth', 'admin.access'])->group(function () {
+    Route::get('/api/sessions', [App\Http\Controllers\SessionController::class, 'getSessions']);
+    Route::post('/api/sessions/participants', [App\Http\Controllers\SessionController::class, 'getSessionParticipants']);
+    Route::get('/api/conferences', [App\Http\Controllers\ConferenceController::class, 'getConferencesForApi'])->name('api.conferences');
+});
 
 Route::get('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'show'])->name('bulk.email');
 Route::post('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'send'])->name('bulk.email.send');

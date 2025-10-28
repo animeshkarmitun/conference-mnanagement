@@ -166,6 +166,8 @@ class PasswordlessLoginController extends Controller
         $validator = Validator::make($request->all(), [
             'user_ids' => 'required|array|min:1',
             'user_ids.*' => 'exists:users,id',
+            'session_ids' => 'nullable|array',
+            'session_ids.*' => 'exists:sessions,id',
             'conference_id' => 'nullable|exists:conferences,id',
             'expiration_days' => 'integer|min:1|max:90',
         ]);
@@ -181,6 +183,7 @@ class PasswordlessLoginController extends Controller
         try {
             $expirationDays = $request->expiration_days ?? 1;
             $expirationHours = $expirationDays * 24; // Convert days to hours
+            $sessionIds = $request->session_ids ?? [];
             
             // Use provided conference_id or get latest conference
             $conference = $request->conference_id ? Conference::find($request->conference_id) : Conference::latest()->first();
@@ -188,7 +191,8 @@ class PasswordlessLoginController extends Controller
             $results = $this->passwordlessLoginService->generateBulkLoginLinks(
                 $request->user_ids, 
                 $expirationHours, 
-                $conference
+                $conference,
+                $sessionIds
             );
 
             $successCount = collect($results)->where('success', true)->count();

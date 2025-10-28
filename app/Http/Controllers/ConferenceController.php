@@ -16,9 +16,14 @@ class ConferenceController extends Controller
     {
         $this->conflictService = $conflictService;
         
-        // Restrict all conference management to admins only
+        // Restrict all conference management to admins only (except API methods)
         $this->middleware(function ($request, $next) {
-            if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
+            // Skip middleware for API methods
+            if ($request->routeIs('api.conferences')) {
+                return $next($request);
+            }
+            
+            if (!auth()->user() || (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin'))) {
                 abort(403, 'Access denied. Admin privileges required.');
             }
             return $next($request);
@@ -542,6 +547,29 @@ class ConferenceController extends Controller
             }
         }
         
+        // Manually delete sessions before deleting conference
+        $deletedSessionsCount = 0;
+        if ($sessionCount > 0) {
+            $sessions = $conference->sessions()->get();
+            foreach ($sessions as $session) {
+                // Store session data before deletion for notification
+                $sessionTitle = $session->title;
+                $conferenceName = $conference->name;
+                
+                // Trigger session deletion event to notify participants
+                $message = "Session '{$sessionTitle}' has been deleted from {$conferenceName}";
+                event(new \App\Events\SessionEvent($session, 'session_deleted', $message, [
+                    'deleted_by' => auth()->user()->id,
+                    'conference_name' => $conferenceName,
+                    'deleted_via_conference' => true
+                ]));
+                
+                // Delete the session
+                $session->delete();
+                $deletedSessionsCount++;
+            }
+        }
+        
         // Log the deletion with related data counts
         \Log::info('Conference deletion initiated', [
             'conference_id' => $conference->id,
@@ -549,7 +577,8 @@ class ConferenceController extends Controller
             'related_data' => $relatedData,
             'venue_deleted' => $venueDeleted,
             'venue_name' => $venueName,
-            'participant_users_deleted' => $deletedUsersCount
+            'participant_users_deleted' => $deletedUsersCount,
+            'sessions_deleted_manually' => $deletedSessionsCount
         ]);
         
         $conference->delete();
@@ -747,5 +776,19 @@ class ConferenceController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Get conferences for API (used by passwordless login modal)
+     */
+    public function getConferencesForApi()
+    {
+        // Skip the constructor middleware for this API method
+        $conferences = Conference::orderBy('name')->get(['id', 'name', 'start_date', 'end_date']);
+        
+        return response()->json([
+            'success' => true,
+            'conferences' => $conferences
+        ]);
     }
 } 

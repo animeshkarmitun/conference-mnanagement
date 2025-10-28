@@ -423,6 +423,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
                     </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email Tracking
+                    </th>
                     <th class="px-6 py-3"></th>
                 </tr>
             </thead>
@@ -536,6 +539,43 @@
                                 {{ $timeData['duration'] }}
                             </span>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @php
+                                // Get email tracking data for this session
+                                $emailTracking = \App\Models\ParticipantSessionEmailTracking::where('session_id', $session->id)->get();
+                                $totalEmailsSent = $emailTracking->sum('email_send_count');
+                                $lastEmailSent = $emailTracking->max('last_email_sent_at');
+                                $participantCount = $emailTracking->count();
+                            @endphp
+                            <div class="flex items-center space-x-2">
+                                <div class="text-sm text-gray-600">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 text-gray-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <span class="font-medium">{{ $totalEmailsSent }}</span>
+                                        <span class="text-xs text-gray-500 ml-1">sent</span>
+                                    </div>
+                                    @if($lastEmailSent)
+                                        <div class="text-xs text-gray-500">
+                                            Last: {{ \Carbon\Carbon::parse($lastEmailSent)->format('M d, H:i') }}
+                                        </div>
+                                    @else
+                                        <div class="text-xs text-gray-500">Never sent</div>
+                                    @endif
+                                </div>
+                                @if($participantCount > 0)
+                                    <button onclick="resendSessionEmails({{ $session->id }})" 
+                                            class="quick-action-btn inline-flex items-center p-1.5 bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 rounded-lg transition-all duration-200 border border-green-200 shadow-sm"
+                                            title="Resend emails to all participants"
+                                            aria-label="Resend session emails">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                    </button>
+                                @endif
+                            </div>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <div class="flex items-center justify-end space-x-2">
                                 <a href="{{ route('sessions.show', $session) }}" 
@@ -574,7 +614,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-8 text-center">
+                        <td colspan="7" class="px-6 py-8 text-center">
                             <div class="flex flex-col items-center">
                                 <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -600,7 +640,7 @@
     </div>
     
     <div class="mt-6">
-        {{ $sessions->appends(['status' => $status, 'conference_id' => request('conference_id'), 'session_title' => request('session_title')])->links() }}
+        {{ $sessions->appends(['status' => $status, 'conference_id' => request('conference_id'), 'session_title' => request('session_title')])->links('pagination.custom') }}
     </div>
 </div>
 
@@ -1072,6 +1112,46 @@ document.addEventListener('DOMContentLoaded', function() {
         // Trigger download
         window.location.href = exportUrl;
     }
+
+    // Resend session emails function
+    window.resendSessionEmails = function(sessionId) {
+        if (!confirm('Are you sure you want to resend emails to all participants for this session?')) {
+            return;
+        }
+
+        // Show loading state
+        const button = event.target.closest('button');
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>';
+        button.disabled = true;
+
+        fetch(`/sessions/${sessionId}/resend-email-all`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                // Reload the page to update the email counters
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while resending emails.');
+        })
+        .finally(() => {
+            // Restore button state
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        });
+    };
 });
 </script>
 @endsection 

@@ -14,12 +14,23 @@ class TravelDetail extends Model
         'flight_info',
         'arrival_date',
         'departure_date',
+        'hotel_info',
         'extra_nights',
         'hotel_id',
         'room_id',
         'travel_documents',
         'room_check_in',
         'room_check_out',
+        'itineraries_status',
+        'takeoff_airport',
+        'flight_info_details',
+    ];
+
+    protected $casts = [
+        'arrival_date' => 'datetime',
+        'departure_date' => 'datetime',
+        'room_check_in' => 'datetime',
+        'room_check_out' => 'datetime',
     ];
 
     // Relationships

@@ -47,7 +47,6 @@ class User extends Authenticatable
         'nid_passport_birth_certificate',
         'how_found_bobc',
         'attended_previous_bobc',
-        'expertise_interests',
         // Media/Speaker fields
         'media_type',
         'other_contact_type',

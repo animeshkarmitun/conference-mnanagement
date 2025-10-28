@@ -227,18 +227,6 @@
                         </div>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Expertise/Interests</label>
-                        <div class="text-gray-900">
-                            @if($participant->user->expertise_interests)
-                                <div class="bg-gray-100 p-3 rounded-lg">
-                                    {{ $participant->user->expertise_interests }}
-                                </div>
-                            @else
-                                <span class="text-gray-400">Not provided</span>
-                            @endif
-                        </div>
-                    </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700">How did you find out about BoBC?</label>

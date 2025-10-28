@@ -53,6 +53,171 @@ class TravelController extends Controller
         return view('admin.travel.itineraries', compact('travelDetails', 'conferences'));
     }
 
+    // Get participant data for modal
+    public function getParticipantData($participantId)
+    {
+        try {
+            $participant = Participant::with('travelDetails')->findOrFail($participantId);
+            
+            return response()->json([
+                'success' => true,
+                'participant' => [
+                    'visa_status' => $participant->visa_status,
+                ],
+                'travel_details' => [
+                    'itineraries_status' => $participant->travelDetails ? $participant->travelDetails->itineraries_status : null,
+                    'takeoff_airport' => $participant->travelDetails ? $participant->travelDetails->takeoff_airport : null,
+                    'flight_info_details' => $participant->travelDetails ? $participant->travelDetails->flight_info_details : null,
+                    'hotel_info' => $participant->travelDetails ? $participant->travelDetails->hotel_info : null,
+                    'room_check_in' => $participant->travelDetails ? $participant->travelDetails->room_check_in : null,
+                    'room_check_out' => $participant->travelDetails ? $participant->travelDetails->room_check_out : null,
+                    'arrival_date' => $participant->travelDetails ? $participant->travelDetails->arrival_date : null,
+                    'departure_date' => $participant->travelDetails ? $participant->travelDetails->departure_date : null,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Participant not found'
+            ], 404);
+        }
+    }
+
+    // Update participant travel details
+    public function updateParticipantDetails(Request $request, $participantId)
+    {
+        try {
+            $participant = Participant::findOrFail($participantId);
+            
+            // Debug: Log incoming request data
+            \Log::info('Travel details update request:', [
+                'participant_id' => $participantId,
+                'request_data' => $request->all(),
+                'room_check_in' => $request->input('room_check_in'),
+                'room_check_out' => $request->input('room_check_out'),
+            ]);
+            
+            $validated = $request->validate([
+                'visa_status' => 'nullable|in:required,not_required,pending,approved,issue',
+                'itineraries_status' => 'nullable|in:pending,approved,n_a',
+                'takeoff_airport' => 'nullable|string|max:255',
+                'flight_info_details' => 'nullable|string|max:1000',
+                'hotel_info' => 'nullable|string|max:2000',
+                'room_check_in' => 'nullable|date_format:Y-m-d\TH:i',
+                'room_check_out' => 'nullable|date_format:Y-m-d\TH:i|after:room_check_in',
+            ], [
+                'room_check_in.date_format' => 'Check-in time must be in valid date and time format.',
+                'room_check_out.date_format' => 'Check-out time must be in valid date and time format.',
+                'room_check_out.after' => 'Room check-out date must be after check-in date.',
+            ]);
+
+            // Additional validation: Check-in and check-out times must be between arrival and departure times
+            $travelDetails = $participant->travelDetails;
+            if ($travelDetails && ($travelDetails->arrival_date || $travelDetails->departure_date)) {
+                $arrivalDate = $travelDetails->arrival_date ? \Carbon\Carbon::parse($travelDetails->arrival_date) : null;
+                $departureDate = $travelDetails->departure_date ? \Carbon\Carbon::parse($travelDetails->departure_date) : null;
+                
+                // Validate check-in time
+                if (!empty($validated['room_check_in'])) {
+                    $checkInDate = \Carbon\Carbon::parse($validated['room_check_in']);
+                    
+                    if ($arrivalDate && $checkInDate->lt($arrivalDate)) {
+                        return redirect()->back()->withErrors([
+                            'room_check_in' => 'Room check-in time cannot be before arrival time (' . $arrivalDate->format('M d, Y g:i A') . ').'
+                        ])->withInput();
+                    }
+                    
+                    if ($departureDate && $checkInDate->gt($departureDate)) {
+                        return redirect()->back()->withErrors([
+                            'room_check_in' => 'Room check-in time cannot be after departure time (' . $departureDate->format('M d, Y g:i A') . ').'
+                        ])->withInput();
+                    }
+                }
+                
+                // Validate check-out time
+                if (!empty($validated['room_check_out'])) {
+                    $checkOutDate = \Carbon\Carbon::parse($validated['room_check_out']);
+                    
+                    if ($arrivalDate && $checkOutDate->lt($arrivalDate)) {
+                        return redirect()->back()->withErrors([
+                            'room_check_out' => 'Room check-out time cannot be before arrival time (' . $arrivalDate->format('M d, Y g:i A') . ').'
+                        ])->withInput();
+                    }
+                    
+                    if ($departureDate && $checkOutDate->gt($departureDate)) {
+                        return redirect()->back()->withErrors([
+                            'room_check_out' => 'Room check-out time cannot be after departure time (' . $departureDate->format('M d, Y g:i A') . ').'
+                        ])->withInput();
+                    }
+                }
+                
+                // Validate that check-in is before check-out if both are provided
+                if (!empty($validated['room_check_in']) && !empty($validated['room_check_out'])) {
+                    $checkInDate = \Carbon\Carbon::parse($validated['room_check_in']);
+                    $checkOutDate = \Carbon\Carbon::parse($validated['room_check_out']);
+                    
+                    if ($checkInDate->gte($checkOutDate)) {
+                        return redirect()->back()->withErrors([
+                            'room_check_out' => 'Room check-out time must be after check-in time.'
+                        ])->withInput();
+                    }
+                }
+            }
+
+            // Update participant visa status
+            if (isset($validated['visa_status'])) {
+                $participant->visa_status = $validated['visa_status'];
+                $participant->save();
+            }
+
+            // Update or create travel details
+            if (isset($validated['itineraries_status']) || isset($validated['takeoff_airport']) || isset($validated['flight_info_details']) || 
+                isset($validated['hotel_info']) || isset($validated['room_check_in']) || isset($validated['room_check_out'])) {
+                
+                // Get or create travel details
+                $travelDetail = $participant->travelDetails;
+                if (!$travelDetail) {
+                    $travelDetail = new TravelDetail();
+                    $travelDetail->participant_id = $participant->id;
+                }
+                
+                // Update fields
+                if (isset($validated['itineraries_status'])) {
+                    $travelDetail->itineraries_status = $validated['itineraries_status'];
+                }
+                if (isset($validated['takeoff_airport'])) {
+                    $travelDetail->takeoff_airport = $validated['takeoff_airport'];
+                }
+                if (isset($validated['flight_info_details'])) {
+                    $travelDetail->flight_info_details = $validated['flight_info_details'];
+                }
+                if (isset($validated['hotel_info'])) {
+                    $travelDetail->hotel_info = $validated['hotel_info'];
+                }
+                if (isset($validated['room_check_in'])) {
+                    $travelDetail->room_check_in = $validated['room_check_in'];
+                }
+                if (isset($validated['room_check_out'])) {
+                    $travelDetail->room_check_out = $validated['room_check_out'];
+                }
+                
+                $travelDetail->save();
+                
+                \Log::info('Travel details updated', [
+                    'participant_id' => $participant->id,
+                    'travel_detail_id' => $travelDetail->id,
+                    'room_check_in' => $validated['room_check_in'] ?? null,
+                    'room_check_out' => $validated['room_check_out'] ?? null,
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Travel details updated successfully.');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update travel details: ' . $e->getMessage());
+        }
+    }
+
     // Admin view for travel conflicts
     public function travelConflicts()
     {
@@ -361,35 +526,42 @@ class TravelController extends Controller
                 'Participant Name',
                 'Email',
                 'Conference',
+                'Visa Status',
+                'Itineraries Status',
                 'Hotel',
                 'Room Number',
                 'Room Type',
                 'Arrival Date',
                 'Departure Date',
+                'Takeoff Airport',
                 'Room Check-in',
                 'Room Check-out',
-                'Flight Info'
+                'Flight Info',
+                'Flight Info Details'
             ]);
 
             // CSV Data
             foreach ($travelDetails as $detail) {
-                // Always use room allocation data as primary source for check-in/check-out times
-                $roomAllocation = $detail->participant->roomAllocations->first();
-                $checkIn = $roomAllocation ? $roomAllocation->check_in : null;
-                $checkOut = $roomAllocation ? $roomAllocation->check_out : null;
+                // Use travel details data for check-in/check-out times
+                $checkIn = $detail->room_check_in;
+                $checkOut = $detail->room_check_out;
                 
                 fputcsv($file, [
                     ($detail->participant->user->first_name ?? $detail->participant->user->name) . ' ' . ($detail->participant->user->last_name ?? ''),
                     $detail->participant->user->email,
                     $detail->participant->conference->name ?? 'N/A',
+                    $detail->participant->visa_status ?? 'Not set',
+                    $detail->itineraries_status ?? 'Not set',
                     $detail->hotel->name ?? 'N/A',
                     $detail->room->room_number ?? 'N/A',
                     $detail->room->roomType->name ?? 'N/A',
                     $detail->arrival_date ? date('Y-m-d H:i', strtotime($detail->arrival_date)) : 'N/A',
                     $detail->departure_date ? date('Y-m-d H:i', strtotime($detail->departure_date)) : 'N/A',
-                    $checkIn ? date('Y-m-d H:i', strtotime($checkIn)) : 'N/A',
-                    $checkOut ? date('Y-m-d H:i', strtotime($checkOut)) : 'N/A',
-                    $detail->flight_info ?? 'N/A'
+                    $detail->takeoff_airport ?? 'N/A',
+                    $checkIn ? \Carbon\Carbon::parse($checkIn)->format('Y-m-d H:i') : 'N/A',
+                    $checkOut ? \Carbon\Carbon::parse($checkOut)->format('Y-m-d H:i') : 'N/A',
+                    $detail->flight_info ?? 'N/A',
+                    $detail->flight_info_details ?? 'N/A'
                 ]);
             }
 

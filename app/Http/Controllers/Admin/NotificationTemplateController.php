@@ -108,6 +108,13 @@ class NotificationTemplateController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
 
+        // Debug logging
+        \Log::info('Updating notification template', [
+            'id' => $notificationTemplate->id,
+            'validated_data' => $validated,
+            'request_data' => $request->all()
+        ]);
+
         // Validate template variables
         $errors = $this->notificationTemplateService->validateTemplate(
             $validated['message_template'], 
@@ -118,7 +125,12 @@ class NotificationTemplateController extends Controller
             return back()->withErrors(['message_template' => implode(', ', $errors)])->withInput();
         }
 
-        $notificationTemplate->update($validated);
+        $result = $notificationTemplate->update($validated);
+        
+        \Log::info('Update result', [
+            'success' => $result,
+            'updated_template' => $notificationTemplate->fresh()->toArray()
+        ]);
 
         // Clear cache
         $this->notificationTemplateService->clearCache($notificationTemplate->notification_type);

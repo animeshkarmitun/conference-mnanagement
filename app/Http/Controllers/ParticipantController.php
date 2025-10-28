@@ -201,7 +201,6 @@ class ParticipantController extends Controller
             'nid_passport_birth_certificate' => 'nullable|image|max:300',
             'how_found_bobc' => 'nullable|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
             'attended_previous_bobc' => 'nullable|boolean',
-            'expertise_interests' => 'nullable|string|max:1000',
         ];
 
         // Add conditional validation rules based on participant type
@@ -259,6 +258,9 @@ class ParticipantController extends Controller
             $travelDatesValidated = $request->validate([
                 'arrival_date' => 'nullable|date_format:Y-m-d\TH:i',
                 'departure_date' => 'nullable|date_format:Y-m-d\TH:i|after_or_equal:arrival_date',
+                'itineraries_status' => 'nullable|in:pending,approved,n_a',
+                'takeoff_airport' => 'nullable|string|max:255',
+                'flight_info_details' => 'nullable|string|max:1000',
             ]);
             
             // Additional validation for travel dates when travel intent is selected
@@ -297,6 +299,9 @@ class ParticipantController extends Controller
             $travelDatesValidated = $request->validate([
                 'arrival_date' => 'nullable|date_format:Y-m-d\TH:i',
                 'departure_date' => 'nullable|date_format:Y-m-d\TH:i|after_or_equal:arrival_date',
+                'itineraries_status' => 'nullable|in:pending,approved,n_a',
+                'takeoff_airport' => 'nullable|string|max:255',
+                'flight_info_details' => 'nullable|string|max:1000',
             ]);
             
             // Additional validation for travel dates when travel intent is selected
@@ -343,7 +348,6 @@ class ParticipantController extends Controller
                 'home_district' => $userValidated['home_district'] ?? null,
                 'how_found_bobc' => $userValidated['how_found_bobc'] ?? null,
                 'attended_previous_bobc' => $userValidated['attended_previous_bobc'] ?? null,
-                'expertise_interests' => $userValidated['expertise_interests'] ?? null,
                 // Media/Speaker conditional fields
                 'media_type' => $request->media_type,
                 'other_contact_type' => $request->other_contact_type,
@@ -426,6 +430,10 @@ class ParticipantController extends Controller
                 'participant_id' => $participant->id,
                 'arrival_date' => $travelDatesValidated['arrival_date'],
                 'departure_date' => $travelDatesValidated['departure_date'],
+                'itineraries_status' => $travelDatesValidated['itineraries_status'] ?? null,
+                'takeoff_airport' => $travelDatesValidated['takeoff_airport'] ?? null,
+                'flight_info_details' => $travelDatesValidated['flight_info_details'] ?? null,
+                'hotel_info' => $travelDatesValidated['hotel_info'] ?? null,
             ]);
         }
         
@@ -549,6 +557,9 @@ class ParticipantController extends Controller
             $travelDatesValidated = $request->validate([
                 'arrival_date' => 'nullable|date_format:Y-m-d\TH:i',
                 'departure_date' => 'nullable|date_format:Y-m-d\TH:i|after_or_equal:arrival_date',
+                'itineraries_status' => 'nullable|in:pending,approved,n_a',
+                'takeoff_airport' => 'nullable|string|max:255',
+                'flight_info_details' => 'nullable|string|max:1000',
             ]);
             
             // Additional validation for travel dates when travel intent is selected
@@ -583,7 +594,6 @@ class ParticipantController extends Controller
             'home_district' => 'nullable|string|max:100',
             'how_found_bobc' => 'nullable|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
             'attended_previous_bobc' => 'nullable|boolean',
-            'expertise_interests' => 'nullable|string|max:1000',
             'dietary_requirements' => 'nullable|string|max:50',
             'dietary_requirements_other' => 'nullable|string|max:100',
                 // Media fields (if participant type is press)
@@ -619,6 +629,9 @@ class ParticipantController extends Controller
             $travelDatesValidated = $request->validate([
                 'arrival_date' => 'nullable|date_format:Y-m-d\TH:i',
                 'departure_date' => 'nullable|date_format:Y-m-d\TH:i|after_or_equal:arrival_date',
+                'itineraries_status' => 'nullable|in:pending,approved,n_a',
+                'takeoff_airport' => 'nullable|string|max:255',
+                'flight_info_details' => 'nullable|string|max:1000',
             ]);
             
             // Additional validation for travel dates when travel intent is selected
@@ -685,7 +698,6 @@ class ParticipantController extends Controller
                 'home_district' => $userValidated['home_district'] ?? null,
                 'how_found_bobc' => $userValidated['how_found_bobc'] ?? null,
                 'attended_previous_bobc' => $userValidated['attended_previous_bobc'] ?? null,
-                'expertise_interests' => $userValidated['expertise_interests'] ?? null,
                 // Media fields
                 'media_type' => $userValidated['media_type'] ?? null,
                 // Speaker fields
@@ -782,12 +794,17 @@ class ParticipantController extends Controller
                 $travelDetail->update([
                     'arrival_date' => $travelDatesValidated['arrival_date'],
                     'departure_date' => $travelDatesValidated['departure_date'],
+                    'itineraries_status' => $travelDatesValidated['itineraries_status'] ?? null,
+                    'takeoff_airport' => $travelDatesValidated['takeoff_airport'] ?? null,
+                    'flight_info_details' => $travelDatesValidated['flight_info_details'] ?? null,
+                    'hotel_info' => $travelDatesValidated['hotel_info'] ?? null,
                 ]);
             } else {
                 \App\Models\TravelDetail::create([
                     'participant_id' => $participant->id,
                     'arrival_date' => $travelDatesValidated['arrival_date'],
                     'departure_date' => $travelDatesValidated['departure_date'],
+                    'hotel_info' => $travelDatesValidated['hotel_info'] ?? null,
                 ]);
             }
         } else {
@@ -918,12 +935,29 @@ class ParticipantController extends Controller
         }
         
         // Load sessions only from the current participant's conference
-        $sessions = $participant->sessions()
+        $allSessions = $participant->sessions()
             ->whereHas('conference', function($query) use ($participant) {
                 $query->where('id', $participant->conference_id);
             })
             ->withPivot('role')
+            ->orderBy('start_time', 'asc')
             ->get();
+        
+        // Sort sessions into categories
+        $now = now();
+        $currentSessions = $allSessions->filter(function($session) use ($now) {
+            return $now->between($session->start_time, $session->end_time);
+        });
+        
+        $upcomingSessions = $allSessions->filter(function($session) use ($now) {
+            return $session->start_time > $now;
+        });
+        
+        $archivedSessions = $allSessions->filter(function($session) use ($now) {
+            return $session->end_time < $now;
+        });
+        
+        $sessions = $allSessions; // Keep original for compatibility
         \Log::info('Sessions loaded for participant ' . $participant->id . ': ' . $sessions->count());
         $notifications = $participant->user->notifications()
             ->where('participant_id', $participant->id)
@@ -945,7 +979,7 @@ class ParticipantController extends Controller
             ->get();
         
         $isMyProfile = true; // Flag to indicate this is accessed from my-profile route
-        return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'roomTypes', 'allParticipantProfiles', 'isMyProfile'));
+        return view('participants.show', compact('participant', 'sessions', 'currentSessions', 'upcomingSessions', 'archivedSessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'roomTypes', 'allParticipantProfiles', 'isMyProfile'));
     }
 
     /**
@@ -969,12 +1003,29 @@ class ParticipantController extends Controller
         $participant->load(['user', 'conference', 'participantType']);
         
         // Load sessions only from the current participant's conference
-        $sessions = $participant->sessions()
+        $allSessions = $participant->sessions()
             ->whereHas('conference', function($query) use ($participant) {
                 $query->where('id', $participant->conference_id);
             })
             ->withPivot('role')
+            ->orderBy('start_time', 'asc')
             ->get();
+        
+        // Sort sessions into categories
+        $now = now();
+        $currentSessions = $allSessions->filter(function($session) use ($now) {
+            return $now->between($session->start_time, $session->end_time);
+        });
+        
+        $upcomingSessions = $allSessions->filter(function($session) use ($now) {
+            return $session->start_time > $now;
+        });
+        
+        $archivedSessions = $allSessions->filter(function($session) use ($now) {
+            return $session->end_time < $now;
+        });
+        
+        $sessions = $allSessions; // Keep original for compatibility
         
         // Load all participant profiles for the current user for dropdown
         $allParticipantProfiles = $user->participants()
@@ -1002,7 +1053,7 @@ class ParticipantController extends Controller
         }
 
         $isMyProfile = true; // Flag to indicate this is accessed from my-profile route
-        return view('participants.show', compact('participant', 'sessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'roomTypes', 'availableSessions', 'allParticipantProfiles', 'isMyProfile'))
+        return view('participants.show', compact('participant', 'sessions', 'currentSessions', 'upcomingSessions', 'archivedSessions', 'notifications', 'comments', 'travelDetail', 'hotels', 'roomTypes', 'availableSessions', 'allParticipantProfiles', 'isMyProfile'))
             ->with('success', 'Switched to ' . ($participant->conference->name ?? 'Unknown Conference') . ' profile');
     }
 

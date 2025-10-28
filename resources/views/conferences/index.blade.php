@@ -684,7 +684,7 @@
     </div>
     
     <div class="mt-6">
-        {{ $conferences->appends(['status' => $status])->links() }}
+        {{ $conferences->appends(['status' => $status])->links('pagination.custom') }}
     </div>
 </div>
 

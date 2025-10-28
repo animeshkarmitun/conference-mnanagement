@@ -911,7 +911,7 @@
     </div>
     
     <div class="mt-6">
-        {{ $participants->appends(['status' => $status])->links() }}
+        {{ $participants->appends(['status' => $status])->links('pagination.custom') }}
     </div>
 </div>
 </div>

@@ -4,6 +4,9 @@
 
 @push('styles')
 <style>
+    .conversation-card {
+        transition: all 0.3s ease;
+    }
     .conversation-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -13,6 +16,15 @@
     }
     .message-bubble-reply {
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .email-body {
+        line-height: 1.6;
+        font-size: 0.95rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    .email-body p {
+        margin-bottom: 0.75rem;
     }
 </style>
 @endpush
@@ -269,12 +281,29 @@
 
                             <!-- Conversation Snippet -->
                             <div class="mb-3">
-                                <p class="text-muted">{{ $thread['snippet'] }}</p>
+                                <p class="text-muted">{{ html_entity_decode($thread['snippet'], ENT_QUOTES | ENT_HTML5, 'UTF-8') }}</p>
                             </div>
 
                             <!-- Messages (Collapsible) -->
                             <div id="messages-{{ $thread['id'] }}" class="d-none">
                                 @foreach ($thread['messages'] as $index => $message)
+                                    @php
+                                        $googleService = app('App\\Services\\GoogleService');
+                                        $fullBody = $googleService->getMessageBody($message);
+                                        
+                                        // If body is empty, fall back to snippet
+                                        if (empty($fullBody)) {
+                                            $displayBody = html_entity_decode($message->getSnippet(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                                        } else {
+                                            // Use the helper method to format the email body
+                                            $displayBody = $googleService->formatEmailBody($fullBody);
+                                        }
+                                        
+                                        // Limit to reasonable length (3000 chars ~= 2-3 pages)
+                                        if (strlen($displayBody) > 3000) {
+                                            $displayBody = substr($displayBody, 0, 3000) . "\n\n... [Message truncated. Click Reply to see full message]";
+                                        }
+                                    @endphp
                                     <div class="message-bubble rounded p-3 text-white mb-3 {{ $index % 2 == 0 ? '' : 'message-bubble-reply ms-5' }}">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                             <div class="d-flex align-items-center">
@@ -290,10 +319,10 @@
                                             </span>
                                         </div>
                                         <div class="small">
-                                            <p class="fw-bold mb-1">
+                                            <p class="fw-bold mb-2">
                                                 {{ app('App\\Services\\GoogleService')->getHeader($message, 'Subject') }}
                                             </p>
-                                            <p class="mb-0">{{ $message->getSnippet() }}</p>
+                                            <div class="email-body mb-0" style="white-space: pre-wrap;">{{ $displayBody }}</div>
                                         </div>
                                     </div>
                                 @endforeach

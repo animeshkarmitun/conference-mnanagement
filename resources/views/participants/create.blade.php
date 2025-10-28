@@ -142,7 +142,7 @@
                 
                 <div class="mb-4">
                     <label for="contact_no" class="block text-sm font-medium text-gray-700">Contact No (Optional)</label>
-                    <input type="tel" name="contact_no" id="contact_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="+8801234567890" value="">
+                    <input type="tel" name="contact_no" id="contact_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="">
                     @error('contact_no')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
                 
@@ -162,7 +162,7 @@
                             <label for="messaging_telegram" class="ml-2 text-sm text-gray-700">Telegram</label>
                         </div>
                     </div>
-                    <input type="tel" name="messaging_number" id="messaging_number" class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="+8801234567890" value="">
+                    <input type="tel" name="messaging_number" id="messaging_number" class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="">
                     @error('messaging_type')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     @error('messaging_number')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
@@ -181,7 +181,7 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="field_of_work_study" class="block text-sm font-medium text-gray-700">Field of Work/Study (Optional)</label>
+                    <label for="field_of_work_study" class="block text-sm font-medium text-gray-700">Field of Work/Study/Expertise/Interests (Optional)</label>
                     <input type="text" name="field_of_work_study" id="field_of_work_study" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., Computer Science, Medicine, Engineering">
                     @error('field_of_work_study')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
@@ -393,22 +393,6 @@
             </div>
         </div>
 
-        <!-- Conference Information Section -->
-        <div class="mb-8 p-6 bg-purple-50 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4 text-purple-800 border-b border-purple-200 pb-2">Conference Information</h3>
-            
-            
-            <div class="mb-4">
-                <label for="expertise_interests" class="block text-sm font-medium text-gray-700">Provide your expertise/interests aligning with the theme of BoBC (Optional)</label>
-                <textarea name="expertise_interests" id="expertise_interests" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Please provide your expertise and interests (200 words max)" maxlength="1000"></textarea>
-                <p class="text-xs text-gray-500 mt-1">Any use of AI in the answers would be banned from the conference in the future</p>
-                <div class="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Word count: <span id="word-count">0</span>/200</span>
-                    <span>Character count: <span id="char-count">0</span>/1000</span>
-                </div>
-                @error('expertise_interests')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
-            </div>
-        </div>
 
         <!-- Modern Hashtag Input Section -->
         <div class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
@@ -477,7 +461,7 @@
             
             <!-- Travel Dates Section (shown when National or International is selected) -->
             <div id="travel-dates-section" class="hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="mb-4">
                         <label for="arrival_date" class="block text-sm font-medium text-gray-700">Arrival Date <span class="text-red-500">*</span></label>
                         <input type="datetime-local" name="arrival_date" id="arrival_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="YYYY-MM-DDTHH:MM">
@@ -490,6 +474,38 @@
                         <input type="datetime-local" name="departure_date" id="departure_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="YYYY-MM-DDTHH:MM">
                         <p class="text-xs text-gray-500 mt-1">Format: YYYY-MM-DDTHH:MM (e.g., 2024-01-17T10:00)</p>
                         @error('departure_date')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="hotel_info" class="block text-sm font-medium text-gray-700">Hotel Info (Optional)</label>
+                        <textarea name="hotel_info" id="hotel_info" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Hotel information..."></textarea>
+                        @error('hotel_info')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+                
+                <!-- Additional Travel Fields (shown when National or International is selected) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="mb-4">
+                        <label for="itineraries_status" class="block text-sm font-medium text-gray-700">Itineraries Status (Optional)</label>
+                        <select name="itineraries_status" id="itineraries_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                            <option value="">Select Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="n_a">N/A</option>
+                        </select>
+                        @error('itineraries_status')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="takeoff_airport" class="block text-sm font-medium text-gray-700">Takeoff Airport (Optional)</label>
+                        <input type="text" name="takeoff_airport" id="takeoff_airport" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="e.g., JFK, LAX, Heathrow">
+                        @error('takeoff_airport')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="flight_info_details" class="block text-sm font-medium text-gray-700">Flight Info (Optional)</label>
+                        <textarea name="flight_info_details" id="flight_info_details" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" placeholder="Additional flight information..."></textarea>
+                        @error('flight_info_details')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                 </div>
             </div>
@@ -676,9 +692,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const visaIssueDescription = document.getElementById('visa-issue-description');
     const participantTypeSelect = document.getElementById('participant_type_id');
     const participantTypeDescription = document.getElementById('participant-type-description');
-    const expertiseTextarea = document.getElementById('expertise_interests');
-    const wordCountSpan = document.getElementById('word-count');
-    const charCountSpan = document.getElementById('char-count');
     
     function toggleVisaIssueDescription() {
         if (visaStatusSelect && visaStatusSelect.value === 'issue') {
@@ -864,35 +877,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Word and character counting
-    function updateWordCount() {
-        if (!expertiseTextarea || !wordCountSpan || !charCountSpan) return;
-        
-        const text = expertiseTextarea.value;
-        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-        const wordCount = words.length;
-        const charCount = text.length;
-        
-        wordCountSpan.textContent = wordCount;
-        charCountSpan.textContent = charCount;
-        
-        // Add visual feedback for limits
-        if (wordCount > 200) {
-            wordCountSpan.style.color = 'red';
-        } else if (wordCount > 180) {
-            wordCountSpan.style.color = 'orange';
-        } else {
-            wordCountSpan.style.color = 'inherit';
-        }
-        
-        if (charCount > 1000) {
-            charCountSpan.style.color = 'red';
-        } else if (charCount > 900) {
-            charCountSpan.style.color = 'orange';
-        } else {
-            charCountSpan.style.color = 'inherit';
-        }
-    }
     
     // Age calculation
     function calculateAge() {
@@ -917,7 +901,6 @@ document.addEventListener('DOMContentLoaded', function() {
     updateParticipantTypeDescription();
     toggleStudentFields();
     toggleTravelDates();
-    updateWordCount();
     
     // Event listeners
     if (visaStatusSelect) {
@@ -925,9 +908,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (participantTypeSelect) {
     participantTypeSelect.addEventListener('change', updateParticipantTypeDescription);
-    }
-    if (expertiseTextarea) {
-        expertiseTextarea.addEventListener('input', updateWordCount);
     }
     
     const travelIntentSelect = document.getElementById('travel_intent');
@@ -1152,16 +1132,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedPlatform && messagingNumberInput) {
             switch(selectedPlatform.value) {
                 case 'whatsapp':
-                    messagingNumberInput.placeholder = '+8801234567890';
+                    messagingNumberInput.placeholder = '';
                     break;
                 case 'signal':
-                    messagingNumberInput.placeholder = '+8801234567890';
+                    messagingNumberInput.placeholder = '';
                     break;
                 case 'telegram':
-                    messagingNumberInput.placeholder = '@username or +8801234567890';
+                    messagingNumberInput.placeholder = '';
                     break;
                 default:
-                    messagingNumberInput.placeholder = '+8801234567890';
+                    messagingNumberInput.placeholder = '';
             }
         }
     }

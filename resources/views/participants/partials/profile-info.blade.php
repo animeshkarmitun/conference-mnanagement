@@ -93,7 +93,7 @@
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Field of Work/Study</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Field of Work/Study/Expertise/Interests</label>
                 <div class="text-gray-900">
                     {{ $participant->user->field_of_work_study ?: 'Not specified' }}
                 </div>
@@ -228,18 +228,6 @@
         </div>
         @endif
 
-        <div class="mt-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Expertise/Interests</label>
-            <div class="text-gray-900">
-                @if($participant->user->expertise_interests)
-                    <div class="bg-gray-100 p-3 rounded-lg">
-                        {{ $participant->user->expertise_interests }}
-                    </div>
-                @else
-                    <span class="text-gray-400">Not provided</span>
-                @endif
-            </div>
-        </div>
     </div>
 
     <!-- Media-specific fields (shown when participant type is press) -->

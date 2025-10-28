@@ -117,7 +117,7 @@
                     <div class="md:col-span-2">
                         <label for="participant_search" class="block text-sm font-medium text-gray-700 mb-2">Search Participants</label>
                         <div class="relative">
-                            <input type="text" id="participant_search" placeholder="Search by name, email, organization, or hashtag..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pl-10">
+                            <input type="text" id="participant_search" placeholder="Search by name, email, hashtag, bio, designation, organization, field of work, or country..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pl-10">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -157,9 +157,6 @@
                     <button type="button" id="deselect_all" class="text-sm bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded">
                         Deselect All
                     </button>
-                    <button type="button" id="add_selected" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
-                        Add All Checked (<span id="selected_count">0</span>)
-                    </button>
                 </div>
                 <div class="text-sm text-gray-600">
                     <span id="total_available">0</span> available participants
@@ -176,7 +173,17 @@
                     <div class="max-h-96 overflow-y-auto">
                         <div id="available_participants" class="p-4 space-y-2">
                             @foreach($participants as $participant)
-                                <div class="participant-item available-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50" data-id="{{ $participant->id }}" data-name="{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}" data-email="{{ $participant->user->email }}" data-organization="{{ $participant->user->organization_institution ?? $participant->user->organization ?? '' }}" data-type="{{ $participant->participantType->name ?? '' }}" data-hashtags="{{ $participant->hashtags ?? '' }}">
+                                <div class="participant-item available-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50" 
+                                     data-id="{{ $participant->id }}" 
+                                     data-name="{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}" 
+                                     data-email="{{ $participant->user->email }}" 
+                                     data-organization="{{ $participant->user->organization_institution ?? $participant->user->organization ?? '' }}" 
+                                     data-type="{{ $participant->participantType->name ?? '' }}" 
+                                     data-hashtags="{{ $participant->hashtags ?? '' }}"
+                                     data-bio="{{ $participant->bio ?? '' }}"
+                                     data-designation="{{ $participant->user->designation ?? '' }}"
+                                     data-field-of-work="{{ $participant->user->field_of_work_study ?? '' }}"
+                                     data-country="{{ $participant->user->country ?? '' }}">
                                     <input type="checkbox" class="participant-checkbox mr-3 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
                                     <div class="flex-1">
                                         <div class="font-medium text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</div>
@@ -726,8 +733,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const orgFilter = document.getElementById('organization_filter');
     const selectAllBtn = document.getElementById('select_all');
     const deselectAllBtn = document.getElementById('deselect_all');
-    const addSelectedBtn = document.getElementById('add_selected');
-    const selectedCountSpan = document.getElementById('selected_count');
     const totalAvailableSpan = document.getElementById('total_available');
     const availableContainer = document.getElementById('available_participants');
     const selectedContainer = document.getElementById('selected_participants');
@@ -740,14 +745,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateParticipantsInput() {
         const selectedArray = Array.from(selectedParticipants);
         participantsInput.value = JSON.stringify(selectedArray);
-        selectedCountSpan.textContent = selectedParticipants.size;
         console.log('Updated participants input:', participantsInput.value);
     }
-
-    // Update selected count display
+    
+    // Update selected count (placeholder function - no count display element exists)
     function updateSelectedCount() {
-        const checkedBoxes = document.querySelectorAll('.available-item input[type="checkbox"]:checked');
-        selectedCountSpan.textContent = checkedBoxes.length;
+        // No selected count display element exists in the template
+        // This function is called but does nothing to prevent errors
     }
 
     // Filter participants
@@ -761,9 +765,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const email = item.dataset.email.toLowerCase();
             const organization = (item.dataset.organization || '').toLowerCase();
             const hashtags = (item.dataset.hashtags || '').toLowerCase();
+            const bio = (item.dataset.bio || '').toLowerCase();
+            const designation = (item.dataset.designation || '').toLowerCase();
+            const fieldOfWork = (item.dataset.fieldOfWork || '').toLowerCase();
+            const country = (item.dataset.country || '').toLowerCase();
             const type = item.dataset.type;
 
-            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || organization.includes(searchTerm) || hashtags.includes(searchTerm);
+            const matchesSearch = name.includes(searchTerm) || 
+                                 email.includes(searchTerm) || 
+                                 organization.includes(searchTerm) || 
+                                 hashtags.includes(searchTerm) ||
+                                 bio.includes(searchTerm) ||
+                                 designation.includes(searchTerm) ||
+                                 fieldOfWork.includes(searchTerm) ||
+                                 country.includes(searchTerm);
             const matchesType = !typeFilterValue || type === typeFilterValue;
             const matchesOrg = !orgFilterValue || organization === orgFilterValue.toLowerCase();
 
@@ -779,9 +794,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update total available count
         const visibleCount = document.querySelectorAll('.available-item.visible').length;
         totalAvailableSpan.textContent = visibleCount;
-        
-        // Update selected count
-        updateSelectedCount();
     }
 
     // Add participant to session
@@ -804,14 +816,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const checkbox = clone.querySelector('input[type="checkbox"]');
                 checkbox.checked = true;
                 checkbox.name = 'participants[]';
-                checkbox.disabled = true; // Disable checkbox in selected panel
-                
-                // Add remove button
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'remove-participant-btn ml-2 text-red-600 hover:text-red-800';
-                removeBtn.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-                clone.appendChild(removeBtn);
+                checkbox.disabled = false; // Enable checkbox for removal
                 
                 selectedContainer.appendChild(clone);
                 item.style.display = 'none';
@@ -928,18 +933,6 @@ document.addEventListener('DOMContentLoaded', function() {
         debouncedConflictCheck(); // Check for conflicts when all participants are deselected
     });
 
-    // Add selected available participants
-    addSelectedBtn.addEventListener('click', function() {
-        const checkedBoxes = document.querySelectorAll('.available-item input[type="checkbox"]:checked');
-        checkedBoxes.forEach(checkbox => {
-            const participantId = checkbox.closest('.participant-item').dataset.id;
-            if (!selectedParticipants.has(participantId)) {
-                addParticipant(participantId);
-            }
-        });
-        updateSelectedCount();
-    });
-
     // Checkbox change event for available participants
     availableContainer.addEventListener('change', function(e) {
         if (e.target.classList.contains('participant-checkbox')) {
@@ -951,16 +944,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Automatically remove from selected panel when unchecked
                 removeParticipant(participantId);
             }
-            updateSelectedCount();
         }
     });
 
-    // Remove individual participant
-    selectedContainer.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-participant-btn') || e.target.closest('.remove-participant-btn')) {
-            const removeBtn = e.target.classList.contains('remove-participant-btn') ? e.target : e.target.closest('.remove-participant-btn');
-            const participantId = removeBtn.closest('.participant-item').dataset.id;
-            removeParticipant(participantId);
+    // Handle checkbox changes in selected participants panel
+    selectedContainer.addEventListener('change', function(e) {
+        if (e.target.type === 'checkbox') {
+            const participantId = e.target.closest('.participant-item').dataset.id;
+            if (!e.target.checked) {
+                // Unchecking removes the participant
+                removeParticipant(participantId);
+            }
         }
     });
 
@@ -1073,6 +1067,10 @@ document.addEventListener('DOMContentLoaded', function() {
         div.setAttribute('data-organization', participant.organization);
         div.setAttribute('data-type', participant.type);
         div.setAttribute('data-hashtags', participant.hashtags || '');
+        div.setAttribute('data-bio', participant.bio || '');
+        div.setAttribute('data-designation', participant.designation || '');
+        div.setAttribute('data-field-of-work', participant.field_of_work_study || '');
+        div.setAttribute('data-country', participant.country || '');
         
         // Create hashtags HTML
         let hashtagsHtml = '';

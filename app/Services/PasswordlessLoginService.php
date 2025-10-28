@@ -177,19 +177,22 @@ class PasswordlessLoginService
     /**
      * Generate and send login link for multiple users
      */
-    public function generateBulkLoginLinks(array $userIds, int $expirationHours = 24, Conference $conference = null): array
+    public function generateBulkLoginLinks(array $userIds, int $expirationHours = 24, Conference $conference = null, array $sessionIds = []): array
     {
         $results = [];
         $users = User::whereIn('id', $userIds)
-                    ->whereHas('roles', function ($query) {
-                        $query->whereIn('name', ['organizer', 'speaker', 'attendee', 'tasker']);
-                    })
+                    ->whereHas('participants') // Only users who are participants
                     ->get();
 
         foreach ($users as $user) {
             try {
                 $passwordlessLogin = $this->generateLoginLink($user, $expirationHours, $conference);
                 $emailSent = $this->sendLoginEmail($user, $passwordlessLogin, $conference);
+                
+                // Track email sends for sessions if provided
+                if (!empty($sessionIds) && $emailSent) {
+                    $this->trackEmailSendsForSessions($user, $sessionIds);
+                }
                 
                 $results[] = [
                     'user_id' => $user->id,
@@ -211,6 +214,33 @@ class PasswordlessLoginService
         }
 
         return $results;
+    }
+
+    /**
+     * Track email sends for sessions
+     */
+    private function trackEmailSendsForSessions(User $user, array $sessionIds): void
+    {
+        // Get participant records for this user
+        $participants = $user->participants;
+        
+        foreach ($participants as $participant) {
+            foreach ($sessionIds as $sessionId) {
+                // Check if this participant is assigned to this session
+                $isAssignedToSession = $participant->participantSessions()
+                    ->where('session_id', $sessionId)
+                    ->exists();
+                
+                if ($isAssignedToSession) {
+                    // Create or update email tracking record
+                    $tracking = \App\Models\ParticipantSessionEmailTracking::getOrCreateTracking($sessionId, $participant->id);
+                    $tracking->incrementEmailCount();
+                    $tracking->update([
+                        'email_recipients' => [$user->email]
+                    ]);
+                }
+            }
+        }
     }
 
     /**

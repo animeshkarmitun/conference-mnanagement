@@ -7,6 +7,32 @@
     <title>Participant Profile - {{ $participant->user->first_name ?? $participant->user->name }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom scrollbar for dropdown */
+        #profileDropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #profileDropdown::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        
+        #profileDropdown::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        #profileDropdown::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Firefox scrollbar */
+        #profileDropdown {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -43,24 +69,24 @@
                     </button>
                     
                     <!-- Dropdown Menu -->
-                    <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-h-80 overflow-y-auto">
                         @if(isset($allParticipantProfiles) && count($allParticipantProfiles) > 1)
                             @foreach($allParticipantProfiles as $profile)
                                 <a href="{{ route('my-profile.switch', $profile) }}" 
                                    class="flex items-center px-4 py-3 hover:bg-gray-50 {{ $profile->id === $participant->id ? 'bg-blue-50 border-r-2 border-blue-500' : '' }}">
-                                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                                         <i class="fas fa-user text-gray-600"></i>
                                     </div>
-                                    <div class="flex-1">
-                                        <div class="text-sm font-medium text-gray-900">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-medium text-gray-900 truncate">
                                             {{ $profile->user->first_name ?? $profile->user->name }} {{ $profile->user->last_name ?? '' }}
                                         </div>
-                                        <div class="text-xs text-gray-500">
+                                        <div class="text-xs text-gray-500 truncate">
                                             {{ ucwords(str_replace('_', ' ', $profile->participantType->name ?? '')) }} - {{ $profile->conference->name ?? 'No Conference' }}
                                         </div>
                                     </div>
                                     @if($profile->id === $participant->id)
-                                        <i class="fas fa-check text-blue-500"></i>
+                                        <i class="fas fa-check text-blue-500 flex-shrink-0 ml-2"></i>
                                     @endif
                                 </a>
                             @endforeach
@@ -141,10 +167,6 @@
                                 <i class="fas fa-calendar text-blue-200"></i>
                                 <span class="text-sm text-blue-100">Joined {{ $participant->created_at->format('M d, Y') }}</span>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-map-marker-alt text-blue-200"></i>
-                                <span class="text-sm text-blue-100">{{ $participant->user->country ?? 'Not specified' }}</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -155,45 +177,6 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Left Column - Profile Details -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Personal Information -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                        <i class="fas fa-user-circle text-blue-500 mr-3"></i>
-                        Personal Information
-                    </h2>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                            <p class="text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <p class="text-gray-900">{{ $participant->user->email }}</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                            <p class="text-gray-900">{{ $participant->user->contact_no ?? 'Not provided' }}</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                            <p class="text-gray-900">{{ $participant->user->country ?? 'Not specified' }}</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Organization</label>
-                            <p class="text-gray-900">{{ $participant->user->organization_institution ?? 'Not specified' }}</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
-                            <p class="text-gray-900">{{ $participant->user->designation ?? 'Not specified' }}</p>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Conference Sessions -->
                 <div class="bg-white rounded-xl shadow-lg p-6">
@@ -203,21 +186,50 @@
                     </h2>
                     
                     @if(isset($sessions) && count($sessions) > 0)
-                        <div class="space-y-4">
-                            @foreach($sessions as $session)
-                                <div class="rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-                                    <div class="flex flex-col">
-                                        <div class="flex-1">
-                                            <!-- Session Information in Readable Format -->
-                                            <div class="space-y-3">
-                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div>
-                                                            <span class="text-sm font-semibold text-gray-700">Title:</span>
-                                                            <p class="text-sm text-gray-900 mt-1">{{ $session->title }}</p>
+                        <div class="space-y-6">
+                            <!-- Current Sessions -->
+                            @if(isset($currentSessions) && count($currentSessions) > 0)
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <i class="fas fa-play-circle text-green-500 mr-2"></i>
+                                        Current Sessions
+                                    </h3>
+                                    <div class="space-y-4">
+                                        @foreach($currentSessions as $index => $session)
+                                            <div class="border border-gray-200 rounded-lg p-6 {{ $index % 2 == 0 ? 'bg-gray-50' : 'bg-white' }} hover:shadow-md transition-shadow duration-200">
+                                                <div class="space-y-3">
+                                                    <h4 class="text-lg font-bold {{ $index % 6 == 0 ? 'text-blue-600' : ($index % 6 == 1 ? 'text-green-600' : ($index % 6 == 2 ? 'text-purple-600' : ($index % 6 == 3 ? 'text-red-600' : ($index % 6 == 4 ? 'text-orange-600' : 'text-indigo-600')))) }}">{{ $session->title }}</h4>
+                                                    
+                                                    <!-- Countdown Timer -->
+                                                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
+                                                        <div class="flex items-center justify-center space-x-6 text-center">
+                                                            <div class="flex flex-col items-center">
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-days" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600">Days</div>
+                                                            </div>
+                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="flex flex-col items-center">
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-hours" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600">Hours</div>
+                                                            </div>
+                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="flex flex-col items-center">
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-minutes" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600">Min</div>
+                                                            </div>
+                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="flex flex-col items-center">
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-seconds" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600">Sec</div>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <span class="text-sm font-semibold text-gray-700">Status:</span>
-                                                            <p class="text-sm text-gray-900 mt-1 capitalize">{{ $session->status ?? 'Published' }}</p>
+                                                        <div class="text-center mt-2">
+                                                            <span class="text-sm font-medium text-gray-700">Time remaining until session starts</span>
+                                                            <div class="mt-1">
+                                                                <span class="text-xs text-gray-500">
+                                                                    <i class="fas fa-clock mr-1"></i>Timezone: {{ config('app.timezone', 'UTC') }}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     
@@ -265,11 +277,174 @@
                                                             @endif
                                                         </div>
                                                     </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
-                            @endforeach
+                            @endif
+
+                            <!-- Upcoming Sessions -->
+                            @if(isset($upcomingSessions) && count($upcomingSessions) > 0)
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <i class="fas fa-clock text-blue-500 mr-2"></i>
+                                        Upcoming Sessions
+                                    </h3>
+                                    <div class="space-y-4">
+                                        @foreach($upcomingSessions as $index => $session)
+                                            <div class="border border-gray-200 rounded-lg p-6 {{ $index % 2 == 0 ? 'bg-gray-50' : 'bg-white' }} hover:shadow-md transition-shadow duration-200">
+                                                <div class="space-y-3">
+                                                    <h4 class="text-lg font-bold {{ $index % 6 == 0 ? 'text-blue-600' : ($index % 6 == 1 ? 'text-green-600' : ($index % 6 == 2 ? 'text-purple-600' : ($index % 6 == 3 ? 'text-red-600' : ($index % 6 == 4 ? 'text-orange-600' : 'text-indigo-600')))) }}">{{ $session->title }}</h4>
+                                                    
+                                                    <!-- Countdown Timer -->
+                                                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
+                                                        <div class="flex items-center justify-center space-x-6 text-center">
+                                                            <div class="flex flex-col items-center">
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-days" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600">Days</div>
+                                                            </div>
+                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="flex flex-col items-center">
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-hours" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600">Hours</div>
+                                                            </div>
+                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="flex flex-col items-center">
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-minutes" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600">Min</div>
+                                                            </div>
+                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="flex flex-col items-center">
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-seconds" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600">Sec</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-center mt-2">
+                                                            <span class="text-sm font-medium text-gray-700">Time remaining until session starts</span>
+                                                            <div class="mt-1">
+                                                                <span class="text-xs text-gray-500">
+                                                                    <i class="fas fa-clock mr-1"></i>Timezone: {{ config('app.timezone', 'UTC') }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <span class="text-sm font-semibold text-gray-700">Description:</span>
+                                                        <p class="text-sm text-gray-900 mt-1">{{ $session->description ?? 'No description available' }}</p>
+                                                    </div>
+                                                    
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <span class="text-sm font-semibold text-gray-700">Start Date & Time:</span>
+                                                            <p class="text-sm text-gray-900 mt-1">{{ \Carbon\Carbon::parse($session->start_time)->format('F j, Y g:i A') }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <span class="text-sm font-semibold text-gray-700">End Date & Time:</span>
+                                                            <p class="text-sm text-gray-900 mt-1">{{ \Carbon\Carbon::parse($session->end_time)->format('F j, Y g:i A') }}</p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <span class="text-sm font-semibold text-gray-700">Duration:</span>
+                                                        <p class="text-sm text-gray-900 mt-1">{{ \Carbon\Carbon::parse($session->start_time)->diffInMinutes(\Carbon\Carbon::parse($session->end_time)) }} minutes</p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <span class="text-sm font-semibold text-gray-700">Location Details:</span>
+                                                        <div class="mt-2 space-y-1">
+                                                            <p class="text-sm text-gray-900">
+                                                                <span class="font-medium">Venue:</span> {{ $session->venue->name ?? ($session->room ?? 'TBD') }}
+                                                            </p>
+                                                            @if($session->venue && $session->venue->address)
+                                                                <p class="text-sm text-gray-900">
+                                                                    <span class="font-medium">Address:</span> {{ $session->venue->address }}
+                                                                </p>
+                                                            @endif
+                                                            @if($session->room && $session->venue)
+                                                                <p class="text-sm text-gray-900">
+                                                                    <span class="font-medium">Room:</span> {{ $session->room }}
+                                                                </p>
+                                                            @endif
+                                                            @if($session->venue && $session->venue->capacity)
+                                                                <p class="text-sm text-gray-900">
+                                                                    <span class="font-medium">Capacity:</span> {{ $session->venue->capacity }} people
+                                                                </p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Archived Sessions -->
+                            @if(isset($archivedSessions) && count($archivedSessions) > 0)
+                                <div>
+                                    <button onclick="toggleArchive()" class="text-lg font-semibold text-gray-800 mb-4 flex items-center hover:text-gray-600 transition-colors duration-200">
+                                        <i class="fas fa-archive text-gray-500 mr-2"></i>
+                                        Archived Sessions
+                                        <i id="archiveIcon" class="fas fa-chevron-down ml-2 transition-transform duration-200"></i>
+                                    </button>
+                                    <div id="archivedSessions" class="hidden space-y-4">
+                                        @foreach($archivedSessions as $index => $session)
+                                            <div class="border border-gray-200 rounded-lg p-6 {{ $index % 2 == 0 ? 'bg-gray-50' : 'bg-white' }} hover:shadow-md transition-shadow duration-200">
+                                                <div class="space-y-3">
+                                                    <h4 class="text-lg font-bold {{ $index % 6 == 0 ? 'text-blue-600' : ($index % 6 == 1 ? 'text-green-600' : ($index % 6 == 2 ? 'text-purple-600' : ($index % 6 == 3 ? 'text-red-600' : ($index % 6 == 4 ? 'text-orange-600' : 'text-indigo-600')))) }}">{{ $session->title }}</h4>
+                                                    
+                                                    <div>
+                                                        <span class="text-sm font-semibold text-gray-700">Description:</span>
+                                                        <p class="text-sm text-gray-900 mt-1">{{ $session->description ?? 'No description available' }}</p>
+                                                    </div>
+                                                    
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <span class="text-sm font-semibold text-gray-700">Start Date & Time:</span>
+                                                            <p class="text-sm text-gray-900 mt-1">{{ \Carbon\Carbon::parse($session->start_time)->format('F j, Y g:i A') }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <span class="text-sm font-semibold text-gray-700">End Date & Time:</span>
+                                                            <p class="text-sm text-gray-900 mt-1">{{ \Carbon\Carbon::parse($session->end_time)->format('F j, Y g:i A') }}</p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <span class="text-sm font-semibold text-gray-700">Duration:</span>
+                                                        <p class="text-sm text-gray-900 mt-1">{{ \Carbon\Carbon::parse($session->start_time)->diffInMinutes(\Carbon\Carbon::parse($session->end_time)) }} minutes</p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <span class="text-sm font-semibold text-gray-700">Location Details:</span>
+                                                        <div class="mt-2 space-y-1">
+                                                            <p class="text-sm text-gray-900">
+                                                                <span class="font-medium">Venue:</span> {{ $session->venue->name ?? ($session->room ?? 'TBD') }}
+                                                            </p>
+                                                            @if($session->venue && $session->venue->address)
+                                                                <p class="text-sm text-gray-900">
+                                                                    <span class="font-medium">Address:</span> {{ $session->venue->address }}
+                                                                </p>
+                                                            @endif
+                                                            @if($session->room && $session->venue)
+                                                                <p class="text-sm text-gray-900">
+                                                                    <span class="font-medium">Room:</span> {{ $session->room }}
+                                                                </p>
+                                                            @endif
+                                                            @if($session->venue && $session->venue->capacity)
+                                                                <p class="text-sm text-gray-900">
+                                                                    <span class="font-medium">Capacity:</span> {{ $session->venue->capacity }} people
+                                                                </p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @else
                         <div class="text-center py-8">
@@ -458,6 +633,36 @@
                                     <p class="text-gray-900">{{ $travelDetail->flight_info }}</p>
                                 </div>
                                 @endif
+                                
+                                @if($travelDetail->itineraries_status)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Itineraries Status</label>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        @if($travelDetail->itineraries_status === 'approved') bg-green-100 text-green-800
+                                        @elseif($travelDetail->itineraries_status === 'n_a') bg-gray-100 text-gray-800
+                                        @else bg-yellow-100 text-yellow-800 @endif">
+                                        @if($travelDetail->itineraries_status === 'n_a')
+                                            N/A
+                                        @else
+                                            {{ ucfirst($travelDetail->itineraries_status) }}
+                                        @endif
+                                    </span>
+                                </div>
+                                @endif
+                                
+                                @if($travelDetail->takeoff_airport)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Takeoff Airport</label>
+                                    <p class="text-gray-900">{{ $travelDetail->takeoff_airport }}</p>
+                                </div>
+                                @endif
+                                
+                                @if($travelDetail->flight_info_details)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Additional Flight Information</label>
+                                    <p class="text-gray-900">{{ $travelDetail->flight_info_details }}</p>
+                                </div>
+                                @endif
                             </div>
                             
                             <!-- Hotel Information -->
@@ -508,6 +713,13 @@
                                     <p class="text-gray-900">{{ $travelDetail->extra_nights }} night(s)</p>
                                 </div>
                                 @endif
+                                
+                                @if($travelDetail->hotel_info)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Hotel Information</label>
+                                    <p class="text-gray-900">{{ $travelDetail->hotel_info }}</p>
+                                </div>
+                                @endif
                             </div>
                         </div>
                         
@@ -537,22 +749,6 @@
                         Comments & Notes
                     </h2>
                     
-                    <!-- Add Comment Form -->
-                    <div class="mb-6">
-                        <form id="commentForm" class="space-y-4">
-                            @csrf
-                            <div>
-                                <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">Add a comment</label>
-                                <textarea id="comment" name="content" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Write your comment here..." required></textarea>
-                            </div>
-                            <div class="flex justify-end">
-                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <i class="fas fa-paper-plane mr-2"></i>
-                                    Post Comment
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                     
                     <!-- Comments List -->
                     <div id="commentsList" class="space-y-4">
@@ -573,15 +769,6 @@
                                             </div>
                                             <p class="text-gray-700">{{ $comment->content }}</p>
                                         </div>
-                                        @if(Auth::user()->hasRole('admin') || Auth::user()->hasRole('superadmin'))
-                                        <div class="ml-4 flex-shrink-0">
-                                            <button onclick="deleteComment({{ $comment->id }})" 
-                                                    class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
-                                                    title="Delete comment">
-                                                <i class="fas fa-trash text-sm"></i>
-                                            </button>
-                                        </div>
-                                        @endif
                                     </div>
                                 </div>
                             @endforeach
@@ -627,6 +814,40 @@
                     </div>
                 </div>
 
+                <!-- Personal Information -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-user-circle text-blue-500 mr-2"></i>
+                        Personal Information
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <p class="text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Phone</label>
+                            <p class="text-gray-900">{{ $participant->user->contact_no ?? 'Not provided' }}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Organization</label>
+                            <p class="text-gray-900">{{ $participant->user->organization_institution ?? 'Not specified' }}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Country</label>
+                            <p class="text-gray-900">{{ $participant->user->country ?? 'Not specified' }}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Designation</label>
+                            <p class="text-gray-900">{{ $participant->user->designation ?? 'Not specified' }}</p>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Contact Information -->
                 <div class="bg-white rounded-xl shadow-lg p-6">
@@ -691,157 +912,86 @@
             console.log('Mobile menu clicked');
         });
 
-        // Comments form submission
-        document.getElementById('commentForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Archive toggle function
+        function toggleArchive() {
+            const archiveSection = document.getElementById('archivedSessions');
+            const archiveIcon = document.getElementById('archiveIcon');
             
-            const formData = new FormData(this);
-            const commentText = formData.get('content');
-            
-            if (!commentText.trim()) {
-                alert('Please enter a comment');
-                return;
+            if (archiveSection.classList.contains('hidden')) {
+                archiveSection.classList.remove('hidden');
+                archiveIcon.classList.remove('fa-chevron-down');
+                archiveIcon.classList.add('fa-chevron-up');
+            } else {
+                archiveSection.classList.add('hidden');
+                archiveIcon.classList.remove('fa-chevron-up');
+                archiveIcon.classList.add('fa-chevron-down');
             }
-            
-            // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Posting...';
-            submitBtn.disabled = true;
-            
-            // Submit comment via AJAX
-            fetch('{{ route("participant-profiles.comments.store", $participant->id) }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || formData.get('_token'),
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Add comment to the list
-                    addCommentToList(data.comment);
-                    // Clear form
-                    this.reset();
-                } else {
-                    alert('Error posting comment: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error posting comment. Please try again.');
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            });
-        });
-        
-        // Function to add comment to the list
-        function addCommentToList(comment) {
-            const commentsList = document.getElementById('commentsList');
-            const emptyState = commentsList.querySelector('.text-center');
-            
-            // Remove empty state if it exists
-            if (emptyState) {
-                emptyState.remove();
-            }
-            
-            // Check if user is admin (you might need to pass this from the server)
-            const isAdmin = {{ Auth::user()->hasRole('admin') || Auth::user()->hasRole('superadmin') ? 'true' : 'false' }};
-            
-            // Create new comment element
-            const commentElement = document.createElement('div');
-            commentElement.className = 'border-l-4 border-blue-500 pl-4 py-2 comment-item';
-            commentElement.setAttribute('data-comment-id', comment.id);
-            
-            let deleteButton = '';
-            if (isAdmin) {
-                deleteButton = `
-                    <div class="ml-4 flex-shrink-0">
-                        <button onclick="deleteComment(${comment.id})" 
-                                class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
-                                title="Delete comment">
-                            <i class="fas fa-trash text-sm"></i>
-                        </button>
-                    </div>
-                `;
-            }
-            
-            commentElement.innerHTML = `
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center space-x-2 mb-1">
-                            <span class="text-sm font-medium text-gray-900">${comment.user_name || 'Unknown User'}</span>
-                            <span class="text-xs text-gray-500">${comment.created_at}</span>
-                        </div>
-                        <p class="text-gray-700">${comment.content}</p>
-                    </div>
-                    ${deleteButton}
-                </div>
-            `;
-            
-            // Add to the top of the comments list
-            commentsList.insertBefore(commentElement, commentsList.firstChild);
         }
-        
-        // Function to delete a comment
-        window.deleteComment = function(commentId) {
-            if (!confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
-                return;
-            }
+
+        // Countdown Timer Function
+        function updateCountdown() {
+            const countdownElements = document.querySelectorAll('[data-start-time]');
             
-            // Show loading state on the delete button
-            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-            const deleteBtn = commentElement.querySelector('button');
-            const originalContent = deleteBtn.innerHTML;
-            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
-            deleteBtn.disabled = true;
-            
-            // Send delete request
-            fetch(`{{ route('participant-profiles.comments.destroy', [$participant->id, 'COMMENT_ID']) }}`.replace('COMMENT_ID', commentId), {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Remove the comment element from the DOM
-                    commentElement.remove();
+            countdownElements.forEach(element => {
+                const startTime = new Date(element.getAttribute('data-start-time')).getTime();
+                const now = new Date().getTime();
+                const timeLeft = startTime - now;
+                
+                if (timeLeft > 0) {
+                    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
                     
-                    // Check if there are no more comments and show empty state
-                    const commentsList = document.getElementById('commentsList');
-                    const remainingComments = commentsList.querySelectorAll('.comment-item');
-                    if (remainingComments.length === 0) {
-                        commentsList.innerHTML = `
-                            <div class="text-center py-8">
-                                <i class="fas fa-comment-slash text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-gray-500">No comments yet</p>
+                    // Update the specific countdown elements for this session
+                    const parentContainer = element.closest('.space-y-3');
+                    const daysElement = parentContainer.querySelector('.countdown-days');
+                    const hoursElement = parentContainer.querySelector('.countdown-hours');
+                    const minutesElement = parentContainer.querySelector('.countdown-minutes');
+                    const secondsElement = parentContainer.querySelector('.countdown-seconds');
+                    
+                    if (daysElement) daysElement.textContent = days.toString().padStart(2, '0');
+                    if (hoursElement) hoursElement.textContent = hours.toString().padStart(2, '0');
+                    if (minutesElement) minutesElement.textContent = minutes.toString().padStart(2, '0');
+                    if (secondsElement) secondsElement.textContent = seconds.toString().padStart(2, '0');
+                } else {
+                    // Session has started or ended
+                    const parentContainer = element.closest('.space-y-3');
+                    const daysElement = parentContainer.querySelector('.countdown-days');
+                    const hoursElement = parentContainer.querySelector('.countdown-hours');
+                    const minutesElement = parentContainer.querySelector('.countdown-minutes');
+                    const secondsElement = parentContainer.querySelector('.countdown-seconds');
+                    
+                    if (daysElement) daysElement.textContent = '00';
+                    if (hoursElement) hoursElement.textContent = '00';
+                    if (minutesElement) minutesElement.textContent = '00';
+                    if (secondsElement) secondsElement.textContent = '00';
+                    
+                    // Update the countdown container to show session has started
+                    const countdownContainer = parentContainer.querySelector('.bg-gradient-to-r.from-blue-50.to-purple-50');
+                    if (countdownContainer) {
+                        countdownContainer.innerHTML = `
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-green-600 mb-2">
+                                    <i class="fas fa-play-circle mr-2"></i>Session Started
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">This session is currently in progress</span>
+                                <div class="mt-1">
+                                    <span class="text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>Timezone: {{ config('app.timezone', 'UTC') }}
+                                    </span>
+                                </div>
                             </div>
                         `;
                     }
-                } else {
-                    alert('Error deleting comment: ' + (data.message || 'Unknown error'));
-                    // Reset button state
-                    deleteBtn.innerHTML = originalContent;
-                    deleteBtn.disabled = false;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error deleting comment. Please try again.');
-                // Reset button state
-                deleteBtn.innerHTML = originalContent;
-                deleteBtn.disabled = false;
             });
-        };
+        }
+
+        // Initialize countdown and update every second
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+        
     </script>
 </body>
 </html>

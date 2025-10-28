@@ -118,7 +118,7 @@
                     <div class="md:col-span-2">
                         <label for="participant_search" class="block text-sm font-medium text-gray-700 mb-2">Search Participants</label>
                         <div class="relative">
-                            <input type="text" id="participant_search" placeholder="Search by name, email, or organization..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pl-10">
+                            <input type="text" id="participant_search" placeholder="Search by name, email, hashtag, bio, designation, organization, field of work, or country..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 pl-10">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -158,9 +158,6 @@
                     <button type="button" id="deselect_all" class="text-sm bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded">
                         Deselect All
                     </button>
-                    <button type="button" id="add_selected" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
-                        Add Selected (<span id="selected_count">0</span>)
-                    </button>
                 </div>
                 <div class="text-sm text-gray-600">
                     <span id="total_available">0</span> available participants
@@ -177,7 +174,17 @@
                     <div class="max-h-96 overflow-y-auto">
                         <div id="available_participants" class="p-4 space-y-2">
                             @foreach($participants as $participant)
-                                <div class="participant-item available-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50" data-id="{{ $participant->id }}" data-name="{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}" data-email="{{ $participant->user->email }}" data-organization="{{ $participant->user->organization ?? '' }}" data-type="{{ $participant->participantType->name ?? '' }}">
+                                <div class="participant-item available-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50" 
+                                     data-id="{{ $participant->id }}" 
+                                     data-name="{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}" 
+                                     data-email="{{ $participant->user->email }}" 
+                                     data-organization="{{ $participant->user->organization ?? '' }}" 
+                                     data-type="{{ $participant->participantType->name ?? '' }}"
+                                     data-hashtags="{{ $participant->hashtags ?? '' }}"
+                                     data-bio="{{ $participant->bio ?? '' }}"
+                                     data-designation="{{ $participant->user->designation ?? '' }}"
+                                     data-field-of-work="{{ $participant->user->field_of_work_study ?? '' }}"
+                                     data-country="{{ $participant->user->country ?? '' }}">
                                     <input type="checkbox" class="participant-checkbox mr-3 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
                                     <div class="flex-1">
                                         <div class="font-medium text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</div>
@@ -185,8 +192,17 @@
                                         @if($participant->user->organization)
                                             <div class="text-xs text-gray-400">{{ $participant->user->organization }}</div>
                                         @endif
+                                        @if($participant->hashtags)
+                                            <div class="text-xs text-blue-500 mt-1">
+                                                <span class="font-medium">Tags:</span> {{ $participant->hashtags }}
+                                            </div>
+                                        @endif
+                                        @if($participant->user->country)
+                                            <div class="text-xs text-green-600 mt-1">
+                                                <span class="font-medium">Country:</span> {{ $participant->user->country }}
+                                            </div>
+                                        @endif
                                     </div>
-
                                 </div>
                             @endforeach
                         </div>
@@ -202,7 +218,17 @@
                     <div class="max-h-96 overflow-y-auto">
                         <div id="selected_participants" class="p-4 space-y-2">
                             @foreach($session->participants as $participant)
-                                <div class="participant-item selected-item flex items-center p-3 border border-green-200 rounded-lg bg-green-50" data-id="{{ $participant->id }}">
+                                <div class="participant-item selected-item flex items-center p-3 border border-green-200 rounded-lg bg-green-50" 
+                                     data-id="{{ $participant->id }}"
+                                     data-name="{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}" 
+                                     data-email="{{ $participant->user->email }}" 
+                                     data-organization="{{ $participant->user->organization ?? '' }}" 
+                                     data-type="{{ $participant->participantType->name ?? '' }}"
+                                     data-hashtags="{{ $participant->hashtags ?? '' }}"
+                                     data-bio="{{ $participant->bio ?? '' }}"
+                                     data-designation="{{ $participant->user->designation ?? '' }}"
+                                     data-field-of-work="{{ $participant->user->field_of_work_study ?? '' }}"
+                                     data-country="{{ $participant->user->country ?? '' }}">
                                     <input type="checkbox" name="participants[]" value="{{ $participant->id }}" checked class="mr-3 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
                                     <div class="flex-1">
                                         <div class="font-medium text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</div>
@@ -210,12 +236,17 @@
                                         @if($participant->user->organization)
                                             <div class="text-xs text-gray-400">{{ $participant->user->organization }}</div>
                                         @endif
+                                        @if($participant->hashtags)
+                                            <div class="text-xs text-blue-500 mt-1">
+                                                <span class="font-medium">Tags:</span> {{ $participant->hashtags }}
+                                            </div>
+                                        @endif
+                                        @if($participant->user->country)
+                                            <div class="text-xs text-green-600 mt-1">
+                                                <span class="font-medium">Country:</span> {{ $participant->user->country }}
+                                            </div>
+                                        @endif
                                     </div>
-                                    <button type="button" class="remove-participant-btn ml-2 text-red-600 hover:text-red-800">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
                                 </div>
                             @endforeach
                         </div>
@@ -371,12 +402,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const orgFilter = document.getElementById('organization_filter');
     const selectAllBtn = document.getElementById('select_all');
     const deselectAllBtn = document.getElementById('deselect_all');
-    const addSelectedBtn = document.getElementById('add_selected');
-    const selectedCountSpan = document.getElementById('selected_count');
     const totalAvailableSpan = document.getElementById('total_available');
     const availableContainer = document.getElementById('available_participants');
     const selectedContainer = document.getElementById('selected_participants');
     const participantsInput = document.getElementById('participants_input');
+
+    // ===================== Participant Management Variables =====================
+    let selectedParticipants = new Set();
+    let availableParticipants = new Set();
+    
+    // ===================== Conflict Detection Variables =====================
+    let conflictCheckTimeout;
+    let currentConflicts = [];
+    const currentSessionId = {{ $session->id }};
 
     // ===================== Conference Management =====================
     
@@ -392,11 +430,31 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load conferences
     async function loadConferences() {
         try {
-            const response = await fetch('/api/conferences');
+            console.log('Loading conferences...');
+            const response = await fetch('/api/conferences', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            
+            console.log('Conference response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Conference API error:', response.status, errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log('Conference data received:', data);
             conferences = data.conferences || [];
             filteredConferences = conferences;
             renderConferenceOptions(filteredConferences);
+            console.log('Conferences loaded successfully:', conferences.length);
             return conferences;
         } catch (error) {
             console.error('Error loading conferences:', error);
@@ -407,11 +465,31 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load venues
     async function loadVenues() {
         try {
-            const response = await fetch('/api/venues');
+            console.log('Loading venues...');
+            const response = await fetch('/api/venues', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            
+            console.log('Venue response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Venue API error:', response.status, errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log('Venue data received:', data);
             venues = data.venues || [];
             filteredVenues = venues;
             renderVenueOptions(filteredVenues);
+            console.log('Venues loaded successfully:', venues.length);
             return venues;
         } catch (error) {
             console.error('Error loading venues:', error);
@@ -579,9 +657,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ===================== Participant Management =====================
 
-    let selectedParticipants = new Set();
-    let availableParticipants = new Set();
-
     // Initialize selected participants from existing session participants
     document.querySelectorAll('#selected_participants input[type="checkbox"]').forEach(checkbox => {
         selectedParticipants.add(checkbox.value);
@@ -597,7 +672,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateParticipantsInput() {
         const selectedArray = Array.from(selectedParticipants);
         participantsInput.value = JSON.stringify(selectedArray);
-        selectedCountSpan.textContent = selectedParticipants.size;
+        // Note: selectedCountSpan is not defined in the template, removing this line
+        // selectedCountSpan.textContent = selectedParticipants.size;
     }
 
     // Filter participants
@@ -611,8 +687,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const email = item.dataset.email.toLowerCase();
             const organization = (item.dataset.organization || '').toLowerCase();
             const type = item.dataset.type;
+            const hashtags = (item.dataset.hashtags || '').toLowerCase();
+            const bio = (item.dataset.bio || '').toLowerCase();
+            const designation = (item.dataset.designation || '').toLowerCase();
+            const fieldOfWork = (item.dataset.fieldOfWork || '').toLowerCase();
+            const country = (item.dataset.country || '').toLowerCase();
 
-            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm) || organization.includes(searchTerm);
+            const matchesSearch = name.includes(searchTerm) || 
+                                 email.includes(searchTerm) || 
+                                 organization.includes(searchTerm) || 
+                                 hashtags.includes(searchTerm) ||
+                                 bio.includes(searchTerm) ||
+                                 designation.includes(searchTerm) ||
+                                 fieldOfWork.includes(searchTerm) ||
+                                 country.includes(searchTerm);
             const matchesType = !typeFilterValue || type === typeFilterValue;
             const matchesOrg = !orgFilterValue || organization === orgFilterValue.toLowerCase();
 
@@ -626,12 +714,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update total available count
         const visibleCount = document.querySelectorAll('.available-item[style="display: block"]').length;
         totalAvailableSpan.textContent = visibleCount;
-    }
-
-    // Update selected count display
-    function updateSelectedCount() {
-        // Count selected participants from the Set, not from checkboxes
-        selectedCountSpan.textContent = selectedParticipants.size;
     }
 
     // Add participant to session
@@ -657,14 +739,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 const checkbox = clone.querySelector('input[type="checkbox"]');
                 checkbox.checked = true;
                 checkbox.name = 'participants[]';
-                checkbox.disabled = true; // Disable checkbox in selected panel
+                checkbox.disabled = false; // Enable checkbox for removal
                 
-                // Add remove button
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.classList.add('remove-participant-btn', 'text-red-600', 'hover:text-red-800');
-                removeBtn.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-                clone.appendChild(removeBtn);
+                // Ensure hashtags and country are displayed in the selected item
+                const hashtags = item.dataset.hashtags;
+                const country = item.dataset.country;
+                const flexDiv = clone.querySelector('.flex-1');
+                
+                if (flexDiv) {
+                    // Remove existing additional info if any
+                    const existingTags = flexDiv.querySelector('.text-blue-500');
+                    const existingCountry = flexDiv.querySelector('.text-green-600');
+                    if (existingTags) existingTags.remove();
+                    if (existingCountry) existingCountry.remove();
+                    
+                    // Add hashtags if available
+                    if (hashtags) {
+                        const hashtagDiv = document.createElement('div');
+                        hashtagDiv.className = 'text-xs text-blue-500 mt-1';
+                        hashtagDiv.innerHTML = `<span class="font-medium">Tags:</span> ${hashtags}`;
+                        flexDiv.appendChild(hashtagDiv);
+                    }
+                    
+                    // Add country if available
+                    if (country) {
+                        const countryDiv = document.createElement('div');
+                        countryDiv.className = 'text-xs text-green-600 mt-1';
+                        countryDiv.innerHTML = `<span class="font-medium">Country:</span> ${country}`;
+                        flexDiv.appendChild(countryDiv);
+                    }
+                }
                 
                 selectedContainer.appendChild(clone);
                 
@@ -739,7 +843,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 addParticipant(item.dataset.id);
             }
         });
-        updateSelectedCount();
         console.log('Selected participants count:', selectedParticipants.size);
     });
 
@@ -758,16 +861,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 removeParticipant(participantId);
             }
         });
-        updateSelectedCount();
-    });
-
-    // Add selected available participants
-    addSelectedBtn.addEventListener('click', function() {
-        document.querySelectorAll('.available-item input[type="checkbox"]:checked').forEach(checkbox => {
-            const participantId = checkbox.closest('.participant-item').dataset.id;
-            addParticipant(participantId);
-        });
-        // Note: Conflict checking is already triggered by addParticipant function
     });
 
     // Auto-add/remove participants when checkboxes are clicked
@@ -779,18 +872,17 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 removeParticipant(participantId);
             }
-            updateSelectedCount();
         }
     });
 
-
-
-    // Remove individual participant (handle clicks on button or inner SVG)
-    selectedContainer.addEventListener('click', function(e) {
-        const btn = e.target.closest('.remove-participant-btn');
-        if (btn) {
-            const participantId = btn.closest('.participant-item').dataset.id;
-            removeParticipant(participantId);
+    // Handle checkbox changes in selected participants panel
+    selectedContainer.addEventListener('change', function(e) {
+        if (e.target.type === 'checkbox') {
+            const participantId = e.target.closest('.participant-item').dataset.id;
+            if (!e.target.checked) {
+                // Unchecking removes the participant
+                removeParticipant(participantId);
+            }
         }
     });
 
@@ -920,6 +1012,19 @@ document.addEventListener('DOMContentLoaded', function() {
         div.setAttribute('data-email', participant.email);
         div.setAttribute('data-organization', participant.organization);
         div.setAttribute('data-type', participant.type);
+        div.setAttribute('data-hashtags', participant.hashtags || '');
+        div.setAttribute('data-bio', participant.bio || '');
+        div.setAttribute('data-designation', participant.designation || '');
+        div.setAttribute('data-field-of-work', participant.field_of_work_study || '');
+        div.setAttribute('data-country', participant.country || '');
+        
+        let additionalInfo = '';
+        if (participant.hashtags) {
+            additionalInfo += `<div class="text-xs text-blue-500 mt-1"><span class="font-medium">Tags:</span> ${participant.hashtags}</div>`;
+        }
+        if (participant.country) {
+            additionalInfo += `<div class="text-xs text-green-600 mt-1"><span class="font-medium">Country:</span> ${participant.country}</div>`;
+        }
         
         div.innerHTML = `
             <input type="checkbox" class="participant-checkbox mr-3 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
@@ -927,6 +1032,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="font-medium text-gray-900">${participant.name}</div>
                 <div class="text-sm text-gray-500">${participant.email}</div>
                 ${participant.organization ? `<div class="text-xs text-gray-400">${participant.organization}</div>` : ''}
+                ${additionalInfo}
             </div>
         `;
         
@@ -1070,12 +1176,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===================== Conflict Detection =====================
-    
-    // Conflict detection variables
-    let conflictCheckTimeout;
-    let currentConflicts = [];
-    const currentSessionId = {{ $session->id }};
     
     // Check for participant conflicts
     function checkParticipantConflicts() {
@@ -1389,28 +1489,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize data and set initial values
     async function initializeForm() {
-        await Promise.all([loadConferences(), loadVenues()]);
-        
-        // Set initial values for edit form after data is loaded
-        const currentConferenceId = conferenceIdInput.value;
-        const currentVenueId = venueIdInput.value;
-        
-        if (currentConferenceId) {
-            // Find and set the current conference
-            const currentConference = conferences.find(c => c.id == currentConferenceId);
-            if (currentConference) {
-                selectConference(currentConference);
-                // Load participants for the current conference
-                await loadParticipantsForConference(currentConferenceId);
+        try {
+            await Promise.all([loadConferences(), loadVenues()]);
+            
+            // Set initial values for edit form after data is loaded
+            const currentConferenceId = conferenceIdInput.value;
+            const currentVenueId = venueIdInput.value;
+            
+            console.log('Initializing form with:', { currentConferenceId, currentVenueId, conferences: conferences.length, venues: venues.length });
+            
+            if (currentConferenceId) {
+                // Find and set the current conference
+                const currentConference = conferences.find(c => c.id == currentConferenceId);
+                console.log('Found conference:', currentConference);
+                if (currentConference) {
+                    selectConference(currentConference);
+                    // Load participants for the current conference
+                    await loadParticipantsForConference(currentConferenceId);
+                } else {
+                    console.error('Conference not found for ID:', currentConferenceId);
+                }
             }
-        }
-        
-        if (currentVenueId) {
-            // Find and set the current venue
-            const currentVenue = venues.find(v => v.id == currentVenueId);
-            if (currentVenue) {
-                selectVenue(currentVenue);
+            
+            if (currentVenueId) {
+                // Find and set the current venue
+                const currentVenue = venues.find(v => v.id == currentVenueId);
+                console.log('Found venue:', currentVenue);
+                if (currentVenue) {
+                    selectVenue(currentVenue);
+                } else {
+                    console.error('Venue not found for ID:', currentVenueId);
+                }
             }
+        } catch (error) {
+            console.error('Error initializing form:', error);
         }
     }
     

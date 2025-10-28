@@ -82,7 +82,9 @@ class Participant extends Model
 
     public function participantSessions()
     {
-        return $this->hasMany(ParticipantSession::class);
+        return $this->belongsToMany(Session::class, 'participant_session')
+                    ->withPivot('role')
+                    ->withTimestamps();
     }
 
     public function comments()
