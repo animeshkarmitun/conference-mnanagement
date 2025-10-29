@@ -61,6 +61,7 @@ class RestrictParticipantAccess
             // Define allowed routes for participants
             $allowedRoutes = [
                 'my-profile',
+                'participants/profile', // legacy alias route name path
                 'notifications',
                 'logout', // Allow logout
             ];

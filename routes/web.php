@@ -362,6 +362,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/conferences/check-conflicts', [\App\Http\Controllers\ConferenceController::class, 'checkConflicts'])->name('conferences.check-conflicts');
     Route::get('/conferences/{conferenceId}/conflicts', [\App\Http\Controllers\ConferenceController::class, 'getConferenceConflicts'])->name('conferences.conflicts');
     Route::post('/conferences/conflicts/{conflictId}/resolve', [\App\Http\Controllers\ConferenceController::class, 'resolveConflict'])->name('conferences.resolve-conflict');
+    
+    // Bulk Import routes for participants (MUST be before resource route to avoid route conflicts)
+    Route::get('/participants/import/sample', [\App\Http\Controllers\ParticipantImportController::class, 'downloadSample'])->name('participants.import.sample');
+    Route::get('/participants/import', [\App\Http\Controllers\ParticipantImportController::class, 'showImportForm'])->name('participants.import.form');
+    Route::post('/participants/import', [\App\Http\Controllers\ParticipantImportController::class, 'processImport'])->name('participants.import.process');
+    
     // Participant routes (excluding edit and update which are admin-only)
     Route::resource('participants', \App\Http\Controllers\ParticipantController::class)->except(['edit', 'update']);
     
@@ -392,6 +398,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('notifications', \App\Http\Controllers\NotificationController::class);
     Route::get('/speakers', [\App\Http\Controllers\SpeakerController::class, 'index'])->name('speakers.index');
     Route::get('/my-profile', [\App\Http\Controllers\ParticipantController::class, 'profile'])->name('my-profile');
+    // Backward-compatible alias for legacy redirects
+    Route::get('/participants/profile', [\App\Http\Controllers\ParticipantController::class, 'profile'])->name('participants.profile');
     Route::get('/my-profile/{participant}', [\App\Http\Controllers\ParticipantController::class, 'switchProfile'])->name('my-profile.switch');
     Route::put('/participants/{participant}/travel', [\App\Http\Controllers\ParticipantController::class, 'updateTravel'])->name('participants.travel.update');
     Route::post('/participants/{participant}/room-allocation', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('room.allocation.update');

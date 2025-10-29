@@ -189,7 +189,7 @@
                     </button>
                 </div>
                 <nav class="flex-1 px-1 py-1 space-y-1 sidebar-nav">
-                    @if(auth()->check() && auth()->user()->hasRole('superadmin'))
+                    @if(auth()->check() && (auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin')))
                         <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Dashboard' : ''">
                             <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>

@@ -336,6 +336,17 @@
                 </svg>
             </button>
             
+            <!-- Bulk Import Button -->
+            <a href="{{ route('participants.import.form') }}" 
+               class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+               style="background-color: #16a34a !important; color: white !important;"
+               title="Bulk Import Participants">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <span style="color: white !important; font-weight: bold;">Bulk Import</span>
+            </a>
+            
             <a href="{{ route('participants.create') }}" class="modern-primary px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -2181,12 +2192,17 @@ function showDeletionConfirmationModal(data, participantIds) {
                 <button onclick="closeParticipantDeleteModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
                     Cancel
                 </button>
-                <button onclick="deleteParticipants(${JSON.stringify(participantIds)})" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                    Delete Participant${participantIds.length > 1 ? 's' : ''}
+                <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Delete Participant` + (participantIds.length > 1 ? 's' : '') + `
                 </button>
             </div>
         </div>
     `;
+    
+    // Add click event to delete button
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        deleteParticipants(participantIds);
+    };
     
     document.getElementById('deleteParticipantModal').classList.remove('hidden');
 }
@@ -2196,17 +2212,22 @@ function deleteParticipants(participantIds) {
     const isBulk = participantIds.length > 1;
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = isBulk ? '{{ route("participants.bulk-delete") }}' : `/participants/${participantIds[0]}`;
+    form.action = isBulk ? '{{ route("participants.bulk-delete") }}' : `/participants/` + participantIds[0];
     
     const csrfToken = document.createElement('input');
     csrfToken.type = 'hidden';
     csrfToken.name = '_token';
     csrfToken.value = '{{ csrf_token() }}';
+    form.appendChild(csrfToken);
     
-    const methodField = document.createElement('input');
-    methodField.type = 'hidden';
-    methodField.name = '_method';
-    methodField.value = 'DELETE';
+    // Only add DELETE method for single participant deletion (uses resource route)
+    if (!isBulk) {
+        const methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = '_method';
+        methodField.value = 'DELETE';
+        form.appendChild(methodField);
+    }
     
     // Add participant IDs
     if (isBulk) {
@@ -2229,8 +2250,6 @@ function deleteParticipants(participantIds) {
         form.appendChild(deleteUserField);
     }
     
-    form.appendChild(csrfToken);
-    form.appendChild(methodField);
     document.body.appendChild(form);
     form.submit();
 }
