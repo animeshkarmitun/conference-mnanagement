@@ -38,7 +38,7 @@
                     @error('name')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
-                    @if(in_array($role->name, ['superadmin', 'admin']))
+                    @if(in_array($role->name, ['superadmin']))
                         <p class="text-yellow-600 text-sm mt-1">System roles cannot be renamed</p>
                     @endif
                 </div>
@@ -61,7 +61,7 @@
         <div class="mb-8">
             <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">Permissions</h2>
             
-            @if(in_array($role->name, ['superadmin', 'admin']))
+            @if(in_array($role->name, ['superadmin']))
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,137 +69,33 @@
                         </svg>
                         <span class="text-yellow-800 font-medium">System Role</span>
                     </div>
-                    <p class="text-yellow-700 text-sm mt-1">System roles have all permissions by default and cannot be modified.</p>
+                    <p class="text-yellow-700 text-sm mt-1">The Super Admin role has all permissions by default and cannot be modified.</p>
                 </div>
             @else
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- System Permissions -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <h3 class="text-lg font-medium text-gray-800 mb-3 flex items-center">
-                            <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                            </svg>
-                            System
-                        </h3>
-                        <div class="space-y-2">
-                            @php
-                                $systemPermissions = [
-                                    'system.view' => 'View System',
-                                    'system.manage' => 'Manage System',
-                                    'system.admin' => 'System Administration'
-                                ];
-                            @endphp
-                            @foreach($systemPermissions as $permission => $label)
-                                <label class="flex items-center">
-                                    <input type="checkbox" 
-                                           name="permissions[]" 
-                                           value="{{ $permission }}"
-                                           {{ in_array($permission, old('permissions', $role->permissions ?? [])) ? 'checked' : '' }}
-                                           class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
-                                    <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
+                    @php
+                        $allPermissions = config('permissions', []);
+                        $rolePermissions = old('permissions', $role->permissions ?? []);
+                    @endphp
 
-                    <!-- User Management Permissions -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <h3 class="text-lg font-medium text-gray-800 mb-3 flex items-center">
-                            <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            Users
-                        </h3>
-                        <div class="space-y-2">
-                            @php
-                                $userPermissions = [
-                                    'users.view' => 'View Users',
-                                    'users.create' => 'Create Users',
-                                    'users.edit' => 'Edit Users',
-                                    'users.delete' => 'Delete Users',
-                                    'users.assign-roles' => 'Assign Roles'
-                                ];
-                            @endphp
-                            @foreach($userPermissions as $permission => $label)
-                                <label class="flex items-center">
-                                    <input type="checkbox" 
-                                           name="permissions[]" 
-                                           value="{{ $permission }}"
-                                           {{ in_array($permission, old('permissions', $role->permissions ?? [])) ? 'checked' : '' }}
-                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
-                                </label>
-                            @endforeach
+                    @foreach($allPermissions as $module => $actions)
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h3 class="text-lg font-medium text-gray-800 mb-3 capitalize">{{ str_replace('-', ' ', $module) }}</h3>
+                            <div class="grid grid-cols-1 gap-2">
+                                @foreach($actions as $action)
+                                    @php $perm = $module . '.' . $action; @endphp
+                                    <label class="flex items-center">
+                                        <input type="checkbox"
+                                               name="permissions[]"
+                                               value="{{ $perm }}"
+                                               {{ in_array($perm, $rolePermissions) ? 'checked' : '' }}
+                                               class="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
+                                        <span class="ml-2 text-sm text-gray-700 capitalize">{{ str_replace(['_', '-', '.'], ' ', $action) }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Content Management Permissions -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <h3 class="text-lg font-medium text-gray-800 mb-3 flex items-center">
-                            <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                            </svg>
-                            Content
-                        </h3>
-                        <div class="space-y-2">
-                            @php
-                                $contentPermissions = [
-                                    'conferences.view' => 'View Conferences',
-                                    'conferences.create' => 'Create Conferences',
-                                    'conferences.edit' => 'Edit Conferences',
-                                    'conferences.delete' => 'Delete Conferences',
-                                    'sessions.view' => 'View Sessions',
-                                    'sessions.create' => 'Create Sessions',
-                                    'sessions.edit' => 'Edit Sessions',
-                                    'sessions.delete' => 'Delete Sessions',
-                                    'participants.view' => 'View Participants',
-                                    'participants.create' => 'Create Participants',
-                                    'participants.edit' => 'Edit Participants',
-                                    'participants.delete' => 'Delete Participants'
-                                ];
-                            @endphp
-                            @foreach($contentPermissions as $permission => $label)
-                                <label class="flex items-center">
-                                    <input type="checkbox" 
-                                           name="permissions[]" 
-                                           value="{{ $permission }}"
-                                           {{ in_array($permission, old('permissions', $role->permissions ?? [])) ? 'checked' : '' }}
-                                           class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
-                                    <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- Reports Permissions -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <h3 class="text-lg font-medium text-gray-800 mb-3 flex items-center">
-                            <svg class="w-5 h-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                            Reports
-                        </h3>
-                        <div class="space-y-2">
-                            @php
-                                $reportPermissions = [
-                                    'reports.view' => 'View Reports',
-                                    'reports.generate' => 'Generate Reports',
-                                    'reports.export' => 'Export Reports',
-                                    'analytics.view' => 'View Analytics'
-                                ];
-                            @endphp
-                            @foreach($reportPermissions as $permission => $label)
-                                <label class="flex items-center">
-                                    <input type="checkbox" 
-                                           name="permissions[]" 
-                                           value="{{ $permission }}"
-                                           {{ in_array($permission, old('permissions', $role->permissions ?? [])) ? 'checked' : '' }}
-                                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
-                                    <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
 
                 <!-- Quick Actions -->

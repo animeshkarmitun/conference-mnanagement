@@ -332,6 +332,14 @@ class ParticipantTypeSeeder extends Seeder
                 'display_order' => 38,
             ],
             [
+                'name' => 'diplomat',
+                'description' => 'Diplomats and visitors',
+                'category' => 'special',
+                'requires_approval' => true,
+                'has_special_privileges' => true,
+                'display_order' => 39,
+            ],
+            [
                 'name' => 'policymaker',
                 'description' => 'Government policymakers and decision-makers',
                 'category' => 'special',

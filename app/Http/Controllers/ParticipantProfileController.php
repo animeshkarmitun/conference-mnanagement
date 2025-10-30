@@ -98,6 +98,7 @@ class ParticipantProfileController extends Controller
                 'status' => 'active',
                 'is_primary' => false, // New profiles are not primary by default
             ]));
+            
 
             // If this is the first participant for the user, make it primary
             if ($user->participants()->count() === 1) {

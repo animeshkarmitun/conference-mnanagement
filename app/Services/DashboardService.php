@@ -126,22 +126,24 @@ class DashboardService
      */
     public function getSummaryStats($conferenceId)
     {
-        $participants = Participant::where('conference_id', $conferenceId);
+        // IMPORTANT: Use a base query and clone it for each metric to avoid condition leakage
+        $base = Participant::where('conference_id', $conferenceId);
         
         // Invited participants (all participants)
-        $invitedCount = $participants->count();
+        $invitedCount = (clone $base)->count();
         
         // Accepted participants (registration_status = approved)
-        $acceptedCount = $participants->where('registration_status', 'approved')->count();
+        $acceptedCount = (clone $base)->where('registration_status', 'approved')->count();
         
         // Flying participants (with travel details)
-        $flyingCount = $participants->whereHas('travelDetails')->count();
+        $flyingCount = (clone $base)->whereHas('travelDetails')->count();
         
-        // Status breakdown
+        // Status breakdown scoped to the selected conference
+        $statusScope = Participant::query()->where('conference_id', $conferenceId);
         $statusBreakdown = [
-            'pending' => $participants->where('registration_status', 'pending')->count(),
-            'approved' => $participants->where('registration_status', 'approved')->count(),
-            'declined' => $participants->where('registration_status', 'rejected')->count(),
+            'pending' => (clone $statusScope)->where('registration_status', 'pending')->count(),
+            'approved' => (clone $statusScope)->where('registration_status', 'approved')->count(),
+            'declined' => (clone $statusScope)->where('registration_status', 'rejected')->count(),
         ];
         
         // Speaker count
@@ -152,12 +154,53 @@ class DashboardService
             ->distinct()
             ->count('participant_session.participant_id');
 
+        // Participant type counts scoped to the selected conference, sorted desc
+        $participantTypeCounts = Participant::with('participantType')
+            ->where('conference_id', $conferenceId)
+            ->get()
+            ->groupBy(function ($p) {
+                return optional($p->participantType)->name ?: 'Unknown';
+            })
+            ->map->count()
+            ->sortDesc()
+            ->toArray();
+
+        // Passwordless login stats for participants of this conference
+        $pwdQuery = \App\Models\PasswordlessLogin::whereHas('user.participants', function ($q) use ($conferenceId) {
+            $q->where('conference_id', $conferenceId);
+        });
+        $passwordlessStats = [
+            'total' => (clone $pwdQuery)->count(),
+            'active' => (clone $pwdQuery)->active()->count(),
+            'used' => (clone $pwdQuery)->used()->count(),
+            'expired' => (clone $pwdQuery)->expired()->count(),
+        ];
+
+        // Gender breakdown for participants in this conference
+        $genderBreakdown = DB::table('participants')
+            ->join('users', 'participants.user_id', '=', 'users.id')
+            ->where('participants.conference_id', $conferenceId)
+            ->select('users.gender', DB::raw('COUNT(*) as count'))
+            ->groupBy('users.gender')
+            ->pluck('count', 'gender')
+            ->toArray();
+        
+        // Ensure all gender categories are present with 0 count
+        $genderStats = [
+            'male' => $genderBreakdown['male'] ?? 0,
+            'female' => $genderBreakdown['female'] ?? 0,
+            'other' => ($genderBreakdown['prefer_not_to_say'] ?? 0) + ($genderBreakdown['other'] ?? 0) + ($genderBreakdown[''] ?? 0) + ($genderBreakdown[null] ?? 0),
+        ];
+
         return [
             'invited' => $invitedCount,
             'accepted' => $acceptedCount,
             'flying' => $flyingCount,
             'status_breakdown' => $statusBreakdown,
             'speakers' => $speakerCount,
+            'participant_type_counts' => $participantTypeCounts,
+            'passwordless_login_stats' => $passwordlessStats,
+            'gender_breakdown' => $genderStats,
         ];
     }
 
@@ -166,44 +209,82 @@ class DashboardService
      */
     public function getCountryStatistics($conferenceId)
     {
-        // Get participants with their user's country information
-        $participants = Participant::with('user')
-            ->where('conference_id', $conferenceId)
+        // Aggregate via SQL to avoid collection inaccuracies and normalize country values
+        $rows = DB::table('participants')
+            ->join('users', 'participants.user_id', '=', 'users.id')
+            ->where('participants.conference_id', $conferenceId)
+            ->selectRaw("LOWER(TRIM(users.country)) as country_key, TRIM(users.country) as country, COUNT(*) as cnt")
+            ->whereNotNull('users.country')
+            ->whereRaw("TRIM(users.country) <> ''")
+            ->groupBy('country_key', 'country')
+            ->orderByDesc('cnt')
             ->get();
 
-        // Group by country and count participants
-        $countryStats = $participants
-            ->filter(function ($participant) {
-                // Filter out participants without users or countries
-                return $participant->user && !empty($participant->user->country);
-            })
-            ->groupBy(function ($participant) {
-                return $participant->user->country;
-            })
-            ->map(function ($group) {
-                return [
-                    'country' => $group->first()->user->country,
-                    'count' => $group->count(),
-                ];
-            })
-            ->sortByDesc('count')
-            ->values();
-
-        // Count total unique countries
-        $totalCountries = $countryStats->count();
-        
-        // Count participants without country data
-        $participantsWithoutCountry = $participants
-            ->filter(function ($participant) {
-                return !$participant->user || empty($participant->user->country);
+        // Participants without country
+        $participantsWithoutCountry = DB::table('participants')
+            ->leftJoin('users', 'participants.user_id', '=', 'users.id')
+            ->where('participants.conference_id', $conferenceId)
+            ->where(function ($q) {
+                $q->whereNull('users.country')
+                  ->orWhereRaw("TRIM(users.country) = ''");
             })
             ->count();
 
+        // Global participants without country (across all conferences)
+        $participantsWithoutCountryGlobal = DB::table('participants')
+            ->leftJoin('users', 'participants.user_id', '=', 'users.id')
+            ->where(function ($q) {
+                $q->whereNull('users.country')
+                  ->orWhereRaw("TRIM(users.country) = ''");
+            })
+            ->distinct('participants.user_id')
+            ->count('participants.user_id');
+
+        // Total with country
+        $totalWithCountry = DB::table('participants')
+            ->join('users', 'participants.user_id', '=', 'users.id')
+            ->where('participants.conference_id', $conferenceId)
+            ->whereNotNull('users.country')
+            ->whereRaw("TRIM(users.country) <> ''")
+            ->count();
+
+        // Global country count (across all conferences) where at least one participant has a country
+        $globalCountryCount = DB::table('participants')
+            ->join('users', 'participants.user_id', '=', 'users.id')
+            ->whereNotNull('users.country')
+            ->whereRaw("TRIM(users.country) <> ''")
+            ->selectRaw("COUNT(DISTINCT LOWER(TRIM(users.country))) as cnt")
+            ->value('cnt');
+
+        // Pretty format country names (Title Case) while preserving known acronyms
+        $countries = $rows->map(function ($r) {
+            $name = $r->country;
+            // Normalize casing safely
+            $pretty = ucwords(strtolower(trim($name)));
+            // Handle common acronyms
+            $pretty = preg_replace_callback('/\b(usa|uk|uae|eu)\b/i', function ($m) {
+                $map = [
+                    'usa' => 'USA',
+                    'uk' => 'UK',
+                    'uae' => 'UAE',
+                    'eu' => 'EU',
+                ];
+                return $map[strtolower($m[0])] ?? strtoupper($m[0]);
+            }, $pretty);
+
+            return [
+                'country' => $pretty,
+                'count' => (int) $r->cnt,
+            ];
+        })->values();
+
         return [
-            'countries' => $countryStats,
-            'total_countries' => $totalCountries,
+            'countries' => $countries,
+            'total_countries' => $countries->count(),
             'participants_without_country' => $participantsWithoutCountry,
-            'total_participants_with_country' => $participants->count() - $participantsWithoutCountry,
+            'participants_without_country_global' => (int) $participantsWithoutCountryGlobal,
+            'total_participants_with_country' => $totalWithCountry,
+            'global_country_count' => (int) $globalCountryCount,
         ];
     }
 

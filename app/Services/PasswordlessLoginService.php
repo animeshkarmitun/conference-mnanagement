@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class PasswordlessLoginService
 {
@@ -23,7 +24,7 @@ class PasswordlessLoginService
     /**
      * Generate a login link for a user
      */
-    public function generateLoginLink(User $user, int $expirationHours = 24, Conference $conference = null): PasswordlessLogin
+    public function generateLoginLink(User $user, int $expirationHours = 24, Conference $conference = null, Carbon $explicitExpiresAt = null): PasswordlessLogin
     {
         // Rate limiting check
         $key = 'passwordless-login:' . $user->id;
@@ -34,7 +35,11 @@ class PasswordlessLoginService
         RateLimiter::hit($key, 3600); // 1 hour cooldown
 
         // Create the passwordless login token
-        $passwordlessLogin = PasswordlessLogin::createForUser($user, $expirationHours);
+        if ($explicitExpiresAt instanceof Carbon) {
+            $passwordlessLogin = PasswordlessLogin::createForUserWithExpiry($user, $explicitExpiresAt);
+        } else {
+            $passwordlessLogin = PasswordlessLogin::createForUser($user, $expirationHours);
+        }
 
         // Store conference information if provided
         if ($conference) {
@@ -176,8 +181,14 @@ class PasswordlessLoginService
 
     /**
      * Generate and send login link for multiple users
+     *
+     * @param array $userIds
+     * @param int $expirationHours
+     * @param Conference|null $conference
+     * @param Carbon|null $explicitExpiresAt Optional explicit expiry timestamp. When provided, overrides $expirationHours.
+     * @param array $sessionIds Optional session IDs used for tracking email sends per session.
      */
-    public function generateBulkLoginLinks(array $userIds, int $expirationHours = 24, Conference $conference = null, array $sessionIds = []): array
+    public function generateBulkLoginLinks(array $userIds, int $expirationHours = 24, Conference $conference = null, Carbon $explicitExpiresAt = null, array $sessionIds = []): array
     {
         $results = [];
         $users = User::whereIn('id', $userIds)
@@ -186,7 +197,7 @@ class PasswordlessLoginService
 
         foreach ($users as $user) {
             try {
-                $passwordlessLogin = $this->generateLoginLink($user, $expirationHours, $conference);
+                $passwordlessLogin = $this->generateLoginLink($user, $expirationHours, $conference, $explicitExpiresAt);
                 $emailSent = $this->sendLoginEmail($user, $passwordlessLogin, $conference);
                 
                 // Track email sends for sessions if provided

@@ -175,6 +175,14 @@ class EmailTrackingService
             $metadata
         );
 
+        // Respect global restriction for non-critical emails
+        $restrict = config('app.restrict_non_critical_emails', true);
+        $allowedTypes = (array) config('app.allowed_email_types', []);
+        if ($restrict && !in_array($emailType, $allowedTypes, true)) {
+            $this->markAsPendingForManualSend($email, 'Email sending restricted by configuration');
+            return $email;
+        }
+
         try {
             // Send the email
             if ($mailable) {
@@ -264,6 +272,14 @@ class EmailTrackingService
             $templateName,
             $metadata
         );
+
+        // Respect global restriction for non-critical emails
+        $restrict = config('app.restrict_non_critical_emails', true);
+        $allowedTypes = (array) config('app.allowed_email_types', []);
+        if ($restrict && !in_array($emailType, $allowedTypes, true)) {
+            $this->markAsPendingForManualSend($email, 'Email sending restricted by configuration');
+            return $email;
+        }
 
         try {
             // Get current user's Gmail token
@@ -414,10 +430,13 @@ class EmailTrackingService
         ?int $userId = null,
         ?string $recipientEmail = null,
         ?string $roleName = null,
-        ?string $emailType = null
+        ?string $emailType = null,
+        ?string $subject = null,
+        ?string $status = null,
+        ?string $sortBy = null,
+        string $sortDir = 'desc'
     ): LengthAwarePaginator {
-        $query = Email::with(['user.roles', 'conference'])
-            ->orderBy('sent_at', 'desc');
+        $query = Email::with(['user.roles', 'conference']);
 
         if ($conferenceId) {
             $query->byConference($conferenceId);
@@ -444,6 +463,29 @@ class EmailTrackingService
         if ($emailType) {
             $query->byType($emailType);
         }
+
+        if ($subject) {
+            $query->where('subject', 'like', "%{$subject}%");
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        // Sorting with whitelist to prevent SQL injection and keep UX predictable
+        $allowedSorts = [
+            'id' => 'id',
+            'sent_at' => 'sent_at',
+            'created_at' => 'created_at',
+            'status' => 'status',
+            'email_type' => 'email_type',
+            'recipient' => 'recipient_email',
+        ];
+
+        $column = $allowedSorts[$sortBy ?? 'sent_at'] ?? 'sent_at';
+        $direction = strtolower($sortDir) === 'asc' ? 'asc' : 'desc';
+
+        $query->orderBy($column, $direction);
 
         return $query->paginate($limit);
     }

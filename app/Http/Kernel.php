@@ -68,5 +68,6 @@ class Kernel extends HttpKernel
         'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
         'admin.access' => \App\Http\Middleware\AdminAccess::class,
         'participant.access' => \App\Http\Middleware\RestrictParticipantAccess::class,
+        'permission' => \App\Http\Middleware\EnsurePermission::class,
     ];
 }

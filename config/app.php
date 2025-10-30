@@ -212,4 +212,23 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
     ])->toArray(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Sending Restrictions
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the application will only send emails for whitelisted
+    | critical types (e.g., passwordless login and bulk email updates).
+    | All other email sends will be tracked but not actually dispatched.
+    |
+    */
+
+    'restrict_non_critical_emails' => env('RESTRICT_NON_CRITICAL_EMAILS', true),
+
+    // Allowed email types when restriction is enabled
+    'allowed_email_types' => [
+        App\Models\Email::TYPE_PASSWORDLESS_LOGIN,
+        App\Models\Email::TYPE_CONFERENCE_UPDATE, // used by bulk email
+    ],
+
 ];

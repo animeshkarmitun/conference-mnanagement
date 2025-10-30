@@ -16,16 +16,41 @@ class ConferenceController extends Controller
     {
         $this->conflictService = $conflictService;
         
-        // Restrict all conference management to admins only (except API methods)
+        // Permission-gated access (skip API methods)
         $this->middleware(function ($request, $next) {
-            // Skip middleware for API methods
             if ($request->routeIs('api.conferences')) {
                 return $next($request);
             }
-            
-            if (!auth()->user() || (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin'))) {
-                abort(403, 'Access denied. Admin privileges required.');
+
+            $user = auth()->user();
+            if (!$user) {
+                abort(403, 'Unauthorized');
             }
+
+            if ($user->hasRole('superadmin')) {
+                return $next($request);
+            }
+
+            $action = $request->route()->getActionMethod();
+            $permissionMap = [
+                'index' => 'conferences.view',
+                'show' => 'conferences.view',
+                'create' => 'conferences.create',
+                'store' => 'conferences.create',
+                'edit' => 'conferences.edit',
+                'update' => 'conferences.edit',
+                'destroy' => 'conferences.delete',
+                'checkConflicts' => 'conferences.view',
+                'getConferenceConflicts' => 'conferences.view',
+                'resolveConflict' => 'conferences.edit',
+                'export' => 'conferences.export',
+            ];
+
+            $needed = $permissionMap[$action] ?? 'conferences.view';
+            if (!$user->hasPermission($needed)) {
+                abort(403, 'Access denied. Missing permission: ' . $needed);
+            }
+
             return $next($request);
         });
     }

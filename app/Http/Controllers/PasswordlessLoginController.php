@@ -9,6 +9,7 @@ use App\Services\PasswordlessLoginService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class PasswordlessLoginController extends Controller
 {
@@ -77,7 +78,7 @@ class PasswordlessLoginController extends Controller
         }
 
         $stats = $this->passwordlessLoginService->getLoginStats();
-        $recentLogins = PasswordlessLogin::with('user')
+        $recentLogins = PasswordlessLogin::with(['user.participants.participantType'])
                                        ->whereHas('user.participants')
                                        ->orderBy('created_at', 'desc')
                                        ->limit(10)
@@ -99,7 +100,7 @@ class PasswordlessLoginController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
             'conference_id' => 'nullable|exists:conferences,id',
-            'expiration_days' => 'integer|min:1|max:90', // Max 90 days
+            'expiration_days' => 'nullable|integer|min:1|max:90', // Max 90 days, nullable so default can be used
         ]);
 
         if ($validator->fails()) {
@@ -121,12 +122,33 @@ class PasswordlessLoginController extends Controller
                 ], 400);
             }
 
-            $expirationDays = $request->expiration_days ?? 1;
-            $expirationHours = $expirationDays * 24; // Convert days to hours
-            
             // Use provided conference_id or get latest conference
             $conference = $request->conference_id ? Conference::find($request->conference_id) : Conference::latest()->first();
-            $passwordlessLogin = $this->passwordlessLoginService->generateLoginLink($user, $expirationHours, $conference);
+
+            // Determine expiration: prefer explicit days; otherwise default to conference end date (end of day)
+            // Set timezone explicitly to application timezone to avoid conversion issues
+            $appTimezone = config('app.timezone', 'UTC');
+            $explicitExpiresAt = null;
+            $expirationDaysInput = $request->expiration_days;
+            
+            if (!empty($expirationDaysInput) && is_numeric($expirationDaysInput)) {
+                $expirationDays = max(1, (int) $expirationDaysInput);
+                // Add days and set to end of day in application timezone
+                $explicitExpiresAt = Carbon::now($appTimezone)
+                    ->addDays($expirationDays)
+                    ->endOfDay();
+            } else if ($conference && !empty($conference->end_date)) {
+                // Parse conference end date in application timezone and set to end of day
+                $explicitExpiresAt = Carbon::parse($conference->end_date, $appTimezone)->endOfDay();
+                if ($explicitExpiresAt->lessThanOrEqualTo(Carbon::now($appTimezone))) {
+                    // If end is in the past, fallback to 1 day from now at end of day
+                    $explicitExpiresAt = Carbon::now($appTimezone)->addDay()->endOfDay();
+                }
+            } else {
+                // Fallback: 1 day from now at end of day
+                $explicitExpiresAt = Carbon::now($appTimezone)->addDay()->endOfDay();
+            }
+            $passwordlessLogin = $this->passwordlessLoginService->generateLoginLink($user, 24, $conference, $explicitExpiresAt);
             
             $emailSent = $this->passwordlessLoginService->sendLoginEmail($user, $passwordlessLogin, $conference);
 
@@ -169,7 +191,7 @@ class PasswordlessLoginController extends Controller
             'session_ids' => 'nullable|array',
             'session_ids.*' => 'exists:sessions,id',
             'conference_id' => 'nullable|exists:conferences,id',
-            'expiration_days' => 'integer|min:1|max:90',
+            'expiration_days' => 'nullable|integer|min:1|max:90', // Max 90 days, nullable so default can be used
         ]);
 
         if ($validator->fails()) {
@@ -181,17 +203,40 @@ class PasswordlessLoginController extends Controller
         }
 
         try {
-            $expirationDays = $request->expiration_days ?? 1;
-            $expirationHours = $expirationDays * 24; // Convert days to hours
             $sessionIds = $request->session_ids ?? [];
             
             // Use provided conference_id or get latest conference
             $conference = $request->conference_id ? Conference::find($request->conference_id) : Conference::latest()->first();
             
+            // Determine expiration: prefer explicit days; otherwise default to conference end date (end of day)
+            // Set timezone explicitly to application timezone to avoid conversion issues
+            $appTimezone = config('app.timezone', 'UTC');
+            $explicitExpiresAt = null;
+            $expirationDaysInput = $request->expiration_days;
+            
+            if (!empty($expirationDaysInput) && is_numeric($expirationDaysInput)) {
+                $expirationDays = max(1, (int) $expirationDaysInput);
+                // Add days and set to end of day in application timezone
+                $explicitExpiresAt = Carbon::now($appTimezone)
+                    ->addDays($expirationDays)
+                    ->endOfDay();
+            } else if ($conference && !empty($conference->end_date)) {
+                // Parse conference end date in application timezone and set to end of day
+                $explicitExpiresAt = Carbon::parse($conference->end_date, $appTimezone)->endOfDay();
+                if ($explicitExpiresAt->lessThanOrEqualTo(Carbon::now($appTimezone))) {
+                    // If end is in the past, fallback to 1 day from now at end of day
+                    $explicitExpiresAt = Carbon::now($appTimezone)->addDay()->endOfDay();
+                }
+            } else {
+                // Fallback: 1 day from now at end of day
+                $explicitExpiresAt = Carbon::now($appTimezone)->addDay()->endOfDay();
+            }
+            
             $results = $this->passwordlessLoginService->generateBulkLoginLinks(
                 $request->user_ids, 
-                $expirationHours, 
+                24, 
                 $conference,
+                $explicitExpiresAt,
                 $sessionIds
             );
 

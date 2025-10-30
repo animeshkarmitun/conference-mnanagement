@@ -151,6 +151,10 @@ class BackupService
     protected function tryMysqldumpBackup(string $host, string $port, string $username, string $password, string $database, string $fullFilePath): callable
     {
         return function() use ($host, $port, $username, $password, $database, $fullFilePath) {
+            // If shell execution is not available, immediately fall back
+            if (!$this->isShellExecAvailable()) {
+                throw new Exception("Shell execution is disabled; cannot use mysqldump");
+            }
             // Check if mysqldump is available
             $mysqldumpPath = $this->findMysqldumpPath();
             
@@ -261,6 +265,11 @@ class BackupService
         ];
 
         foreach ($possiblePaths as $path) {
+            // For absolute paths, prefer filesystem checks to avoid using exec
+            $isAbsolute = str_starts_with($path, '/') || preg_match('/^[A-Za-z]:\\\\/', $path) === 1;
+            if ($isAbsolute && file_exists($path)) {
+                return $path;
+            }
             if ($this->commandExists($path)) {
                 return $path;
             }
@@ -274,9 +283,24 @@ class BackupService
      */
     protected function commandExists(string $command): bool
     {
+        // If shell execution is not available, we cannot reliably probe PATH
+        if (!$this->isShellExecAvailable()) {
+            return false;
+        }
         $returnCode = 0;
         exec("which {$command} 2>/dev/null || where {$command} 2>nul", $output, $returnCode);
         return $returnCode === 0;
+    }
+
+    /**
+     * Determine whether shell execution functions are available
+     */
+    protected function isShellExecAvailable(): bool
+    {
+        // Some hosts mark disabled functions via php.ini
+        $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+        $isDisabled = in_array('exec', $disabled, true) || !function_exists('exec') || !is_callable('exec');
+        return !$isDisabled;
     }
 
     /**

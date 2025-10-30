@@ -1,4 +1,4 @@
-@extends(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin') || auth()->user()->hasRole('tasker') || auth()->user()->hasRole('event_coordinator') ? 'layouts.app' : 'layouts.participant-notification')
+@extends(auth()->user()->hasAnyRole() ? 'layouts.app' : 'layouts.participant')
 
 @section('title', 'Notifications')
 

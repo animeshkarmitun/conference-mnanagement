@@ -365,13 +365,7 @@ class ParticipantController extends Controller
                 'visa_issue_explanation' => $request->visa_issue_explanation,
             ]);
 
-            // Assign attendee role to the user if they don't have any roles
-            if (!$user->hasAnyRole()) {
-                $attendeeRole = \App\Models\Role::where('name', 'attendee')->first();
-                if ($attendeeRole) {
-                    $user->roles()->attach($attendeeRole->id);
-                }
-            }
+            // Do not auto-assign any role to the user
 
             // Handle file uploads for the user
             if ($request->hasFile('profile_picture')) {
@@ -647,6 +641,10 @@ class ParticipantController extends Controller
                 'first_name' => 'required|string|max:50',
                 'last_name' => 'required|string|max:50',
                 'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
+                // Allow admin to edit participant user country and basic profile fields
+                'country' => 'nullable|string|max:100',
+                'contact_no' => 'nullable|string|max:20',
+                'whatsapp_no' => 'nullable|string|max:20',
                 'dietary_requirements' => 'nullable|string|max:50',
                 'dietary_requirements_other' => 'nullable|string|max:100',
             ]);
@@ -721,6 +719,9 @@ class ParticipantController extends Controller
                     'first_name' => $userValidated['first_name'],
                     'last_name' => $userValidated['last_name'],
                     'email' => $userValidated['email'],
+                    'country' => $userValidated['country'] ?? $user->country,
+                    'contact_no' => $userValidated['contact_no'] ?? $user->contact_no,
+                    'whatsapp_no' => $userValidated['whatsapp_no'] ?? $user->whatsapp_no,
                     'dietary_requirements' => $userValidated['dietary_requirements'] ?? null,
                     'dietary_requirements_other' => $userValidated['dietary_requirements_other'] ?? null,
                 ]);
@@ -732,6 +733,9 @@ class ParticipantController extends Controller
                         'first_name' => $userValidated['first_name'],
                         'last_name' => $userValidated['last_name'],
                         'email' => $userValidated['email'],
+                        'country' => $userValidated['country'] ?? $user->country,
+                        'contact_no' => $userValidated['contact_no'] ?? $user->contact_no,
+                        'whatsapp_no' => $userValidated['whatsapp_no'] ?? $user->whatsapp_no,
                         'dietary_requirements' => $userValidated['dietary_requirements'] ?? null,
                         'dietary_requirements_other' => $userValidated['dietary_requirements_other'] ?? null,
                     ]);
@@ -861,10 +865,7 @@ class ParticipantController extends Controller
             $profileNotificationService->notifyDocumentUploaded($participant, 'Resume');
         }
         
-        // Send email notification to participant if admin made changes
-        if ((Auth::user()->hasRole('admin') || Auth::user()->hasRole('superadmin')) && !empty($changes)) {
-            $this->sendParticipantUpdateEmail($participant, $changes, Auth::user());
-        }
+        // Email notifications on profile update have been disabled per requirements
         
         // Redirect based on who is updating (admin vs participant)
         if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('superadmin')) {
@@ -1879,106 +1880,6 @@ class ParticipantController extends Controller
         }
     }
 
-    /**
-     * Send email notification to participant when admin updates their information
-     */
-    private function sendParticipantUpdateEmail(Participant $participant, array $changes, User $adminUser)
-    {
-        try {
-            $changeDescriptions = [];
-            
-            if (isset($changes['personal_info'])) {
-                $changeDescriptions[] = 'personal information';
-            }
-            if (isset($changes['visa_status'])) {
-                $changeDescriptions[] = 'visa status';
-            }
-            if (isset($changes['dietary_needs'])) {
-                $changeDescriptions[] = 'dietary preferences';
-            }
-            if (isset($changes['organization'])) {
-                $changeDescriptions[] = 'organization details';
-            }
-            if (isset($changes['profile_picture'])) {
-                $changeDescriptions[] = 'profile picture';
-            }
-            if (isset($changes['resume'])) {
-                $changeDescriptions[] = 'resume';
-            }
-            
-            $changesText = implode(', ', $changeDescriptions);
-            $subject = "Your Profile Has Been Updated - {$participant->conference->name}";
-            
-            $emailBody = "
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
-                    <h2 style='color: #1f2937; margin-bottom: 20px;'>Profile Update Notification</h2>
-                    
-                    <p>Dear {$participant->user->first_name} {$participant->user->last_name},</p>
-                    
-                    <p>Your profile information for the <strong>{$participant->conference->name}</strong> conference has been updated by our administrative team.</p>
-                    
-                    <div style='background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;'>
-                        <h3 style='color: #374151; margin-top: 0;'>Updated Information:</h3>
-                        <ul style='color: #4b5563;'>
-            ";
-            
-            foreach ($changeDescriptions as $change) {
-                $emailBody .= "<li style='margin-bottom: 5px;'>" . ucfirst($change) . "</li>";
-            }
-            
-            $emailBody .= "
-                        </ul>
-                    </div>
-                    
-                    <p>Please log in to your account to review the changes and ensure all information is correct.</p>
-                    
-                    <div style='margin: 30px 0; text-align: center;'>
-                        <a href='" . route('participants.show', $participant) . "' 
-                           style='background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;'>
-                            View Your Profile
-                        </a>
-                    </div>
-                    
-                    <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>
-                        If you have any questions or concerns about these changes, please contact our support team.
-                    </p>
-                    
-                    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
-                    <p style='color: #9ca3af; font-size: 12px; text-align: center;'>
-                        This is an automated notification from the CGS Events management system.
-                    </p>
-                </div>
-            ";
-            
-            // Use EmailTrackingService to send the email
-            $emailTrackingService = app(\App\Services\EmailTrackingService::class);
-            
-            $emailTrackingService->sendTrackedEmailViaGmail(
-                $participant->user->email,
-                $subject,
-                $emailBody,
-                'profile_update',
-                $adminUser,
-                $participant->conference,
-                'Participant',
-                $participant->id,
-                'participant_update_notification'
-            );
-            
-            \Log::info('Participant update email sent', [
-                'participant_id' => $participant->id,
-                'admin_user_id' => $adminUser->id,
-                'changes' => $changes
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Failed to send participant update email', [
-                'participant_id' => $participant->id,
-                'admin_user_id' => $adminUser->id,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
 
     /**
      * Send email to participant

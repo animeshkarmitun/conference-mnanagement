@@ -1151,9 +1151,25 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('No session to publish', 'error');
             return;
         }
-        
+
+        // Ensure any currently-checked available participants are included
+        addCheckedAvailableToSelected();
+        updateParticipantsInput();
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('title').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('start_time', document.getElementById('start_time').value);
+        formData.append('end_time', document.getElementById('end_time').value);
+        formData.append('conference_id', document.getElementById('conference_id').value);
+        formData.append('venue_id', document.getElementById('venue_id').value);
+        formData.append('room', document.getElementById('room').value);
+        formData.append('participants', JSON.stringify(Array.from(selectedParticipants)));
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
         fetch(`/sessions/${currentDraftSessionId}/publish`, {
             method: 'POST',
+            body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

@@ -28,7 +28,32 @@
     
     .stat-card {
         position: relative;
-        overflow: hidden;
+    }
+    
+    /* Custom scrollbar for country modal */
+    .country-modal-content {
+        max-height: 70vh;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+    }
+    
+    .country-modal-content::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .country-modal-content::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    
+    .country-modal-content::-webkit-scrollbar-thumb {
+        background: rgba(156, 163, 175, 0.5);
+        border-radius: 10px;
+    }
+    
+    .country-modal-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(156, 163, 175, 0.8);
     }
     
     .stat-card::before {
@@ -152,11 +177,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
             </svg>
         </a>
-        <a href="{{ route('tasks.create') }}" class="quick-action-btn modern-primary p-3 rounded-full shadow-lg transition-all duration-200" title="Add Task">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-        </a>
+        
         <a href="{{ route('participants.create') }}" class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200" title="Add Participant">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
@@ -264,37 +285,11 @@
             </div>
         </div>
 
-        <!-- Enhanced Task Progress Section -->
-        <div class="max-w-7xl mx-auto mb-8 animate-fade-in-up animate-delay-3">
-            <div class="bg-white rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between p-6 border-l-4 border-green-400 card-hover">
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full shadow-lg">
-                        <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2l4-4M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </span>
-                    <div>
-                        <div class="text-lg font-bold text-green-700">Task Progress</div>
-                        <div class="text-sm text-gray-500">Completed Tasks</div>
-                    </div>
-                </div>
-                <div class="flex flex-col items-end mt-4 md:mt-0 md:ml-8 min-w-0 flex-shrink-0">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-sm text-gray-500">{{ $dashboardData['task_progress']['completed_tasks'] }} / {{ $dashboardData['task_progress']['total_tasks'] }}</span>
-                        <span class="text-lg font-bold text-green-700">{{ $dashboardData['task_progress']['progress_percentage'] }}%</span>
-                    </div>
-                    <div class="w-40 h-3 bg-gray-200 rounded-full overflow-hidden mb-1 shadow-inner">
-                        <div class="h-3 bg-gradient-to-r from-green-400 to-green-500 rounded-full progress-bar shadow-sm" style="width: {{ $dashboardData['task_progress']['progress_percentage'] }}%"></div>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-gray-500">
-                        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2l4-4"/></svg>
-                        <span>{{ $dashboardData['task_progress']['remaining_tasks'] }} tasks remaining</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
 
         <!-- Enhanced Country Statistics Section -->
         <div class="max-w-7xl mx-auto mb-8 animate-fade-in-up animate-delay-4">
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-400 card-hover">
+            <div id="countryCard" class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-400 card-hover cursor-pointer" title="Click to view full list">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shadow-lg">
                         <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -306,44 +301,22 @@
                         <div class="text-sm text-gray-500">Participants by Country</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-2xl font-bold text-blue-700">{{ $dashboardData['country_statistics']['total_countries'] }}</div>
-                        <div class="text-xs text-gray-500">{{ $dashboardData['country_statistics']['total_countries'] === 1 ? 'Country' : 'Countries' }}</div>
+                        <div class="text-2xl font-bold text-blue-700">{{ $dashboardData['country_statistics']['total_participants_with_country'] }}</div>
+                        <div class="text-xs text-gray-500">{{ $dashboardData['country_statistics']['total_participants_with_country'] === 1 ? 'Participant' : 'Participants' }}</div>
+                        <div class="text-[10px] text-gray-400 mt-1">{{ $dashboardData['country_statistics']['total_countries'] }} {{ $dashboardData['country_statistics']['total_countries'] === 1 ? 'country' : 'countries' }}</div>
                     </div>
                 </div>
                 
-                @if($dashboardData['country_statistics']['total_countries'] > 0)
-                    <div class="mt-4 max-h-64 overflow-y-auto">
-                        <div class="space-y-2">
-                            @foreach($dashboardData['country_statistics']['countries']->take(10) as $country)
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                        <span class="font-medium text-gray-700">{{ $country['country'] }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div class="h-2 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" 
-                                                 style="width: {{ ($country['count'] / max($dashboardData['country_statistics']['total_participants_with_country'], 1)) * 100 }}%">
-                                            </div>
-                                        </div>
-                                        <span class="text-sm font-bold text-blue-700 min-w-[3rem] text-right">{{ $country['count'] }}</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                        
-                        @if($dashboardData['country_statistics']['countries']->count() > 10)
-                            <div class="mt-3 text-center text-sm text-gray-500">
-                                ... and {{ $dashboardData['country_statistics']['countries']->count() - 10 }} more {{ $dashboardData['country_statistics']['countries']->count() - 10 === 1 ? 'country' : 'countries' }}
-                            </div>
-                        @endif
-                    </div>
-                @else
+                @if($dashboardData['country_statistics']['total_countries'] === 0)
                     <div class="text-center py-8">
                         <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <p class="text-gray-500">No country data available for participants</p>
+                    </div>
+                @else
+                    <div class="text-center py-4 text-sm text-gray-500">
+                        Click to view full list
                     </div>
                 @endif
 
@@ -363,41 +336,60 @@
             </div>
         </div>
 
+        <!-- Country Full List Modal -->
+        <div id="countryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <h3 class="text-lg font-semibold">Participants by Country</h3>
+                        <button id="countryModalClose" class="text-gray-500 hover:text-gray-700" aria-label="Close">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="p-4 country-modal-content">
+                        @if($dashboardData['country_statistics']['total_countries'] > 0)
+                            <div class="space-y-2">
+                                @foreach($dashboardData['country_statistics']['countries'] as $country)
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                            <span class="font-medium text-gray-700">{{ $country['country'] }}</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-blue-700">{{ $country['count'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-8 text-gray-500">No country data available for participants</div>
+                        @endif
+                    </div>
+                    <div class="p-4 border-t text-right">
+                        <button id="countryModalClose2" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Enhanced Summary Stats Section -->
         <div class="max-w-7xl mx-auto mb-10">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                <!-- Invited -->
-                <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-indigo-400 stat-card card-hover animate-fade-in-up animate-delay-5">
-                    <span class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-3 shadow-lg">
-                        <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                </span>
-                <div class="text-3xl font-bold text-indigo-700 mb-1">{{ $dashboardData['summary_stats']['invited'] }}</div>
-                <div class="text-sm text-slate-500 font-medium">Invited</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Gender Breakdown -->
+        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-blue-400 stat-card card-hover animate-fade-in-up animate-delay-5">
+            <span class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-3 shadow-lg">
+                <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+            </span>
+            <div class="flex flex-col items-center mb-1">
+                <div class="text-xs text-slate-500">Male: <span class="font-bold text-blue-700">{{ $dashboardData['summary_stats']['gender_breakdown']['male'] }}</span></div>
+                <div class="text-xs text-slate-500">Female: <span class="font-bold text-pink-700">{{ $dashboardData['summary_stats']['gender_breakdown']['female'] }}</span></div>
+                <div class="text-xs text-slate-500">Other: <span class="font-bold text-purple-700">{{ $dashboardData['summary_stats']['gender_breakdown']['other'] }}</span></div>
             </div>
-            
-            <!-- Accepted -->
-            <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-emerald-400 stat-card card-hover animate-fade-in-up animate-delay-5">
-                <span class="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full mb-3 shadow-lg">
-                    <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
-                </svg>
-            </span>
-            <div class="text-3xl font-bold text-emerald-700 mb-1">{{ $dashboardData['summary_stats']['accepted'] }}</div>
-            <div class="text-sm text-slate-500 font-medium">Accepted</div>
+            <div class="text-sm text-slate-500 font-medium">Gender Distribution</div>
         </div>
-        
-        <!-- Flying -->
-        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-amber-400 stat-card card-hover animate-fade-in-up animate-delay-5">
-            <span class="inline-flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full mb-3 shadow-lg">
-                <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                </svg>
-            </span>
-            <div class="text-3xl font-bold text-amber-700 mb-1">{{ $dashboardData['summary_stats']['flying'] }}</div>
-            <div class="text-sm text-slate-500 font-medium">Flying</div>
-        </div>
-        
-        <!-- Status Breakdown -->
+
+        <!-- Registration Status -->
         <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-rose-400 stat-card card-hover animate-fade-in-up animate-delay-5">
             <span class="inline-flex items-center justify-center w-12 h-12 bg-rose-100 rounded-full mb-3 shadow-lg">
                 <svg class="w-7 h-7 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -409,18 +401,55 @@
                 <div class="text-xs text-slate-500">Approved: <span class="font-bold text-emerald-700">{{ $dashboardData['summary_stats']['status_breakdown']['approved'] }}</span></div>
                 <div class="text-xs text-slate-500">Declined: <span class="font-bold text-rose-700">{{ $dashboardData['summary_stats']['status_breakdown']['declined'] }}</span></div>
             </div>
-            <div class="text-sm text-slate-500 font-medium">Status</div>
+            <div class="text-sm text-slate-500 font-medium">Registration Status</div>
         </div>
         
-        <!-- Speakers -->
-        <div class="bg-white rounded-2xl shadow-lg flex flex-col items-center p-5 border-t-4 border-violet-400 stat-card card-hover animate-fade-in-up animate-delay-5">
-            <span class="inline-flex items-center justify-center w-12 h-12 bg-violet-100 rounded-full mb-3 shadow-lg">
-                <svg class="w-7 h-7 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
-                </svg>
-            </span>
-            <div class="text-3xl font-bold text-violet-700 mb-1">{{ $dashboardData['speaker_statistics']['total_speakers'] }}</div>
-            <div class="text-sm text-slate-500 font-medium">Speakers</div>
+        <!-- Participant Types (counts, desc) -->
+        <div class="bg-white rounded-2xl shadow-lg p-5 border-t-4 border-indigo-400 stat-card card-hover animate-fade-in-up animate-delay-5">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="inline-flex items-center justify-center w-10 h-10 bg-indigo-100 rounded-full shadow-lg">
+                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </span>
+                <h4 class="text-base font-semibold text-slate-700">Participant Types</h4>
+            </div>
+            <div class="w-full space-y-1">
+                @foreach($dashboardData['summary_stats']['participant_type_counts'] as $typeName => $typeCount)
+                    @if($typeCount > 0)
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-600">{{ $typeName }}</span>
+                        <span class="font-semibold text-slate-800">{{ $typeCount }}</span>
+                    </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+
+        <!-- Passwordless Login Stats -->
+        <div class="bg-white rounded-2xl shadow-lg p-5 border-t-4 border-violet-400 stat-card card-hover animate-fade-in-up animate-delay-5">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="inline-flex items-center justify-center w-10 h-10 bg-violet-100 rounded-full shadow-lg">
+                    <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </span>
+                <h4 class="text-base font-semibold text-slate-700">Passwordless Login</h4>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="flex items-center justify-between bg-violet-50 rounded p-2">
+                    <span class="text-slate-600">Total</span>
+                    <span class="font-semibold text-violet-700">{{ $dashboardData['summary_stats']['passwordless_login_stats']['total'] }}</span>
+                </div>
+                <div class="flex items-center justify-between bg-emerald-50 rounded p-2">
+                    <span class="text-slate-600">Active</span>
+                    <span class="font-semibold text-emerald-700">{{ $dashboardData['summary_stats']['passwordless_login_stats']['active'] }}</span>
+                </div>
+                <div class="flex items-center justify-between bg-blue-50 rounded p-2">
+                    <span class="text-slate-600">Used</span>
+                    <span class="font-semibold text-blue-700">{{ $dashboardData['summary_stats']['passwordless_login_stats']['used'] }}</span>
+                </div>
+                <div class="flex items-center justify-between bg-rose-50 rounded p-2">
+                    <span class="text-slate-600">Expired</span>
+                    <span class="font-semibold text-rose-700">{{ $dashboardData['summary_stats']['passwordless_login_stats']['expired'] }}</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -466,13 +495,7 @@
                         <span class="text-xs font-medium">Conferences</span>
                     </a>
 
-                    <!-- Manage Tasks -->
-                    <a href="{{ route('tasks.index') }}" class="quick-action-btn modern-info p-3 rounded-full shadow-lg transition-all duration-200 flex flex-col items-center" title="Manage Tasks">
-                        <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        <span class="text-xs font-medium">Tasks</span>
-                    </a>
+                    
 
                     <!-- Manage Participant Types -->
                     <a href="{{ route('participant-types.index') }}" class="quick-action-btn modern-admin p-3 rounded-full shadow-lg transition-all duration-200 flex flex-col items-center" title="Manage Participant Types">
@@ -577,6 +600,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         });
     });
+
+    // Country modal open/close
+    const countryCard = document.getElementById('countryCard');
+    const countryModal = document.getElementById('countryModal');
+    const closeBtns = [document.getElementById('countryModalClose'), document.getElementById('countryModalClose2')];
+    if (countryCard && countryModal) {
+        countryCard.addEventListener('click', () => countryModal.classList.remove('hidden'));
+        closeBtns.forEach(b => b && b.addEventListener('click', () => countryModal.classList.add('hidden')));
+        countryModal.addEventListener('click', (e) => {
+            if (e.target === countryModal) countryModal.classList.add('hidden');
+        });
+    }
 });
 </script>
 @endpush

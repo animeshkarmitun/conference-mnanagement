@@ -59,13 +59,22 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Sort Controls -->
                 <div class="flex items-center space-x-2">
-                    <span class="text-sm text-gray-600">Hotel:</span>
-                    <select class="text-sm border border-gray-300 rounded px-3 py-2 min-w-[150px]" onchange="filterByHotel(this.value)">
-                        <option value="">All Hotels</option>
-                        @foreach($travelDetails->pluck('hotel.name')->filter()->unique() as $hotelName)
-                            <option value="{{ $hotelName }}">{{ $hotelName }}</option>
-                        @endforeach
+                    <span class="text-sm text-gray-600">Sort:</span>
+                    <select id="sortColumn" class="text-sm border border-gray-300 rounded px-3 py-2 min-w-[160px]" onchange="applySorting()">
+                        <option value="participant">Participant</option>
+                        <option value="conference">Conference</option>
+                        <option value="visa">Visa Status</option>
+                        <option value="status">Itineraries Status</option>
+                        <option value="arrival">Arrival</option>
+                        <option value="departure">Departure</option>
+                        <option value="airport">Takeoff Airport</option>
+                    </select>
+                    <select id="sortDirection" class="text-sm border border-gray-300 rounded px-3 py-2" onchange="applySorting()">
+                        <option value="asc">Asc</option>
+                        <option value="desc">Desc</option>
                     </select>
                 </div>
             </div>
@@ -77,14 +86,14 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participant</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conference</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visa Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Itineraries Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="setSort('participant')">Participant</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="setSort('conference')">Conference</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="setSort('visa')">Visa Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="setSort('status')">Itineraries Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hotel Info</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrival</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departure</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Takeoff Airport</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="setSort('arrival')">Arrival</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="setSort('departure')">Departure</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="setSort('airport')">Takeoff Airport</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Check-in/out</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flight Info</th>
                     </tr>
@@ -396,8 +405,8 @@
 
 <script>
 let currentConferenceFilter = '';
-let currentHotelFilter = '';
 let currentParticipantId = null;
+let currentSort = { column: 'participant', direction: 'asc' };
 
 // Modal functions
 function openEditModal(participantId, participantName) {
@@ -750,11 +759,6 @@ function filterByConference(conferenceName) {
     applyFilters();
 }
 
-function filterByHotel(hotelName) {
-    currentHotelFilter = hotelName;
-    applyFilters();
-}
-
 function selectConference(conferenceName) {
     document.getElementById('conferenceSearch').value = conferenceName;
     currentConferenceFilter = conferenceName;
@@ -797,7 +801,6 @@ function applyFilters() {
     
     rows.forEach(row => {
         const conferenceCell = row.querySelector('td:nth-child(2)');
-        const hotelCell = row.querySelector('td:nth-child(3)');
         
         let showRow = true;
         
@@ -805,14 +808,6 @@ function applyFilters() {
         if (currentConferenceFilter !== '') {
             const conferenceText = conferenceCell ? conferenceCell.textContent.trim() : '';
             if (!conferenceText.includes(currentConferenceFilter)) {
-                showRow = false;
-            }
-        }
-        
-        // Check hotel filter
-        if (currentHotelFilter !== '' && showRow) {
-            const hotelText = hotelCell ? hotelCell.textContent.trim() : '';
-            if (!hotelText.includes(currentHotelFilter)) {
                 showRow = false;
             }
         }
@@ -827,6 +822,73 @@ function applyFilters() {
     
     // Update record count
     document.querySelector('.text-sm.text-gray-500').textContent = `${visibleCount} records found`;
+}
+
+// Sorting
+function setSort(column) {
+    if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+    }
+    // Sync dropdowns if present
+    const colSel = document.getElementById('sortColumn');
+    const dirSel = document.getElementById('sortDirection');
+    if (colSel) colSel.value = currentSort.column;
+    if (dirSel) dirSel.value = currentSort.direction;
+    applySorting();
+}
+
+function applySorting() {
+    const colSel = document.getElementById('sortColumn');
+    const dirSel = document.getElementById('sortDirection');
+    if (colSel && dirSel) {
+        currentSort.column = colSel.value;
+        currentSort.direction = dirSel.value;
+    }
+
+    const tbody = document.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    const getCellValue = (row, column) => {
+        switch (column) {
+            case 'participant':
+                return (row.querySelector('td:nth-child(1)')?.innerText || '').toLowerCase();
+            case 'conference':
+                return (row.querySelector('td:nth-child(2)')?.innerText || '').toLowerCase();
+            case 'visa':
+                return (row.querySelector('td:nth-child(3)')?.innerText || '').toLowerCase();
+            case 'status':
+                return (row.querySelector('td:nth-child(4)')?.innerText || '').toLowerCase();
+            case 'arrival':
+                return row.querySelector('td:nth-child(6)')?.innerText || '';
+            case 'departure':
+                return row.querySelector('td:nth-child(7)')?.innerText || '';
+            case 'airport':
+                return (row.querySelector('td:nth-child(8)')?.innerText || '').toLowerCase();
+            default:
+                return '';
+        }
+    };
+
+    rows.sort((a, b) => {
+        const av = getCellValue(a, currentSort.column);
+        const bv = getCellValue(b, currentSort.column);
+
+        // Try numeric/date compare when applicable
+        const an = Date.parse(av);
+        const bn = Date.parse(bv);
+        let cmp = 0;
+        if (!isNaN(an) && !isNaN(bn)) {
+            cmp = an - bn;
+        } else {
+            cmp = av.localeCompare(bv, undefined, { sensitivity: 'base', numeric: true });
+        }
+        return currentSort.direction === 'asc' ? cmp : -cmp;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
 }
 </script>
 @endsection

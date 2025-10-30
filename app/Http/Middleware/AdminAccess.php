@@ -32,26 +32,14 @@ class AdminAccess
                 return $next($request);
             }
             
-            // If user has no roles at all, redirect to a restricted page
+            // If user has no roles at all, redirect to role-based dashboard
             if (!$user->hasAnyRole()) {
-                return redirect()->route('participants.profile')->with('error', 'Access denied. No role assigned. Please contact an administrator.');
+                return redirect()->route('role-dashboard')->with('error', 'Access denied. No role assigned. Please contact an administrator.');
             }
             
-            // Redirect to appropriate dashboard based on role
-            if ($user->hasRole('attendee') || $user->hasRole('speaker')) {
-                return redirect()->route('participant-dashboard')->with('error', 'Access denied. This feature is only available to administrators.');
-            }
-            
-            if ($user->hasRole('tasker')) {
-                return redirect()->route('dashboard.tasker')->with('error', 'Access denied. This feature is only available to administrators.');
-            }
-            
-            if ($user->hasRole('event_coordinator')) {
-                return redirect()->route('event-coordinator.dashboard')->with('error', 'Access denied. This feature is only available to administrators.');
-            }
-            
-            // Default fallback - redirect to participant dashboard
-            return redirect()->route('participant-dashboard')->with('error', 'Access denied. This feature is only available to administrators.');
+            // Redirect to user's default dashboard route
+            $dashboardRoute = $user->getDefaultDashboardRoute();
+            return redirect()->route($dashboardRoute)->with('error', 'Access denied. This feature is only available to administrators.');
         }
         return $next($request);
     }

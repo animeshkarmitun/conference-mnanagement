@@ -26,6 +26,7 @@ class SuperAdminSeeder extends Seeder
             'first_name' => 'Super',
             'last_name' => 'Admin',
             'organization' => 'CGS Events',
+            'email_verified_at' => now(),
         ]);
 
         // Attach the superadmin role

@@ -22,6 +22,7 @@ class ParticipantSeeder extends Seeder
                 'last_name' => 'Doe',
                 'password' => bcrypt('password'),
                 'organization' => 'TechCorp Solutions',
+                'country' => 'United States',
             ]
         );
         
@@ -54,6 +55,7 @@ class ParticipantSeeder extends Seeder
                 'last_name' => 'Smith',
                 'password' => bcrypt('password'),
                 'organization' => 'AI Research Institute',
+                'country' => 'United Kingdom',
             ]
         );
         
@@ -87,6 +89,7 @@ class ParticipantSeeder extends Seeder
                 'last_name' => 'Chen',
                 'password' => bcrypt('password'),
                 'organization' => 'Healthcare Innovations',
+                'country' => 'Singapore',
             ]
         );
         
@@ -118,6 +121,7 @@ class ParticipantSeeder extends Seeder
                 'last_name' => 'Wilson',
                 'password' => bcrypt('password'),
                 'organization' => 'Green Future Initiative',
+                'country' => 'Australia',
             ]
         );
         
@@ -141,5 +145,22 @@ class ParticipantSeeder extends Seeder
                 'profile_name' => 'Sophie Wilson - Sustainability Consultant'
             ]
         );
+
+        // Backfill country for all participant users missing a country
+        $countryPool = [
+            'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Singapore', 'India', 'Bangladesh', 'Brazil',
+            'Japan', 'South Korea', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Spain', 'Italy', 'Switzerland', 'United Arab Emirates'
+        ];
+        $i = 0;
+        Participant::with('user')->chunk(200, function ($participants) use (&$i, $countryPool) {
+            foreach ($participants as $participant) {
+                $user = $participant->user;
+                if ($user && (empty($user->country) || $user->country === null)) {
+                    $user->country = $countryPool[$i % count($countryPool)];
+                    $user->save();
+                    $i++;
+                }
+            }
+        });
     }
 } 

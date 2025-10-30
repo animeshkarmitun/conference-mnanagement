@@ -31,6 +31,10 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
+/* Sort indicators for activity table */
+.pla-sort-icon { margin-left: 6px; color: #9ca3af; display: inline-block; transition: transform .2s ease, color .2s ease; }
+.pla-sort-icon.active { color: #3b82f6; }
+.pla-sort-icon.asc { transform: rotate(180deg); }
 </style>
 @endpush
 
@@ -70,30 +74,6 @@
         </div>
     </div>
 
-    <!-- Filter Section -->
-    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Filter Participants</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Participant Type</label>
-                <select id="typeFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Types</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                <input type="text" id="globalSearch" placeholder="Search participants..." 
-                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex items-end">
-                <button onclick="applyFilters()" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold">
-                    Apply Filters
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Action Buttons -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
         <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
@@ -124,23 +104,89 @@
         </div>
     </div>
 
-    <!-- Recent Activity -->
+    <!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Filter Participants</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Participant Type</label>
+                <select id="typeFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <input type="text" id="globalSearch" placeholder="Search participants..." 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                <select id="sortBy" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="name" selected>Name</option>
+                    <option value="email">Email</option>
+                    <option value="type">Type</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Order</label>
+                <select id="sortDir" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="asc" selected>Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button onclick="applyFilters()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passwordless Login Activity -->
     <div class="bg-white rounded-lg shadow-lg p-6">
-        <h2 class="text-xl font-semibold mb-4">Recent Login Activity</h2>
+        <h2 class="text-xl font-semibold mb-4">Passwordless Login Activity</h2>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200" id="plaTable">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
+                        <th data-sort="user" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                            <span>User</span>
+                            <svg class="pla-sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"></polyline><polyline points="7 11 12 6 17 11"></polyline></svg>
+                        </th>
+                        <th data-sort="type" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                            <span>Type</span>
+                            <svg class="pla-sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"></polyline><polyline points="7 11 12 6 17 11"></polyline></svg>
+                        </th>
+                        <th data-sort="status" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                            <span>Status</span>
+                            <svg class="pla-sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"></polyline><polyline points="7 11 12 6 17 11"></polyline></svg>
+                        </th>
+                        <th data-sort="created" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                            <span>Created</span>
+                            <svg class="pla-sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"></polyline><polyline points="7 11 12 6 17 11"></polyline></svg>
+                        </th>
+                        <th data-sort="expires" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                            <span>Expires</span>
+                            <svg class="pla-sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"></polyline><polyline points="7 11 12 6 17 11"></polyline></svg>
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-200" id="plaBody">
                     @forelse($recentLogins as $login)
-                        <tr>
+                        @php
+                            $types = optional($login->user->participants)->map(function($p){return $p->participantType->name ?? null;})->filter()->unique()->values()->all();
+                            $typesLabel = implode(', ', $types);
+                            $statusLabel = $login->expires_at->isPast() ? 'Expired' : ($login->used_at ? 'Used' : 'Active');
+                        @endphp
+                        <tr 
+                            data-user="{{ strtolower($login->user->first_name . ' ' . $login->user->last_name . ' ' . $login->user->email) }}"
+                            data-type="{{ strtolower($typesLabel) }}"
+                            data-status="{{ strtolower($statusLabel) }}"
+                            data-created-ts="{{ $login->created_at->timestamp }}"
+                            data-expires-ts="{{ $login->expires_at->timestamp }}"
+                        >
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
@@ -156,6 +202,7 @@
                                     </div>
                                 </div>
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $typesLabel ?: '—' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($login->expires_at->isPast())
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -494,6 +541,8 @@ async function loadParticipantTypes() {
 async function applyFilters() {
     const typeFilter = document.getElementById('typeFilter').value;
     const searchTerm = document.getElementById('globalSearch').value;
+    const sortBy = document.getElementById('sortBy').value;
+    const sortDir = document.getElementById('sortDir').value;
     
     try {
         let url = '{{ route("passwordless-login.participants") }}';
@@ -516,6 +565,8 @@ async function applyFilters() {
                     participant.participant_types.toLowerCase().includes(searchLower)
                 );
             }
+            // sort
+            filteredParticipants = sortParticipants(filteredParticipants, sortBy, sortDir);
             
             // Update the display
             updateParticipantDisplay(filteredParticipants);
@@ -530,7 +581,11 @@ function updateParticipantDisplay(participants) {
     // Update single select
     const select = document.getElementById('userSelect');
     select.innerHTML = '<option value="">Select a participant...</option>';
-    participants.forEach(participant => {
+    // Apply current sort to keep consistent when only search changes
+    const sortBy = document.getElementById('sortBy') ? document.getElementById('sortBy').value : 'name';
+    const sortDir = document.getElementById('sortDir') ? document.getElementById('sortDir').value : 'asc';
+    const sorted = sortParticipants(participants, sortBy, sortDir);
+    sorted.forEach(participant => {
         const option = document.createElement('option');
         option.value = participant.id;
         option.textContent = `${participant.first_name} ${participant.last_name} (${participant.email}) - ${participant.participant_types}`;
@@ -538,8 +593,23 @@ function updateParticipantDisplay(participants) {
     });
     
     // Update bulk list
-    allParticipants = participants;
-    renderBulkParticipants(participants);
+    allParticipants = sorted;
+    renderBulkParticipants(sorted);
+}
+
+// Utility: sort participants client-side
+function sortParticipants(list, by = 'name', dir = 'asc') {
+    const direction = dir === 'desc' ? -1 : 1;
+    const safeLower = v => (v || '').toString().toLowerCase();
+    return [...list].sort((a,b) => {
+        let av, bv;
+        if (by === 'email') { av = safeLower(a.email); bv = safeLower(b.email); }
+        else if (by === 'type') { av = safeLower(a.participant_types); bv = safeLower(b.participant_types); }
+        else { av = safeLower(`${a.first_name} ${a.last_name}`); bv = safeLower(`${b.first_name} ${b.last_name}`); }
+        if (av < bv) return -1 * direction;
+        if (av > bv) return 1 * direction;
+        return 0;
+    });
 }
 
 // Load conferences for dropdown
@@ -1538,6 +1608,80 @@ document.addEventListener('DOMContentLoaded', function() {
             loadBulkParticipants(conferenceId);
         }
     });
+});
+
+// Filtering and sorting for Passwordless Login Activity table
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.getElementById('plaBody');
+    const table = document.getElementById('plaTable');
+    const headers = table.querySelectorAll('thead [data-sort]');
+    let currentSort = { key: 'created', dir: 'desc' };
+
+    function applyActivityFiltersAndSort() {
+        const typeVal = (document.getElementById('typeFilter').value || '').toLowerCase();
+        const q = (document.getElementById('globalSearch').value || '').toLowerCase();
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+
+        // Filter
+        rows.forEach(row => {
+            const matchesType = !typeVal || row.dataset.type.includes(typeVal);
+            const matchesSearch = !q || row.dataset.user.includes(q) || row.dataset.type.includes(q);
+            row.style.display = matchesType && matchesSearch ? '' : 'none';
+        });
+
+        // Sort
+        const visible = rows.filter(r => r.style.display !== 'none');
+        visible.sort((a,b) => compareRows(a,b,currentSort.key,currentSort.dir));
+        visible.forEach(r => tableBody.appendChild(r));
+    }
+
+    function compareRows(a,b,key,dir){
+        const d = dir === 'desc' ? -1 : 1;
+        if (key === 'created') return (Number(a.dataset.createdTs) - Number(b.dataset.createdTs)) * d;
+        if (key === 'expires') return (Number(a.dataset.expiresTs) - Number(b.dataset.expiresTs)) * d;
+        if (key === 'user') return a.dataset.user.localeCompare(b.dataset.user) * d;
+        if (key === 'type') return a.dataset.type.localeCompare(b.dataset.type) * d;
+        if (key === 'status') return a.dataset.status.localeCompare(b.dataset.status) * d;
+        return 0;
+    }
+
+    // Hook filters
+    ['typeFilter','globalSearch'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', applyActivityFiltersAndSort);
+        if (el) el.addEventListener('change', applyActivityFiltersAndSort);
+    });
+
+    // Sorting via headers
+    headers.forEach(h => {
+        h.addEventListener('click', () => {
+            const key = h.getAttribute('data-sort');
+            if (currentSort.key === key) currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+            else currentSort = { key, dir: 'asc' };
+            updatePlaSortIndicators();
+            applyActivityFiltersAndSort();
+        });
+    });
+
+    // Initial
+    applyActivityFiltersAndSort();
+    updatePlaSortIndicators();
+
+    function updatePlaSortIndicators(){
+        headers.forEach(h => {
+            const icon = h.querySelector('.pla-sort-icon');
+            if (!icon) return;
+            icon.classList.remove('active','asc');
+        });
+        const active = Array.from(headers).find(h => h.getAttribute('data-sort') === currentSort.key);
+        if (active) {
+            const icon = active.querySelector('.pla-sort-icon');
+            if (icon) {
+                icon.classList.add('active');
+                if (currentSort.dir === 'asc') icon.classList.add('asc');
+            }
+        }
+    }
 });
 </script>
 @endpush

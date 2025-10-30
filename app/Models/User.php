@@ -249,4 +249,114 @@ class User extends Authenticatable
             ->get()
             ->groupBy('conference_id');
     }
+
+    /**
+     * Get all permissions for this user across all their roles
+     * Returns a flat array of unique permissions
+     */
+    public function getAllPermissions(): array
+    {
+        $permissions = [];
+        
+        foreach ($this->roles as $role) {
+            $rolePermissions = $role->permissions ?? [];
+            
+            // Handle wildcard permission (*) - grants all permissions
+            if (in_array('*', $rolePermissions)) {
+                return ['*']; // Return wildcard to indicate all permissions
+            }
+            
+            $permissions = array_merge($permissions, $rolePermissions);
+        }
+        
+        return array_unique($permissions);
+    }
+
+    /**
+     * Check if user has a specific permission
+     * Supports wildcard patterns like 'conferences.*' or exact matches like 'conferences.view'
+     */
+    public function hasPermission(string $permission): bool
+    {
+        $userPermissions = $this->getAllPermissions();
+        
+        // Check for wildcard (all permissions)
+        if (in_array('*', $userPermissions)) {
+            return true;
+        }
+        
+        // Exact match
+        if (in_array($permission, $userPermissions)) {
+            return true;
+        }
+        
+        // Check for wildcard pattern match (e.g., 'conferences.*' matches 'conferences.view')
+        foreach ($userPermissions as $userPermission) {
+            if (str_ends_with($userPermission, '.*')) {
+                $prefix = str_replace('.*', '', $userPermission);
+                if (str_starts_with($permission, $prefix . '.')) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if user has any of the given permissions
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if user has all of the given permissions
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Get the default dashboard route for this user based on their permissions
+     */
+    public function getDefaultDashboardRoute(): string
+    {
+        // Admin/superadmin go to main dashboard
+        if ($this->hasRole('admin') || $this->hasRole('superadmin')) {
+            return 'dashboard';
+        }
+        
+        // Specific role-based dashboards (for backward compatibility)
+        if ($this->hasRole('attendee') || $this->hasRole('speaker')) {
+            // Only redirect to participant dashboard if they have participant records
+            if ($this->participants()->exists()) {
+                return 'participant-dashboard';
+            }
+        }
+        
+        if ($this->hasRole('tasker')) {
+            return 'dashboard.tasker';
+        }
+        
+        if ($this->hasRole('event_coordinator')) {
+            return 'event-coordinator.dashboard';
+        }
+        
+        // For any other role (including custom roles like organizer), use role-based dashboard
+        // This will show a dashboard based on their permissions
+        return 'role-dashboard';
+    }
 }

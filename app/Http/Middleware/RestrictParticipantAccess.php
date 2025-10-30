@@ -58,11 +58,82 @@ class RestrictParticipantAccess
         
         // If user is a participant but not admin, restrict access
         if ($isParticipant && !$hasAdminRole) {
+            // If user has relevant permission for the current module, allow access
+            $routeName = $request->route()?->getName();
+            $segments = array_values(array_filter(explode('/', $currentPath)));
+
+            $permissionsConfig = config('permissions', []);
+            $moduleKeys = array_keys($permissionsConfig);
+
+            $hasModulePermission = function (string $module) use ($user, $permissionsConfig): bool {
+                if (!isset($permissionsConfig[$module])) {
+                    return false;
+                }
+                if ($user->hasPermission($module . '.view') || $user->hasPermission($module . '.*')) {
+                    return true;
+                }
+                foreach ($permissionsConfig[$module] as $action) {
+                    if ($user->hasPermission($module . '.' . $action)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            // Admin-prefixed sections: map the second segment to a module key
+            if (!empty($segments) && $segments[0] === 'admin') {
+                $adminSecond = $segments[1] ?? '';
+                // Aliases for admin sections to module keys
+                $adminAliases = [
+                    'settings' => 'email-settings',
+                    'email-tracking' => 'email-tracking',
+                    'backup' => 'backup',
+                    // Travel feature group under a single module key
+                    'itineraries' => 'travel',
+                    'travel-conflicts' => 'travel',
+                    'room-allocations' => 'travel',
+                    'export-itinerary' => 'travel',
+                ];
+                $module = $adminAliases[$adminSecond] ?? $adminSecond;
+                if (in_array($module, $moduleKeys, true) && $hasModulePermission($module)) {
+                    return $next($request);
+                }
+            }
+
+            // Direct module path checks using config keys
+            $first = $segments[0] ?? '';
+            if (in_array($first, $moduleKeys, true) && $hasModulePermission($first)) {
+                return $next($request);
+            }
+
+            // Route name-based checks (fallback)
+            if ($routeName) {
+                $parts = explode('.', $routeName);
+                // Try each progressive prefix as a module key
+                for ($i = 1; $i <= count($parts); $i++) {
+                    $candidate = implode('.', array_slice($parts, 0, $i));
+                    if (in_array($candidate, $moduleKeys, true) && $hasModulePermission($candidate)) {
+                        return $next($request);
+                    }
+                }
+                // Simple base check
+                $base = $parts[0] ?? '';
+                if ($base && in_array($base, $moduleKeys, true) && $hasModulePermission($base)) {
+                    return $next($request);
+                }
+            }
+
             // Define allowed routes for participants
             $allowedRoutes = [
                 'my-profile',
                 'participants/profile', // legacy alias route name path
                 'notifications',
+                'participant-dashboard',
+                'role-dashboard',
+                'dashboard-tasker',
+                'event-coordinator',
+                'how-to-use', // How to Use guide page
+                'guide', // legacy path alias for guide
                 'logout', // Allow logout
             ];
             
@@ -76,9 +147,10 @@ class RestrictParticipantAccess
                 }
             }
             
-            // If not allowed, return 404
+            // If not allowed, redirect to the user's default dashboard route instead of 404
             if (!$isAllowed) {
-                abort(404, 'Page not found');
+                $dashboardRoute = auth()->user()->getDefaultDashboardRoute();
+                return redirect()->route($dashboardRoute);
             }
         }
 

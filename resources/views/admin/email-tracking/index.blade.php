@@ -45,14 +45,17 @@
                             <label for="type_filter">Email Type:</label>
                             <select id="type_filter" class="form-control" onchange="filterEmails()">
                                 <option value="">All Types</option>
-                                @foreach(\App\Models\Email::getTypeOptions() as $type => $label)
-                                    <option value="{{ $type }}">{{ $label }}</option>
+                                @php
+                                    $selectedType = $type ?? '';
+                                @endphp
+                                @foreach(\App\Models\Email::getTypeOptions() as $t => $label)
+                                    <option value="{{ $t }}" {{ $selectedType === $t ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="recipient_filter">Recipient Email:</label>
-                            <input id="recipient_filter" type="text" class="form-control" value="" placeholder="e.g. user@example.com" onkeydown="if(event.key==='Enter') filterEmails()" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                            <input id="recipient_filter" type="text" class="form-control" value="{{ $recipientEmail ?? '' }}" placeholder="e.g. user@example.com" onkeydown="if(event.key==='Enter') filterEmails()" autocomplete="off" autocapitalize="off" spellcheck="false" />
                         </div>
                         <div class="col-md-2">
                             <label for="role_filter">User Role:</label>
@@ -61,6 +64,37 @@
                                 @foreach($roles as $r)
                                     <option value="{{ $r->name }}" {{ ($role ?? '') === $r->name ? 'selected' : '' }}>{{ ucfirst($r->name) }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="subject_filter">Subject:</label>
+                            <input id="subject_filter" type="text" class="form-control" value="{{ $subject ?? '' }}" placeholder="Search subject..." onkeydown="if(event.key==='Enter') filterEmails()" />
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status_filter">Status:</label>
+                            <select id="status_filter" class="form-control" onchange="filterEmails()">
+                                <option value="">All Statuses</option>
+                                @foreach(['pending','sent','delivered','opened','bounced','failed'] as $s)
+                                    <option value="{{ $s }}" {{ ($status ?? '') === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="sort_by">Sort By:</label>
+                            <select id="sort_by" class="form-control" onchange="filterEmails()">
+                                <option value="sent_at" {{ ($sortBy ?? 'sent_at') === 'sent_at' ? 'selected' : '' }}>Sent At</option>
+                                <option value="created_at" {{ ($sortBy ?? '') === 'created_at' ? 'selected' : '' }}>Created At</option>
+                                <option value="status" {{ ($sortBy ?? '') === 'status' ? 'selected' : '' }}>Status</option>
+                                <option value="email_type" {{ ($sortBy ?? '') === 'email_type' ? 'selected' : '' }}>Type</option>
+                                <option value="recipient" {{ ($sortBy ?? '') === 'recipient' ? 'selected' : '' }}>Recipient</option>
+                                <option value="id" {{ ($sortBy ?? '') === 'id' ? 'selected' : '' }}>ID</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label for="sort_dir">Order:</label>
+                            <select id="sort_dir" class="form-control" onchange="filterEmails()">
+                                <option value="desc" {{ ($sortDir ?? 'desc') === 'desc' ? 'selected' : '' }}>Desc</option>
+                                <option value="asc" {{ ($sortDir ?? '') === 'asc' ? 'selected' : '' }}>Asc</option>
                             </select>
                         </div>
                         <div class="col-md-2 mt-md-0 mt-2 d-flex align-items-end">
@@ -214,12 +248,12 @@
                         </div>
                     </div>
 
-                    <!-- Recent Emails -->
+                    <!-- Email List -->
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header">
-                                    <h3 class="card-title">Recent Emails</h3>
+                                    <h3 class="card-title">Email List</h3>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
@@ -297,14 +331,12 @@
 </div>
 
 <!-- Cleanup Modal -->
-<div class="modal fade" id="cleanupModal" tabindex="-1">
+<div class="modal fade" id="cleanupModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Cleanup Old Emails</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>This will permanently delete email records older than the specified number of days.</p>
@@ -314,7 +346,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" onclick="confirmCleanup()">Cleanup</button>
             </div>
         </div>
@@ -330,6 +362,10 @@ function filterEmails() {
     const type = document.getElementById('type_filter').value;
     const recipient = document.getElementById('recipient_filter').value;
     const role = document.getElementById('role_filter').value;
+    const subject = document.getElementById('subject_filter') ? document.getElementById('subject_filter').value : '';
+    const status = document.getElementById('status_filter') ? document.getElementById('status_filter').value : '';
+    const sortBy = document.getElementById('sort_by') ? document.getElementById('sort_by').value : '';
+    const sortDir = document.getElementById('sort_dir') ? document.getElementById('sort_dir').value : '';
     
     const params = new URLSearchParams();
     if (conferenceId) params.append('conference_id', conferenceId);
@@ -337,6 +373,10 @@ function filterEmails() {
     if (type) params.append('type', type);
     if (recipient) params.append('recipient_email', recipient);
     if (role) params.append('role', role);
+    if (subject) params.append('subject', subject);
+    if (status) params.append('status', status);
+    if (sortBy) params.append('sort_by', sortBy);
+    if (sortDir) params.append('sort_dir', sortDir);
     
     window.location.href = '{{ route("admin.email-tracking.index") }}?' + params.toString();
 }
@@ -397,11 +437,14 @@ function deleteEmail(emailId) {
 }
 
 function cleanupEmails() {
-    $('#cleanupModal').modal('show');
+    const modalElement = document.getElementById('cleanupModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    modal.show();
 }
 
 function confirmCleanup() {
-    const days = document.getElementById('cleanup_days').value;
+    const daysInput = document.getElementById('cleanup_days');
+    const days = parseInt(daysInput && daysInput.value ? daysInput.value : '90', 10);
     
     fetch('{{ route("admin.email-tracking.cleanup") }}', {
         method: 'POST',
@@ -409,13 +452,15 @@ function confirmCleanup() {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ days: parseInt(days) }),
+        body: JSON.stringify({ days }),
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             alert(data.message);
-            $('#cleanupModal').modal('hide');
+            const modalElement = document.getElementById('cleanupModal');
+            const modal = bootstrap.Modal.getInstance(modalElement) || bootstrap.Modal.getOrCreateInstance(modalElement);
+            modal.hide();
             location.reload();
         } else {
             alert('Error: ' + data.message);

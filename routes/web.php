@@ -58,6 +58,45 @@ Route::get('/debug/gmail-access', function() {
     ]);
 });
 
+// Debug route to inspect current user's roles, permissions, and visible admin menus
+Route::get('/debug/acl', function() {
+    if (!Auth::check()) {
+        return response()->json(['error' => 'Not authenticated']);
+    }
+
+    $user = Auth::user();
+    $roles = $user->roles->pluck('name')->toArray();
+    $permissions = $user->getAllPermissions();
+
+    // Menu visibility checks aligned with layout
+    $menu = [
+        'users' => $user->hasPermission('users.view'),
+        'roles' => $user->hasPermission('roles.view'),
+        'conferences' => $user->hasPermission('conferences.view'),
+        'participants' => $user->hasPermission('participants.view'),
+        'sessions' => $user->hasPermission('sessions.view'),
+        'tasks' => $user->hasPermission('tasks.view'),
+        'notifications' => $user->hasPermission('notifications.view'),
+        'conference_docs' => $user->hasPermission('conference-docs.view'),
+        'bulk_email' => $user->hasPermission('bulk-email.view'),
+        'backup' => $user->hasPermission('backup.view'),
+        'gmail' => $user->hasPermission('gmail.view'),
+        'email_settings' => $user->hasPermission('email-settings.view'),
+        'email_tracking' => $user->hasPermission('email-tracking.view'),
+        'passwordless_login' => $user->hasPermission('passwordless-login.admin.view'),
+        'travel_itineraries' => $user->hasPermission('travel.itineraries.view'),
+    ];
+
+    return response()->json([
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'roles' => $roles,
+        'permissions' => $permissions,
+        'menu_visibility' => $menu,
+        'default_dashboard_route' => $user->getDefaultDashboardRoute(),
+    ]);
+})->middleware(['auth']);
+
 // Debug route to test middleware behavior
 Route::get('/debug/middleware-test', function() {
     if (!Auth::check()) {
@@ -112,6 +151,7 @@ Route::get('/clear-cache', function() {
 });
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'role.redirect'])->name('dashboard');
+Route::get('/role-dashboard', [\App\Http\Controllers\RoleBasedDashboardController::class, 'index'])->middleware(['auth'])->name('role-dashboard');
 Route::get('/participant-dashboard', [\App\Http\Controllers\ParticipantDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('participant-dashboard');
 
 // Dashboard AJAX endpoints
@@ -354,7 +394,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('conferences', \App\Http\Controllers\ConferenceController::class);
+    Route::resource('conferences', \App\Http\Controllers\ConferenceController::class)->middleware('permission:conferences.view');
     Route::get('/conferences-export', [\App\Http\Controllers\ConferenceController::class, 'export'])->name('conferences.export');
     Route::get('/conferences/{conference}/deletion-info', [\App\Http\Controllers\ConferenceController::class, 'getDeletionInfo'])->name('conferences.deletion-info');
     
@@ -369,7 +409,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/import', [\App\Http\Controllers\ParticipantImportController::class, 'processImport'])->name('participants.import.process');
     
     // Participant routes (excluding edit and update which are admin-only)
-    Route::resource('participants', \App\Http\Controllers\ParticipantController::class)->except(['edit', 'update']);
+    Route::resource('participants', \App\Http\Controllers\ParticipantController::class)->except(['edit', 'update'])->middleware('permission:participants.view');
     
     // Comment routes
     Route::post('/participants/{participant}/comments', [\App\Http\Controllers\ParticipantController::class, 'storeComment'])->name('participants.comments.store');
@@ -381,7 +421,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/participants/{participant}', [\App\Http\Controllers\ParticipantController::class, 'update'])->name('participants.update');
     });
 
-    Route::resource('sessions', \App\Http\Controllers\SessionController::class);
+    Route::resource('sessions', \App\Http\Controllers\SessionController::class)->middleware('permission:sessions.view');
     Route::get('/sessions/participants/by-conference', [\App\Http\Controllers\SessionController::class, 'getParticipantsByConference'])->name('sessions.participants.by-conference');
     Route::get('/sessions/export', [\App\Http\Controllers\SessionController::class, 'export'])->name('sessions.export');
     Route::post('/sessions/auto-save-draft', [\App\Http\Controllers\SessionController::class, 'autoSaveDraft'])->name('sessions.auto-save-draft');
@@ -392,10 +432,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/sessions/check-conflicts', [\App\Http\Controllers\SessionController::class, 'checkParticipantConflicts'])->name('sessions.check-conflicts');
     Route::get('/sessions/test-conflicts', [\App\Http\Controllers\SessionController::class, 'testConflictDetection'])->name('sessions.test-conflicts');
     
-    Route::resource('tasks', \App\Http\Controllers\TaskController::class);
+    Route::resource('tasks', \App\Http\Controllers\TaskController::class)->middleware('permission:tasks.view');
     Route::patch('/tasks/{task}/status', [\App\Http\Controllers\TaskController::class, 'updateStatus'])->name('tasks.update-status');
     Route::get('/tasks/test-export', function() { return 'Test export route works'; })->name('tasks.test-export');
-    Route::resource('notifications', \App\Http\Controllers\NotificationController::class);
+    Route::resource('notifications', \App\Http\Controllers\NotificationController::class)->middleware('permission:notifications.view');
     Route::get('/speakers', [\App\Http\Controllers\SpeakerController::class, 'index'])->name('speakers.index');
     Route::get('/my-profile', [\App\Http\Controllers\ParticipantController::class, 'profile'])->name('my-profile');
     // Backward-compatible alias for legacy redirects
@@ -451,18 +491,28 @@ Route::middleware('auth')->group(function () {
     Route::get('/conference-docs/{conferenceDoc}/media/{docItem}/download', [\App\Http\Controllers\ConferenceDocController::class, 'downloadMedia'])->name('conference-docs.media.download');
     Route::delete('/conference-docs/{conferenceDoc}/media/{docItem}', [\App\Http\Controllers\ConferenceDocController::class, 'deleteMedia'])->name('conference-docs.media.delete');
     
-    // Conference Docs Routes for Participants (more specific routes after admin routes)
-    Route::get('/my-conference-docs', [\App\Http\Controllers\ConferenceDocController::class, 'participantIndex'])->name('participant.conference-docs.index');
-    Route::get('/my-conference-docs/{conferenceDoc}/download', [\App\Http\Controllers\ConferenceDocController::class, 'download'])->name('participant.conference-docs.download');
-    Route::get('/my-conference-docs/{conferenceDoc}/media/{docItem}/download', [\App\Http\Controllers\ConferenceDocController::class, 'downloadMedia'])->name('participant.conference-docs.media.download');
+    // Conference Docs Routes for Participants (permission-gated)
+    Route::middleware('permission:conference-docs.view')->group(function () {
+        Route::get('/my-conference-docs', [\App\Http\Controllers\ConferenceDocController::class, 'participantIndex'])->name('participant.conference-docs.index');
+        Route::get('/my-conference-docs/{conferenceDoc}/download', [\App\Http\Controllers\ConferenceDocController::class, 'download'])->name('participant.conference-docs.download');
+        Route::get('/my-conference-docs/{conferenceDoc}/media/{docItem}/download', [\App\Http\Controllers\ConferenceDocController::class, 'downloadMedia'])->name('participant.conference-docs.media.download');
+    });
     
     // Participant Notification Routes
     Route::get('/participant/notifications', [\App\Http\Controllers\NotificationController::class, 'participantIndex'])->name('participant.notifications.index');
     
-    Route::get('/admin/room-allocations', [\App\Http\Controllers\TravelController::class, 'roomAllocations'])->name('admin.room-allocations');
-    Route::get('/admin/itineraries', [\App\Http\Controllers\TravelController::class, 'itineraries'])->name('admin.itineraries');
-    Route::get('/admin/travel-conflicts', [\App\Http\Controllers\TravelController::class, 'travelConflicts'])->name('admin.travel-conflicts');
-    Route::get('/admin/export-itinerary', [\App\Http\Controllers\TravelController::class, 'exportItinerary'])->name('admin.export-itinerary');
+    Route::get('/admin/room-allocations', [\App\Http\Controllers\TravelController::class, 'roomAllocations'])
+        ->middleware('permission:travel.room_allocations.view')
+        ->name('admin.room-allocations');
+    Route::get('/admin/itineraries', [\App\Http\Controllers\TravelController::class, 'itineraries'])
+        ->middleware('permission:travel.itineraries.view')
+        ->name('admin.itineraries');
+    Route::get('/admin/travel-conflicts', [\App\Http\Controllers\TravelController::class, 'travelConflicts'])
+        ->middleware('permission:travel.travel_conflicts.view')
+        ->name('admin.travel-conflicts');
+    Route::get('/admin/export-itinerary', [\App\Http\Controllers\TravelController::class, 'exportItinerary'])
+        ->middleware('permission:travel.export_itinerary')
+        ->name('admin.export-itinerary');
     Route::post('/admin/room-allocations/{participant}', [\App\Http\Controllers\TravelController::class, 'updateRoomAllocation'])->name('admin.room-allocations.update');
     Route::get('/admin/hotels/{hotel}/rooms', [\App\Http\Controllers\TravelController::class, 'getHotelRooms'])->name('admin.hotels.rooms');
     
@@ -471,8 +521,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/admin/travel/update-participant-details/{participantId}', [\App\Http\Controllers\TravelController::class, 'updateParticipantDetails'])->name('admin.travel.update-participant-details');
     Route::post('/admin/participants/download-biographies', [\App\Http\Controllers\ParticipantController::class, 'downloadBiographies'])->name('admin.participants.download-biographies');
     
-    // Email Tracking Routes (Admin Only)
-    Route::prefix('admin/email-tracking')->name('admin.email-tracking.')->group(function () {
+    // Email Tracking Routes (Admin Only + Permission)
+    Route::prefix('admin/email-tracking')->name('admin.email-tracking.')->middleware('permission:email-tracking.view')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\EmailTrackingController::class, 'index'])->name('index');
         Route::get('/stats', [App\Http\Controllers\Admin\EmailTrackingController::class, 'stats'])->name('stats');
         Route::get('/emails', [App\Http\Controllers\Admin\EmailTrackingController::class, 'emails'])->name('emails');
@@ -489,8 +539,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/search', [App\Http\Controllers\Admin\EmailTrackingController::class, 'searchParticipantEmails'])->name('search');
     });
     
-    // Email Settings Routes (Admin Only)
-    Route::prefix('admin/settings')->name('admin.email-settings.')->group(function () {
+    // Email Settings Routes (Admin Only + Permission)
+    Route::prefix('admin/settings')->name('admin.email-settings.')->middleware('permission:email-settings.view')->group(function () {
         Route::get('email', [App\Http\Controllers\Admin\EmailSettingsController::class, 'index'])->name('index');
         Route::get('email/{type}/edit', [App\Http\Controllers\Admin\EmailSettingsController::class, 'edit'])->name('edit');
         Route::put('email/{type}', [App\Http\Controllers\Admin\EmailSettingsController::class, 'update'])->name('update');
@@ -548,7 +598,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/deletion-data', [\App\Http\Controllers\ParticipantController::class, 'getDeletionData'])->name('participants.deletion-data');
     Route::resource('venues', \App\Http\Controllers\VenueController::class);
     Route::post('/hotels', [\App\Http\Controllers\HotelController::class, 'store'])->name('hotels.store');
-    Route::resource('users', \App\Http\Controllers\UserController::class);
+    Route::resource('users', \App\Http\Controllers\UserController::class)->middleware('permission:users.view');
     Route::post('/users/{user}/activate', [\App\Http\Controllers\UserController::class, 'activate'])->name('users.activate');
     Route::post('/users/{user}/deactivate', [\App\Http\Controllers\UserController::class, 'deactivate'])->name('users.deactivate');
     
@@ -570,8 +620,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/export-itinerary', [\App\Http\Controllers\EventCoordinatorController::class, 'exportItinerary'])->name('export-itinerary');
     });
 
-    // Backup Management Routes (Admin Only)
-    Route::prefix('admin/backup')->name('admin.backup.')->group(function () {
+    // Backup Management Routes (Admin Only + Permission)
+    Route::prefix('admin/backup')->name('admin.backup.')->middleware('permission:backup.view')->group(function () {
         Route::get('/', [\App\Http\Controllers\BackupController::class, 'index'])->name('index');
         Route::post('/create', [\App\Http\Controllers\BackupController::class, 'create'])->name('create');
         
@@ -598,11 +648,11 @@ Route::get('/speaker/register', [\App\Http\Controllers\SpeakerRegistrationContro
 Route::post('/speaker/register', [\App\Http\Controllers\SpeakerRegistrationController::class, 'register']);
 Route::get('/speaker/registration/success', [\App\Http\Controllers\SpeakerRegistrationController::class, 'success'])->name('speaker.registration.success');
 
-Route::get('/guide', function () {
+Route::middleware(['auth'])->get('/how-to-use', function () {
     return view('guide');
 })->name('guide');
 
-Route::resource('roles', \App\Http\Controllers\RoleController::class)->middleware(['auth', 'verified']);
+Route::resource('roles', \App\Http\Controllers\RoleController::class)->middleware(['auth', 'verified', 'permission:roles.view']);
 Route::get('/roles/{role}/assign-users', [\App\Http\Controllers\RoleController::class, 'assignUsers'])->name('roles.assign-users');
 Route::post('/roles/{role}/assign-users', [\App\Http\Controllers\RoleController::class, 'updateUserAssignments'])->name('roles.update-user-assignments');
 
@@ -612,7 +662,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Gmail routes - Admin and Super Admin only (simplified middleware)
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'permission:gmail.view'])->group(function () {
     Route::get('/gmail', [GoogleController::class, 'showGmailThreads'])->name('gmail.index');
     Route::get('/gmail/disconnect', [GoogleController::class, 'disconnectGmail'])->name('gmail.disconnect');
     Route::get('/gmail/{threadId}/reply', [GoogleController::class, 'showReplyForm'])->name('gmail.reply');
@@ -694,9 +744,11 @@ Route::middleware(['auth', 'admin.access'])->group(function () {
     Route::get('/api/conferences', [App\Http\Controllers\ConferenceController::class, 'getConferencesForApi'])->name('api.conferences');
 });
 
-Route::get('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'show'])->name('bulk.email');
-Route::post('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'send'])->name('bulk.email.send');
-Route::get('/bulk-email/participants', [App\Http\Controllers\BulkEmailController::class, 'getParticipants'])->name('bulk.email.participants');
+Route::middleware(['auth', 'permission:bulk-email.view|bulk-email.send'])->group(function () {
+    Route::get('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'show'])->name('bulk.email');
+    Route::post('/bulk-email', [App\Http\Controllers\BulkEmailController::class, 'send'])->name('bulk.email.send');
+    Route::get('/bulk-email/participants', [App\Http\Controllers\BulkEmailController::class, 'getParticipants'])->name('bulk.email.participants');
+});
 
 // Load authentication routes if present
 if (file_exists(__DIR__.'/auth.php')) {

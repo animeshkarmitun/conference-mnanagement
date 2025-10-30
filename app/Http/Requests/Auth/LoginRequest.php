@@ -49,6 +49,18 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Check if user is active (email verified / activated by admin)
+        $user = Auth::user();
+        if (!$user || !$user->email_verified_at) {
+            // Log out the user if they're inactive
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account is inactive. Please contact an administrator to activate your account.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

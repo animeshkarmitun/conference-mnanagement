@@ -211,30 +211,28 @@
                     </a>
                     
                     <!-- Participant Profiles -->
+                    @if(auth()->user()->hasPermission('participant-profiles.view'))
                     <a href="{{ route('participant-profiles.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant-profiles.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Participant Profiles' : ''">
                         <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
                         <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">All Profiles</span>
                     </a>
+                    @endif
                     
                     
-                                         <!-- Notifications -->
-                     <a href="{{ route('participant.notifications.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant.notifications.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Notifications' : ''">
+                    <!-- Notifications -->
+                    @if(auth()->user()->hasPermission('notifications.view'))
+                    <a href="{{ route('participant.notifications.index') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('participant.notifications.*') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Notifications' : ''">
                         <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
                         <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Notifications</span>
                     </a>
+                    @endif
                     
                     
-                    <!-- Help/Support -->
-                    <a href="{{ route('guide') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 font-medium text-slate-200 group transition-all duration-200 {{ request()->routeIs('guide') ? 'active' : '' }}" :title="sidebarCollapsed ? 'Help' : ''">
-                        <svg class="w-5 h-5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">Help & Support</span>
-                    </a>
+                    
                 </nav>
                 <div class="border-t p-4">
                     <div class="flex items-center space-x-3">

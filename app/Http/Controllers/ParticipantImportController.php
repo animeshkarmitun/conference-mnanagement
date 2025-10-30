@@ -514,15 +514,9 @@ class ParticipantImportController extends Controller
                 'organization_institution' => $row['organization_institution'] ?? null,
                 'address' => $row['address'] ?? null,
             ]);
-            
-            // Assign attendee role if no roles exist
-            if (!$user->hasAnyRole()) {
-                $attendeeRole = \App\Models\Role::where('name', 'attendee')->first();
-                if ($attendeeRole) {
-                    $user->roles()->attach($attendeeRole->id);
-                }
-            }
         }
+
+        // No default role assignment during import
         
         // Check if participant already exists for this conference
         $existingParticipant = Participant::where('user_id', $user->id)
@@ -558,6 +552,7 @@ class ParticipantImportController extends Controller
             'profile_name' => $profileName,
             'profile_type' => 'personal',
         ]);
+        
         
         // Create travel details if applicable
         if (in_array($travelIntent, ['national', 'international']) && !empty($row['arrival_date']) && !empty($row['departure_date'])) {

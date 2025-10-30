@@ -12,11 +12,39 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        // Restrict all user management to admins only
+        // Permission-gated access for user management
         $this->middleware(function ($request, $next) {
-            if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
-                abort(403, 'Access denied. Admin privileges required.');
+            $user = auth()->user();
+
+            if (!$user) {
+                abort(403, 'Unauthorized');
             }
+
+            // Superadmin bypasses permission checks
+            if ($user->hasRole('superadmin')) {
+                return $next($request);
+            }
+
+            // Map controller methods to permissions
+            $action = $request->route()->getActionMethod();
+            $permissionMap = [
+                'index' => 'users.view',
+                'show' => 'users.view',
+                'create' => 'users.create',
+                'store' => 'users.create',
+                'edit' => 'users.edit',
+                'update' => 'users.edit',
+                'destroy' => 'users.delete',
+                'activate' => 'users.activate',
+                'deactivate' => 'users.deactivate',
+            ];
+
+            $needed = $permissionMap[$action] ?? 'users.view';
+
+            if (!$user->hasPermission($needed)) {
+                abort(403, 'Access denied. Missing permission: ' . $needed);
+            }
+
             return $next($request);
         });
     }
@@ -24,7 +52,9 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $status = $request->get('status', 'active'); // Default to active users
-        
+        $search = trim((string) $request->get('q', ''));
+        $roleFilter = $request->get('role');
+
         $query = User::with(['roles']);
         
         // Filter users based on status
@@ -45,7 +75,27 @@ class UserController extends Controller
                 break;
         }
         
-        $users = $query->paginate(10);
+        // Apply role filter
+        if (!empty($roleFilter) && $roleFilter !== 'all') {
+            $query->whereHas('roles', function ($q) use ($roleFilter) {
+                $q->where('id', $roleFilter);
+            });
+        }
+
+        // Apply search on name and email
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%$search%")
+                  ->orWhere('last_name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%");
+            });
+        }
+
+        $users = $query->paginate(10)->appends([
+            'status' => $status,
+            'q' => $search,
+            'role' => $roleFilter,
+        ]);
         
         // Get user counts for each category
         $userCounts = [
@@ -54,7 +104,9 @@ class UserController extends Controller
             'all' => User::count(),
         ];
         
-        return view('users.index', compact('users', 'userCounts', 'status'));
+        $roles = Role::orderBy('name')->get();
+
+        return view('users.index', compact('users', 'userCounts', 'status', 'roles', 'search', 'roleFilter'));
     }
 
     public function create()

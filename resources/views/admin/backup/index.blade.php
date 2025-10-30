@@ -1817,22 +1817,34 @@ function updateStatusIndicator(status) {
     
     switch(status) {
         case 'ready':
-            indicator.innerHTML = '<i class="fas fa-circle me-1"></i>System Ready';
-            indicator.className = 'badge bg-primary me-2';
-            storageStatus.innerHTML = '<i class="fas fa-check-circle me-1"></i>Healthy';
-            storageStatus.className = 'badge bg-success me-2';
+            if (indicator) {
+                indicator.innerHTML = '<i class="fas fa-circle me-1"></i>System Ready';
+                indicator.className = 'badge bg-primary me-2';
+            }
+            if (storageStatus) {
+                storageStatus.innerHTML = '<i class="fas fa-check-circle me-1"></i>Healthy';
+                storageStatus.className = 'badge bg-success me-2';
+            }
             break;
         case 'working':
-            indicator.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Working';
-            indicator.className = 'badge bg-warning me-2';
-            storageStatus.innerHTML = '<i class="fas fa-cog fa-spin me-1"></i>Processing';
-            storageStatus.className = 'badge bg-warning me-2';
+            if (indicator) {
+                indicator.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Working';
+                indicator.className = 'badge bg-warning me-2';
+            }
+            if (storageStatus) {
+                storageStatus.innerHTML = '<i class="fas fa-cog fa-spin me-1"></i>Processing';
+                storageStatus.className = 'badge bg-warning me-2';
+            }
             break;
         case 'error':
-            indicator.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
-            indicator.className = 'badge bg-danger me-2';
-            storageStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Warning';
-            storageStatus.className = 'badge bg-danger me-2';
+            if (indicator) {
+                indicator.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
+                indicator.className = 'badge bg-danger me-2';
+            }
+            if (storageStatus) {
+                storageStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Warning';
+                storageStatus.className = 'badge bg-danger me-2';
+            }
             break;
     }
 }

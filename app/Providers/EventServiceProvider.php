@@ -28,23 +28,27 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        Registered::class => [
-            SendEmailVerificationNotification::class,
-        ],
+        // Disable default email verification notifications to restrict non-critical emails
+        // Registered::class => [
+        //     SendEmailVerificationNotification::class,
+        // ],
         TravelEvent::class => [
             SendTravelNotification::class,
-            SendTravelEmailNotification::class,
+            // Sending travel emails disabled per restrictions
+            // SendTravelEmailNotification::class,
         ],
         TaskEvent::class => [
             SendTaskNotification::class,
-            SendTaskEmailNotification::class,
+            // Sending task emails disabled per restrictions
+            // SendTaskEmailNotification::class,
         ],
         ProfileEvent::class => [
             SendProfileNotification::class,
         ],
         SessionEvent::class => [
             SendSessionNotification::class,
-            SendSessionEmailNotification::class,
+            // Sending session emails disabled per restrictions
+            // SendSessionEmailNotification::class,
         ],
         ConferenceEvent::class => [
             SendConferenceNotification::class,

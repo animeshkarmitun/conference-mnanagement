@@ -29,7 +29,18 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        // Redirect based on user's default dashboard route
+        $user = Auth::user();
+        $dashboardRoute = $user->getDefaultDashboardRoute();
+        
+        // Use intended URL if available, otherwise use default dashboard
+        $intendedUrl = $request->session()->pull('url.intended');
+        if ($intendedUrl && str_starts_with($intendedUrl, url('/'))) {
+            // If intended URL is a valid internal URL, use it
+            return redirect()->intended($intendedUrl);
+        }
+        
+        return redirect()->route($dashboardRoute);
     }
 
     /**

@@ -700,6 +700,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
                     </th>
+                    <th class="sortable-header" data-sort="country">
+                        Country
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
                     <th class="sortable-header" data-sort="status">
                         Status
                         <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -784,6 +790,14 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                             </svg>
                             <span>{{ $participant->conference->name ?? 'Unassigned' }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($user->country ?? 'unknown') }}">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20 10 10 0 000-20zm2.5 3.5a3.5 3.5 0 010 7 3.5 3.5 0 010-7zM6 12a6 6 0 0012 0"></path>
+                            </svg>
+                            <span>{{ $user->country ?? '-' }}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ ucfirst($participant->registration_status) }}" data-sort-priority="{{ $statusPriority }}">
@@ -954,7 +968,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Sorting functionality
     const table = document.getElementById('participantsTable');
     const tbody = table.querySelector('tbody');
-    const headers = table.querySelectorAll('.sortable-header');
+    // Only target headers that actually have a data-sort attribute
+    const headers = table.querySelectorAll('.sortable-header[data-sort]');
     
     let currentSort = {
         column: null,
@@ -1032,7 +1047,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return parseInt(cell.getAttribute('data-sort-priority'));
         }
         
-        return cell.getAttribute('data-sort-value');
+        const val = cell.getAttribute('data-sort-value');
+        return (val === null || val === undefined) ? '' : String(val);
     }
     
     function getColumnIndex(column) {
@@ -1042,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'email': 3,
             'type': 4,
             'organization': 5,
+            'conference': 5,
             'status': 6,
             'visa_status': 7
         };
@@ -1049,9 +1066,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateSortIndicators(activeColumn, direction) {
-        // Reset all sort icons
+        // Reset all sort icons (skip headers without an icon)
         headers.forEach(header => {
             const icon = header.querySelector('.sort-icon');
+            if (!icon) return;
             icon.classList.remove('active', 'asc', 'desc');
             icon.style.color = '#9ca3af'; // gray-400
         });
@@ -1060,8 +1078,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const activeHeader = table.querySelector(`[data-sort="${activeColumn}"]`);
         if (activeHeader) {
             const icon = activeHeader.querySelector('.sort-icon');
-            icon.classList.add('active', direction);
-            icon.style.color = '#3b82f6'; // blue-500
+            if (icon) {
+                icon.classList.add('active', direction);
+                icon.style.color = '#3b82f6'; // blue-500
+            }
         }
     }
     

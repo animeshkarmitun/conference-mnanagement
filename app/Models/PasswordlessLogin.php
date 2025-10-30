@@ -55,6 +55,24 @@ class PasswordlessLogin extends Model
     }
 
     /**
+     * Create a new passwordless login token with an explicit expiration timestamp
+     */
+    public static function createForUserWithExpiry(User $user, Carbon $expiresAt): self
+    {
+        // Clean up any existing tokens for this user
+        self::where('user_id', $user->id)
+            ->where('expires_at', '<', now())
+            ->delete();
+
+        return self::create([
+            'user_id' => $user->id,
+            'token' => self::generateToken(),
+            'expires_at' => $expiresAt,
+            'use_count' => 0,
+        ]);
+    }
+
+    /**
      * Check if token is valid and not expired
      */
     public function isValid(): bool

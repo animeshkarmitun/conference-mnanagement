@@ -231,6 +231,29 @@
             </a>
         </nav>
     </div>
+    <!-- Search and Filters -->
+    <div class="px-6 py-4 border-t border-slate-100">
+        <form method="GET" action="{{ route('users.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="hidden" name="status" value="{{ $status }}">
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Search</label>
+                <input type="text" name="q" value="{{ $search ?? '' }}" placeholder="Search by name or email" class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Role</label>
+                <select name="role" class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="all">All roles</option>
+                    @foreach(($roles ?? []) as $r)
+                        <option value="{{ $r->id }}" {{ (isset($roleFilter) && (string)$roleFilter === (string)$r->id) ? 'selected' : '' }}>{{ $r->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="modern-primary px-4 py-2 rounded-lg font-semibold shadow">Apply</button>
+                <a href="{{ route('users.index', ['status' => $status]) }}" class="modern-secondary px-4 py-2 rounded-lg font-semibold shadow">Clear</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Enhanced User Table -->
@@ -442,7 +465,7 @@
     </div>
     
     <div class="mt-6">
-        {{ $users->appends(['status' => $status])->links() }}
+        {{ $users->appends(['status' => $status, 'q' => $search ?? null, 'role' => $roleFilter ?? null])->links() }}
     </div>
 </div>
 

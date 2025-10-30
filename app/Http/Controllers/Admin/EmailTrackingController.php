@@ -30,6 +30,10 @@ class EmailTrackingController extends Controller
         $recipientEmail = $request->get('recipient_email');
         $role = $request->get('role');
         $type = $request->get('type');
+        $subject = $request->get('subject');
+        $status = $request->get('status');
+        $sortBy = $request->get('sort_by');
+        $sortDir = $request->get('sort_dir', 'desc');
         
         $conferences = Conference::orderBy('name')->get();
         $roles = Role::orderBy('name')->get();
@@ -40,7 +44,18 @@ class EmailTrackingController extends Controller
         $statsByType = $this->emailTrackingService->getEmailStatsByType($conferenceId, $days);
 
         // Get recent emails
-        $emails = $this->emailTrackingService->getRecentEmails(20, $conferenceId, null, $recipientEmail, $role, $type);
+        $emails = $this->emailTrackingService->getRecentEmails(
+            20,
+            $conferenceId,
+            null,
+            $recipientEmail,
+            $role,
+            $type,
+            $subject,
+            $status,
+            $sortBy,
+            $sortDir
+        );
 
         return view('admin.email-tracking.index', compact(
             'conferences',
@@ -53,7 +68,11 @@ class EmailTrackingController extends Controller
             'days',
             'recipientEmail',
             'role',
-            'type'
+            'type',
+            'subject',
+            'status',
+            'sortBy',
+            'sortDir'
         ));
     }
 

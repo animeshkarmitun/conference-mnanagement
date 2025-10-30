@@ -14,11 +14,42 @@ class SessionController extends Controller
 {
     public function __construct()
     {
-        // Restrict all session management to admins only
+        // Permission-gated access for sessions
         $this->middleware(function ($request, $next) {
-            if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
-                abort(403, 'Access denied. Admin privileges required.');
+            $user = auth()->user();
+            if (!$user) {
+                abort(403, 'Unauthorized');
             }
+
+            if ($user->hasRole('superadmin')) {
+                return $next($request);
+            }
+
+            $action = $request->route()->getActionMethod();
+            $permissionMap = [
+                'index' => 'sessions.view',
+                'show' => 'sessions.view',
+                'create' => 'sessions.create',
+                'store' => 'sessions.create',
+                'edit' => 'sessions.edit',
+                'update' => 'sessions.edit',
+                'destroy' => 'sessions.delete',
+                'publish' => 'sessions.publish',
+                'export' => 'sessions.export',
+                'resendEmail' => 'sessions.view',
+                'resendEmailToParticipant' => 'sessions.view',
+                'resendEmailToAll' => 'sessions.view',
+                'getParticipantsByConference' => 'sessions.view',
+                'autoSaveDraft' => 'sessions.edit',
+                'checkParticipantConflicts' => 'sessions.view',
+                'testConflictDetection' => 'sessions.view',
+            ];
+
+            $needed = $permissionMap[$action] ?? 'sessions.view';
+            if (!$user->hasPermission($needed)) {
+                abort(403, 'Access denied. Missing permission: ' . $needed);
+            }
+
             return $next($request);
         });
     }
