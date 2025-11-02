@@ -410,45 +410,9 @@
 
 <!-- Enhanced Search and Secondary Filters -->
 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100 animate-fade-in-up animate-delay-2">
+    <!-- First Row: Conference, Country, Visa Status, and Participant Type Filters -->
     <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
-        <!-- Enhanced Search Bar -->
-        <div class="flex-1 max-w-md">
-            <form method="GET" action="{{ route('participants.index') }}" class="flex">
-                <input type="hidden" name="status" value="{{ $status }}">
-                @if(request()->has('conference_id'))
-                    <input type="hidden" name="conference_id" value="{{ request('conference_id') }}">
-                @endif
-                <div class="relative flex-1">
-                    <input type="text" 
-                           name="search" 
-                           value="{{ $search }}" 
-                           placeholder="Search participants by name, email, organization, or serial number..."
-                           class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <button type="submit" class="ml-3 bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    Search
-                </button>
-                @if($search)
-                    <a href="{{ route('participants.index', array_merge(request()->except('search'), ['status' => $status])) }}" class="ml-3 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
-                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                        Clear
-                    </a>
-                @endif
-            </form>
-        </div>
-        
-        <!-- Enhanced Secondary Filter Tabs -->
-        <div class="flex gap-3 flex-shrink-0">
+        <div class="flex gap-3 items-center">
             <!-- Conference Filter -->
             <div class="flex items-center gap-2">
                 <label for="conference_search" class="text-sm text-gray-600">Conference</label>
@@ -490,6 +454,49 @@
                     <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
                 </div>
             </div>
+            
+            <!-- Country Filter -->
+            <div class="flex items-center gap-2">
+                <label for="country_search" class="text-sm text-gray-600">Country</label>
+                <div class="relative">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="country_search" 
+                            placeholder="Search countries..." 
+                            class="w-64 rounded-lg border-gray-300 text-sm focus:ring-green-500 focus:border-green-500 pr-16"
+                            autocomplete="off"
+                        >
+                        <button 
+                            type="button" 
+                            id="clear_country_filter" 
+                            class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                            title="Clear selection"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <button 
+                            type="button" 
+                            id="country_dropdown_toggle" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            title="Show all countries"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="country_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
+                        <div id="country_options" class="py-1">
+                            <!-- Options will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <input type="hidden" id="country_filter" name="country_filter" value="{{ request('country_filter') }}">
+                </div>
+            </div>
+            
             <!-- Visa Status Filter -->
             <div class="relative group">
                 <button class="filter-dropdown {{ request()->has('visa_filter') ? 'bg-blue-200 text-blue-800 border-blue-300' : 'bg-blue-100 hover:bg-blue-200 text-blue-700' }} px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm" onclick="toggleDropdown('visa-dropdown')">
@@ -582,8 +589,8 @@
             </div>
             
             <!-- Clear Filters Button -->
-            @if(request()->has('visa_filter') || request()->has('type'))
-                <a href="{{ route('participants.index', request()->except(['visa_filter', 'type'])) }}" 
+            @if(request()->has('visa_filter') || request()->has('type') || request()->has('country_filter'))
+                <a href="{{ route('participants.index', request()->except(['visa_filter', 'type', 'country_filter'])) }}" 
                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-gray-200 shadow-sm">
                     <div class="flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -593,6 +600,48 @@
                     </div>
                 </a>
             @endif
+        </div>
+    </div>
+    
+    <!-- Second Row: Search Input -->
+    <div class="flex flex-col xl:flex-row gap-6 items-center justify-between mt-4 pt-4 border-t border-gray-200">
+        <!-- Enhanced Search Bar -->
+        <div class="flex-1 max-w-xl">
+            <form method="GET" action="{{ route('participants.index') }}" class="flex">
+                <input type="hidden" name="status" value="{{ $status }}">
+                @if(request()->has('conference_id'))
+                    <input type="hidden" name="conference_id" value="{{ request('conference_id') }}">
+                @endif
+                @if(request()->has('country_filter'))
+                    <input type="hidden" name="country_filter" value="{{ request('country_filter') }}">
+                @endif
+                <div class="relative flex-1">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ $search }}" 
+                           placeholder="Search participants by name, email, organization, or serial number..."
+                           class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <button type="submit" class="ml-3 bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Search
+                </button>
+                @if($search)
+                    <a href="{{ route('participants.index', array_merge(request()->except('search'), ['status' => $status])) }}" class="ml-3 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear
+                    </a>
+                @endif
+            </form>
         </div>
     </div>
 </div>
@@ -1497,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.relative')) {
+            if (!e.target.closest('#conference_search') && !e.target.closest('#conference_dropdown') && !e.target.closest('#clear_conference') && !e.target.closest('#dropdown_toggle')) {
                 conferenceDropdown.classList.add('hidden');
                 isDropdownOpen = false;
             }
@@ -1506,6 +1555,233 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize conference search
     initConferenceSearch();
+    
+    // ===================== Country Search Functions =====================
+    
+    // Comprehensive list of countries
+    const countries = [
+        "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", 
+        "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", 
+        "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", 
+        "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+        "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", 
+        "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", 
+        "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", 
+        "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", 
+        "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", 
+        "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", 
+        "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", 
+        "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", 
+        "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", 
+        "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", 
+        "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", 
+        "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", 
+        "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+        "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", 
+        "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", 
+        "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", 
+        "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", 
+        "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", 
+        "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+    ];
+    
+    // Country search functionality
+    const countrySearch = document.getElementById('country_search');
+    const countryDropdown = document.getElementById('country_dropdown');
+    const countryOptions = document.getElementById('country_options');
+    const countryFilterInput = document.getElementById('country_filter');
+    const clearCountryBtn = document.getElementById('clear_country_filter');
+    const countryDropdownToggle = document.getElementById('country_dropdown_toggle');
+    
+    let selectedCountry = null;
+    let filteredCountries = [];
+    let isCountryDropdownOpen = false;
+    
+    // Filter countries based on search query
+    function filterCountries(query) {
+        if (!query.trim()) {
+            return countries;
+        }
+        const lowerQuery = query.toLowerCase();
+        return countries.filter(country => 
+            country.toLowerCase().includes(lowerQuery)
+        );
+    }
+    
+    // Render country options in dropdown
+    function renderCountryOptions(countryList) {
+        countryOptions.innerHTML = '';
+        
+        if (countryList.length === 0) {
+            countryOptions.innerHTML = `
+                <div class="px-4 py-2 text-sm text-gray-500">
+                    No countries found
+                </div>
+            `;
+            return;
+        }
+        
+        countryList.forEach(country => {
+            const option = document.createElement('div');
+            option.className = 'px-4 py-2 text-sm cursor-pointer hover:bg-green-50 transition-colors duration-150';
+            option.textContent = country;
+            option.dataset.name = country;
+            
+            option.addEventListener('click', () => {
+                selectCountry(country);
+            });
+            
+            countryOptions.appendChild(option);
+        });
+    }
+    
+    // Select a country
+    function selectCountry(country) {
+        selectedCountry = country;
+        countrySearch.value = country;
+        countryFilterInput.value = country;
+        clearCountryBtn.classList.remove('hidden');
+        countryDropdown.classList.add('hidden');
+        isCountryDropdownOpen = false;
+        
+        // Submit the form to filter participants
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = '{{ route("participants.index") }}';
+        
+        // Add all current query parameters except country_filter
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.delete('country_filter');
+        currentParams.set('country_filter', country);
+        
+        // Add all parameters as hidden inputs
+        for (const [key, value] of currentParams.entries()) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+    
+    // Clear country selection
+    function clearCountry() {
+        selectedCountry = null;
+        countrySearch.value = '';
+        countryFilterInput.value = '';
+        clearCountryBtn.classList.add('hidden');
+        countryDropdown.classList.add('hidden');
+        isCountryDropdownOpen = false;
+        
+        // Submit the form to remove country filter
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = '{{ route("participants.index") }}';
+        
+        // Add all current query parameters except country_filter
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.delete('country_filter');
+        
+        // Add all parameters as hidden inputs
+        for (const [key, value] of currentParams.entries()) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+    
+    // Toggle country dropdown
+    function toggleCountryDropdown() {
+        if (isCountryDropdownOpen) {
+            countryDropdown.classList.add('hidden');
+            isCountryDropdownOpen = false;
+        } else {
+            const query = countrySearch.value.trim();
+            if (query) {
+                filteredCountries = filterCountries(query);
+                renderCountryOptions(filteredCountries);
+            } else {
+                renderCountryOptions(countries);
+            }
+            countryDropdown.classList.remove('hidden');
+            isCountryDropdownOpen = true;
+        }
+    }
+    
+    // Initialize country search
+    async function initCountrySearch() {
+        // Initialize with current selection
+        const currentCountry = countryFilterInput.value;
+        if (currentCountry) {
+            selectedCountry = currentCountry;
+            countrySearch.value = currentCountry;
+            clearCountryBtn.classList.remove('hidden');
+        }
+        
+        // Event listeners
+        if (countrySearch) {
+            countrySearch.addEventListener('input', function() {
+                const query = this.value;
+                filteredCountries = filterCountries(query);
+                
+                if (query.trim() && filteredCountries.length > 0) {
+                    renderCountryOptions(filteredCountries);
+                    countryDropdown.classList.remove('hidden');
+                    isCountryDropdownOpen = true;
+                } else if (query.trim() && filteredCountries.length === 0) {
+                    renderCountryOptions([]);
+                    countryDropdown.classList.remove('hidden');
+                    isCountryDropdownOpen = true;
+                } else {
+                    countryDropdown.classList.add('hidden');
+                    isCountryDropdownOpen = false;
+                }
+            });
+            
+            countrySearch.addEventListener('focus', function() {
+                if (this.value.trim()) {
+                    filteredCountries = filterCountries(this.value);
+                    renderCountryOptions(filteredCountries);
+                    countryDropdown.classList.remove('hidden');
+                    isCountryDropdownOpen = true;
+                }
+            });
+            
+            countrySearch.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    countryDropdown.classList.add('hidden');
+                    isCountryDropdownOpen = false;
+                }
+            });
+        }
+        
+        if (clearCountryBtn) {
+            clearCountryBtn.addEventListener('click', clearCountry);
+        }
+        
+        if (countryDropdownToggle) {
+            countryDropdownToggle.addEventListener('click', toggleCountryDropdown);
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#country_search') && !e.target.closest('#country_dropdown') && !e.target.closest('#clear_country_filter') && !e.target.closest('#country_dropdown_toggle')) {
+                countryDropdown.classList.add('hidden');
+                isCountryDropdownOpen = false;
+            }
+        });
+    }
+    
+    // Initialize country search
+    initCountrySearch();
 });
 
 // Dropdown toggle function

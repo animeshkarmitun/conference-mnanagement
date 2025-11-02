@@ -65,6 +65,13 @@ class ParticipantController extends Controller
             });
         }
         
+        // Country filtering
+        if ($request->has('country_filter')) {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('country', $request->country_filter);
+            });
+        }
+        
         // Get counts for tabs (scoped only by conference filter)
         $countsScope = Participant::query();
         if ($conferenceId) {
@@ -91,6 +98,20 @@ class ParticipantController extends Controller
         $participantTypes = ParticipantType::all();
         foreach ($participantTypes as $type) {
             $typeCounts[$type->name] = (clone $countsScope)->where('participant_type_id', $type->id)->count();
+        }
+        
+        // Get country counts (scoped by conference if specified)
+        $countryCountsQuery = (clone $countsScope)->join('users', 'participants.user_id', '=', 'users.id')
+            ->whereNotNull('users.country')
+            ->whereRaw("TRIM(users.country) <> ''")
+            ->select('users.country', DB::raw('count(*) as count'))
+            ->groupBy('users.country')
+            ->orderBy('count', 'desc')
+            ->get();
+        
+        $countryCounts = [];
+        foreach ($countryCountsQuery as $countryData) {
+            $countryCounts[$countryData->country] = $countryData->count;
         }
         
         // Handle CSV export
@@ -149,7 +170,7 @@ class ParticipantController extends Controller
         // Conferences list for filter (adjust for permissions if needed)
         $conferences = Conference::orderBy('start_date', 'desc')->get();
 
-        return view('participants.index', compact('participants', 'counts', 'visaCounts', 'typeCounts', 'participantTypes', 'status', 'search', 'conferences', 'conferenceId'));
+        return view('participants.index', compact('participants', 'counts', 'visaCounts', 'typeCounts', 'countryCounts', 'participantTypes', 'status', 'search', 'conferences', 'conferenceId'));
     }
 
     // Show create form
