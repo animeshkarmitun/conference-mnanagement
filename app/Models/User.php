@@ -359,4 +359,235 @@ class User extends Authenticatable
         // This will show a dashboard based on their permissions
         return 'role-dashboard';
     }
+
+    /**
+     * Check if user role has permission for a route
+     * 
+     * @param string $routeName Route name (e.g., 'conferences.index') or route path
+     * @param \Illuminate\Http\Request|null $request Optional request object for extracting route info
+     * @return bool
+     */
+    public function canAccessRoute(string $routeName = null, $request = null): bool
+    {
+        // Superadmins have access to everything
+        if ($this->hasRole('superadmin')) {
+            return true;
+        }
+
+        // If no route name provided, try to get it from request
+        if ($routeName === null && $request) {
+            $route = $request->route();
+            $routeName = $route ? $route->getName() : null;
+        }
+
+        // If still no route name, cannot determine permission
+        if ($routeName === null) {
+            return false;
+        }
+
+        // Extract permission required for this route
+        $requiredPermission = $this->getPermissionForRoute($routeName);
+        
+        if ($requiredPermission === null) {
+            // If no specific permission mapping found, deny by default for security
+            // You can modify this behavior based on your requirements
+            return false;
+        }
+
+        // Check if user has the required permission
+        return $this->hasPermission($requiredPermission);
+    }
+
+    /**
+     * Get the required permission for a given route name
+     * 
+     * @param string $routeName
+     * @return string|null
+     */
+    protected function getPermissionForRoute(string $routeName): ?string
+    {
+        // Route name to permission mapping
+        $routePermissionMap = [
+            // Conference routes
+            'conferences.index' => 'conferences.view',
+            'conferences.show' => 'conferences.view',
+            'conferences.create' => 'conferences.create',
+            'conferences.store' => 'conferences.create',
+            'conferences.edit' => 'conferences.edit',
+            'conferences.update' => 'conferences.edit',
+            'conferences.destroy' => 'conferences.delete',
+            'conferences.export' => 'conferences.export',
+            'conferences.check-conflicts' => 'conferences.view',
+            'conferences.conflicts' => 'conferences.view',
+            'conferences.resolve-conflict' => 'conferences.edit',
+
+            // Participant routes
+            'participants.index' => 'participants.view',
+            'participants.show' => 'participants.view',
+            'participants.create' => 'participants.create',
+            'participants.store' => 'participants.create',
+            'participants.edit' => 'participants.edit',
+            'participants.update' => 'participants.edit',
+            'participants.destroy' => 'participants.delete',
+            'participants.import.form' => 'participants.import.view',
+            'participants.import.process' => 'participants.import.process',
+            'participants.import.sample' => 'participants.import.sample',
+
+            // Session routes
+            'sessions.index' => 'sessions.view',
+            'sessions.show' => 'sessions.view',
+            'sessions.create' => 'sessions.create',
+            'sessions.store' => 'sessions.create',
+            'sessions.edit' => 'sessions.edit',
+            'sessions.update' => 'sessions.edit',
+            'sessions.destroy' => 'sessions.delete',
+            'sessions.export' => 'sessions.export',
+            'sessions.publish' => 'sessions.publish',
+            'sessions.resend-email' => 'sessions.resend_email',
+
+            // Task routes
+            'tasks.index' => 'tasks.view',
+            'tasks.show' => 'tasks.view',
+            'tasks.create' => 'tasks.create',
+            'tasks.store' => 'tasks.create',
+            'tasks.edit' => 'tasks.edit',
+            'tasks.update' => 'tasks.edit',
+            'tasks.destroy' => 'tasks.delete',
+            'tasks.export' => 'tasks.export',
+            'tasks.update-status' => 'tasks.update_status',
+
+            // Notification routes
+            'notifications.index' => 'notifications.view',
+            'notifications.show' => 'notifications.view',
+            'notifications.create' => 'notifications.create',
+            'notifications.store' => 'notifications.create',
+            'notifications.mark-read' => 'notifications.mark_read',
+            'notifications.mark-all-read' => 'notifications.mark_read',
+
+            // User routes
+            'users.index' => 'users.view',
+            'users.show' => 'users.view',
+            'users.create' => 'users.create',
+            'users.store' => 'users.create',
+            'users.edit' => 'users.edit',
+            'users.update' => 'users.edit',
+            'users.destroy' => 'users.delete',
+            'users.activate' => 'users.activate',
+            'users.deactivate' => 'users.deactivate',
+
+            // Role routes
+            'roles.index' => 'roles.view',
+            'roles.show' => 'roles.view',
+            'roles.create' => 'roles.create',
+            'roles.store' => 'roles.create',
+            'roles.edit' => 'roles.edit',
+            'roles.update' => 'roles.edit',
+            'roles.destroy' => 'roles.delete',
+            'roles.assign-users' => 'roles.assign_users',
+            'roles.update-user-assignments' => 'roles.assign_users',
+
+            // Conference Docs routes
+            'conference-docs.index' => 'conference-docs.view',
+            'conference-docs.show' => 'conference-docs.view',
+            'conference-docs.create' => 'conference-docs.create',
+            'conference-docs.store' => 'conference-docs.create',
+            'conference-docs.edit' => 'conference-docs.edit',
+            'conference-docs.update' => 'conference-docs.edit',
+            'conference-docs.destroy' => 'conference-docs.delete',
+            'conference-docs.media.upload' => 'conference-docs.media.upload',
+            'conference-docs.media.download' => 'conference-docs.media.download',
+            'participant.conference-docs.index' => 'conference-docs.view',
+            'participant.conference-docs.download' => 'conference-docs.media.download',
+
+            // Gmail routes
+            'gmail.index' => 'gmail.view',
+            'gmail.disconnect' => 'gmail.disconnect',
+            'gmail.reply' => 'gmail.reply',
+            'gmail.send-reply' => 'gmail.send_reply',
+            'gmail.participants' => 'gmail.participants',
+
+            // Bulk Email routes
+            'bulk.email' => 'bulk-email.view',
+            'bulk.email.send' => 'bulk-email.send',
+            'bulk.email.participants' => 'bulk-email.participants',
+
+            // Backup routes
+            'admin.backup.index' => 'backup.view',
+            'admin.backup.create' => 'backup.create',
+            'admin.backup.restore' => 'backup.restore',
+            'admin.backup.destroy' => 'backup.delete',
+            'admin.backup.cleanup' => 'backup.cleanup',
+
+            // Email Tracking routes
+            'admin.email-tracking.index' => 'email-tracking.view',
+            'admin.email-tracking.stats' => 'email-tracking.stats',
+            'admin.email-tracking.emails' => 'email-tracking.emails',
+            'admin.email-tracking.show' => 'email-tracking.show',
+            'admin.email-tracking.resend' => 'email-tracking.resend',
+            'admin.email-tracking.destroy' => 'email-tracking.delete',
+            'admin.email-tracking.export' => 'email-tracking.export',
+
+            // Email Settings routes
+            'admin.email-settings.index' => 'email-settings.view',
+            'admin.email-settings.edit' => 'email-settings.edit',
+            'admin.email-settings.update' => 'email-settings.update',
+            'admin.email-settings.preview' => 'email-settings.preview',
+            'admin.email-settings.test' => 'email-settings.test',
+            'admin.email-settings.reset' => 'email-settings.reset',
+
+            // Travel routes
+            'admin.itineraries' => 'travel.itineraries.view',
+            'admin.export-itinerary' => 'travel.export_itinerary',
+            'admin.room-allocations' => 'travel.room_allocations.view',
+            'admin.travel-conflicts' => 'travel.travel_conflicts.view',
+
+            // Passwordless Login routes
+            'passwordless-login.admin.index' => 'passwordless-login.admin.view',
+            'passwordless-login.generate' => 'passwordless-login.generate',
+            'passwordless-login.generate.bulk' => 'passwordless-login.generate_bulk',
+            'passwordless-login.participants' => 'passwordless-login.participants',
+            'passwordless-login.user.links' => 'passwordless-login.user.links',
+            'passwordless-login.user.revoke' => 'passwordless-login.user.revoke',
+            'passwordless-login.cleanup' => 'passwordless-login.cleanup',
+        ];
+
+        // Check direct mapping first
+        if (isset($routePermissionMap[$routeName])) {
+            return $routePermissionMap[$routeName];
+        }
+
+        // Try pattern-based matching for resource routes
+        // Format: resource.action => resource.permission_type
+        $parts = explode('.', $routeName);
+        if (count($parts) >= 2) {
+            $resource = $parts[0];
+            $action = $parts[1];
+
+            // Map common RESTful actions to permissions
+            $actionPermissionMap = [
+                'index' => 'view',
+                'show' => 'view',
+                'create' => 'create',
+                'store' => 'create',
+                'edit' => 'edit',
+                'update' => 'edit',
+                'destroy' => 'delete',
+            ];
+
+            if (isset($actionPermissionMap[$action])) {
+                $permission = $resource . '.' . $actionPermissionMap[$action];
+                
+                // Check if this permission exists in config
+                $configPermissions = config('permissions');
+                $resourceKey = str_replace('-', '_', $resource);
+                
+                // Try to validate if permission exists in config
+                // This is a fallback for standard RESTful routes
+                return $permission;
+            }
+        }
+
+        // No mapping found
+        return null;
+    }
 }

@@ -806,8 +806,16 @@ class ConferenceController extends Controller
     /**
      * Get conferences for API (used by passwordless login modal)
      */
-    public function getConferencesForApi()
+    public function getConferencesForApi(Request $request)
     {
+        // Check if user has passwordless-login admin permission
+        if (!auth()->user()->hasPermission('passwordless-login.admin.view')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access denied. Admin privileges required.'
+            ], 403);
+        }
+        
         // Skip the constructor middleware for this API method
         $conferences = Conference::orderBy('name')->get(['id', 'name', 'start_date', 'end_date']);
         

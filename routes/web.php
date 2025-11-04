@@ -404,9 +404,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/conferences/conflicts/{conflictId}/resolve', [\App\Http\Controllers\ConferenceController::class, 'resolveConflict'])->name('conferences.resolve-conflict');
     
     // Bulk Import routes for participants (MUST be before resource route to avoid route conflicts)
-    Route::get('/participants/import/sample', [\App\Http\Controllers\ParticipantImportController::class, 'downloadSample'])->name('participants.import.sample');
-    Route::get('/participants/import', [\App\Http\Controllers\ParticipantImportController::class, 'showImportForm'])->name('participants.import.form');
-    Route::post('/participants/import', [\App\Http\Controllers\ParticipantImportController::class, 'processImport'])->name('participants.import.process');
+    Route::get('/participants/import/sample', [\App\Http\Controllers\ParticipantImportController::class, 'downloadSample'])
+        ->middleware('permission:participants.import.sample')
+        ->name('participants.import.sample');
+    Route::get('/participants/import', [\App\Http\Controllers\ParticipantImportController::class, 'showImportForm'])
+        ->middleware('permission:participants.import.view')
+        ->name('participants.import.form');
+    Route::post('/participants/import', [\App\Http\Controllers\ParticipantImportController::class, 'processImport'])
+        ->middleware('permission:participants.import.process')
+        ->name('participants.import.process');
     
     // Participant routes (excluding edit and update which are admin-only)
     Route::resource('participants', \App\Http\Controllers\ParticipantController::class)->except(['edit', 'update'])->middleware('permission:participants.view');
@@ -738,7 +744,7 @@ Route::get('/test-roles', function() {
 // Route::get('/dashboard', [GoogleController::class, 'showDashboard'])->name('dashboard');
 
 // Passwordless Login API Routes
-Route::middleware(['auth', 'admin.access'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/api/sessions', [App\Http\Controllers\SessionController::class, 'getSessions']);
     Route::post('/api/sessions/participants', [App\Http\Controllers\SessionController::class, 'getSessionParticipants']);
     Route::get('/api/conferences', [App\Http\Controllers\ConferenceController::class, 'getConferencesForApi'])->name('api.conferences');

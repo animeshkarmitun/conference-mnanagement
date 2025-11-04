@@ -619,13 +619,22 @@ async function loadConferences() {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
             },
             credentials: 'same-origin'
         });
+        
+        // Check if response is successful
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Failed to load conferences' }));
+            console.error('Error loading conferences:', errorData.message || `HTTP ${response.status}`);
+            return;
+        }
+        
         const data = await response.json();
         
-        if (data.conferences) {
+        if (data.success && data.conferences) {
             allConferences = data.conferences;
             
             // Update bulk conference select

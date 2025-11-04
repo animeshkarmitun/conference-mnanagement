@@ -79,6 +79,8 @@ class RoleSeeder extends Seeder
                     'travel.room_allocations.view', 'travel.itineraries.view', 'travel.travel_conflicts.view',
                     // Reference data (read)
                     'venues.view', 'hotels.view', 'room-types.view',
+                    // Passwordless login admin
+                    'passwordless-login.*',
                 ],
             ],
             [

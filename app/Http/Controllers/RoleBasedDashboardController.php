@@ -7,11 +7,18 @@ use App\Models\Participant;
 use App\Models\Session;
 use App\Models\Task;
 use App\Models\Notification;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class RoleBasedDashboardController extends Controller
 {
+    protected $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
     /**
      * Display the role-based dashboard
      * Shows different widgets and data based on user's permissions
@@ -42,6 +49,7 @@ class RoleBasedDashboardController extends Controller
         // Load data based on permissions
         
         // Conference-related data
+        $selectedConferenceId = null;
         if ($user->hasPermission('conferences.view')) {
             $conferences = Conference::orderBy('start_date', 'desc')->get();
             $dashboardData['conferences'] = $conferences;
@@ -54,6 +62,16 @@ class RoleBasedDashboardController extends Controller
             if ($selectedConferenceId) {
                 $conference = Conference::find($selectedConferenceId);
                 $dashboardData['selectedConference'] = $conference;
+            }
+        }
+        
+        // Get dashboard data for the selected conference if user has participants permission
+        if ($user->hasPermission('participants.view') && $selectedConferenceId) {
+            try {
+                $dashboardData['dashboardStats'] = $this->dashboardService->getAllDashboardData($selectedConferenceId);
+            } catch (\Exception $e) {
+                // If there's an error, set empty dashboard data
+                $dashboardData['dashboardStats'] = null;
             }
         }
         

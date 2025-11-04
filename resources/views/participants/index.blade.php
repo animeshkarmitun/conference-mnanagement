@@ -410,204 +410,186 @@
 
 <!-- Enhanced Search and Secondary Filters -->
 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100 animate-fade-in-up animate-delay-2">
-    <!-- First Row: Conference, Country, Visa Status, and Participant Type Filters -->
-    <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
-        <div class="flex gap-3 items-center">
-            <!-- Conference Filter -->
-            <div class="flex items-center gap-2">
-                <label for="conference_search" class="text-sm text-gray-600">Conference</label>
+    <!-- First Row: Conference, Country, Visa Status, Participant Type, and Search -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 items-center">
+        <!-- Conference Filter -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label for="conference_search" class="text-sm text-gray-600 whitespace-nowrap">Conference</label>
+            <div class="relative flex-1 min-w-0">
                 <div class="relative">
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="conference_search" 
-                            placeholder="Search conferences..." 
-                            class="w-64 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-16"
-                            autocomplete="off"
-                        >
-                        <button 
-                            type="button" 
-                            id="clear_conference" 
-                            class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
-                            title="Clear selection"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                        <button 
-                            type="button" 
-                            id="dropdown_toggle" 
-                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            title="Show all conferences"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div id="conference_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
-                        <div id="conference_options" class="py-1">
-                            <!-- Options will be populated by JavaScript -->
-                        </div>
-                    </div>
-                    <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
-                </div>
-            </div>
-            
-            <!-- Country Filter -->
-            <div class="flex items-center gap-2">
-                <label for="country_search" class="text-sm text-gray-600">Country</label>
-                <div class="relative">
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="country_search" 
-                            placeholder="Search countries..." 
-                            class="w-64 rounded-lg border-gray-300 text-sm focus:ring-green-500 focus:border-green-500 pr-16"
-                            autocomplete="off"
-                        >
-                        <button 
-                            type="button" 
-                            id="clear_country_filter" 
-                            class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
-                            title="Clear selection"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                        <button 
-                            type="button" 
-                            id="country_dropdown_toggle" 
-                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            title="Show all countries"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div id="country_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
-                        <div id="country_options" class="py-1">
-                            <!-- Options will be populated by JavaScript -->
-                        </div>
-                    </div>
-                    <input type="hidden" id="country_filter" name="country_filter" value="{{ request('country_filter') }}">
-                </div>
-            </div>
-            
-            <!-- Visa Status Filter -->
-            <div class="relative group">
-                <button class="filter-dropdown {{ request()->has('visa_filter') ? 'bg-blue-200 text-blue-800 border-blue-300' : 'bg-blue-100 hover:bg-blue-200 text-blue-700' }} px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm" onclick="toggleDropdown('visa-dropdown')">
-                    <div class="flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Visa Status
-                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </div>
-                </button>
-                <div id="visa-dropdown" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                    <div class="py-2">
-                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Visa Status</div>
-                        <a href="{{ route('participants.index', request()->except(['visa_filter'])) }}" 
-                           class="block px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <span>All Visa Statuses</span>
-                                <span class="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['required'] + $visaCounts['approved'] + $visaCounts['pending'] + $visaCounts['issue'] + $visaCounts['not_required'] }}</span>
-                            </div>
-                        </a>
-                        <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'required'])) }}" 
-                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
-                            <div class="flex items-center justify-between">
-                                <span>Required</span>
-                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['required'] }}</span>
-                            </div>
-                        </a>
-                        <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'approved'])) }}" 
-                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-green-50 transition-colors duration-200">
-                            <div class="flex items-center justify-between">
-                                <span>Approved</span>
-                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['approved'] }}</span>
-                            </div>
-                        </a>
-                        <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'pending'])) }}" 
-                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-yellow-50 transition-colors duration-200">
-                            <div class="flex items-center justify-between">
-                                <span>Pending</span>
-                                <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['pending'] }}</span>
-                            </div>
-                        </a>
-                        <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'issue'])) }}" 
-                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-red-50 transition-colors duration-200">
-                            <div class="flex items-center justify-between">
-                                <span>Issues</span>
-                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['issue'] }}</span>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Enhanced Participant Type Filter -->
-            <div class="relative group">
-                <button class="filter-dropdown {{ request()->has('type') ? 'bg-purple-200 text-purple-800 border-purple-300' : 'bg-purple-100 hover:bg-purple-200 text-purple-700' }} px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-200 shadow-sm" onclick="toggleDropdown('type-dropdown')">
-                    <div class="flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Participant Type
-                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </div>
-                </button>
-                <div id="type-dropdown" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                    <div class="py-2">
-                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Type</div>
-                        <a href="{{ route('participants.index', request()->except(['type'])) }}" 
-                           class="block px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <span>All Types</span>
-                                <span class="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">{{ array_sum($typeCounts) }}</span>
-                            </div>
-                        </a>
-                        @foreach($participantTypes as $type)
-                            <a href="{{ route('participants.index', array_merge(request()->query(), ['type' => $type->name])) }}" 
-                               class="block px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 transition-colors duration-200">
-                                <div class="flex items-center justify-between">
-                                    <span>{{ $type->name }}</span>
-                                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">{{ $typeCounts[$type->name] ?? 0 }}</span>
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Clear Filters Button -->
-            @if(request()->has('visa_filter') || request()->has('type') || request()->has('country_filter'))
-                <a href="{{ route('participants.index', request()->except(['visa_filter', 'type', 'country_filter'])) }}" 
-                   class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-gray-200 shadow-sm">
-                    <div class="flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <input 
+                        type="text" 
+                        id="conference_search" 
+                        placeholder="Search conferences..." 
+                        class="w-full rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-16"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="button" 
+                        id="clear_conference" 
+                        class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                        title="Clear selection"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                        Clear Filters
+                    </button>
+                    <button 
+                        type="button" 
+                        id="dropdown_toggle" 
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        title="Show all conferences"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="conference_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
+                    <div id="conference_options" class="py-1">
+                        <!-- Options will be populated by JavaScript -->
                     </div>
-                </a>
-            @endif
+                </div>
+                <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
+            </div>
         </div>
-    </div>
-    
-    <!-- Second Row: Search Input -->
-    <div class="flex flex-col xl:flex-row gap-6 items-center justify-between mt-4 pt-4 border-t border-gray-200">
+        
+        <!-- Country Filter -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label for="country_search" class="text-sm text-gray-600 whitespace-nowrap">Country</label>
+            <div class="relative flex-1 min-w-0">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="country_search" 
+                        placeholder="Search countries..." 
+                        class="w-full rounded-lg border-gray-300 text-sm focus:ring-green-500 focus:border-green-500 pr-16"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="button" 
+                        id="clear_country_filter" 
+                        class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                        title="Clear selection"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    <button 
+                        type="button" 
+                        id="country_dropdown_toggle" 
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        title="Show all countries"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="country_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
+                    <div id="country_options" class="py-1">
+                        <!-- Options will be populated by JavaScript -->
+                    </div>
+                </div>
+                <input type="hidden" id="country_filter" name="country_filter" value="{{ request('country_filter') }}">
+            </div>
+        </div>
+        
+        <!-- Visa Status Filter -->
+        <div class="relative group">
+            <button class="filter-dropdown w-full {{ request()->has('visa_filter') ? 'bg-blue-200 text-blue-800 border-blue-300' : 'bg-blue-100 hover:bg-blue-200 text-blue-700' }} px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-200 shadow-sm" onclick="toggleDropdown('visa-dropdown')">
+                <div class="flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Visa Status
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+            </button>
+            <div id="visa-dropdown" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <div class="py-2">
+                    <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Visa Status</div>
+                    <a href="{{ route('participants.index', request()->except(['visa_filter'])) }}" 
+                       class="block px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <span>All Visa Statuses</span>
+                            <span class="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['required'] + $visaCounts['approved'] + $visaCounts['pending'] + $visaCounts['issue'] + $visaCounts['not_required'] }}</span>
+                        </div>
+                    </a>
+                    <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'required'])) }}" 
+                       class="block px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
+                        <div class="flex items-center justify-between">
+                            <span>Required</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['required'] }}</span>
+                        </div>
+                    </a>
+                    <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'approved'])) }}" 
+                       class="block px-4 py-3 text-sm text-gray-700 hover:bg-green-50 transition-colors duration-200">
+                        <div class="flex items-center justify-between">
+                            <span>Approved</span>
+                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['approved'] }}</span>
+                        </div>
+                    </a>
+                    <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'pending'])) }}" 
+                       class="block px-4 py-3 text-sm text-gray-700 hover:bg-yellow-50 transition-colors duration-200">
+                        <div class="flex items-center justify-between">
+                            <span>Pending</span>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['pending'] }}</span>
+                        </div>
+                    </a>
+                    <a href="{{ route('participants.index', array_merge(request()->query(), ['visa_filter' => 'issue'])) }}" 
+                       class="block px-4 py-3 text-sm text-gray-700 hover:bg-red-50 transition-colors duration-200">
+                        <div class="flex items-center justify-between">
+                            <span>Issues</span>
+                            <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">{{ $visaCounts['issue'] }}</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Enhanced Participant Type Filter -->
+        <div class="relative group">
+            <button class="filter-dropdown w-full {{ request()->has('type') ? 'bg-purple-200 text-purple-800 border-purple-300' : 'bg-purple-100 hover:bg-purple-200 text-purple-700' }} px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-200 shadow-sm" onclick="toggleDropdown('type-dropdown')">
+                <div class="flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Participant Type
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+            </button>
+            <div id="type-dropdown" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <div class="py-2">
+                    <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Filter by Type</div>
+                    <a href="{{ route('participants.index', request()->except(['type'])) }}" 
+                       class="block px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <span>All Types</span>
+                            <span class="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">{{ array_sum($typeCounts) }}</span>
+                        </div>
+                    </a>
+                    @foreach($participantTypes as $type)
+                        <a href="{{ route('participants.index', array_merge(request()->query(), ['type' => $type->name])) }}" 
+                           class="block px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <span>{{ $type->name }}</span>
+                                <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">{{ $typeCounts[$type->name] ?? 0 }}</span>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        
         <!-- Enhanced Search Bar -->
-        <div class="flex-1 max-w-xl">
-            <form method="GET" action="{{ route('participants.index') }}" class="flex">
+        <div class="sm:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-2">
+            <form method="GET" action="{{ route('participants.index') }}" class="flex flex-col sm:flex-row gap-3">
                 <input type="hidden" name="status" value="{{ $status }}">
                 @if(request()->has('conference_id'))
                     <input type="hidden" name="conference_id" value="{{ request('conference_id') }}">
@@ -615,7 +597,7 @@
                 @if(request()->has('country_filter'))
                     <input type="hidden" name="country_filter" value="{{ request('country_filter') }}">
                 @endif
-                <div class="relative flex-1">
+                <div class="relative flex-1 min-w-0">
                     <input type="text" 
                            name="search" 
                            value="{{ $search }}" 
@@ -627,22 +609,39 @@
                         </svg>
                     </div>
                 </div>
-                <button type="submit" class="ml-3 bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    Search
-                </button>
-                @if($search)
-                    <a href="{{ route('participants.index', array_merge(request()->except('search'), ['status' => $status])) }}" class="ml-3 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                <div class="flex gap-3">
+                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap">
                         <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
-                        Clear
-                    </a>
-                @endif
+                        Search
+                    </button>
+                    @if($search)
+                        <a href="{{ route('participants.index', array_merge(request()->except('search'), ['status' => $status])) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Clear
+                        </a>
+                    @endif
+                </div>
             </form>
         </div>
+        
+        <!-- Clear Filters Button -->
+        @if(request()->has('visa_filter') || request()->has('type') || request()->has('country_filter'))
+            <div class="flex items-center">
+                <a href="{{ route('participants.index', request()->except(['visa_filter', 'type', 'country_filter'])) }}" 
+                   class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-gray-200 shadow-sm text-center">
+                    <div class="flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear Filters
+                    </div>
+                </a>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -737,6 +736,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
                     </th>
+                    <th class="sortable-header" data-sort="sessions_count">
+                        Sessions
+                        <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
                     <th class="sortable-header" data-sort="type">
                         Type
                         <svg class="sort-icon ml-8 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -823,6 +828,20 @@
                             <button onclick="openEmailModal('{{ $user->email }}', '{{ $user->first_name ?? $user->name }} {{ $user->last_name ?? '' }}')" class="text-blue-700 hover:text-blue-800 hover:underline cursor-pointer font-semibold transition-colors duration-200 border-none bg-transparent p-0">
                                 {{ $user->email }}
                             </button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $participant->sessions->whereIn('status', ['draft', 'published'])->count() }}">
+                        @php                
+                            $draftCount = $participant->sessions->where('status', 'draft')->count();
+                            $publishedCount = $participant->sessions->where('status', 'published')->count();
+                        @endphp
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            <span class="font-medium text-gray-900">
+                            Draft: {{ $draftCount }}, Published: {{ $publishedCount }}
+                            </span>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ strtolower($participant->participantType->name ?? '') }}">
@@ -1073,6 +1092,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (column === 'serial') {
                 // Sort by serial number (numeric parts)
                 comparison = aValue.localeCompare(bValue);
+            } else if (column === 'sessions_count') {
+                // Numeric sort for session counts
+                comparison = (parseInt(aValue) || 0) - (parseInt(bValue) || 0);
             } else {
                 // Sort alphabetically for other columns
                 comparison = aValue.localeCompare(bValue);
@@ -1103,13 +1125,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function getColumnIndex(column) {
         const columnMap = {
             'serial': 1,      // Skip checkbox column (0)
-            'name': 2,
-            'email': 3,
+            'name': 1,
+            'email': 2,
+            'sessions_count': 3,
             'type': 4,
-            'organization': 5,
             'conference': 5,
-            'status': 6,
-            'visa_status': 7
+            'country': 6,
+            'status': 7,
+            'visa_status': 8
         };
         return columnMap[column] || 0;
     }

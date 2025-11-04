@@ -33,9 +33,9 @@ class TravelController extends Controller
     }
 
     // Admin view for itineraries
-    public function itineraries()
+    public function itineraries(Request $request)
     {
-        $travelDetails = TravelDetail::with([
+        $query = TravelDetail::with([
             'participant.user', 
             'hotel', 
             'participant.conference',
@@ -43,11 +43,28 @@ class TravelController extends Controller
             'room.roomType',
             'participant.roomAllocations'
         ])
-        ->whereHas('participant', function($query) {
+        ->whereHas('participant', function($q) use ($request) {
             // Only include travel details for participants with travel intent 'national' or 'international'
-            $query->whereIn('travel_intent', ['national', 'international']);
+            $q->whereIn('travel_intent', ['national', 'international']);
+            
+            // Search by participant name or email
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $q->whereHas('user', function($userQuery) use ($search) {
+                    $userQuery->where(function($subQuery) use ($search) {
+                        $subQuery->where('email', 'like', "%{$search}%")
+                                  ->orWhere('first_name', 'like', "%{$search}%")
+                                  ->orWhere('last_name', 'like', "%{$search}%")
+                                  ->orWhereRaw("CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) LIKE ?", ["%{$search}%"]);
+                    });
+                });
+            }
         })
-        ->get();
+        ->join('participants', 'travel_details.participant_id', '=', 'participants.id')
+        ->orderBy('participants.created_at', 'desc')
+        ->select('travel_details.*');
+        
+        $travelDetails = $query->get();
         
         $conferences = \App\Models\Conference::all();
         return view('admin.travel.itineraries', compact('travelDetails', 'conferences'));

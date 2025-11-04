@@ -278,103 +278,111 @@
 <!-- Conference and Session Title Filters -->
 <div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-3">
     <div class="p-4 border-b border-gray-200">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div class="w-full overflow-x-auto">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-center min-w-0">
                 <!-- Conference Filter -->
-                <div class="flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                    <label for="conference_search" class="text-sm font-medium text-gray-700">Filter by Conference:</label>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+                    <label for="conference_search" class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        Conference:
+                    </label>
+                    <div class="relative flex-1 min-w-0">
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="conference_search" 
+                                placeholder="Search conferences..." 
+                                class="w-full min-w-0 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-16 px-3 py-2"
+                                autocomplete="off"
+                            >
+                            <button 
+                                type="button" 
+                                id="clear_conference" 
+                                class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                                title="Clear selection"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            <button 
+                                type="button" 
+                                id="dropdown_toggle" 
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                title="Show all conferences"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="conference_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
+                            <div id="conference_options" class="py-1">
+                                <!-- Options will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
+                    </div>
                 </div>
-                <div class="relative">
-                    <div class="relative">
+                
+                <!-- Session Title Filter -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+                    <label for="session_title_search" class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        Session Title:
+                    </label>
+                    <div class="relative flex-1 min-w-0">
                         <input 
                             type="text" 
-                            id="conference_search" 
-                            placeholder="Search conferences..." 
-                            class="w-64 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-16"
+                            id="session_title_search" 
+                            placeholder="Search session titles..." 
+                            value="{{ request('session_title') }}"
+                            class="w-full min-w-0 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-8 px-3 py-2"
                             autocomplete="off"
                         >
                         <button 
                             type="button" 
-                            id="clear_conference" 
-                            class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
-                            title="Clear selection"
+                            id="clear_session_title" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 {{ request('session_title') ? '' : 'hidden' }}"
+                            title="Clear session title search"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
-                        <button 
-                            type="button" 
-                            id="dropdown_toggle" 
-                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            title="Show all conferences"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
                     </div>
-                    <div id="conference_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
-                        <div id="conference_options" class="py-1">
-                            <!-- Options will be populated by JavaScript -->
-                        </div>
-                    </div>
-                    <input type="hidden" id="conference_id" name="conference_id" value="{{ request('conference_id') }}">
                 </div>
-                
-                <!-- Session Title Filter -->
-                <div class="flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <label for="session_title_search" class="text-sm font-medium text-gray-700">Filter by Session Title:</label>
-                </div>
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        id="session_title_search" 
-                        placeholder="Search session titles..." 
-                        value="{{ request('session_title') }}"
-                        class="w-64 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-8"
-                        autocomplete="off"
-                    >
-                    <button 
-                        type="button" 
-                        id="clear_session_title" 
-                        class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 {{ request('session_title') ? '' : 'hidden' }}"
-                        title="Clear session title search"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+
+                <!-- Status Filter -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+                    <label for="status_filter" class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                         </svg>
-                    </button>
+                        Status:
+                    </label>
+                    <div class="relative flex-1 min-w-0">
+                        <select 
+                            id="status_filter" 
+                            class="w-full min-w-0 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 px-3 py-2"
+                        >
+                            <option value="">All Statuses</option>
+                            <option value="published" {{ request('session_status') === 'published' ? 'selected' : '' }}>Published</option>
+                            <option value="draft" {{ request('session_status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                    </svg>
-                    <label for="status_filter" class="text-sm font-medium text-gray-700">Filter by Status:</label>
-                </div>
-                <div class="relative">
-                    <select 
-                        id="status_filter" 
-                        class="w-40 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500"
-                    >
-                        <option value="">All Statuses</option>
-                        <option value="published" {{ request('session_status') === 'published' ? 'selected' : '' }}>Published</option>
-                        <option value="draft" {{ request('session_status') === 'draft' ? 'selected' : '' }}>Draft</option>
-                    </select>
-                </div>
-                <div class="flex items-center space-x-2 text-sm text-gray-500">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                <!-- Session Count -->
+                <div class="flex items-center gap-2 text-sm text-gray-500 min-w-0">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span>{{ $sessions->total() }} session{{ $sessions->total() !== 1 ? 's' : '' }} found</span>
+                    <span class="whitespace-nowrap">{{ $sessions->total() }} session{{ $sessions->total() !== 1 ? 's' : '' }} found</span>
                 </div>
             </div>
         </div>

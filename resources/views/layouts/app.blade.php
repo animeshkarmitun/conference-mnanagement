@@ -181,7 +181,7 @@
             <!-- Sidebar -->
             <aside class="bg-slate-900 shadow-xl flex flex-col transition-all duration-300 flex-shrink-0" :class="sidebarCollapsed ? 'w-16' : 'w-64'">
                 <div class="h-20 flex items-center justify-between border-b border-slate-800 px-4 relative">
-                    <span class="text-2xl font-bold text-indigo-200 transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'">CGS Events</span>
+                    <span class="text-2xl font-bold text-indigo-200 transition-opacity duration-300" :class="sidebarCollapsed ? 'opacity-0' : 'opacity-100'"><img src="{{ asset('public/images/logo.png') }}" alt="Logo" class="img-fluid"></span>
                     <button @click="sidebarCollapsed = !sidebarCollapsed" class="p-3 rounded-lg hover:bg-slate-800 transition-colors duration-150 flex-shrink-0 sidebar-toggle-btn bg-slate-800 border border-slate-700 shadow-sm" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
                         <svg class="w-6 h-6 text-slate-300 transition-transform duration-300" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>

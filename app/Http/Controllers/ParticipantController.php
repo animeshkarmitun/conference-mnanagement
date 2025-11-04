@@ -20,10 +20,49 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ParticipantController extends Controller
 {
+    public function __construct()
+    {
+        // Permission-gated access for participant actions
+        // Note: edit and update are handled separately with admin.access middleware in routes
+        $this->middleware(function ($request, $next) {
+            $user = auth()->user();
+            if (!$user) {
+                abort(403, 'Unauthorized');
+            }
+
+            // Superadmins have access to everything
+            if ($user->hasRole('superadmin')) {
+                return $next($request);
+            }
+
+            $action = $request->route()->getActionMethod();
+            
+            // Skip permission check for edit/update as they're handled by admin.access middleware
+            if (in_array($action, ['edit', 'update'])) {
+                return $next($request);
+            }
+
+            $permissionMap = [
+                'index' => 'participants.view',
+                'show' => 'participants.view',
+                'create' => 'participants.create',
+                'store' => 'participants.create',
+                'destroy' => 'participants.delete',
+            ];
+
+            $needed = $permissionMap[$action] ?? 'participants.view';
+            if (!$user->hasPermission($needed)) {
+                abort(403, 'Access denied. Missing permission: ' . $needed);
+            }
+
+            return $next($request);
+        });
+    }
+
     // List all participants
     public function index(Request $request)
     {
-        $query = Participant::with(['user', 'conference', 'participantType']);
+        $query = Participant::with(['user', 'conference', 'participantType', 'sessions']);
 
         // Optional conference filter
         $conferenceId = $request->get('conference_id');

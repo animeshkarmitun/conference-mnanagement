@@ -72,8 +72,8 @@ class PasswordlessLoginController extends Controller
      */
     public function adminIndex()
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login admin permission
+        if (!auth()->user()->hasPermission('passwordless-login.admin.view')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
@@ -92,8 +92,8 @@ class PasswordlessLoginController extends Controller
      */
     public function generateLink(Request $request)
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login generate permission
+        if (!auth()->user()->hasPermission('passwordless-login.generate')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
@@ -180,8 +180,8 @@ class PasswordlessLoginController extends Controller
      */
     public function generateBulkLinks(Request $request)
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login generate_bulk permission
+        if (!auth()->user()->hasPermission('passwordless-login.generate_bulk')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
@@ -262,8 +262,8 @@ class PasswordlessLoginController extends Controller
      */
     public function getUserLinks(Request $request, User $user)
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login user.links permission
+        if (!auth()->user()->hasPermission('passwordless-login.user.links')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
@@ -287,8 +287,8 @@ class PasswordlessLoginController extends Controller
      */
     public function revokeUserLinks(Request $request, User $user)
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login user.revoke permission
+        if (!auth()->user()->hasPermission('passwordless-login.user.revoke')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
@@ -314,8 +314,8 @@ class PasswordlessLoginController extends Controller
      */
     public function cleanupExpired(Request $request)
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login cleanup permission
+        if (!auth()->user()->hasPermission('passwordless-login.cleanup')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
@@ -341,8 +341,8 @@ class PasswordlessLoginController extends Controller
      */
     public function getParticipants(Request $request)
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login participants permission
+        if (!auth()->user()->hasPermission('passwordless-login.participants')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
@@ -383,8 +383,8 @@ class PasswordlessLoginController extends Controller
      */
     public function getParticipantsByType(Request $request)
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login participants.by_type permission
+        if (!auth()->user()->hasPermission('passwordless-login.participants.by_type')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
@@ -431,8 +431,8 @@ class PasswordlessLoginController extends Controller
      */
     public function getParticipantTypes(Request $request)
     {
-        // Check if user has admin or superadmin role
-        if (!auth()->user()->roles()->whereIn('name', ['admin', 'superadmin'])->exists()) {
+        // Check if user has passwordless-login participant_types permission
+        if (!auth()->user()->hasPermission('passwordless-login.participant_types')) {
             abort(403, 'Access denied. Admin privileges required.');
         }
 

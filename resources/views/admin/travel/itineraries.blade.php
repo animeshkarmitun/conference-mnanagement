@@ -28,27 +28,61 @@
 
 <!-- Itineraries Table -->
 <div class="bg-white rounded-xl shadow p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Travel Details</h2>
-        <div class="flex items-center space-x-4">
+    <div class="mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">Travel Details</h2>
             <div class="text-sm text-gray-500">{{ $travelDetails->count() }} records found</div>
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-2">
-                    <span class="text-sm text-gray-600">Conference:</span>
-                    <div class="relative">
+        </div>
+        
+        <!-- Filter and Search Row -->
+        <div class="w-full overflow-x-auto">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-center min-w-0">
+                <!-- Search by Name/Email -->
+                <div class="min-w-0">
+                    <form method="GET" action="{{ route('admin.itineraries') }}" class="flex flex-col sm:flex-row gap-3 min-w-0" id="searchForm">
+                        <div class="relative flex-1 min-w-0">
+                            <input type="text" 
+                                   name="search" 
+                                   id="participantSearch" 
+                                   value="{{ request('search') }}"
+                                   placeholder="Name or email..." 
+                                   class="w-full min-w-0 pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                   onkeyup="handleSearchInput(event)"
+                                   onkeydown="handleSearchKeydown(event)">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        @if(request('search'))
+                            <a href="{{ route('admin.itineraries') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap flex items-center justify-center flex-shrink-0" title="Clear search">
+                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                Clear
+                            </a>
+                        @endif
+                    </form>
+                </div>
+                
+                <!-- Conference Filter -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+                    <label for="conferenceSearch" class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">Conference:</label>
+                    <div class="relative flex-1 min-w-0">
                         <input type="text" 
                                id="conferenceSearch" 
                                placeholder="Search conferences..." 
-                               class="text-sm border border-gray-300 rounded px-3 py-2 min-w-[200px] pr-8"
+                               class="w-full min-w-0 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-8 px-3 py-2"
                                onkeyup="filterConferenceOptions()"
                                onfocus="showConferenceDropdown()"
                                onblur="hideConferenceDropdown()">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </div>
-                        <div id="conferenceDropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded shadow-lg hidden max-h-60 overflow-y-auto">
+                        <div id="conferenceDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
                             <div class="p-2 text-xs text-gray-500 border-b">All Conferences</div>
                             <div class="p-2 hover:bg-gray-100 cursor-pointer" onclick="selectConference('')">All Conferences</div>
                             @foreach($conferences as $conference)
@@ -61,21 +95,23 @@
                 </div>
 
                 <!-- Sort Controls -->
-                <div class="flex items-center space-x-2">
-                    <span class="text-sm text-gray-600">Sort:</span>
-                    <select id="sortColumn" class="text-sm border border-gray-300 rounded px-3 py-2 min-w-[160px]" onchange="applySorting()">
-                        <option value="participant">Participant</option>
-                        <option value="conference">Conference</option>
-                        <option value="visa">Visa Status</option>
-                        <option value="status">Itineraries Status</option>
-                        <option value="arrival">Arrival</option>
-                        <option value="departure">Departure</option>
-                        <option value="airport">Takeoff Airport</option>
-                    </select>
-                    <select id="sortDirection" class="text-sm border border-gray-300 rounded px-3 py-2" onchange="applySorting()">
-                        <option value="asc">Asc</option>
-                        <option value="desc">Desc</option>
-                    </select>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+                    <label class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">Sort:</label>
+                    <div class="flex gap-2 flex-1 min-w-0">
+                        <select id="sortColumn" class="flex-1 min-w-0 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-yellow-500 focus:border-yellow-500" onchange="applySorting()">
+                            <option value="participant">Participant</option>
+                            <option value="conference">Conference</option>
+                            <option value="visa">Visa Status</option>
+                            <option value="status">Itineraries Status</option>
+                            <option value="arrival">Arrival</option>
+                            <option value="departure">Departure</option>
+                            <option value="airport">Takeoff Airport</option>
+                        </select>
+                        <select id="sortDirection" class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-yellow-500 focus:border-yellow-500 flex-shrink-0" onchange="applySorting()">
+                            <option value="asc">Asc</option>
+                            <option value="desc">Desc</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -407,6 +443,29 @@
 let currentConferenceFilter = '';
 let currentParticipantId = null;
 let currentSort = { column: 'participant', direction: 'asc' };
+let searchTimeout = null;
+
+// Handle search input - submit on Enter
+function handleSearchKeydown(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        document.getElementById('searchForm').submit();
+    }
+}
+
+// Optional: Auto-submit after user stops typing (debounced)
+function handleSearchInput(event) {
+    // Clear existing timeout
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+    
+    // Debounce: submit form after user stops typing for 800ms
+    // This provides a better UX than immediate submission on every keystroke
+    searchTimeout = setTimeout(function() {
+        document.getElementById('searchForm').submit();
+    }, 800);
+}
 
 // Modal functions
 function openEditModal(participantId, participantName) {

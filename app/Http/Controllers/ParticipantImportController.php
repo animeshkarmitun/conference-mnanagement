@@ -31,6 +31,36 @@ use Illuminate\Support\Str;
  */
 class ParticipantImportController extends Controller
 {
+    public function __construct()
+    {
+        // Permission-gated access for participant import actions
+        $this->middleware(function ($request, $next) {
+            $user = auth()->user();
+            if (!$user) {
+                abort(403, 'Unauthorized');
+            }
+
+            // Superadmins have access to everything
+            if ($user->hasRole('superadmin')) {
+                return $next($request);
+            }
+
+            $action = $request->route()->getActionMethod();
+            $permissionMap = [
+                'downloadSample' => 'participants.import.sample',
+                'showImportForm' => 'participants.import.view',
+                'processImport' => 'participants.import.process',
+            ];
+
+            $needed = $permissionMap[$action] ?? null;
+            if ($needed && !$user->hasPermission($needed)) {
+                abort(403, 'Access denied. Missing permission: ' . $needed);
+            }
+
+            return $next($request);
+        });
+    }
+
     /**
      * Download the sample CSV template
      * 

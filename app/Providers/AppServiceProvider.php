@@ -38,5 +38,13 @@ class AppServiceProvider extends ServiceProvider
             }
             return false;
         });
+
+        // Blade directive to check if user can access a route
+        Blade::if('canAccessRoute', function (string $routeName) {
+            if (!auth()->check()) {
+                return false;
+            }
+            return auth()->user()->canAccessRoute($routeName, request());
+        });
     }
 }
