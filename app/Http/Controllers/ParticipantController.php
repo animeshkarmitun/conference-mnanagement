@@ -202,7 +202,28 @@ class ParticipantController extends Controller
             return response()->stream($callback, 200, $headers);
         }
         
-        $participants = $query->latest()->paginate(20)->withQueryString();
+        $perPage = $request->get('per_page', 50);
+        // Validate per_page value: 50, 150, 300, or 'all'
+        if (!in_array($perPage, ['50', '150', '300', 'all'])) {
+            $perPage = 50; // Default to 50 if invalid
+        }
+        
+        // Handle "all" option - get all results without pagination
+        if ($perPage === 'all') {
+            $allParticipants = $query->latest()->get();
+            $totalCount = $allParticipants->count();
+            // Create a custom paginator-like object for "all" to maintain compatibility
+            $participants = new \Illuminate\Pagination\LengthAwarePaginator(
+                $allParticipants,
+                $totalCount,
+                $totalCount > 0 ? $totalCount : 1, // Per page = total count
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            $participants->withQueryString();
+        } else {
+            $participants = $query->latest()->paginate((int)$perPage)->withQueryString();
+        }
         $status = $request->get('status', 'all');
         $search = $request->get('search', '');
 

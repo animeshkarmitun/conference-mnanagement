@@ -191,6 +191,61 @@
     .session-title-link:hover::after {
         width: 100%;
     }
+    
+    /* Conference dropdown z-index fix - ensure it appears above everything */
+    #conference_dropdown {
+        z-index: 99999 !important;
+        position: fixed !important;
+    }
+    
+    /* Ensure parent container doesn't clip dropdown */
+    .relative.flex-1.min-w-0.z-50 {
+        z-index: 50;
+        position: relative;
+    }
+    
+    /* Make sure filter container allows overflow */
+    .bg-white.rounded-2xl.shadow-lg.mb-6.border {
+        position: relative;
+        z-index: 1;
+        overflow: visible !important;
+    }
+    
+    /* Ensure overflow containers don't clip dropdown */
+    .w-full.overflow-x-auto {
+        overflow-y: visible !important;
+        position: relative;
+    }
+    
+    /* Grid container should allow overflow */
+    .grid.grid-cols-1 {
+        overflow: visible !important;
+    }
+    
+    /* Table container should have lower z-index */
+    #sessionsTable {
+        position: relative;
+        z-index: 0;
+    }
+    
+    /* Custom scrollbar for conference dropdown */
+    #conference_dropdown::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    #conference_dropdown::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    #conference_dropdown::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    
+    #conference_dropdown::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
 </style>
 @endpush
 
@@ -276,10 +331,10 @@
 </div>
 
 <!-- Conference and Session Title Filters -->
-<div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-3">
-    <div class="p-4 border-b border-gray-200">
-        <div class="w-full overflow-x-auto">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-center min-w-0">
+<div class="bg-white rounded-2xl shadow-lg mb-6 border border-gray-100 animate-fade-in-up animate-delay-3" style="position: relative; z-index: 1; overflow: visible;">
+    <div class="p-4 border-b border-gray-200" style="overflow: visible;">
+        <div class="w-full overflow-x-auto" style="overflow-y: visible !important; position: relative;">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-center min-w-0" style="overflow: visible;">
                 <!-- Conference Filter -->
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
                     <label for="conference_search" class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0 flex items-center gap-2">
@@ -288,7 +343,7 @@
                         </svg>
                         Conference:
                     </label>
-                    <div class="relative flex-1 min-w-0">
+                    <div class="relative flex-1 min-w-0 z-50">
                         <div class="relative">
                             <input 
                                 type="text" 
@@ -310,7 +365,7 @@
                             <button 
                                 type="button" 
                                 id="dropdown_toggle" 
-                                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
                                 title="Show all conferences"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,7 +373,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <div id="conference_dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden">
+                        <div id="conference_dropdown" class="absolute z-[99999] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-2xl max-h-60 overflow-y-auto hidden" style="position: fixed; display: none;">
                             <div id="conference_options" class="py-1">
                                 <!-- Options will be populated by JavaScript -->
                             </div>
@@ -395,26 +450,8 @@
         <table class="w-full divide-y divide-gray-200" id="sessionsTable">
             <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">
-                        Status
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="session_status">
-                        Session Status
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
-                    </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="title">
                         Title
-                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="conference">
-                        Conference
                         <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
@@ -425,14 +462,32 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
                     </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="participants">
+                        Participants
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="duration">
                         Duration
                         <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                         </svg>
                     </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="room">
+                        Room
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Email Tracking
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" data-sort="status">
+                        Status
+                        <svg class="w-4 h-4 inline sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
                     </th>
                     <th class="px-6 py-3"></th>
                 </tr>
@@ -454,52 +509,8 @@
                     @endphp
                     
                     <tr class="table-row-hover hover:bg-yellow-50 transition-all duration-200 border-b border-gray-100">
-                        <td class="px-6 py-4 whitespace-nowrap" 
-                            data-sort-value="{{ $statusText }}" 
-                            data-sort-priority="{{ $timeData['is_active'] ? 1 : ($timeData['is_today'] ? 2 : ($timeData['is_past'] ? 3 : 4)) }}">
-                            <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $statusClass }}">
-                                @if($timeData['is_active'])
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M13 10V3L4 14h7v7l9-11h-7z" clip-rule="evenodd"></path>
-                                    </svg>
-                                @elseif($timeData['is_today'])
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                                    </svg>
-                                @elseif(!$timeData['is_past'])
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" clip-rule="evenodd"></path>
-                                    </svg>
-                                @else
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5 13l4 4L19 7" clip-rule="evenodd"></path>
-                                    </svg>
-                                @endif
-                                {{ $statusText }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $session->status ?? 'draft' }}">
-                            @php
-                                $sessionStatus = $session->status ?? 'draft';
-                                $sessionStatusClass = $sessionStatus === 'published' 
-                                    ? 'bg-green-100 text-green-800 border-green-200' 
-                                    : 'bg-yellow-100 text-yellow-800 border-yellow-200';
-                                $sessionStatusText = $sessionStatus === 'published' ? 'Published' : 'Draft';
-                            @endphp
-                            <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $sessionStatusClass }}">
-                                @if($sessionStatus === 'published')
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                @else
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                @endif
-                                {{ $sessionStatusText }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $session->title }}">
+                        <!-- Title -->
+                        <td class="px-6 py-4" data-sort-value="{{ $session->title }}">
                             <div class="flex items-center">
                                 <div class="w-10 h-10 session-icon rounded-full flex items-center justify-center mr-3 shadow-lg">
                                     <span class="text-sm font-bold">
@@ -520,14 +531,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500" data-sort-value="{{ $session->conference->name ?? 'N/A' }}">
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                </svg>
-                                <span>{{ $session->conference->name ?? 'N/A' }}</span>
-                            </div>
-                        </td>
+                        <!-- Schedule -->
                         <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $session->start_time }}">
                             <div class="flex items-center">
                                 <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -539,6 +543,20 @@
                                 </div>
                             </div>
                         </td>
+                        <!-- Participants -->
+                        <td class="px-6 py-4" data-sort-value="{{ $session->participants->map(function($p) { return ($p->user->first_name ?? '') . ' ' . ($p->user->last_name ?? ''); })->filter()->join(', ') }}">
+                            @if($session->participants->count() > 0)
+                                <div class="text-sm text-gray-900 max-w-xs">
+                                    {{ $session->participants->map(function($p) { return trim(($p->user->first_name ?? '') . ' ' . ($p->user->last_name ?? '')); })->filter()->join(', ') }}
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    {{ $session->participants->count() }} participant{{ $session->participants->count() !== 1 ? 's' : '' }}
+                                </div>
+                            @else
+                                <span class="text-sm text-gray-400">No participants</span>
+                            @endif
+                        </td>
+                        <!-- Duration -->
                         <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $timeData['duration_minutes'] }}">
                             <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $durationClass }}">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -547,6 +565,20 @@
                                 {{ $timeData['duration'] }}
                             </span>
                         </td>
+                        <!-- Room -->
+                        <td class="px-6 py-4 whitespace-nowrap" data-sort-value="{{ $session->room ?? 'N/A' }}">
+                            @if($session->room)
+                                <div class="flex items-center text-sm text-gray-900">
+                                    <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span>{{ $session->room }}</span>
+                                </div>
+                            @else
+                                <span class="text-sm text-gray-400">N/A</span>
+                            @endif
+                        </td>
+                        <!-- Email Tracking -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
                                 // Get email tracking data for this session
@@ -584,6 +616,32 @@
                                 @endif
                             </div>
                         </td>
+                        <!-- Status -->
+                        <td class="px-6 py-4 whitespace-nowrap" 
+                            data-sort-value="{{ $statusText }}" 
+                            data-sort-priority="{{ $timeData['is_active'] ? 1 : ($timeData['is_today'] ? 2 : ($timeData['is_past'] ? 3 : 4)) }}">
+                            <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm border {{ $statusClass }}">
+                                @if($timeData['is_active'])
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M13 10V3L4 14h7v7l9-11h-7z" clip-rule="evenodd"></path>
+                                    </svg>
+                                @elseif($timeData['is_today'])
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                @elseif(!$timeData['is_past'])
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" clip-rule="evenodd"></path>
+                                    </svg>
+                                @else
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5 13l4 4L19 7" clip-rule="evenodd"></path>
+                                    </svg>
+                                @endif
+                                {{ $statusText }}
+                            </span>
+                        </td>
+                        <!-- Actions -->
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <div class="flex items-center justify-end space-x-2">
                                 <a href="{{ route('sessions.show', $session) }}" 
@@ -622,7 +680,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center">
+                        <td colspan="8" class="px-6 py-8 text-center">
                             <div class="flex flex-col items-center">
                                 <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -705,20 +763,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (column === 'status') {
                 // Sort by status priority (Active=1, Today=2, Upcoming=3, Finished=4)
-                const aPriority = parseInt(a.cells[0].getAttribute('data-sort-priority'));
-                const bPriority = parseInt(b.cells[0].getAttribute('data-sort-priority'));
+                const columnIndex = getColumnIndex('status');
+                const aPriority = parseInt(a.cells[columnIndex].getAttribute('data-sort-priority'));
+                const bPriority = parseInt(b.cells[columnIndex].getAttribute('data-sort-priority'));
                 comparison = aPriority - bPriority;
             } else if (column === 'duration') {
                 // Sort by duration minutes (numeric)
-                comparison = parseInt(aValue) - parseInt(bValue);
-            } else if (column === 'capacity') {
-                // Sort by capacity (numeric)
                 comparison = parseInt(aValue) - parseInt(bValue);
             } else if (column === 'schedule') {
                 // Sort by start date
                 comparison = new Date(aValue) - new Date(bValue);
             } else {
-                // Sort alphabetically for title, conference, and room
+                // Sort alphabetically for title, participants, and room
                 comparison = aValue.localeCompare(bValue);
             }
             
@@ -737,23 +793,22 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!cell) return '';
         
         if (column === 'status') {
-            return parseInt(cell.getAttribute('data-sort-priority'));
+            return parseInt(cell.getAttribute('data-sort-priority')) || 0;
         }
         
-        return cell.getAttribute('data-sort-value');
+        return cell.getAttribute('data-sort-value') || '';
     }
     
     function getColumnIndex(column) {
         const columnMap = {
-            'status': 0,
-            'title': 1,
-            'conference': 2,
-            'schedule': 3,
-            'duration': 4,
-            'room': 5,
-            'capacity': 6
+            'title': 0,
+            'schedule': 1,
+            'participants': 2,
+            'duration': 3,
+            'room': 4,
+            'status': 6
         };
-        return columnMap[column] || 0;
+        return columnMap[column] !== undefined ? columnMap[column] : 0;
     }
     
     function updateSortIndicators(activeColumn, direction) {
@@ -839,6 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
         conferenceSearch.value = conference.name;
         conferenceIdInput.value = conference.id;
         conferenceDropdown.classList.add('hidden');
+        conferenceDropdown.style.display = 'none';
         isDropdownOpen = false;
         clearConferenceBtn.classList.remove('hidden');
         
@@ -872,6 +928,7 @@ document.addEventListener('DOMContentLoaded', function() {
         conferenceSearch.value = '';
         conferenceIdInput.value = '';
         conferenceDropdown.classList.add('hidden');
+        conferenceDropdown.style.display = 'none';
         isDropdownOpen = false;
         clearConferenceBtn.classList.add('hidden');
         
@@ -900,9 +957,22 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = currentUrl.toString();
     }
     
+    function positionDropdown() {
+        if (!conferenceSearch || !conferenceDropdown) return;
+        
+        const inputRect = conferenceSearch.getBoundingClientRect();
+        
+        // Position dropdown below the input field using fixed positioning
+        // Fixed positioning is relative to viewport, so use getBoundingClientRect() values directly
+        conferenceDropdown.style.top = (inputRect.bottom + 4) + 'px';
+        conferenceDropdown.style.left = inputRect.left + 'px';
+        conferenceDropdown.style.width = inputRect.width + 'px';
+    }
+    
     function toggleDropdown() {
         if (isDropdownOpen) {
             conferenceDropdown.classList.add('hidden');
+            conferenceDropdown.style.display = 'none';
             isDropdownOpen = false;
         } else {
             const query = conferenceSearch.value.trim();
@@ -914,10 +984,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show all conferences
                 renderConferenceOptions(conferences);
             }
+            positionDropdown();
+            conferenceDropdown.style.display = 'block';
             conferenceDropdown.classList.remove('hidden');
             isDropdownOpen = true;
         }
     }
+    
+    // Update dropdown position on scroll and resize
+    function updateDropdownPosition() {
+        if (isDropdownOpen && !conferenceDropdown.classList.contains('hidden')) {
+            positionDropdown();
+        }
+    }
+    
+    window.addEventListener('scroll', updateDropdownPosition, true);
+    window.addEventListener('resize', updateDropdownPosition);
     
     // Event listeners
     if (conferenceSearch) {
@@ -927,14 +1009,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (query.trim() && filteredConferences.length > 0) {
                 renderConferenceOptions(filteredConferences);
+                positionDropdown();
+                conferenceDropdown.style.display = 'block';
                 conferenceDropdown.classList.remove('hidden');
                 isDropdownOpen = true;
             } else if (query.trim() && filteredConferences.length === 0) {
                 renderConferenceOptions([]);
+                positionDropdown();
+                conferenceDropdown.style.display = 'block';
                 conferenceDropdown.classList.remove('hidden');
                 isDropdownOpen = true;
             } else {
                 conferenceDropdown.classList.add('hidden');
+                conferenceDropdown.style.display = 'none';
                 isDropdownOpen = false;
             }
         });
@@ -943,6 +1030,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.value.trim()) {
                 filteredConferences = filterConferences(this.value);
                 renderConferenceOptions(filteredConferences);
+                positionDropdown();
+                conferenceDropdown.style.display = 'block';
                 conferenceDropdown.classList.remove('hidden');
                 isDropdownOpen = true;
             }
@@ -951,6 +1040,7 @@ document.addEventListener('DOMContentLoaded', function() {
         conferenceSearch.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 conferenceDropdown.classList.add('hidden');
+                conferenceDropdown.style.display = 'none';
                 isDropdownOpen = false;
                 this.blur();
             }
@@ -973,6 +1063,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (!e.target.closest('#conference_search') && !e.target.closest('#conference_dropdown') && !e.target.closest('#dropdown_toggle')) {
             conferenceDropdown.classList.add('hidden');
+            conferenceDropdown.style.display = 'none';
             isDropdownOpen = false;
         }
     });

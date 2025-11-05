@@ -674,6 +674,13 @@
         <div class="flex items-center space-x-4">
             <div class="text-sm text-slate-500">{{ $participants->total() ?? 0 }} participants</div>
             <div class="flex items-center space-x-2">
+                <label for="per-page-select" class="text-sm text-gray-600 whitespace-nowrap">Rows per page:</label>
+                <select id="per-page-select" class="rounded-md border-2 border-gray-400 bg-white text-gray-700 focus:border-blue-500 focus:ring-blue-500 text-sm font-medium shadow-sm px-3 py-1">
+                    <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50</option>
+                    <option value="150" {{ request('per_page', 50) == 150 ? 'selected' : '' }}>150</option>
+                    <option value="300" {{ request('per_page', 50) == 300 ? 'selected' : '' }}>300</option>
+                    <option value="all" {{ request('per_page', 50) == 'all' ? 'selected' : '' }}>All</option>
+                </select>
                 <select id="format-select" class="rounded-md border-2 border-gray-400 bg-white text-gray-700 focus:border-blue-500 focus:ring-blue-500 text-sm font-medium shadow-sm">
                     <option value="pdf">PDF</option>
                     <option value="zip">ZIP</option>
@@ -1004,7 +1011,13 @@
     </div>
     
     <div class="mt-6">
-        {{ $participants->appends(['status' => $status])->links('pagination.custom') }}
+        @if(request('per_page') !== 'all')
+            {{ $participants->appends(['status' => $status, 'per_page' => request('per_page', 50)])->links('pagination.custom') }}
+        @else
+            <div class="text-sm text-gray-500 text-center py-4">
+                Showing all {{ $participants->total() }} participants
+            </div>
+        @endif
     </div>
 </div>
 </div>
@@ -1012,6 +1025,18 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Rows per page functionality
+    const perPageSelect = document.getElementById('per-page-select');
+    if (perPageSelect) {
+        perPageSelect.addEventListener('change', function() {
+            const perPage = this.value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('per_page', perPage);
+            url.searchParams.set('page', '1'); // Reset to first page when changing per_page
+            window.location.href = url.toString();
+        });
+    }
+    
     // Existing participant functionality
     const selectAllCheckbox = document.getElementById('select-all');
     const selectAllHeaderCheckbox = document.getElementById('select-all-header');

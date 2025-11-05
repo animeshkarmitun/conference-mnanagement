@@ -520,6 +520,142 @@
     </div>
 </div>
 
+<!-- Assigned Sessions Section -->
+<div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <i class="fas fa-calendar-check text-indigo-500 mr-3"></i>
+        Assigned Sessions
+    </h2>
+    
+    @if(isset($sessions) && count($sessions) > 0)
+        <div class="space-y-4">
+            @foreach($sessions as $index => $session)
+                <div class="border border-gray-200 rounded-lg p-6 {{ $index % 2 == 0 ? 'bg-gray-50' : 'bg-white' }} hover:shadow-md transition-shadow duration-200">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center flex-wrap gap-2 mb-3">
+                                <h4 class="text-lg font-bold text-indigo-600">{{ $session->title }}</h4>
+                                @if($session->pivot && $session->pivot->role)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        @if($session->pivot->role === 'speaker') bg-purple-100 text-purple-800
+                                        @elseif($session->pivot->role === 'moderator') bg-blue-100 text-blue-800
+                                        @elseif($session->pivot->role === 'panelist') bg-green-100 text-green-800
+                                        @elseif($session->pivot->role === 'organizer') bg-yellow-100 text-yellow-800
+                                        @else bg-gray-100 text-gray-800 @endif">
+                                        {{ ucfirst($session->pivot->role) }}
+                                    </span>
+                                @endif
+                                
+                                @php
+                                    // Time-based status
+                                    $now = \Carbon\Carbon::now();
+                                    $startTime = \Carbon\Carbon::parse($session->start_time);
+                                    $endTime = \Carbon\Carbon::parse($session->end_time);
+                                    
+                                    $isActive = $startTime->isPast() && $endTime->isFuture();
+                                    $isPast = $endTime->isPast();
+                                    $isToday = $startTime->isToday();
+                                    
+                                    if ($isActive) {
+                                        $timeStatusText = 'Active';
+                                        $timeStatusClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                                        $timeStatusIcon = 'fas fa-play-circle';
+                                    } elseif ($isPast) {
+                                        $timeStatusText = 'Finished';
+                                        $timeStatusClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                                        $timeStatusIcon = 'fas fa-check-circle';
+                                    } elseif ($isToday) {
+                                        $timeStatusText = 'Today';
+                                        $timeStatusClass = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                                        $timeStatusIcon = 'fas fa-clock';
+                                    } else {
+                                        $timeStatusText = 'Upcoming';
+                                        $timeStatusClass = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                                        $timeStatusIcon = 'fas fa-calendar';
+                                    }
+                                    
+                                    // Publication status
+                                    $sessionStatus = $session->status ?? 'draft';
+                                    $publishStatusText = $sessionStatus === 'published' ? 'Published' : 'Draft';
+                                    $publishStatusClass = $sessionStatus === 'published' 
+                                        ? 'bg-green-100 text-green-800 border-green-200' 
+                                        : 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                                    $publishStatusIcon = $sessionStatus === 'published' 
+                                        ? 'fas fa-check-circle' 
+                                        : 'fas fa-edit';
+                                @endphp
+                                
+                                <!-- Time-based Status Badge -->
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold shadow-sm border {{ $timeStatusClass }}">
+                                    <i class="{{ $timeStatusIcon }} text-xs mr-1"></i>
+                                    {{ $timeStatusText }}
+                                </span>
+                                
+                                <!-- Publication Status Badge -->
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold shadow-sm border {{ $publishStatusClass }}">
+                                    <i class="{{ $publishStatusIcon }} text-xs mr-1"></i>
+                                    {{ $publishStatusText }}
+                                </span>
+                            </div>
+                            
+                            @if($session->description)
+                            <div class="mb-3">
+                                <span class="text-sm font-semibold text-gray-700">Description:</span>
+                                <p class="text-sm text-gray-900 mt-1">{{ $session->description }}</p>
+                            </div>
+                            @endif
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-sm font-semibold text-gray-700">Start Date & Time:</span>
+                                    <p class="text-sm text-gray-900 mt-1">
+                                        {{ \Carbon\Carbon::parse($session->start_time)->format('F j, Y g:i A') }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-semibold text-gray-700">End Date & Time:</span>
+                                    <p class="text-sm text-gray-900 mt-1">
+                                        {{ \Carbon\Carbon::parse($session->end_time)->format('F j, Y g:i A') }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <span class="text-sm font-semibold text-gray-700">Duration:</span>
+                                <p class="text-sm text-gray-900 mt-1">
+                                    {{ \Carbon\Carbon::parse($session->start_time)->diffInMinutes(\Carbon\Carbon::parse($session->end_time)) }} minutes
+                                </p>
+                            </div>
+                            
+                            @if($session->venue || $session->room)
+                            <div class="mt-3">
+                                <span class="text-sm font-semibold text-gray-700">Location:</span>
+                                <div class="mt-1 text-sm text-gray-900">
+                                    @if($session->venue)
+                                        <p><span class="font-medium">Venue:</span> {{ $session->venue->name }}</p>
+                                        @if($session->venue->address)
+                                            <p class="text-gray-600"><span class="font-medium">Address:</span> {{ $session->venue->address }}</p>
+                                        @endif
+                                    @endif
+                                    @if($session->room)
+                                        <p><span class="font-medium">Room:</span> {{ $session->room }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @else
+        <div class="text-center py-8">
+            <i class="fas fa-calendar-times text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">No sessions assigned to this participant</p>
+        </div>
+    @endif
+</div>
+
 <!-- Comments Section -->
 <div class="bg-white rounded-xl shadow-lg p-6 mt-6">
     <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">

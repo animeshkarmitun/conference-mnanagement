@@ -62,7 +62,7 @@ class SessionController extends Controller
         $sessionTitle = $request->get('session_title'); // New parameter for session title search
         $now = now();
         
-        $query = Session::with(['conference', 'participants']);
+        $query = Session::with(['conference', 'participants.user']);
         
         // Filter by conference if specified
         if ($conferenceId) {
