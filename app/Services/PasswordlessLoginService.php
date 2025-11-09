@@ -5,20 +5,24 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\PasswordlessLogin;
 use App\Models\Conference;
+use App\Models\EmailSettings;
+use App\Services\EmailTemplateService;
 use App\Services\EmailTrackingService;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class PasswordlessLoginService
 {
     protected EmailTrackingService $emailTrackingService;
+    protected EmailTemplateService $emailTemplateService;
 
-    public function __construct(EmailTrackingService $emailTrackingService)
+    public function __construct(EmailTrackingService $emailTrackingService, EmailTemplateService $emailTemplateService)
     {
         $this->emailTrackingService = $emailTrackingService;
+        $this->emailTemplateService = $emailTemplateService;
     }
 
     /**
@@ -68,15 +72,26 @@ class PasswordlessLoginService
     {
         try {
             $loginUrl = $passwordlessLogin->getLoginUrl();
-            $subject = 'Your Conference Dashboard Access' . ($conference ? ' - ' . $conference->name : '');
-            
-            // Create email content
+
+            $templateVariables = $this->buildTemplateVariables($user, $passwordlessLogin, $conference, $loginUrl);
+            $template = $this->emailTemplateService->processTemplate(
+                EmailSettings::TYPE_PASSWORDLESS_LOGIN,
+                $templateVariables
+            );
+
+            $subject = $template['subject'] ?? ('Your Conference Dashboard Access' . ($conference ? ' - ' . $conference->name : ''));
+            $useCustomLayout = $this->shouldUseCustomLayout($template);
+
+            // Create email content using dynamic template
             $emailContent = view('emails.passwordless-login', [
+                'template' => $template,
+                'templateVariables' => $templateVariables,
                 'user' => $user,
                 'loginUrl' => $loginUrl,
                 'conference' => $conference,
                 'expiresAt' => $passwordlessLogin->expires_at,
                 'token' => $passwordlessLogin,
+                'useCustomLayout' => $useCustomLayout,
             ])->render();
             
             // Send tracked email
@@ -112,6 +127,46 @@ class PasswordlessLoginService
 
             return false;
         }
+    }
+
+    /**
+     * Build template variables for passwordless login email
+     */
+    protected function buildTemplateVariables(User $user, PasswordlessLogin $passwordlessLogin, ?Conference $conference, string $loginUrl): array
+    {
+        $expiresAt = $passwordlessLogin->expires_at ? $passwordlessLogin->expires_at->timezone(config('app.timezone', 'UTC')) : null;
+
+        $escapedLoginUrl = e($loginUrl);
+
+        return [
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'full_name' => trim($user->first_name . ' ' . $user->last_name),
+            'user_email' => $user->email,
+            'login_url' => $loginUrl,
+            'login_button' => "<a href=\"{$escapedLoginUrl}\" style=\"display:inline-block;background:linear-gradient(90deg,#5b21b6,#2563eb);color:#fff;padding:12px 24px;border-radius:9999px;text-decoration:none;font-weight:600;\">Access My Dashboard</a>",
+            'expires_at' => $expiresAt ? $expiresAt->format('M d, Y g:i A T') : '',
+            'expires_at_date' => $expiresAt ? $expiresAt->format('M d, Y') : '',
+            'expires_at_time' => $expiresAt ? $expiresAt->format('g:i A T') : '',
+            'expires_in_minutes' => $expiresAt ? max(1, now($expiresAt->getTimezone())->diffInMinutes($expiresAt)) : '',
+            'conference_name' => $conference->name ?? '',
+            'conference_date' => $conference && $conference->start_date ? \Carbon\Carbon::parse($conference->start_date)->format('M d, Y') : '',
+            'conference_venue' => $conference && $conference->venue ? $conference->venue->name : '',
+            'email_heading' => '🎉 Welcome to Your Conference Dashboard',
+            'email_cta_label' => 'Access My Dashboard',
+            'email_cta_emoji' => '🚀',
+            'signature' => config('mail.from.name') ?? config('app.name', 'Conference Team'),
+        ];
+    }
+
+    /**
+     * Determine if template body contains full custom layout
+     */
+    protected function shouldUseCustomLayout(array $template): bool
+    {
+        $body = $template['body'] ?? '';
+
+        return Str::contains(Str::lower($body), ['<!doctype', '<html', '<body']);
     }
 
     /**

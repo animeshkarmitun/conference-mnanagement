@@ -622,7 +622,7 @@ class ParticipantController extends Controller
             $participantValidated = $request->validate([
                 'visa_status' => 'nullable|in:required,not_required,pending,approved,issue',
                 'visa_issue_description' => 'nullable|string|max:1000',
-                'bio' => 'nullable|string|max:500',
+                'bio' => 'nullable|string|max:10000',
                 'organization' => 'nullable|string|max:100',
                 'travel_intent' => 'nullable|in:none,national,international',
                 'hashtags' => 'nullable|string|max:1000',
@@ -692,7 +692,7 @@ class ParticipantController extends Controller
                 'participant_type_id' => 'required|exists:participant_types,id',
                 'visa_status' => 'required|in:required,not_required,pending,approved,issue',
                 'visa_issue_description' => 'nullable|string|max:1000',
-                'bio' => 'nullable|string|max:500',
+                'bio' => 'nullable|string|max:10000',
                 'organization' => 'nullable|string|max:100',
                 'approved' => 'boolean',
                 'travel_intent' => 'nullable|in:none,national,international',

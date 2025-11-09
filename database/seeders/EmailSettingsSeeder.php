@@ -38,6 +38,16 @@ class EmailSettingsSeeder extends Seeder
             ['variable_name' => 'session_date', 'variable_description' => 'Session date and time', 'example_value' => 'January 15, 2025 at 2:00 PM', 'is_system_variable' => true],
             ['variable_name' => 'session_location', 'variable_description' => 'Session location/room', 'example_value' => 'Room A-101', 'is_system_variable' => true],
             ['variable_name' => 'session_description', 'variable_description' => 'Session description', 'example_value' => 'Learn the basics of artificial intelligence', 'is_system_variable' => true],
+            ['variable_name' => 'login_url', 'variable_description' => 'Passwordless login URL', 'example_value' => 'https://example.com/passwordless/abc123', 'is_system_variable' => true],
+            ['variable_name' => 'login_button', 'variable_description' => 'Styled login button HTML', 'example_value' => '<a href=\"https://example.com\">Access My Dashboard</a>', 'is_system_variable' => true],
+            ['variable_name' => 'expires_at', 'variable_description' => 'Expiry date/time for the login link', 'example_value' => 'Nov 20, 2025 05:00 PM GMT+6', 'is_system_variable' => true],
+            ['variable_name' => 'expires_at_date', 'variable_description' => 'Expiry date only', 'example_value' => 'Nov 20, 2025', 'is_system_variable' => true],
+            ['variable_name' => 'expires_at_time', 'variable_description' => 'Expiry time only', 'example_value' => '5:00 PM GMT+6', 'is_system_variable' => true],
+            ['variable_name' => 'expires_in_minutes', 'variable_description' => 'Minutes remaining until expiry', 'example_value' => '90', 'is_system_variable' => true],
+            ['variable_name' => 'email_heading', 'variable_description' => 'Email header title', 'example_value' => '🎉 Welcome to Your Conference Dashboard', 'is_system_variable' => true],
+            ['variable_name' => 'email_cta_label', 'variable_description' => 'CTA button label text', 'example_value' => 'Access My Dashboard', 'is_system_variable' => true],
+            ['variable_name' => 'email_cta_emoji', 'variable_description' => 'CTA emoji or prefix text', 'example_value' => '🚀', 'is_system_variable' => true],
+            ['variable_name' => 'signature', 'variable_description' => 'System or sender signature', 'example_value' => 'Conference Team', 'is_system_variable' => true],
             
             // Task variables
             ['variable_name' => 'task_title', 'variable_description' => 'Title of the task', 'example_value' => 'Prepare presentation slides', 'is_system_variable' => true],
@@ -157,19 +167,21 @@ If you have any questions or need to make changes, please contact our support te
             // Passwordless Login
             [
                 'email_type' => EmailSettings::TYPE_PASSWORDLESS_LOGIN,
-                'subject_template' => 'Login Link - {system_name}',
+                'subject_template' => 'Welcome to Your Conference Dashboard',
                 'greeting_template' => 'Hello {first_name},',
-                'body_template' => 'You have requested a passwordless login to {system_name}.
+                'body_template' => '<p>You now have secure, password-free access to your conference dashboard.</p>
 
-Click the link below to access your account:
+{login_button}
 
-[Login Link]
+<p><strong>Conference:</strong> {conference_name}</p>
+<p><strong>Date:</strong> {conference_date}</p>
+<p><strong>Venue:</strong> {conference_venue}</p>
 
-This link will expire in 15 minutes for security reasons.
+<p>If the button above does not work, paste this link into your browser:<br>{login_url}</p>
 
-If you did not request this login, please ignore this email.',
+<p>This login link will expire on {expires_at}.</p>',
                 'closing_template' => 'Best regards,',
-                'system_signature' => 'Conference Team',
+                'system_signature' => '{signature}',
             ],
 
             // Session Update
