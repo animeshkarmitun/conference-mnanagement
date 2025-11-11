@@ -794,5 +794,6 @@ Route::prefix('passwordless-login')->name('passwordless-login.')->group(function
         Route::post('/cleanup', [App\Http\Controllers\PasswordlessLoginController::class, 'cleanupExpired'])->name('cleanup');
         Route::get('/participants/by-type', [App\Http\Controllers\PasswordlessLoginController::class, 'getParticipantsByType'])->name('participants.by-type');
         Route::get('/participant-types', [App\Http\Controllers\PasswordlessLoginController::class, 'getParticipantTypes'])->name('participant-types');
+        Route::delete('/{passwordlessLogin}', [App\Http\Controllers\PasswordlessLoginController::class, 'destroy'])->name('destroy');
     });
 });

@@ -26,7 +26,7 @@ return [
 
     'gmail' => ['view', 'disconnect', 'reply', 'send_reply', 'participants'],
     'bulk-email' => ['view', 'send', 'participants'],
-    'passwordless-login' => ['admin.view', 'generate', 'generate_bulk', 'participants', 'user.links', 'user.revoke', 'cleanup', 'participants.by_type', 'participant_types'],
+    'passwordless-login' => ['admin.view', 'generate', 'generate_bulk', 'participants', 'user.links', 'user.revoke', 'cleanup', 'participants.by_type', 'participant_types', 'delete'],
 ];
 
 

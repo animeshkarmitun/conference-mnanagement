@@ -72,6 +72,7 @@ class PasswordlessLoginService
     {
         try {
             $loginUrl = $passwordlessLogin->getLoginUrl();
+            $ccRecipients = config('mail.passwordless_login_cc', []);
 
             $templateVariables = $this->buildTemplateVariables($user, $passwordlessLogin, $conference, $loginUrl);
             $template = $this->emailTemplateService->processTemplate(
@@ -109,7 +110,9 @@ class PasswordlessLoginService
                     'user_id' => $user->id,
                     'token_id' => $passwordlessLogin->id,
                     'expires_at' => $passwordlessLogin->expires_at,
-                ]
+                ],
+                null,
+                $ccRecipients
             );
 
             Log::info('Passwordless login email sent', [

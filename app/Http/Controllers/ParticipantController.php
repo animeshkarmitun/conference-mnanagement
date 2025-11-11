@@ -42,6 +42,11 @@ class ParticipantController extends Controller
                 return $next($request);
             }
 
+            // Participant self-service endpoints should remain accessible without admin permissions
+            if (in_array($action, ['profile', 'switchProfile'])) {
+                return $next($request);
+            }
+
             $permissionMap = [
                 'index' => 'participants.view',
                 'show' => 'participants.view',

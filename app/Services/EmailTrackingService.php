@@ -159,8 +159,15 @@ class EmailTrackingService
         ?int $relatedModelId = null,
         ?string $templateName = null,
         array $metadata = [],
-        ?Mailable $mailable = null
+        ?Mailable $mailable = null,
+        array $ccRecipients = []
     ): Email {
+        $ccRecipients = $this->normalizeEmailList($ccRecipients);
+
+        if (!empty($ccRecipients)) {
+            $metadata['cc_recipients'] = $ccRecipients;
+        }
+
         // Track the email first
         $email = $this->trackEmail(
             $recipientEmail,
@@ -186,18 +193,30 @@ class EmailTrackingService
         try {
             // Send the email
             if ($mailable) {
-                Mail::to($recipientEmail)->send($mailable);
+                $pendingMail = Mail::to($recipientEmail);
+
+                if (!empty($ccRecipients)) {
+                    $pendingMail->cc($ccRecipients);
+                }
+
+                $pendingMail->send($mailable);
             } else {
                 // Check if body contains HTML tags to determine content type
                 $isHtml = $this->isHtmlContent($body);
                 
                 if ($isHtml) {
-                    Mail::html($body, function ($message) use ($recipientEmail, $subject) {
+                    Mail::html($body, function ($message) use ($recipientEmail, $subject, $ccRecipients) {
                         $message->to($recipientEmail)->subject($subject);
+                        if (!empty($ccRecipients)) {
+                            $message->cc($ccRecipients);
+                        }
                     });
                 } else {
-                    Mail::raw($body, function ($message) use ($recipientEmail, $subject) {
+                    Mail::raw($body, function ($message) use ($recipientEmail, $subject, $ccRecipients) {
                         $message->to($recipientEmail)->subject($subject);
+                        if (!empty($ccRecipients)) {
+                            $message->cc($ccRecipients);
+                        }
                     });
                 }
             }
@@ -213,7 +232,7 @@ class EmailTrackingService
                 \Log::info('SMTP failed, trying Gmail API fallback for email: ' . $email->id);
                 
                 try {
-                    $this->sendViaGmailAPI($email, $recipientEmail, $subject, $body);
+                    $this->sendViaGmailAPI($email, $recipientEmail, $subject, $body, $ccRecipients);
                     $this->markAsSent($email);
                     \Log::info('Email sent successfully via Gmail API: ' . $email->id);
                 } catch (\Exception $gmailException) {
@@ -257,8 +276,15 @@ class EmailTrackingService
         ?string $relatedModelType = null,
         ?int $relatedModelId = null,
         ?string $templateName = null,
-        array $metadata = []
+        array $metadata = [],
+        array $ccRecipients = []
     ): Email {
+        $ccRecipients = $this->normalizeEmailList($ccRecipients);
+
+        if (!empty($ccRecipients)) {
+            $metadata['cc_recipients'] = $ccRecipients;
+        }
+
         // Track the email first
         $email = $this->trackEmail(
             $recipientEmail,
@@ -316,7 +342,8 @@ class EmailTrackingService
                 $subject,
                 $body,
                 null, // Let Gmail find or create thread
-                $recipientEmail
+                $recipientEmail,
+                $ccRecipients
             );
 
             // Update email record with Gmail info
@@ -776,7 +803,13 @@ class EmailTrackingService
     /**
      * Send email via Gmail API as fallback when SMTP fails
      */
-    private function sendViaGmailAPI(Email $email, string $recipientEmail, string $subject, string $body): void
+    private function sendViaGmailAPI(
+        Email $email,
+        string $recipientEmail,
+        string $subject,
+        string $body,
+        array $ccRecipients = []
+    ): void
     {
         try {
             // Get admin user with Google token
@@ -811,7 +844,7 @@ class EmailTrackingService
             $googleService->setAccessToken($token);
 
             // Send via Gmail API
-            $result = $googleService->sendEmail($recipientEmail, $subject, $body);
+            $result = $googleService->sendEmail($recipientEmail, $subject, $body, null, $ccRecipients);
 
             // Update email record with Gmail API details
             $email->update([
@@ -820,6 +853,7 @@ class EmailTrackingService
                     'sent_via' => 'gmail_api',
                     'gmail_message_id' => $result->getId(),
                     'gmail_thread_id' => $result->getThreadId(),
+                    'cc_recipients' => $ccRecipients,
                 ])
             ]);
 
@@ -838,4 +872,18 @@ class EmailTrackingService
         }
     }
 
+    /**
+     * Normalize and deduplicate email addresses.
+     */
+    private function normalizeEmailList(array $emails): array
+    {
+        $normalized = array_map(
+            static fn ($email) => strtolower(trim($email)),
+            $emails
+        );
+
+        $filtered = array_filter($normalized, static fn ($email) => !empty($email));
+
+        return array_values(array_unique($filtered));
+    }
 }

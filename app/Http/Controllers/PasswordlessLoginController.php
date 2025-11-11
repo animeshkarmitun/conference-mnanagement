@@ -8,6 +8,7 @@ use App\Models\PasswordlessLogin;
 use App\Services\PasswordlessLoginService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
@@ -81,7 +82,6 @@ class PasswordlessLoginController extends Controller
         $recentLogins = PasswordlessLogin::with(['user.participants.participantType'])
                                        ->whereHas('user.participants')
                                        ->orderBy('created_at', 'desc')
-                                       ->limit(10)
                                        ->get();
 
         return view('admin.passwordless-login.index', compact('stats', 'recentLogins'));
@@ -334,6 +334,36 @@ class PasswordlessLoginController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Delete a specific passwordless login token.
+     */
+    public function destroy(PasswordlessLogin $passwordlessLogin)
+    {
+        if (!auth()->user()->hasPermission('passwordless-login.delete')) {
+            abort(403, 'Access denied. Admin privileges required.');
+        }
+
+        if (!$passwordlessLogin->user || !$passwordlessLogin->user->participants()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only participant login tokens can be deleted from this screen.',
+            ], 422);
+        }
+
+        $passwordlessLogin->delete();
+
+        Log::info('Passwordless login token deleted by admin', [
+            'admin_id' => auth()->id(),
+            'token_id' => $passwordlessLogin->id,
+            'user_id' => $passwordlessLogin->user_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Passwordless login token deleted successfully.',
+        ]);
     }
 
     /**

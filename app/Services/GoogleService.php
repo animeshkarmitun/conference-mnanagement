@@ -156,12 +156,12 @@ class GoogleService
     }
 
     // Send email
-    public function sendEmail($to, $subject, $body, $threadId = null)
+    public function sendEmail($to, $subject, $body, $threadId = null, array $cc = [])
     {
         $service = new Gmail($this->client);
         
         // Create email message
-        $message = $this->createMessage($to, $subject, $body, $threadId);
+        $message = $this->createMessage($to, $subject, $body, $threadId, $cc);
         
         // Send the message
         $sentMessage = $service->users_messages->send('me', $message);
@@ -170,7 +170,7 @@ class GoogleService
     }
 
     // Send email and return both message and thread info
-    public function sendEmailWithThread($to, $subject, $body, $threadId = null, $participantEmail = null)
+    public function sendEmailWithThread($to, $subject, $body, $threadId = null, $participantEmail = null, array $cc = [])
     {
         $service = new Gmail($this->client);
         
@@ -180,7 +180,7 @@ class GoogleService
         }
         
         // Create email message
-        $message = $this->createMessage($to, $subject, $body, $threadId);
+        $message = $this->createMessage($to, $subject, $body, $threadId, $cc);
         
         // Send the message
         $sentMessage = $service->users_messages->send('me', $message);
@@ -236,7 +236,7 @@ class GoogleService
     }
 
     // Create email message
-    private function createMessage($to, $subject, $body, $threadId = null)
+    private function createMessage($to, $subject, $body, $threadId = null, array $cc = [])
     {
         $message = new \Google\Service\Gmail\Message();
         
@@ -247,6 +247,10 @@ class GoogleService
             'Content-Type' => 'text/html; charset=UTF-8',
             'MIME-Version' => '1.0'
         ];
+
+        if (!empty($cc)) {
+            $headers['Cc'] = implode(', ', array_map('trim', $cc));
+        }
 
         // If replying to a thread, add thread ID
         if ($threadId) {

@@ -32,6 +32,41 @@
             scrollbar-width: thin;
             scrollbar-color: #cbd5e1 #f1f5f9;
         }
+
+        .countdown-card .countdown-value,
+        .countdown-card .countdown-separator {
+            font-size: 1.75rem;
+        }
+
+        @media (max-width: 640px) {
+            .countdown-card {
+                padding: 1rem;
+            }
+
+            .countdown-card .countdown-value,
+            .countdown-card .countdown-separator {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .countdown-card {
+                padding: 0.75rem;
+            }
+
+            .countdown-card .countdown-value,
+            .countdown-card .countdown-separator {
+                font-size: 1.25rem;
+            }
+
+            .countdown-card .countdown-label {
+                font-size: 0.65rem;
+            }
+
+            .countdown-row > *:not(:first-child) {
+                margin-left: 0.5rem !important;
+            }
+        }
     </style>
     <script>
         tailwind.config = {
@@ -201,26 +236,26 @@
                                                     <h4 class="text-lg font-bold {{ $index % 6 == 0 ? 'text-blue-600' : ($index % 6 == 1 ? 'text-green-600' : ($index % 6 == 2 ? 'text-purple-600' : ($index % 6 == 3 ? 'text-red-600' : ($index % 6 == 4 ? 'text-orange-600' : 'text-indigo-600')))) }}">{{ $session->title }}</h4>
                                                     
                                                     <!-- Countdown Timer -->
-                                                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
-                                                        <div class="flex items-center justify-center space-x-6 text-center">
+                                                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200 countdown-card">
+                                                        <div class="flex items-center justify-center space-x-3 sm:space-x-6 text-center countdown-row">
                                                             <div class="flex flex-col items-center">
-                                                                <div class="text-2xl font-bold text-blue-600 countdown-days" data-start-time="{{ $session->start_time }}">--</div>
-                                                                <div class="text-xs text-gray-600">Days</div>
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-value countdown-days" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600 countdown-label">Days</div>
                                                             </div>
-                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="text-2xl font-bold text-gray-400 countdown-separator">:</div>
                                                             <div class="flex flex-col items-center">
-                                                                <div class="text-2xl font-bold text-blue-600 countdown-hours" data-start-time="{{ $session->start_time }}">--</div>
-                                                                <div class="text-xs text-gray-600">Hours</div>
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-value countdown-hours" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600 countdown-label">Hours</div>
                                                             </div>
-                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="text-2xl font-bold text-gray-400 countdown-separator">:</div>
                                                             <div class="flex flex-col items-center">
-                                                                <div class="text-2xl font-bold text-blue-600 countdown-minutes" data-start-time="{{ $session->start_time }}">--</div>
-                                                                <div class="text-xs text-gray-600">Min</div>
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-value countdown-minutes" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600 countdown-label">Min</div>
                                                             </div>
-                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="text-2xl font-bold text-gray-400 countdown-separator">:</div>
                                                             <div class="flex flex-col items-center">
-                                                                <div class="text-2xl font-bold text-blue-600 countdown-seconds" data-start-time="{{ $session->start_time }}">--</div>
-                                                                <div class="text-xs text-gray-600">Sec</div>
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-value countdown-seconds" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600 countdown-label">Sec</div>
                                                             </div>
                                                         </div>
                                                         <div class="text-center mt-2">
@@ -298,26 +333,26 @@
                                                     <h4 class="text-lg font-bold {{ $index % 6 == 0 ? 'text-blue-600' : ($index % 6 == 1 ? 'text-green-600' : ($index % 6 == 2 ? 'text-purple-600' : ($index % 6 == 3 ? 'text-red-600' : ($index % 6 == 4 ? 'text-orange-600' : 'text-indigo-600')))) }}">{{ $session->title }}</h4>
                                                     
                                                     <!-- Countdown Timer -->
-                                                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
-                                                        <div class="flex items-center justify-center space-x-6 text-center">
+                                                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200 countdown-card">
+                                                        <div class="flex items-center justify-center space-x-3 sm:space-x-6 text-center countdown-row">
                                                             <div class="flex flex-col items-center">
-                                                                <div class="text-2xl font-bold text-blue-600 countdown-days" data-start-time="{{ $session->start_time }}">--</div>
-                                                                <div class="text-xs text-gray-600">Days</div>
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-value countdown-days" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600 countdown-label">Days</div>
                                                             </div>
-                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="text-2xl font-bold text-gray-400 countdown-separator">:</div>
                                                             <div class="flex flex-col items-center">
-                                                                <div class="text-2xl font-bold text-blue-600 countdown-hours" data-start-time="{{ $session->start_time }}">--</div>
-                                                                <div class="text-xs text-gray-600">Hours</div>
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-value countdown-hours" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600 countdown-label">Hours</div>
                                                             </div>
-                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="text-2xl font-bold text-gray-400 countdown-separator">:</div>
                                                             <div class="flex flex-col items-center">
-                                                                <div class="text-2xl font-bold text-blue-600 countdown-minutes" data-start-time="{{ $session->start_time }}">--</div>
-                                                                <div class="text-xs text-gray-600">Min</div>
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-value countdown-minutes" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600 countdown-label">Min</div>
                                                             </div>
-                                                            <div class="text-2xl font-bold text-gray-400">:</div>
+                                                            <div class="text-2xl font-bold text-gray-400 countdown-separator">:</div>
                                                             <div class="flex flex-col items-center">
-                                                                <div class="text-2xl font-bold text-blue-600 countdown-seconds" data-start-time="{{ $session->start_time }}">--</div>
-                                                                <div class="text-xs text-gray-600">Sec</div>
+                                                                <div class="text-2xl font-bold text-blue-600 countdown-value countdown-seconds" data-start-time="{{ $session->start_time }}">--</div>
+                                                                <div class="text-xs text-gray-600 countdown-label">Sec</div>
                                                             </div>
                                                         </div>
                                                         <div class="text-center mt-2">

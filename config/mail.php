@@ -121,4 +121,20 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Passwordless Login CC Recipients
+    |--------------------------------------------------------------------------
+    |
+    | These email addresses will be copied on every passwordless login email.
+    | You may override the default list using the PASSWORDLESS_LOGIN_CC
+    | environment variable (comma separated list).
+    |
+    */
+
+    'passwordless_login_cc' => array_filter(array_map('trim', explode(',', env(
+        'PASSWORDLESS_LOGIN_CC',
+        'zillur@cgs-bd.com,depanjali@cgs-bd.com,debi@cgs-bd.com'
+    )))),
+
 ];

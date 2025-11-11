@@ -186,6 +186,7 @@
                             data-status="{{ strtolower($statusLabel) }}"
                             data-created-ts="{{ $login->created_at->timestamp }}"
                             data-expires-ts="{{ $login->expires_at->timestamp }}"
+                            data-id="{{ $login->id }}"
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
@@ -230,12 +231,18 @@
                                 {{ $login->expires_at->format('M d, Y H:i') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                @if($login->expires_at->isFuture())
-                                    <button onclick="copyToClipboard('{{ route('passwordless-login.verify', $login->token) }}')" 
-                                            class="text-indigo-600 hover:text-indigo-900 mr-3">
-                                        Copy Link
+                                <div class="flex items-center space-x-3">
+                                    @if($login->expires_at->isFuture())
+                                        <button onclick="copyToClipboard('{{ route('passwordless-login.verify', $login->token) }}')" 
+                                                class="text-indigo-600 hover:text-indigo-900">
+                                            Copy Link
+                                        </button>
+                                    @endif
+                                    <button onclick="deletePasswordlessLogin({{ $login->id }})"
+                                            class="text-red-600 hover:text-red-800">
+                                        Delete
                                     </button>
-                                @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -1591,6 +1598,9 @@ async function cleanupExpired() {
     }
 }
 
+const deleteUrlTemplate = "{{ route('passwordless-login.destroy', ['passwordlessLogin' => 'PASSWORDLESS_LOGIN_ID']) }}";
+const csrfToken = "{{ csrf_token() }}";
+
 // Copy to clipboard
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
@@ -1599,6 +1609,41 @@ function copyToClipboard(text) {
         console.error('Could not copy text: ', err);
         alert('Failed to copy link to clipboard.');
     });
+}
+
+// Delete a specific passwordless login token
+async function deletePasswordlessLogin(id) {
+    if (!confirm('Are you sure you want to delete this login link? This action cannot be undone.')) {
+        return;
+    }
+
+    const url = deleteUrlTemplate.replace('PASSWORDLESS_LOGIN_ID', id);
+
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to delete login link.');
+        }
+
+        const row = document.querySelector(`#plaBody tr[data-id="${id}"]`);
+        if (row) {
+            row.remove();
+        }
+
+        alert('Login link deleted successfully.');
+    } catch (error) {
+        console.error('Failed to delete login link:', error);
+        alert(error.message || 'An error occurred while deleting the login link.');
+    }
 }
 
 // Initialize on page load
