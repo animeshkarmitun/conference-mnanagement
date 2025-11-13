@@ -351,22 +351,17 @@
                                     </div>
                                     
                                     <div class="row g-2">
-                                        <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="col-lg-4 col-md-4 col-sm-6">
                                             <button type="button" class="btn btn-success w-100 btn-sm" onclick="createInstantBackup()" title="Create a quick full backup">
                                                 <i class="fas fa-bolt me-1"></i>Instant Backup
                                             </button>
                                         </div>
-                                        <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="col-lg-4 col-md-4 col-sm-6">
                                             <button type="button" class="btn btn-warning w-100 btn-sm" onclick="showCleanupModal()" title="Clean up old backups">
                                                 <i class="fas fa-broom me-1"></i>Cleanup
                                             </button>
                                         </div>
-                                        <div class="col-lg-3 col-md-4 col-sm-6">
-                                            <button type="button" class="btn btn-info w-100 btn-sm" onclick="testConnection()" title="Test backup system">
-                                                <i class="fas fa-stethoscope me-1"></i>System Test
-                                            </button>
-                                        </div>
-                                        <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="col-lg-4 col-md-4 col-sm-6">
                                             <button type="button" class="btn btn-outline-secondary w-100 btn-sm" onclick="exportBackupList()" title="Export backup list">
                                                 <i class="fas fa-download me-1"></i>Export
                                             </button>
@@ -509,13 +504,13 @@
                                                         <small class="text-muted">{{ $backup->created_at->format('M d, Y') }}</small><br>
                                                         <small>{{ $backup->created_at->format('H:i:s') }}</small>
                                                     </td>
-                                                    <td>{{ $backup->creator->first_name }} {{ $backup->creator->last_name }}</td>
+                                                    <td>{{ $backup->creator ? $backup->creator->first_name . ' ' . $backup->creator->last_name : 'System' }}</td>
                                                     <td>
                                                         <div class="btn-group btn-group-sm">
-                                                            <button type="button" class="btn btn-outline-info" onclick="viewBackup({{ $backup->id }})" title="View Details">
-                                                                <i class="fas fa-eye"></i>
-                                                            </button>
                                                             @if($backup->status === 'completed')
+                                                            <button type="button" class="btn btn-outline-primary" onclick="downloadBackup({{ $backup->id }})" title="Download Backup">
+                                                                <i class="fas fa-download"></i>
+                                                            </button>
                                                             <button type="button" class="btn btn-outline-success" onclick="restoreBackup({{ $backup->id }})" title="Restore">
                                                                 <i class="fas fa-undo"></i>
                                                             </button>
@@ -579,15 +574,15 @@
                                                     </div>
                                                     <div class="col-6">
                                                         <small class="text-muted">Creator:</small><br>
-                                                        <small>{{ $backup->creator->first_name }} {{ $backup->creator->last_name }}</small>
+                                                        <small>{{ $backup->creator ? $backup->creator->first_name . ' ' . $backup->creator->last_name : 'System' }}</small>
                                                     </div>
                                                 </div>
                                                 
                                                 <div class="btn-group w-100" role="group">
-                                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="viewBackup({{ $backup->id }})" title="View Details">
-                                                        <i class="fas fa-eye me-1"></i>View
-                                                    </button>
                                                     @if($backup->status === 'completed')
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="downloadBackup({{ $backup->id }})" title="Download Backup">
+                                                        <i class="fas fa-download me-1"></i>Download
+                                                    </button>
                                                     <button type="button" class="btn btn-outline-success btn-sm" onclick="restoreBackup({{ $backup->id }})" title="Restore">
                                                         <i class="fas fa-undo me-1"></i>Restore
                                                     </button>
@@ -871,6 +866,7 @@
         </div>
     </div>
 </div>
+
 @endsection
 
 @push('scripts')
@@ -982,7 +978,22 @@ function createInstantBackup() {
             console.log('Response data:', data);
             if (data.success) {
                 showAlert('success', 'Instant backup created successfully!');
-                // Start polling for updates
+                // Immediately refresh the backup list to show the new backup
+                setTimeout(() => {
+                    refreshBackupList();
+                    // Also refresh stats (which will also refresh the list, but that's ok - it ensures consistency)
+                    fetch('{{ route("admin.backup.stats") }}')
+                    .then(response => response.json())
+                    .then(statsData => {
+                        if (statsData.success) {
+                            updateStats(statsData.backup_stats, statsData.storage_info);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error refreshing stats:', error);
+                    });
+                }, 500); // Small delay to ensure backup is recorded in database
+                // Start polling for updates to track progress
                 startStatusPolling();
             } else {
                 console.error('Backup failed with message:', data.message);
@@ -1003,7 +1014,21 @@ function createInstantBackup() {
     }
 }
 
-// View backup details
+// Download backup file
+function downloadBackup(id) {
+    // Create a download link and trigger it
+    const downloadUrl = `{{ url('admin/backup') }}/${id}/download`;
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = '';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showAlert('success', 'Download started...');
+}
+
+// View backup details (kept for backward compatibility if needed elsewhere)
 function viewBackup(id) {
     showLoading('Loading backup details...');
     
@@ -1165,18 +1190,32 @@ function executeRestore() {
         return;
     }
     
-    showLoading('Starting restore operation...');
+    // Show loading with longer timeout message since restore can take time
+    showLoading('Starting restore operation... This may take several minutes. Please wait...');
+    
+    // Increase timeout for restore operation (10 minutes)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes
     
     fetch(`{{ url('admin/backup') }}/${document.getElementById('restoreBackupId').value}/restore`, {
         method: 'POST',
         body: formData,
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
+        },
+        signal: controller.signal
     })
     .then(response => {
+        clearTimeout(timeoutId);
         console.log('Restore response status:', response.status);
         console.log('Restore response headers:', response.headers);
+        
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Restore failed');
+            });
+        }
+        
         return response.json();
     })
     .then(data => {
@@ -1186,8 +1225,8 @@ function executeRestore() {
         console.log('Data message:', data.message);
         
         if (data.success) {
-            console.log('Restore successful, showing success alert');
-            showAlert('success', data.message);
+            console.log('Restore completed successfully');
+            showAlert('success', data.message || 'Restore completed successfully!');
             console.log('Hiding restore modal');
             
             // Try to get the modal instance and hide it
@@ -1206,13 +1245,27 @@ function executeRestore() {
                 console.error('Restore modal element not found');
             }
             
-            console.log('Reloading page in 2 seconds...');
+            // Refresh backup list and stats
             setTimeout(() => {
-                location.reload();
-            }, 2000);
+                refreshBackupList();
+                fetch('{{ route("admin.backup.stats") }}')
+                .then(response => response.json())
+                .then(statsData => {
+                    if (statsData.success) {
+                        updateStats(statsData.backup_stats, statsData.storage_info);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing stats:', error);
+                });
+                // Reload page to show updated status
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }, 500);
         } else {
             console.log('Restore failed, showing error alert');
-            showAlert('error', data.message);
+            showAlert('error', data.message || 'Restore failed');
             
             // Close modal on error too
             const modalElement = document.getElementById('restoreModal');
@@ -1229,13 +1282,19 @@ function executeRestore() {
         }
     })
     .catch(error => {
+        clearTimeout(timeoutId);
         hideLoading();
         console.error('=== RESTORE ERROR DETAILS ===');
         console.error('Error object:', error);
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
         console.error('=============================');
-        showAlert('error', 'An error occurred while restoring backup. Check console for details.');
+        
+        if (error.name === 'AbortError' || error.message.includes('timeout')) {
+            showAlert('error', 'Restore operation timed out. The restore may still be in progress. Please check the restore status manually or wait a few minutes and refresh the page.');
+        } else {
+            showAlert('error', 'Restore failed: ' + (error.message || 'Unknown error occurred'));
+        }
         
         // Close modal on error too
         const modalElement = document.getElementById('restoreModal');
@@ -1249,6 +1308,11 @@ function executeRestore() {
                 newModalInstance.hide();
             }
         }
+        
+        // Refresh page after error to show current status
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
     });
 }
 
@@ -1407,43 +1471,99 @@ function showRestoreHistory() {
     showLoading('Loading restore history...');
     
     fetch('{{ route("admin.backup.restore.history") }}')
-    .then(response => response.json())
+    .then(response => {
+        // Check if response is ok (status 200-299)
+        if (!response.ok) {
+            return response.text().then(text => {
+                try {
+                    const data = JSON.parse(text);
+                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                } catch (e) {
+                    if (e instanceof Error && e.message.includes('HTTP error')) {
+                        throw e;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}`);
+                }
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         hideLoading();
         if (data.success) {
-            displayRestoreHistory(data.restores);
-            bootstrap.Modal.getInstance(document.getElementById('restoreHistoryModal')).show();
+            displayRestoreHistory(data.restores || []);
+            
+            // Get or create modal instance
+            const modalElement = document.getElementById('restoreHistoryModal');
+            if (!modalElement) {
+                console.error('Restore history modal element not found');
+                showAlert('error', 'Restore history modal not found');
+                return;
+            }
+            
+            // Try to get existing instance, or create a new one
+            let modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (!modalInstance) {
+                modalInstance = new bootstrap.Modal(modalElement);
+            }
+            modalInstance.show();
         } else {
-            showAlert('error', data.message);
+            showAlert('error', data.message || 'Failed to load restore history');
         }
     })
     .catch(error => {
         hideLoading();
-        showAlert('error', 'An error occurred while loading restore history');
-        console.error('Error:', error);
+        const errorMessage = error.message || 'An error occurred while loading restore history';
+        showAlert('error', errorMessage);
+        console.error('Restore history error:', error);
     });
 }
 
 // Display restore history
 function displayRestoreHistory(restores) {
     const tbody = document.querySelector('#restoreHistoryTable tbody');
+    if (!tbody) {
+        console.error('Restore history table tbody not found');
+        return;
+    }
+    
     tbody.innerHTML = '';
     
-    if (restores.length === 0) {
+    if (!restores || restores.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No restore operations found</td></tr>';
         return;
     }
     
     restores.forEach(restore => {
+        if (!restore) {
+            return;
+        }
+        
         const row = document.createElement('tr');
+        
+        // Safely get status badge class
+        let statusBadgeClass = 'secondary';
+        if (restore.status === 'completed') {
+            statusBadgeClass = 'success';
+        } else if (restore.status === 'failed') {
+            statusBadgeClass = 'danger';
+        } else if (restore.status === 'in_progress') {
+            statusBadgeClass = 'warning';
+        } else if (restore.status === 'pending') {
+            statusBadgeClass = 'info';
+        }
+        
+        // Safely get type badge class
+        const typeBadgeClass = restore.type === 'full' ? 'primary' : 'secondary';
+        
         row.innerHTML = `
-            <td>${restore.id}</td>
-            <td>${restore.backup_date}</td>
-            <td><span class="badge bg-${restore.type === 'full' ? 'primary' : 'secondary'}">${restore.type}</span></td>
-            <td><span class="badge bg-${restore.status === 'completed' ? 'success' : 'warning'}">${restore.status}</span></td>
-            <td>${restore.tables_restored}</td>
-            <td>${restore.created_at}</td>
-            <td>${restore.creator}</td>
+            <td>${restore.id || 'N/A'}</td>
+            <td>${restore.backup_date || 'N/A'}</td>
+            <td><span class="badge bg-${typeBadgeClass}">${restore.type || 'unknown'}</span></td>
+            <td><span class="badge bg-${statusBadgeClass}">${restore.status || 'unknown'}</span></td>
+            <td>${restore.tables_restored || 'All tables'}</td>
+            <td>${restore.created_at || 'N/A'}</td>
+            <td>${restore.creator || 'Unknown'}</td>
             <td>${restore.duration || 'N/A'}</td>
         `;
         tbody.appendChild(row);
@@ -1477,18 +1597,21 @@ function loadTablesForRestore() {
     });
 }
 
-// Refresh statistics
+// Refresh statistics and backup list
 function refreshStats() {
     showLoading('Refreshing statistics...');
     
     fetch('{{ route("admin.backup.stats") }}')
     .then(response => response.json())
     .then(data => {
-        hideLoading();
         if (data.success) {
             updateStats(data.backup_stats, data.storage_info);
-            showAlert('success', 'Statistics refreshed successfully');
+            // Refresh the backup list after updating stats
+            refreshBackupList();
+            hideLoading();
+            showAlert('success', 'Statistics and backup list refreshed successfully');
         } else {
+            hideLoading();
             showAlert('error', data.message);
         }
     })
@@ -1511,75 +1634,7 @@ function updateStats(backupStats, storageInfo) {
     document.getElementById('lastBackupSize').textContent = backupStats.last_backup_size || 'N/A';
 }
 
-// Test backup system connection
-function testConnection() {
-    showLoading('Testing backup system...');
-    
-    fetch('{{ route("admin.backup.test.connection") }}')
-    .then(response => response.json())
-    .then(data => {
-        hideLoading();
-        if (data.success) {
-            displayTestResults(data.results);
-        } else {
-            showAlert('error', data.message);
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        showAlert('error', 'An error occurred while testing connection');
-        console.error('Error:', error);
-    });
-}
 
-// Display test results
-function displayTestResults(results) {
-    let message = 'Backup System Test Results:\n\n';
-    
-    for (const [key, value] of Object.entries(results)) {
-        if (key === 'database_config') {
-            message += `${key}:\n`;
-            for (const [configKey, configValue] of Object.entries(value)) {
-                message += `  ${configKey}: ${configValue}\n`;
-            }
-        } else {
-            message += `${key}: ${value}\n`;
-        }
-    }
-    
-    showAlert('info', message);
-}
-
-// Test simple backup functionality
-function testSimpleBackup() {
-    showLoading('Running simple backup test...');
-    
-    fetch('{{ route("admin.backup.test.simple") }}')
-    .then(response => {
-        console.log('Simple test response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        hideLoading();
-        console.log('Simple test response data:', data);
-        if (data.success) {
-            displayTestResults(data.results);
-        } else {
-            console.error('Simple test failed:', data.message);
-            console.error('Simple test error:', data.error);
-            showAlert('error', data.message);
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        console.error('=== SIMPLE TEST ERROR DETAILS ===');
-        console.error('Error object:', error);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-        console.error('==================================');
-        showAlert('error', 'An error occurred while running simple test. Check console for details.');
-    });
-}
 
 // Progress bar functions
 function showProgressBar() {
@@ -1619,11 +1674,24 @@ function startProgressAnimation() {
 
 // Status polling for real-time updates
 let statusPollingInterval = null;
+let lastBackupCount = 0;
 
 function startStatusPolling() {
     if (statusPollingInterval) {
         clearInterval(statusPollingInterval);
     }
+    
+    // Get initial backup count
+    fetch('{{ route("admin.backup.stats") }}')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            lastBackupCount = data.backup_stats.total_backups;
+        }
+    })
+    .catch(error => {
+        console.error('Error getting initial backup count:', error);
+    });
     
     statusPollingInterval = setInterval(() => {
         fetch('{{ route("admin.backup.stats") }}')
@@ -1631,13 +1699,23 @@ function startStatusPolling() {
         .then(data => {
             if (data.success) {
                 updateStats(data.backup_stats, data.storage_info);
+                
+                // Refresh backup list if count changed or if backups completed
+                if (data.backup_stats.total_backups !== lastBackupCount) {
+                    refreshBackupList();
+                    lastBackupCount = data.backup_stats.total_backups;
+                }
+                
                 // Check if any backups are still in progress
                 const hasInProgress = data.backup_stats.total_backups > 0 && 
                                     data.backup_stats.completed_backups < data.backup_stats.total_backups;
                 
-                if (!hasInProgress) {
+                // Refresh list when backup completes
+                if (!hasInProgress && lastBackupCount > 0) {
+                    refreshBackupList();
                     clearInterval(statusPollingInterval);
                     statusPollingInterval = null;
+                    lastBackupCount = 0;
                 }
             }
         })
@@ -1654,27 +1732,193 @@ function stopStatusPolling() {
     }
 }
 
+// Restore status polling
+let restorePollingInterval = null;
+
+function startRestoreStatusPolling(restoreId) {
+    console.log('Starting restore status polling for restore ID:', restoreId);
+    
+    if (restorePollingInterval) {
+        clearInterval(restorePollingInterval);
+    }
+    
+    let pollCount = 0;
+    const maxPolls = 600; // Poll for up to 10 minutes (600 * 1 second)
+    
+    // Show a notification that restore is in progress
+    showAlert('info', 'Restore operation started. Please wait...');
+    
+    restorePollingInterval = setInterval(() => {
+        pollCount++;
+        
+        // Check restore status via restore status endpoint
+        fetch(`{{ url('admin/backup/restore/status') }}/${restoreId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.restore) {
+                const restore = data.restore;
+                console.log('Restore status:', restore.status, 'Poll count:', pollCount);
+                
+                if (restore.status === 'completed') {
+                    clearInterval(restorePollingInterval);
+                    restorePollingInterval = null;
+                    showAlert('success', 'Restore completed successfully!');
+                    // Refresh backup list and stats
+                    setTimeout(() => {
+                        refreshBackupList();
+                        fetch('{{ route("admin.backup.stats") }}')
+                        .then(response => response.json())
+                        .then(statsData => {
+                            if (statsData.success) {
+                                updateStats(statsData.backup_stats, statsData.storage_info);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error refreshing stats:', error);
+                        });
+                        // Refresh page after a delay
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    }, 1000);
+                } else if (restore.status === 'failed') {
+                    clearInterval(restorePollingInterval);
+                    restorePollingInterval = null;
+                    showAlert('error', 'Restore failed: ' + (restore.error_message || 'Unknown error'));
+                    // Refresh backup list and stats
+                    setTimeout(() => {
+                        refreshBackupList();
+                        fetch('{{ route("admin.backup.stats") }}')
+                        .then(response => response.json())
+                        .then(statsData => {
+                            if (statsData.success) {
+                                updateStats(statsData.backup_stats, statsData.storage_info);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error refreshing stats:', error);
+                        });
+                    }, 1000);
+                } else if (restore.status === 'in_progress' || restore.status === 'pending') {
+                    // Still in progress, continue polling
+                    if (pollCount % 10 === 0) {
+                        console.log('Restore still in progress...', pollCount, 'seconds elapsed');
+                    }
+                }
+            } else {
+                console.error('Failed to get restore status:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error polling restore status:', error);
+            // Don't stop polling on network errors, just log them
+            if (pollCount % 30 === 0) {
+                console.warn('Network error while polling restore status, continuing...');
+            }
+        });
+        
+        // Stop polling after max attempts
+        if (pollCount >= maxPolls) {
+            clearInterval(restorePollingInterval);
+            restorePollingInterval = null;
+            showAlert('warning', 'Restore is taking longer than expected. Please check the restore history manually.');
+        }
+    }, 1000); // Poll every second
+}
+
+function stopRestoreStatusPolling() {
+    if (restorePollingInterval) {
+        clearInterval(restorePollingInterval);
+        restorePollingInterval = null;
+    }
+}
+
 // Auto-refresh backup list
 function refreshBackupList() {
-    fetch('{{ route("admin.backup.index") }}')
-    .then(response => response.text())
+    console.log('Refreshing backup list...');
+    // Fetch fresh backup data from index page
+    fetch('{{ route("admin.backup.index") }}', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'text/html'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+    })
     .then(html => {
         // Extract the table content from the response
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        const newTableContent = doc.querySelector('.table-responsive');
+        
+        // Get desktop table content
+        const newTableContent = doc.querySelector('.table-responsive.d-none.d-lg-block');
+        // Get mobile table content
         const newMobileContent = doc.querySelector('.d-lg-none');
         
+        // Update desktop table
         if (newTableContent) {
-            document.querySelector('.table-responsive').innerHTML = newTableContent.innerHTML;
+            const currentTable = document.querySelector('.table-responsive.d-none.d-lg-block');
+            if (currentTable) {
+                // Update the tbody content
+                const newTbody = newTableContent.querySelector('tbody');
+                const currentTbody = currentTable.querySelector('tbody');
+                if (newTbody && currentTbody) {
+                    currentTbody.innerHTML = newTbody.innerHTML;
+                    console.log('Desktop table refreshed');
+                } else {
+                    // Fallback: replace entire table
+                    currentTable.innerHTML = newTableContent.innerHTML;
+                    console.log('Desktop table refreshed (fallback)');
+                }
+            }
         }
+        
+        // Update mobile table
         if (newMobileContent) {
-            document.querySelector('.d-lg-none').innerHTML = newMobileContent.innerHTML;
+            const currentMobile = document.querySelector('.d-lg-none');
+            if (currentMobile) {
+                // Get all mobile cards
+                const newCards = newMobileContent.querySelectorAll('.card.mb-3');
+                const currentCards = currentMobile.querySelectorAll('.card.mb-3');
+                
+                if (newCards.length > 0) {
+                    // Clear existing cards
+                    currentMobile.innerHTML = '';
+                    // Add new cards
+                    newCards.forEach(card => {
+                        currentMobile.appendChild(card.cloneNode(true));
+                    });
+                    console.log('Mobile table refreshed');
+                } else {
+                    // Fallback: replace entire content
+                    currentMobile.innerHTML = newMobileContent.innerHTML;
+                    console.log('Mobile table refreshed (fallback)');
+                }
+            }
         }
+        
+        console.log('Backup list refreshed successfully');
     })
     .catch(error => {
         console.error('Error refreshing backup list:', error);
+        // Fallback: reload the page if refresh fails
+        console.log('Attempting page reload as fallback...');
+        // Don't reload automatically - just log the error
+        // location.reload();
     });
+}
+
+// Attach event listeners to backup list buttons
+function attachBackupListEventListeners() {
+    // This function will be called after refreshing the backup list
+    // to ensure all buttons have their click handlers attached
+    // Note: Since we're using onclick attributes in the HTML, this is not strictly necessary
+    // but it's here for future enhancements if needed
 }
 
 // Utility functions

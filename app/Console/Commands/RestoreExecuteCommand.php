@@ -101,20 +101,71 @@ class RestoreExecuteCommand extends Command
             }
         }
 
+        // Wait a moment to ensure restore record is created by controller
+        sleep(2);
+        
+        // Find existing restore record for this backup (created by controller)
+        $restoreRecord = \App\Models\RestoreRecord::where('backup_id', $backupId)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->latest()
+            ->first();
+
+        if (!$restoreRecord) {
+            $this->error("No restore record found for backup ID {$backupId}");
+            $this->error("This might happen if the restore record was not created properly.");
+            $this->error("Please check the logs for more information.");
+            return 1;
+        }
+
+        $this->info("Found restore record ID: {$restoreRecord->id}");
         $this->info("Starting restore operation...");
+        $this->info("Backup file: {$backup->getFullFilePath()}");
 
         try {
+            // Increase execution time limit
+            set_time_limit(0);
+            ini_set('max_execution_time', '0');
+            ini_set('memory_limit', '512M');
+            
+            // Update restore record status to in_progress if it's pending
+            if ($restoreRecord->status === 'pending') {
+                $restoreRecord->update(['status' => 'in_progress']);
+            }
+
+            // Execute restore using the existing restore record
+            $this->info("Calling restoreFromBackup service...");
             $restore = $this->restoreService->restoreFromBackup($backupId, $type, $tablesArray, $user);
 
             $this->info("Restore completed successfully!");
             $this->line("Restore ID: {$restore->id}");
             $this->line("Status: {$restore->status}");
-            $this->line("Duration: {$restore->duration}");
+            if ($restore->completed_at) {
+                $this->line("Completed at: {$restore->completed_at->format('Y-m-d H:i:s')}");
+            }
+            
+            // Verify restore record was updated
+            $restoreRecord->refresh();
+            $this->line("Final restore record status: {$restoreRecord->status}");
 
             return 0;
 
         } catch (Exception $e) {
             $this->error("Restore failed: " . $e->getMessage());
+            $this->error("Error trace: " . $e->getTraceAsString());
+            
+            // Update restore record with error
+            try {
+                $restoreRecord->refresh();
+                $restoreRecord->update([
+                    'status' => 'failed',
+                    'error_message' => $e->getMessage(),
+                    'completed_at' => now(),
+                ]);
+                $this->info("Restore record updated with error status");
+            } catch (Exception $updateError) {
+                $this->error("Failed to update restore record: " . $updateError->getMessage());
+            }
+            
             return 1;
         }
     }

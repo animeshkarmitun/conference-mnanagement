@@ -533,6 +533,7 @@ class ParticipantController extends Controller
             ->whereHas('conference', function($query) use ($participant) {
                 $query->where('id', $participant->conference_id);
             })
+            ->with(['participants.user'])
             ->withPivot('role')
             ->get();
         
@@ -1026,6 +1027,7 @@ class ParticipantController extends Controller
             ->whereHas('conference', function($query) use ($participant) {
                 $query->where('id', $participant->conference_id);
             })
+            ->with(['participants.user'])
             ->withPivot('role')
             ->orderBy('start_time', 'asc')
             ->get();
@@ -1094,6 +1096,7 @@ class ParticipantController extends Controller
             ->whereHas('conference', function($query) use ($participant) {
                 $query->where('id', $participant->conference_id);
             })
+            ->with(['participants.user'])
             ->withPivot('role')
             ->orderBy('start_time', 'asc')
             ->get();

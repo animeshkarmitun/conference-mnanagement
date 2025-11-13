@@ -73,7 +73,31 @@ class RestoreRecord extends Model
             return 'All tables';
         }
         
-        return implode(', ', $this->tables_restored);
+        // Ensure tables_restored is an array
+        if (!is_array($this->tables_restored)) {
+            // Try to decode if it's a JSON string
+            if (is_string($this->tables_restored)) {
+                $decoded = json_decode($this->tables_restored, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $this->tables_restored = $decoded;
+                } else {
+                    return 'All tables';
+                }
+            } else {
+                return 'All tables';
+            }
+        }
+        
+        // Filter out any null or empty values
+        $tables = array_filter($this->tables_restored, function($table) {
+            return !empty($table) && is_string($table);
+        });
+        
+        if (empty($tables)) {
+            return 'All tables';
+        }
+        
+        return implode(', ', $tables);
     }
 
     // Helper methods

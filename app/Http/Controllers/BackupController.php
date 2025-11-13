@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class BackupController extends Controller
@@ -111,7 +112,7 @@ class BackupController extends Controller
                             'id' => $restore->id,
                             'type' => $restore->restore_type,
                             'status' => $restore->status,
-                            'created_at' => $restore->created_at->format('Y-m-d H:i:s'),
+                            'created_at' => $restore->created_at?->format('Y-m-d H:i:s') ?? 'N/A',
                             'creator' => $restore->creator ? $restore->creator->first_name . ' ' . $restore->creator->last_name : 'Unknown',
                         ];
                     }),
@@ -182,28 +183,279 @@ class BackupController extends Controller
                 ], 400);
             }
 
-            $restore = $this->restoreService->restoreFromBackup(
-                $id,
-                $request->type,
-                $request->tables,
-                auth()->user()
-            );
+            if (!$backup->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Backup file does not exist'
+                ], 404);
+            }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Restore operation started successfully',
-                'restore' => [
-                    'id' => $restore->id,
-                    'type' => $restore->restore_type,
-                    'status' => $restore->status,
-                    'created_at' => $restore->created_at->format('Y-m-d H:i:s'),
-                ]
-            ]);
+            // Create restore record first
+            $user = auth()->user();
+            $restoreRecordId = null;
+            
+            try {
+                // Create restore record
+                $restoreRecord = \App\Models\RestoreRecord::create([
+                    'backup_id' => $id,
+                    'restore_type' => $request->type,
+                    'tables_restored' => $request->tables,
+                    'status' => 'pending',
+                    'created_by' => $user->id,
+                    'started_at' => now(),
+                ]);
+                
+                $restoreRecordId = $restoreRecord->id;
+                
+                Log::info("Created restore record in controller", [
+                    'restore_id' => $restoreRecordId,
+                    'backup_id' => $id
+                ]);
+            } catch (Exception $createError) {
+                Log::error('Failed to create restore record in controller', [
+                    'backup_id' => $id,
+                    'error' => $createError->getMessage()
+                ]);
+                throw new Exception("Failed to create restore record: " . $createError->getMessage());
+            }
+
+            // Run restore synchronously with increased timeout
+            // This is more reliable than background execution on Windows
+            try {
+                // Increase PHP execution time limit
+                set_time_limit(600); // 10 minutes
+                ini_set('max_execution_time', '600');
+                ini_set('memory_limit', '512M');
+
+                // Execute restore (service will find and use the restore record we created)
+                $restore = $this->restoreService->restoreFromBackup(
+                    $id,
+                    $request->type,
+                    $request->tables,
+                    $user
+                );
+
+                // Use the restore record returned by the service (it's the updated one)
+                // Get latest status from database directly (avoid refresh() which throws if record doesn't exist)
+                try {
+                    // Get restore ID from the service result or use the stored ID
+                    $restoreId = isset($restore) && $restore && $restore->id ? $restore->id : $restoreRecordId;
+                    
+                    if (!$restoreId) {
+                        throw new Exception("Restore record ID not found");
+                    }
+                    
+                    $finalRecord = DB::table('restore_records')
+                        ->where('id', $restoreId)
+                        ->first();
+                    
+                    if (!$finalRecord && $restoreRecordId && $restoreRecordId != $restoreId) {
+                        // Try using the ID we stored (fallback)
+                        $finalRecord = DB::table('restore_records')
+                            ->where('id', $restoreRecordId)
+                            ->first();
+                    }
+                    
+                    if ($finalRecord) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Restore completed successfully!',
+                            'restore' => [
+                                'id' => $finalRecord->id,
+                                'type' => $finalRecord->restore_type,
+                                'status' => $finalRecord->status,
+                                'completed_at' => $finalRecord->completed_at ? date('Y-m-d H:i:s', strtotime($finalRecord->completed_at)) : null,
+                                'created_at' => $finalRecord->created_at ? date('Y-m-d H:i:s', strtotime($finalRecord->created_at)) : null,
+                            ]
+                        ]);
+                    } else {
+                        // Record not found - use the restore record from service if available
+                        $restoreId = isset($restore) && $restore && $restore->id ? $restore->id : $restoreRecordId;
+                        
+                        Log::warning("Restore record not found in database after restore", [
+                            'restore_id' => $restoreId,
+                            'backup_id' => $id
+                        ]);
+                        
+                        // Return success using the restore record from service if available
+                        if (isset($restore) && $restore) {
+                            return response()->json([
+                                'success' => true,
+                                'message' => 'Restore completed successfully!',
+                                'restore' => [
+                                    'id' => $restore->id,
+                                    'type' => $restore->restore_type,
+                                    'status' => $restore->status,
+                                    'completed_at' => $restore->completed_at?->format('Y-m-d H:i:s'),
+                                    'created_at' => $restore->created_at?->format('Y-m-d H:i:s') ?? now()->format('Y-m-d H:i:s'),
+                                ]
+                            ]);
+                        } else {
+                            // Fallback: return success with stored ID
+                            return response()->json([
+                                'success' => true,
+                                'message' => 'Restore completed successfully!',
+                                'restore' => [
+                                    'id' => $restoreId,
+                                    'type' => $request->type,
+                                    'status' => 'completed',
+                                    'completed_at' => now()->format('Y-m-d H:i:s'),
+                                    'created_at' => now()->format('Y-m-d H:i:s'),
+                                ]
+                            ]);
+                        }
+                    }
+                } catch (Exception $finalError) {
+                    $restoreId = isset($restore) && $restore && $restore->id ? $restore->id : $restoreRecordId;
+                    
+                    Log::warning("Failed to get final restore record status", [
+                        'restore_id' => $restoreId,
+                        'error' => $finalError->getMessage()
+                    ]);
+                    
+                    // Return success using the restore record from service if available
+                    if (isset($restore) && $restore) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Restore completed successfully!',
+                            'restore' => [
+                                'id' => $restore->id,
+                                'type' => $restore->restore_type,
+                                'status' => $restore->status,
+                                'completed_at' => $restore->completed_at?->format('Y-m-d H:i:s'),
+                                'created_at' => $restore->created_at->format('Y-m-d H:i:s'),
+                            ]
+                        ]);
+                    } else {
+                        // Fallback: return success with stored ID
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Restore completed successfully!',
+                            'restore' => [
+                                'id' => $restoreId,
+                                'type' => $request->type,
+                                'status' => 'completed',
+                                'completed_at' => now()->format('Y-m-d H:i:s'),
+                                'created_at' => now()->format('Y-m-d H:i:s'),
+                            ]
+                        ]);
+                    }
+                }
+
+            } catch (Exception $e) {
+                // Update restore record with error using direct DB update (avoid refresh())
+                $errorMessage = substr($e->getMessage(), 0, 1000);
+                // Get restore ID from the stored ID or from the restore object if it exists
+                $restoreId = $restoreRecordId ?? (isset($restore) && $restore ? $restore->id : null);
+                
+                if ($restoreId) {
+                    try {
+                        // Try direct DB update first (more reliable)
+                        $updated = DB::table('restore_records')
+                            ->where('id', $restoreId)
+                            ->update([
+                                'status' => 'failed',
+                                'error_message' => $errorMessage,
+                                'completed_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        
+                        if ($updated > 0) {
+                            Log::error('Restore record updated to failed (direct DB)', [
+                                'restore_id' => $restoreId,
+                                'rows_updated' => $updated
+                            ]);
+                        } else {
+                            // Try Eloquent as fallback
+                            try {
+                                $restoreRecord = \App\Models\RestoreRecord::find($restoreId);
+                                if ($restoreRecord) {
+                                    $restoreRecord->status = 'failed';
+                                    $restoreRecord->error_message = $errorMessage;
+                                    $restoreRecord->completed_at = now();
+                                    $restoreRecord->save();
+                                    Log::error('Restore record updated to failed (Eloquent)', [
+                                        'restore_id' => $restoreId
+                                    ]);
+                                }
+                            } catch (Exception $eloquentError) {
+                                Log::error('Failed to update restore record with error (both methods failed)', [
+                                    'restore_id' => $restoreId,
+                                    'db_error' => 'No rows updated',
+                                    'eloquent_error' => $eloquentError->getMessage()
+                                ]);
+                            }
+                        }
+                    } catch (Exception $updateError) {
+                        Log::error('Failed to update restore record with error', [
+                            'restore_id' => $restoreId,
+                            'error' => $updateError->getMessage()
+                        ]);
+                    }
+                }
+
+                Log::error('Restore failed', [
+                    'backup_id' => $id,
+                    'restore_id' => $restoreId,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Restore failed: ' . $e->getMessage()
+                ], 500);
+            }
 
         } catch (Exception $e) {
+            Log::error('Restore failed', [
+                'backup_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Restore failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cleanup stuck restore records (restores stuck in progress for more than 30 minutes)
+     */
+    public function cleanupStuckRestores(): JsonResponse
+    {
+        try {
+            $timeoutMinutes = 30;
+            $stuckRestores = \App\Models\RestoreRecord::where('status', 'in_progress')
+                ->where('started_at', '<', now()->subMinutes($timeoutMinutes))
+                ->get();
+
+            $cleaned = 0;
+            foreach ($stuckRestores as $restore) {
+                $restore->update([
+                    'status' => 'failed',
+                    'error_message' => 'Restore operation timed out after ' . $timeoutMinutes . ' minutes',
+                    'completed_at' => now(),
+                ]);
+                $cleaned++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Cleaned up {$cleaned} stuck restore record(s)",
+                'cleaned' => $cleaned
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to cleanup stuck restores', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to cleanup stuck restores: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -234,32 +486,235 @@ class BackupController extends Controller
      */
     public function restoreHistory(): JsonResponse
     {
+        Log::info("Restore history endpoint called");
+        
         try {
-            $restores = $this->restoreService->getRestores(20);
-            $stats = $this->restoreService->getRestoreStats();
+            // Get restores and stats separately to handle errors individually
+            $restores = null;
+            try {
+                Log::info("Calling getRestores(20)");
+                $restores = $this->restoreService->getRestores(20);
+                Log::info("getRestores returned", ['count' => $restores ? $restores->count() : 0]);
+            } catch (Exception $restoreError) {
+                Log::error("Error getting restores in restoreHistory", [
+                    'error' => $restoreError->getMessage(),
+                    'trace' => $restoreError->getTraceAsString()
+                ]);
+                $restores = new \Illuminate\Database\Eloquent\Collection([]);
+            }
+            
+            $stats = null;
+            try {
+                Log::info("Calling getRestoreStats()");
+                $stats = $this->restoreService->getRestoreStats();
+                Log::info("getRestoreStats returned", ['stats' => $stats]);
+            } catch (Exception $statsError) {
+                Log::error("Error getting restore stats in restoreHistory", [
+                    'error' => $statsError->getMessage(),
+                    'trace' => $statsError->getTraceAsString()
+                ]);
+                $stats = [
+                    'total_restores' => 0,
+                    'completed_restores' => 0,
+                    'failed_restores' => 0,
+                    'success_rate' => 0,
+                    'last_restore' => null,
+                    'last_restore_type' => null,
+                ];
+            }
+
+            // Map restores to array format safely
+            $restoresArray = [];
+            Log::info("Starting to map restores", ['restores_count' => $restores ? $restores->count() : 0]);
+            
+            if ($restores && is_iterable($restores)) {
+                foreach ($restores as $index => $restore) {
+                    // Skip null restores
+                    if (!$restore || !isset($restore->id)) {
+                        Log::warning("Skipping null restore at index", ['index' => $index]);
+                        continue;
+                    }
+                    
+                    try {
+                        Log::debug("Processing restore", ['restore_id' => $restore->id, 'index' => $index]);
+                        
+                        // Safely get tables_restored_list
+                        $tablesRestored = 'All tables';
+                        if (!empty($restore->tables_restored)) {
+                            if (is_array($restore->tables_restored)) {
+                                $tables = array_filter($restore->tables_restored, function($table) {
+                                    return !empty($table) && is_string($table);
+                                });
+                                $tablesRestored = !empty($tables) ? implode(', ', $tables) : 'All tables';
+                            } else {
+                                $tablesRestored = (string) $restore->tables_restored;
+                            }
+                        }
+                        
+                        // Safely get creator name
+                        $creatorName = 'Unknown';
+                        if ($restore->creator) {
+                            $firstName = $restore->creator->first_name ?? '';
+                            $lastName = $restore->creator->last_name ?? '';
+                            $creatorName = trim($firstName . ' ' . $lastName);
+                            if (empty($creatorName)) {
+                                $creatorName = 'Unknown';
+                            }
+                        }
+                        
+                        // Safely get backup date
+                        $backupDate = 'N/A';
+                        if ($restore->backup && $restore->backup->created_at) {
+                            try {
+                                $backupDate = $restore->backup->created_at->format('Y-m-d H:i:s');
+                            } catch (Exception $e) {
+                                Log::warning("Error formatting backup date", [
+                                    'restore_id' => $restore->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                                $backupDate = 'N/A';
+                            }
+                        }
+                        
+                        // Safely get backup name
+                        $backupName = 'Backup not found';
+                        if ($restore->backup) {
+                            $backupName = $restore->backup->file_name ?? 'Backup not found';
+                        }
+                        
+                        // Safely get created_at
+                        $createdAt = 'N/A';
+                        if ($restore->created_at) {
+                            try {
+                                $createdAt = $restore->created_at->format('Y-m-d H:i:s');
+                            } catch (Exception $e) {
+                                Log::warning("Error formatting created_at", [
+                                    'restore_id' => $restore->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                                $createdAt = 'N/A';
+                            }
+                        }
+                        
+                        // Safely get completed_at
+                        $completedAt = null;
+                        if ($restore->completed_at) {
+                            try {
+                                $completedAt = $restore->completed_at->format('Y-m-d H:i:s');
+                            } catch (Exception $e) {
+                                Log::warning("Error formatting completed_at", [
+                                    'restore_id' => $restore->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                                $completedAt = null;
+                            }
+                        }
+                        
+                        // Safely get duration
+                        $duration = null;
+                        if ($restore->started_at && $restore->completed_at) {
+                            try {
+                                $duration = $restore->started_at->diffForHumans($restore->completed_at, true);
+                            } catch (Exception $e) {
+                                Log::warning("Error calculating duration", [
+                                    'restore_id' => $restore->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                                $duration = null;
+                            }
+                        }
+                        
+                        // Safely get restore properties
+                        $restoresArray[] = [
+                            'id' => $restore->id ?? null,
+                            'backup_id' => $restore->backup_id ?? null,
+                            'backup_date' => $backupDate,
+                            'backup_name' => $backupName,
+                            'type' => $restore->restore_type ?? 'full',
+                            'status' => $restore->status ?? 'unknown',
+                            'tables_restored' => $tablesRestored,
+                            'created_at' => $createdAt,
+                            'duration' => $duration,
+                            'creator' => $creatorName,
+                            'error_message' => $restore->error_message ?? null,
+                            'completed_at' => $completedAt,
+                        ];
+                        
+                        Log::debug("Successfully processed restore", ['restore_id' => $restore->id]);
+                    } catch (Exception $restoreError) {
+                        // Log error for this specific restore but continue processing others
+                        Log::warning("Error processing restore record", [
+                            'restore_id' => $restore->id ?? 'unknown',
+                            'index' => $index,
+                            'error' => $restoreError->getMessage(),
+                            'trace' => $restoreError->getTraceAsString()
+                        ]);
+                        
+                        // Skip this restore record instead of adding an error entry
+                        continue;
+                    }
+                }
+            }
+            
+            Log::info("Restore history mapping completed", [
+                'total_restores' => count($restoresArray),
+                'stats' => $stats
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'restores' => $restoresArray,
+                'stats' => $stats
+            ]);
+
+        } catch (Exception $e) {
+            Log::error("Failed to get restore history", [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while loading restore history: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get restore status by ID
+     */
+    public function restoreStatus(int $id): JsonResponse
+    {
+        try {
+            $restore = $this->restoreService->getRestore($id);
+            
+            if (!$restore) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Restore not found'
+                ], 404);
+            }
 
             return response()->json([
                 'success' => true,
-                'restores' => $restores->map(function ($restore) {
-                    return [
-                        'id' => $restore->id,
-                        'backup_id' => $restore->backup_id,
-                        'backup_date' => $restore->backup->created_at->format('Y-m-d H:i:s'),
-                        'type' => $restore->restore_type,
-                        'status' => $restore->status,
-                        'tables_restored' => $restore->tables_restored_list,
-                        'created_at' => $restore->created_at->format('Y-m-d H:i:s'),
-                        'duration' => $restore->duration,
-                        'creator' => $restore->creator ? $restore->creator->first_name . ' ' . $restore->creator->last_name : 'Unknown',
-                    ];
-                }),
-                'stats' => $stats
+                'restore' => [
+                    'id' => $restore->id,
+                    'backup_id' => $restore->backup_id,
+                    'type' => $restore->restore_type,
+                    'status' => $restore->status,
+                    'error_message' => $restore->error_message,
+                    'created_at' => $restore->created_at?->format('Y-m-d H:i:s') ?? 'N/A',
+                    'completed_at' => $restore->completed_at?->format('Y-m-d H:i:s'),
+                    'duration' => $restore->duration,
+                ]
             ]);
 
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to get restore history: ' . $e->getMessage()
+                'message' => 'Failed to get restore status: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -576,6 +1031,43 @@ class BackupController extends Controller
                 'message' => 'Failed to get backup details: ' . $e->getMessage(),
                 'error' => $e->getTraceAsString()
             ], 500);
+        }
+    }
+
+    /**
+     * Download a backup file
+     */
+    public function download(int $id)
+    {
+        try {
+            $backup = $this->backupService->getBackup($id);
+            
+            if (!$backup) {
+                abort(404, 'Backup not found');
+            }
+
+            if (!$backup->isCompleted()) {
+                abort(400, 'Cannot download incomplete backup');
+            }
+
+            $filePath = $backup->getFullFilePath();
+            
+            if (!file_exists($filePath)) {
+                abort(404, 'Backup file not found');
+            }
+
+            return response()->download($filePath, $backup->file_name, [
+                'Content-Type' => 'application/sql',
+                'Content-Disposition' => 'attachment; filename="' . $backup->file_name . '"',
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to download backup', [
+                'backup_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            abort(500, 'Failed to download backup: ' . $e->getMessage());
         }
     }
 }

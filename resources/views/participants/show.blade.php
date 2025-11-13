@@ -82,6 +82,12 @@
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
+@php
+    $isSpeakerParticipant = false;
+    if ($participant->participantType && $participant->participantType->name) {
+        $isSpeakerParticipant = strcasecmp($participant->participantType->name, 'speaker') === 0;
+    }
+@endphp
     <!-- Top Navigation Bar -->
     <nav class="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -305,13 +311,16 @@
                                                                     <span class="font-medium">Room:</span> {{ $session->room }}
                                                                 </p>
                                                             @endif
-                                                            @if($session->venue && $session->venue->capacity)
-                                                                <p class="text-sm text-gray-900">
-                                                                    <span class="font-medium">Capacity:</span> {{ $session->venue->capacity }} people
-                                                                </p>
-                                                            @endif
+                                                            
                                                         </div>
                                                     </div>
+                                                    
+                                                    @if($isSpeakerParticipant)
+                                                        @include('participants.partials.session-participants', [
+                                                            'session' => $session,
+                                                            'currentParticipant' => $participant,
+                                                        ])
+                                                    @endif
                                                 </div>
                                             </div>
                                         @endforeach
@@ -402,13 +411,16 @@
                                                                     <span class="font-medium">Room:</span> {{ $session->room }}
                                                                 </p>
                                                             @endif
-                                                            @if($session->venue && $session->venue->capacity)
-                                                                <p class="text-sm text-gray-900">
-                                                                    <span class="font-medium">Capacity:</span> {{ $session->venue->capacity }} people
-                                                                </p>
-                                                            @endif
+                                                            
                                                         </div>
                                                     </div>
+                                                    
+                                                    @if($isSpeakerParticipant)
+                                                        @include('participants.partials.session-participants', [
+                                                            'session' => $session,
+                                                            'currentParticipant' => $participant,
+                                                        ])
+                                                    @endif
                                                 </div>
                                             </div>
                                         @endforeach
@@ -467,13 +479,16 @@
                                                                     <span class="font-medium">Room:</span> {{ $session->room }}
                                                                 </p>
                                                             @endif
-                                                            @if($session->venue && $session->venue->capacity)
-                                                                <p class="text-sm text-gray-900">
-                                                                    <span class="font-medium">Capacity:</span> {{ $session->venue->capacity }} people
-                                                                </p>
-                                                            @endif
+                                                            
                                                         </div>
                                                     </div>
+                                                    
+                                                    @if($isSpeakerParticipant)
+                                                        @include('participants.partials.session-participants', [
+                                                            'session' => $session,
+                                                            'currentParticipant' => $participant,
+                                                        ])
+                                                    @endif
                                                 </div>
                                             </div>
                                         @endforeach

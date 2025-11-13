@@ -633,6 +633,8 @@ Route::middleware('auth')->group(function () {
         
         // Specific routes must come before parameterized routes
         Route::get('/restore/history', [\App\Http\Controllers\BackupController::class, 'restoreHistory'])->name('restore.history');
+        Route::get('/restore/status/{id}', [\App\Http\Controllers\BackupController::class, 'restoreStatus'])->name('restore.status');
+        Route::post('/restore/cleanup-stuck', [\App\Http\Controllers\BackupController::class, 'cleanupStuckRestores'])->name('restore.cleanup.stuck');
         Route::get('/tables', [\App\Http\Controllers\BackupController::class, 'getTables'])->name('tables');
         Route::get('/stats', [\App\Http\Controllers\BackupController::class, 'stats'])->name('stats');
         Route::post('/cleanup', [\App\Http\Controllers\BackupController::class, 'cleanup'])->name('cleanup');
@@ -641,6 +643,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/test/simple', [\App\Http\Controllers\BackupController::class, 'testSimpleBackup'])->name('test.simple');
         Route::post('/fix-paths', [\App\Http\Controllers\BackupController::class, 'fixBackupPaths'])->name('fix.paths');
         Route::get('/test/details/{id}', [\App\Http\Controllers\BackupController::class, 'testBackupDetails'])->name('test.details');
+        Route::get('/{id}/download', [\App\Http\Controllers\BackupController::class, 'download'])->name('download');
         
         // Parameterized routes must come last
         Route::get('/{id}', [\App\Http\Controllers\BackupController::class, 'show'])->name('show');

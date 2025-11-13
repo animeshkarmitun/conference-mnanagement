@@ -28,7 +28,39 @@ class BackupService
      */
     public function createBackup(string $type = 'full', ?User $user = null): BackupRecord
     {
-        $user = $user ?? auth()->user();
+        // Get user - if not provided, try auth user, otherwise find a system admin
+        if ($user === null) {
+            $user = auth()->user();
+        }
+        
+        // If still no user (e.g., in scheduled tasks), find a system admin or first user
+        if ($user === null) {
+            try {
+                // Try to find an admin user using hasRole method if available
+                $users = User::all();
+                foreach ($users as $candidateUser) {
+                    if (method_exists($candidateUser, 'hasRole')) {
+                        if ($candidateUser->hasRole('admin') || $candidateUser->hasRole('superadmin')) {
+                            $user = $candidateUser;
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                Log::warning('Failed to find admin user by role', ['error' => $e->getMessage()]);
+            }
+            
+            // If no admin found, get the first user (fallback)
+            // This ensures we always have a user for the foreign key constraint
+            if ($user === null) {
+                $user = User::first();
+            }
+            
+            // If still no user (shouldn't happen in a real system), throw an exception
+            if ($user === null) {
+                throw new Exception('No user found to associate with backup. Please ensure at least one user exists in the system.');
+            }
+        }
         
         // Create backup record
         $backupRecord = BackupRecord::create([
