@@ -218,6 +218,9 @@
                     <div class="max-h-96 overflow-y-auto">
                         <div id="selected_participants" class="p-4 space-y-2">
                             @foreach($session->participants as $participant)
+                                @php
+                                    $isModerator = $participant->pivot->role === 'moderator';
+                                @endphp
                                 <div class="participant-item selected-item flex items-center p-3 border border-green-200 rounded-lg bg-green-50" 
                                      data-id="{{ $participant->id }}"
                                      data-name="{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}" 
@@ -229,9 +232,13 @@
                                      data-designation="{{ $participant->user->designation ?? '' }}"
                                      data-field-of-work="{{ $participant->user->field_of_work_study ?? '' }}"
                                      data-country="{{ $participant->user->country ?? '' }}">
-                                    <input type="checkbox" name="participants[]" value="{{ $participant->id }}" checked class="mr-3 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
+                                    <div class="flex items-center mr-3">
+                                        <input type="checkbox" name="participants[]" value="{{ $participant->id }}" checked class="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
+                                    </div>
                                     <div class="flex-1">
-                                        <div class="font-medium text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="font-medium text-gray-900">{{ $participant->user->first_name ?? $participant->user->name }} {{ $participant->user->last_name ?? '' }}</div>
+                                        </div>
                                         <div class="text-sm text-gray-500">{{ $participant->user->email }}</div>
                                         @if($participant->user->organization)
                                             <div class="text-xs text-gray-400">{{ $participant->user->organization }}</div>
@@ -246,6 +253,16 @@
                                                 <span class="font-medium">Country:</span> {{ $participant->user->country }}
                                             </div>
                                         @endif
+                                        <div class="mt-2">
+                                            <label class="flex items-center text-sm text-gray-700 cursor-pointer">
+                                                <input type="checkbox" 
+                                                       name="moderators[]" 
+                                                       value="{{ $participant->id }}" 
+                                                       class="moderator-checkbox mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                       {{ $isModerator ? 'checked' : '' }}>
+                                                <span class="text-xs font-medium text-blue-600">Moderator</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -658,10 +675,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===================== Participant Management =====================
 
     // Initialize selected participants from existing session participants
-    document.querySelectorAll('#selected_participants input[type="checkbox"]').forEach(checkbox => {
+    document.querySelectorAll('#selected_participants input[type="checkbox"][name="participants[]"]').forEach(checkbox => {
         selectedParticipants.add(checkbox.value);
         availableParticipants.delete(checkbox.value);
     });
+    
+    // Initialize participants input with existing moderator states
+    updateParticipantsInput();
     
     // Initial conflict check for existing participants
     setTimeout(() => {
@@ -670,8 +690,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update hidden input and selected count
     function updateParticipantsInput() {
-        const selectedArray = Array.from(selectedParticipants);
-        participantsInput.value = JSON.stringify(selectedArray);
+        const selectedArray = Array.from(selectedParticipants).map(id => parseInt(id));
+        const moderatorsArray = Array.from(document.querySelectorAll('.moderator-checkbox:checked')).map(cb => parseInt(cb.value));
+        
+        // Create object with participant IDs and their roles
+        const participantsData = {};
+        selectedArray.forEach(participantId => {
+            participantsData[participantId] = moderatorsArray.includes(participantId) ? 'moderator' : 'participant';
+        });
+        
+        participantsInput.value = JSON.stringify(participantsData);
         // Note: selectedCountSpan is not defined in the template, removing this line
         // selectedCountSpan.textContent = selectedParticipants.size;
     }
@@ -768,6 +796,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         countryDiv.innerHTML = `<span class="font-medium">Country:</span> ${country}`;
                         flexDiv.appendChild(countryDiv);
                     }
+                }
+                
+                // Add moderator checkbox under country
+                if (flexDiv) {
+                    const moderatorDiv = document.createElement('div');
+                    moderatorDiv.className = 'mt-2';
+                    moderatorDiv.innerHTML = `
+                        <label class="flex items-center text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" 
+                                   name="moderators[]" 
+                                   value="${participantId}" 
+                                   class="moderator-checkbox mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="text-xs font-medium text-blue-600">Moderator</span>
+                        </label>
+                    `;
+                    flexDiv.appendChild(moderatorDiv);
                 }
                 
                 selectedContainer.appendChild(clone);
@@ -879,7 +923,10 @@ document.addEventListener('DOMContentLoaded', function() {
     selectedContainer.addEventListener('change', function(e) {
         if (e.target.type === 'checkbox') {
             const participantId = e.target.closest('.participant-item').dataset.id;
-            if (!e.target.checked) {
+            if (e.target.classList.contains('moderator-checkbox')) {
+                // Moderator checkbox changed, update the input
+                updateParticipantsInput();
+            } else if (!e.target.checked) {
                 // Unchecking removes the participant
                 removeParticipant(participantId);
             }
@@ -906,6 +953,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (formEl) {
         formEl.addEventListener('submit', function() {
             addCheckedAvailableToSelected();
+            updateParticipantsInput(); // Ensure participants input is updated with moderator roles
         });
     }
 

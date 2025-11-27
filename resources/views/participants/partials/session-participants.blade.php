@@ -1,7 +1,5 @@
 @php
-    $otherParticipants = $session->participants
-        ? $session->participants->filter(fn ($p) => $p->id !== $currentParticipant->id)
-        : collect();
+    $allParticipants = $session->participants ?? collect();
 
     $formatParticipantName = static function ($participant) {
         $first = $participant->user->first_name ?? '';
@@ -29,16 +27,27 @@
 <div class="mt-4">
     <span class="text-sm font-semibold text-gray-700 flex items-center">
         <i class="fas fa-users text-blue-500 mr-2"></i>
-        Other Participants in This Session
+        Participants in This Session
     </span>
 
-    @if($otherParticipants->isNotEmpty())
+    @if($allParticipants->isNotEmpty())
         <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-            @foreach($otherParticipants as $sessionParticipant)
+            @foreach($allParticipants as $sessionParticipant)
+                @php
+                    $isModerator = $sessionParticipant->pivot->role === 'moderator';
+                @endphp
                 <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                    <p class="text-sm font-semibold text-gray-900">
-                        {{ $formatParticipantName($sessionParticipant) }}
-                    </p>
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-sm font-semibold text-gray-900">
+                            {{ $formatParticipantName($sessionParticipant) }}
+                        </p>
+                        @if($isModerator)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="fas fa-microphone mr-1"></i>
+                                Moderator
+                            </span>
+                        @endif
+                    </div>
 
                     <p class="text-xs text-gray-600 mt-1">
                         {{ $resolveDesignation($sessionParticipant) }}
@@ -65,7 +74,7 @@
         </div>
     @else
         <p class="text-sm text-gray-500 mt-2">
-            No other participants are assigned to this session yet.
+            No participants are assigned to this session yet.
         </p>
     @endif
 </div>

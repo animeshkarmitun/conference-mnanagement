@@ -199,14 +199,24 @@ class SessionController extends Controller
         // Handle participants from enhanced interface
         if ($request->has('participants') && $request->participants) {
             \Log::info('Processing participants:', ['participants' => $request->participants]);
-            $participantIds = json_decode($request->participants, true);
-            \Log::info('Decoded participant IDs:', ['participant_ids' => $participantIds]);
+            $participantsData = json_decode($request->participants, true);
+            \Log::info('Decoded participant data:', ['participants_data' => $participantsData]);
             
-            if (is_array($participantIds)) {
-                // Create array with participant IDs as keys and default role as values
+            if (is_array($participantsData)) {
+                // Check if it's an object (associative array) with roles or a simple array
                 $participantData = [];
-                foreach ($participantIds as $participantId) {
-                    $participantData[$participantId] = ['role' => 'participant'];
+                $isAssociative = array_keys($participantsData) !== range(0, count($participantsData) - 1);
+                
+                if (!$isAssociative && isset($participantsData[0])) {
+                    // Simple array of IDs, use default role
+                    foreach ($participantsData as $participantId) {
+                        $participantData[$participantId] = ['role' => 'participant'];
+                    }
+                } else {
+                    // Object with participant IDs as keys and roles as values
+                    foreach ($participantsData as $participantId => $role) {
+                        $participantData[$participantId] = ['role' => $role ?? 'participant'];
+                    }
                 }
                 \Log::info('Participant data to sync:', $participantData);
                 $session->participants()->sync($participantData);
@@ -304,12 +314,22 @@ class SessionController extends Controller
 
         // Handle participants from enhanced interface
         if ($request->has('participants') && $request->participants) {
-            $participantIds = json_decode($request->participants, true);
-            if (is_array($participantIds)) {
-                // Create array with participant IDs as keys and default role as values
+            $participantsData = json_decode($request->participants, true);
+            if (is_array($participantsData)) {
+                // Check if it's an object (associative array) with roles or a simple array
                 $participantData = [];
-                foreach ($participantIds as $participantId) {
-                    $participantData[$participantId] = ['role' => 'participant'];
+                $isAssociative = array_keys($participantsData) !== range(0, count($participantsData) - 1);
+                
+                if (!$isAssociative && isset($participantsData[0])) {
+                    // Simple array of IDs, use default role
+                    foreach ($participantsData as $participantId) {
+                        $participantData[$participantId] = ['role' => 'participant'];
+                    }
+                } else {
+                    // Object with participant IDs as keys and roles as values
+                    foreach ($participantsData as $participantId => $role) {
+                        $participantData[$participantId] = ['role' => $role ?? 'participant'];
+                    }
                 }
                 $session->participants()->sync($participantData);
             }
@@ -580,11 +600,22 @@ class SessionController extends Controller
 
         // Handle participants
         if ($request->has('participants') && $request->participants) {
-            $participantIds = json_decode($request->participants, true);
-            if (is_array($participantIds)) {
+            $participantsData = json_decode($request->participants, true);
+            if (is_array($participantsData)) {
+                // Check if it's an object (associative array) with roles or a simple array
                 $participantData = [];
-                foreach ($participantIds as $participantId) {
-                    $participantData[$participantId] = ['role' => 'participant'];
+                $isAssociative = array_keys($participantsData) !== range(0, count($participantsData) - 1);
+                
+                if (!$isAssociative && isset($participantsData[0])) {
+                    // Simple array of IDs, use default role
+                    foreach ($participantsData as $participantId) {
+                        $participantData[$participantId] = ['role' => 'participant'];
+                    }
+                } else {
+                    // Object with participant IDs as keys and roles as values
+                    foreach ($participantsData as $participantId => $role) {
+                        $participantData[$participantId] = ['role' => $role ?? 'participant'];
+                    }
                 }
                 $session->participants()->sync($participantData);
             }
@@ -622,11 +653,22 @@ class SessionController extends Controller
 
         // Handle participants
         if ($request->has('participants') && $request->participants) {
-            $participantIds = json_decode($request->participants, true);
-            if (is_array($participantIds)) {
+            $participantsData = json_decode($request->participants, true);
+            if (is_array($participantsData)) {
+                // Check if it's an object (associative array) with roles or a simple array
                 $participantData = [];
-                foreach ($participantIds as $participantId) {
-                    $participantData[$participantId] = ['role' => 'participant'];
+                $isAssociative = array_keys($participantsData) !== range(0, count($participantsData) - 1);
+                
+                if (!$isAssociative && isset($participantsData[0])) {
+                    // Simple array of IDs, use default role
+                    foreach ($participantsData as $participantId) {
+                        $participantData[$participantId] = ['role' => 'participant'];
+                    }
+                } else {
+                    // Object with participant IDs as keys and roles as values
+                    foreach ($participantsData as $participantId => $role) {
+                        $participantData[$participantId] = ['role' => $role ?? 'participant'];
+                    }
                 }
                 $session->participants()->sync($participantData);
             }

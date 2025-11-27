@@ -743,8 +743,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update hidden input and selected count
     function updateParticipantsInput() {
-        const selectedArray = Array.from(selectedParticipants);
-        participantsInput.value = JSON.stringify(selectedArray);
+        const selectedArray = Array.from(selectedParticipants).map(id => parseInt(id));
+        const moderatorsArray = Array.from(document.querySelectorAll('.moderator-checkbox:checked')).map(cb => parseInt(cb.value));
+        
+        // Create object with participant IDs and their roles
+        const participantsData = {};
+        selectedArray.forEach(participantId => {
+            participantsData[participantId] = moderatorsArray.includes(participantId) ? 'moderator' : 'participant';
+        });
+        
+        participantsInput.value = JSON.stringify(participantsData);
         console.log('Updated participants input:', participantsInput.value);
     }
     
@@ -817,6 +825,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 checkbox.checked = true;
                 checkbox.name = 'participants[]';
                 checkbox.disabled = false; // Enable checkbox for removal
+                
+                // Ensure hashtags and country are displayed in the selected item
+                const hashtags = item.dataset.hashtags;
+                const country = item.dataset.country;
+                const flexDiv = clone.querySelector('.flex-1');
+                
+                if (flexDiv) {
+                    // Remove existing additional info if any
+                    const existingTags = flexDiv.querySelector('.text-blue-500');
+                    const existingCountry = flexDiv.querySelector('.text-green-600');
+                    if (existingTags) existingTags.remove();
+                    if (existingCountry) existingCountry.remove();
+                    
+                    // Add hashtags if available
+                    if (hashtags) {
+                        const hashtagDiv = document.createElement('div');
+                        hashtagDiv.className = 'text-xs text-blue-500 mt-1';
+                        hashtagDiv.innerHTML = `<span class="font-medium">Tags:</span> ${hashtags}`;
+                        flexDiv.appendChild(hashtagDiv);
+                    }
+                    
+                    // Add country if available
+                    if (country) {
+                        const countryDiv = document.createElement('div');
+                        countryDiv.className = 'text-xs text-green-600 mt-1';
+                        countryDiv.innerHTML = `<span class="font-medium">Country:</span> ${country}`;
+                        flexDiv.appendChild(countryDiv);
+                    }
+                    
+                    // Add moderator checkbox under country
+                    const moderatorDiv = document.createElement('div');
+                    moderatorDiv.className = 'mt-2';
+                    moderatorDiv.innerHTML = `
+                        <label class="flex items-center text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" 
+                                   name="moderators[]" 
+                                   value="${participantId}" 
+                                   class="moderator-checkbox mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="text-xs font-medium text-blue-600">Moderator</span>
+                        </label>
+                    `;
+                    flexDiv.appendChild(moderatorDiv);
+                }
                 
                 selectedContainer.appendChild(clone);
                 item.style.display = 'none';
@@ -951,7 +1002,10 @@ document.addEventListener('DOMContentLoaded', function() {
     selectedContainer.addEventListener('change', function(e) {
         if (e.target.type === 'checkbox') {
             const participantId = e.target.closest('.participant-item').dataset.id;
-            if (!e.target.checked) {
+            if (e.target.classList.contains('moderator-checkbox')) {
+                // Moderator checkbox changed, update the input
+                updateParticipantsInput();
+            } else if (!e.target.checked) {
                 // Unchecking removes the participant
                 removeParticipant(participantId);
             }
@@ -1192,6 +1246,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formEl.addEventListener('submit', function(e) {
             console.log('Form submitting...');
             addCheckedAvailableToSelected();
+            updateParticipantsInput(); // Ensure participants input is updated with moderator roles
             console.log('Selected participants:', Array.from(selectedParticipants));
             console.log('Participants input value:', participantsInput.value);
         });
