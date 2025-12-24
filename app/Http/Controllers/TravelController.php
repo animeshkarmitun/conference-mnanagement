@@ -41,11 +41,20 @@ class TravelController extends Controller
             'participant.conference',
             'room',
             'room.roomType',
-            'participant.roomAllocations'
+            'participant.roomAllocations',
+            'participant.sessions' // Load sessions to check timing
         ])
         ->whereHas('participant', function($q) use ($request) {
             // Only include travel details for participants with travel intent 'national' or 'international'
             $q->whereIn('travel_intent', ['national', 'international']);
+            
+            // Filter by conference
+            if ($request->filled('conference')) {
+                $conferenceName = $request->conference;
+                $q->whereHas('conference', function($confQuery) use ($conferenceName) {
+                    $confQuery->where('name', 'like', "%{$conferenceName}%");
+                });
+            }
             
             // Search by participant name or email
             if ($request->filled('search')) {

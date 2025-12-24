@@ -29,9 +29,12 @@ return [
     | to be allowed to remain idle before it expires. If you want them
     | to immediately expire on the browser closing, set that option.
     |
+    | For passwordless login, set to a very high value (5256000 = ~10 years)
+    | to effectively make sessions never expire.
+    |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 120),
+    'lifetime' => env('SESSION_LIFETIME', 5256000), // ~10 years (effectively never expires)
 
     'expire_on_close' => false,
 

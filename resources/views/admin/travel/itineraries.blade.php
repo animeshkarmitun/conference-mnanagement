@@ -35,11 +35,14 @@
         </div>
         
         <!-- Filter and Search Row -->
-        <div class="w-full overflow-x-auto">
+        <div class="w-full overflow-x-auto overflow-y-visible">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-center min-w-0">
                 <!-- Search by Name/Email -->
                 <div class="min-w-0">
                     <form method="GET" action="{{ route('admin.itineraries') }}" class="flex flex-col sm:flex-row gap-3 min-w-0" id="searchForm">
+                        @if(request('conference'))
+                            <input type="hidden" name="conference" value="{{ request('conference') }}">
+                        @endif
                         <div class="relative flex-1 min-w-0">
                             <input type="text" 
                                    name="search" 
@@ -56,7 +59,7 @@
                             </div>
                         </div>
                         @if(request('search'))
-                            <a href="{{ route('admin.itineraries') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap flex items-center justify-center flex-shrink-0" title="Clear search">
+                            <a href="{{ route('admin.itineraries', request('conference') ? ['conference' => request('conference')] : []) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap flex items-center justify-center flex-shrink-0" title="Clear search">
                                 <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
@@ -70,27 +73,34 @@
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
                     <label for="conferenceSearch" class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">Conference:</label>
                     <div class="relative flex-1 min-w-0">
-                        <input type="text" 
-                               id="conferenceSearch" 
-                               placeholder="Search conferences..." 
-                               class="w-full min-w-0 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-8 px-3 py-2"
-                               onkeyup="filterConferenceOptions()"
-                               onfocus="showConferenceDropdown()"
-                               onblur="hideConferenceDropdown()">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </div>
-                        <div id="conferenceDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
-                            <div class="p-2 text-xs text-gray-500 border-b">All Conferences</div>
-                            <div class="p-2 hover:bg-gray-100 cursor-pointer" onclick="selectConference('')">All Conferences</div>
-                            @foreach($conferences as $conference)
-                                <div class="p-2 hover:bg-gray-100 cursor-pointer conference-option" data-conference="{{ $conference->name }}" onclick="selectConference('{{ $conference->name }}')">
-                                    {{ $conference->name }}
+                        <form method="GET" action="{{ route('admin.itineraries') }}" id="conferenceForm" class="w-full">
+                            <input type="hidden" name="search" value="{{ request('search') }}">
+                            <div class="relative w-full">
+                                <input type="text" 
+                                       id="conferenceSearch" 
+                                       name="conference"
+                                       value="{{ request('conference') }}"
+                                       placeholder="Search conferences..." 
+                                       class="w-full min-w-0 rounded-lg border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 pr-8 px-3 py-2"
+                                       onkeyup="filterConferenceOptions()"
+                                       onfocus="showConferenceDropdown()"
+                                       onclick="showConferenceDropdown()"
+                                       onblur="setTimeout(() => hideConferenceDropdown(), 200)"
+                                       autocomplete="off">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                    </svg>
                                 </div>
-                            @endforeach
-                        </div>
+                                @if(request('conference'))
+                                    <a href="{{ route('admin.itineraries', ['search' => request('search')]) }}" class="absolute inset-y-0 right-8 flex items-center text-gray-500 hover:text-gray-700" title="Clear conference filter" onclick="event.preventDefault(); window.location.href='{{ route('admin.itineraries', ['search' => request('search')]) }}'">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -114,6 +124,26 @@
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Conference Dropdown (positioned outside overflow container) -->
+        <div id="conferenceDropdown" class="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto" style="min-width: 200px;">
+            <div class="p-2 text-xs text-gray-500 border-b bg-gray-50">All Conferences</div>
+            <div class="p-2 hover:bg-gray-100 cursor-pointer transition-colors" onclick="selectConference('')" onmousedown="event.preventDefault()">
+                <span class="text-sm">All Conferences</span>
+            </div>
+            @if($conferences && $conferences->count() > 0)
+                @foreach($conferences as $conference)
+                    <div class="p-2 hover:bg-gray-100 cursor-pointer conference-option transition-colors" 
+                         data-conference="{{ $conference->name }}" 
+                         onclick="selectConference('{{ $conference->name }}')"
+                         onmousedown="event.preventDefault()">
+                        <span class="text-sm">{{ $conference->name }}</span>
+                    </div>
+                @endforeach
+            @else
+                <div class="p-2 text-sm text-gray-500">No conferences available</div>
+            @endif
         </div>
     </div>
 
@@ -200,16 +230,114 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @if($detail->arrival_date)
-                                    <div>{{ \Carbon\Carbon::parse($detail->arrival_date)->format('M d, Y') }}</div>
-                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($detail->arrival_date)->format('g:i A') }}</div>
+                                    @php
+                                        $arrivalDate = \Carbon\Carbon::parse($detail->arrival_date);
+                                        $hasSessionNote = false;
+                                        $sessionNote = '';
+                                        
+                                        // Check if participant has sessions
+                                        if ($detail->participant && $detail->participant->sessions) {
+                                            foreach ($detail->participant->sessions as $session) {
+                                                if ($session->start_time) {
+                                                    $sessionStart = \Carbon\Carbon::parse($session->start_time);
+                                                    $hoursDiff = abs($arrivalDate->diffInHours($sessionStart));
+                                                    
+                                                    // Check if arrival is within 3 hours before or after session start
+                                                    if ($hoursDiff <= 3) {
+                                                        $hasSessionNote = true;
+                                                        $minutesDiff = abs($arrivalDate->diffInMinutes($sessionStart));
+                                                        if ($arrivalDate->lt($sessionStart)) {
+                                                            if ($minutesDiff < 60) {
+                                                                $sessionNote = "Arrives {$minutesDiff} min before session";
+                                                            } else {
+                                                                $hours = floor($minutesDiff / 60);
+                                                                $mins = $minutesDiff % 60;
+                                                                $sessionNote = $mins > 0 ? "Arrives {$hours}h {$mins}m before session" : "Arrives {$hours}h before session";
+                                                            }
+                                                        } else {
+                                                            if ($minutesDiff < 60) {
+                                                                $sessionNote = "Arrives {$minutesDiff} min after session";
+                                                            } else {
+                                                                $hours = floor($minutesDiff / 60);
+                                                                $mins = $minutesDiff % 60;
+                                                                $sessionNote = $mins > 0 ? "Arrives {$hours}h {$mins}m after session" : "Arrives {$hours}h after session";
+                                                            }
+                                                        }
+                                                        break; // Show note for first matching session
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    <div>{{ $arrivalDate->format('M d, Y') }}</div>
+                                    <div class="text-xs text-gray-500">{{ $arrivalDate->format('g:i A') }}</div>
+                                    @if($hasSessionNote)
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title="{{ $sessionNote }}">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                {{ $sessionNote }}
+                                            </span>
+                                        </div>
+                                    @endif
                                 @else
                                     <span class="text-gray-400">Not specified</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @if($detail->departure_date)
-                                    <div>{{ \Carbon\Carbon::parse($detail->departure_date)->format('M d, Y') }}</div>
-                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($detail->departure_date)->format('g:i A') }}</div>
+                                    @php
+                                        $departureDate = \Carbon\Carbon::parse($detail->departure_date);
+                                        $hasSessionNote = false;
+                                        $sessionNote = '';
+                                        
+                                        // Check if participant has sessions
+                                        if ($detail->participant && $detail->participant->sessions) {
+                                            foreach ($detail->participant->sessions as $session) {
+                                                if ($session->end_time) {
+                                                    $sessionEnd = \Carbon\Carbon::parse($session->end_time);
+                                                    $hoursDiff = abs($departureDate->diffInHours($sessionEnd));
+                                                    
+                                                    // Check if departure is within 3 hours before or after session end
+                                                    if ($hoursDiff <= 3) {
+                                                        $hasSessionNote = true;
+                                                        $minutesDiff = abs($departureDate->diffInMinutes($sessionEnd));
+                                                        if ($departureDate->lt($sessionEnd)) {
+                                                            if ($minutesDiff < 60) {
+                                                                $sessionNote = "Departs {$minutesDiff} min before session ends";
+                                                            } else {
+                                                                $hours = floor($minutesDiff / 60);
+                                                                $mins = $minutesDiff % 60;
+                                                                $sessionNote = $mins > 0 ? "Departs {$hours}h {$mins}m before session ends" : "Departs {$hours}h before session ends";
+                                                            }
+                                                        } else {
+                                                            if ($minutesDiff < 60) {
+                                                                $sessionNote = "Departs {$minutesDiff} min after session ends";
+                                                            } else {
+                                                                $hours = floor($minutesDiff / 60);
+                                                                $mins = $minutesDiff % 60;
+                                                                $sessionNote = $mins > 0 ? "Departs {$hours}h {$mins}m after session ends" : "Departs {$hours}h after session ends";
+                                                            }
+                                                        }
+                                                        break; // Show note for first matching session
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    <div>{{ $departureDate->format('M d, Y') }}</div>
+                                    <div class="text-xs text-gray-500">{{ $departureDate->format('g:i A') }}</div>
+                                    @if($hasSessionNote)
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title="{{ $sessionNote }}">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                {{ $sessionNote }}
+                                            </span>
+                                        </div>
+                                    @endif
                                 @else
                                     <span class="text-gray-400">Not specified</span>
                                 @endif
@@ -819,39 +947,93 @@ function filterByConference(conferenceName) {
 }
 
 function selectConference(conferenceName) {
-    document.getElementById('conferenceSearch').value = conferenceName;
+    const searchInput = document.getElementById('conferenceSearch');
+    if (searchInput) {
+        searchInput.value = conferenceName;
+    }
     currentConferenceFilter = conferenceName;
-    hideConferenceDropdown();
-    applyFilters();
+    
+    // Submit the form to apply server-side filtering
+    const form = document.getElementById('conferenceForm');
+    if (form) {
+        form.submit();
+    } else {
+        // Fallback to client-side filtering if form doesn't exist
+        hideConferenceDropdown();
+        applyFilters();
+    }
 }
 
 function showConferenceDropdown() {
-    document.getElementById('conferenceDropdown').classList.remove('hidden');
+    const dropdown = document.getElementById('conferenceDropdown');
+    const input = document.getElementById('conferenceSearch');
+    
+    if (dropdown && input) {
+        // Get input position
+        const inputRect = input.getBoundingClientRect();
+        
+        // Position dropdown below the input
+        dropdown.style.top = (inputRect.bottom + window.scrollY + 4) + 'px';
+        dropdown.style.left = (inputRect.left + window.scrollX) + 'px';
+        dropdown.style.width = inputRect.width + 'px';
+        
+        dropdown.classList.remove('hidden');
+        // Reset filter when showing dropdown
+        filterConferenceOptions();
+    }
 }
 
 function hideConferenceDropdown() {
+    // Use a longer timeout to allow clicks on dropdown items
     setTimeout(() => {
-        document.getElementById('conferenceDropdown').classList.add('hidden');
-    }, 200);
+        const dropdown = document.getElementById('conferenceDropdown');
+        if (dropdown) {
+            dropdown.classList.add('hidden');
+        }
+    }, 300);
 }
 
+// Reposition dropdown on scroll or resize
+function repositionConferenceDropdown() {
+    const dropdown = document.getElementById('conferenceDropdown');
+    const input = document.getElementById('conferenceSearch');
+    
+    if (dropdown && input && !dropdown.classList.contains('hidden')) {
+        const inputRect = input.getBoundingClientRect();
+        dropdown.style.top = (inputRect.bottom + window.scrollY + 4) + 'px';
+        dropdown.style.left = (inputRect.left + window.scrollX) + 'px';
+        dropdown.style.width = inputRect.width + 'px';
+    }
+}
+
+// Add event listeners for scroll and resize
+window.addEventListener('scroll', repositionConferenceDropdown, true);
+window.addEventListener('resize', repositionConferenceDropdown);
+
 function filterConferenceOptions() {
-    const searchTerm = document.getElementById('conferenceSearch').value.toLowerCase();
+    const searchInput = document.getElementById('conferenceSearch');
+    if (!searchInput) return;
+    
+    const searchTerm = searchInput.value.toLowerCase().trim();
     const options = document.querySelectorAll('.conference-option');
     
+    // If search is empty, show all options
+    if (searchTerm === '') {
+        options.forEach(option => {
+            option.style.display = 'block';
+        });
+        return;
+    }
+    
+    // Filter options based on search term
     options.forEach(option => {
-        const conferenceName = option.getAttribute('data-conference').toLowerCase();
-        if (conferenceName.includes(searchTerm)) {
+        const conferenceName = option.getAttribute('data-conference');
+        if (conferenceName && conferenceName.toLowerCase().includes(searchTerm)) {
             option.style.display = 'block';
         } else {
             option.style.display = 'none';
         }
     });
-    
-    // Show dropdown when typing
-    if (searchTerm.length > 0) {
-        showConferenceDropdown();
-    }
 }
 
 function applyFilters() {
@@ -863,10 +1045,16 @@ function applyFilters() {
         
         let showRow = true;
         
-        // Check conference filter
+        // Check conference filter (client-side fallback)
         if (currentConferenceFilter !== '') {
-            const conferenceText = conferenceCell ? conferenceCell.textContent.trim() : '';
-            if (!conferenceText.includes(currentConferenceFilter)) {
+            if (conferenceCell) {
+                // Get text from span or directly from cell
+                const span = conferenceCell.querySelector('span');
+                const conferenceText = span ? span.textContent.trim() : conferenceCell.textContent.trim();
+                if (!conferenceText.toLowerCase().includes(currentConferenceFilter.toLowerCase())) {
+                    showRow = false;
+                }
+            } else {
                 showRow = false;
             }
         }
@@ -880,7 +1068,10 @@ function applyFilters() {
     });
     
     // Update record count
-    document.querySelector('.text-sm.text-gray-500').textContent = `${visibleCount} records found`;
+    const countElement = document.querySelector('.text-sm.text-gray-500');
+    if (countElement) {
+        countElement.textContent = `${visibleCount} records found`;
+    }
 }
 
 // Sorting

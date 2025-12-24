@@ -211,8 +211,8 @@ class PasswordlessLoginService
             $request->userAgent()
         );
 
-        // Log the user in
-        auth()->login($user);
+        // Log the user in with "remember me" enabled for persistent session
+        auth()->login($user, true);
 
         // Get conference from the passwordless login data or request
         $conference = null;
