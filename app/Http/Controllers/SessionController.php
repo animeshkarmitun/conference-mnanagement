@@ -562,22 +562,24 @@ class SessionController extends Controller
             ], 422);
         }
 
-        // Check if we're updating an existing draft
+        // Check if we're updating an existing session (draft or published)
         $draftSessionId = $request->input('draft_session_id');
         $isUpdate = false;
         
         if ($draftSessionId) {
-            $existingDraft = Session::where('id', $draftSessionId)
-                ->where('status', 'draft')
-                ->first();
+            // Try to find the session (whether it's draft or published)
+            $existingSession = Session::where('id', $draftSessionId)->first();
                 
-            if ($existingDraft) {
-                // Update existing draft
-                $existingDraft->update($validated);
-                $session = $existingDraft;
+            if ($existingSession) {
+                // Update existing session (preserve its current status)
+                $updateData = $validated;
+                // Always preserve the existing status - don't change published to draft during auto-save
+                unset($updateData['status']);
+                $existingSession->update($updateData);
+                $session = $existingSession;
                 $isUpdate = true;
             } else {
-                // Draft doesn't exist or is not a draft, create new one
+                // Session doesn't exist, create new draft
                 $session = Session::create(array_merge($validated, ['status' => 'draft']));
             }
         } else {

@@ -18,7 +18,7 @@ return [
 
     // 'hotels' => ['view', 'create', 'edit', 'delete', 'rooms.view', 'rooms.update'],
     // 'room-types' => ['view', 'create', 'edit', 'delete'],
-    // 'venues' => ['view', 'create', 'edit', 'delete'],
+    'venues' => ['view', 'create', 'edit', 'delete'],
 
     //'id-cards' => ['view', 'generate', 'toggle_status', 'generate_for_user', 'generate_for_participant', 'generate_for_conference', 'generate_my_card'],
     'participant-profiles' => ['view', 'create', 'edit', 'set_primary', 'archive', 'restore', 'delete', 'conflicts.view', 'conflicts.resolve'],

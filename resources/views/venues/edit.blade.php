@@ -9,17 +9,17 @@
         @csrf
         @method('PUT')
         <div class="mb-4">
-            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+            <label for="name" class="block text-sm font-medium text-gray-700">Name <span class="text-red-600">*</span></label>
             <input type="text" name="name" id="name" value="{{ old('name', $venue->name) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
             @error('name')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
         <div class="mb-4">
-            <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+            <label for="address" class="block text-sm font-medium text-gray-700">Address <span class="text-red-600">*</span></label>
             <input type="text" name="address" id="address" value="{{ old('address', $venue->address) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
             @error('address')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
         <div class="mb-6">
-            <label for="capacity" class="block text-sm font-medium text-gray-700">Capacity</label>
+            <label for="capacity" class="block text-sm font-medium text-gray-700">Capacity <span class="text-red-600">*</span></label>
             <input type="number" name="capacity" id="capacity" value="{{ old('capacity', $venue->capacity) }}" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
             @error('capacity')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>

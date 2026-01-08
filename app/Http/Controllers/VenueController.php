@@ -9,11 +9,37 @@ class VenueController extends Controller
 {
     public function __construct()
     {
-        // Restrict all venue management to admins only
+        // Permission-gated access for venue management
         $this->middleware(function ($request, $next) {
-            if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin')) {
-                abort(403, 'Access denied. Admin privileges required.');
+            $user = auth()->user();
+
+            if (!$user) {
+                abort(403, 'Unauthorized');
             }
+
+            // Superadmin bypasses permission checks
+            if ($user->hasRole('superadmin')) {
+                return $next($request);
+            }
+
+            // Map controller methods to permissions
+            $action = $request->route()->getActionMethod();
+            $permissionMap = [
+                'index' => 'venues.view',
+                'show' => 'venues.view',
+                'create' => 'venues.create',
+                'store' => 'venues.create',
+                'edit' => 'venues.edit',
+                'update' => 'venues.edit',
+                'destroy' => 'venues.delete',
+            ];
+
+            $needed = $permissionMap[$action] ?? 'venues.view';
+
+            if (!$user->hasPermission($needed)) {
+                abort(403, 'Access denied. Missing permission: ' . $needed);
+            }
+
             return $next($request);
         });
     }

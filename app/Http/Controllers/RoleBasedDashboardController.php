@@ -35,6 +35,7 @@ class RoleBasedDashboardController extends Controller
             return view('dashboard.role-based', [
                 'error' => 'No role assigned. Please contact an administrator.',
                 'user' => $user,
+                'roles' => $user->roles ?? collect(),
                 'permissions' => [],
                 'dashboardData' => [],
             ]);
