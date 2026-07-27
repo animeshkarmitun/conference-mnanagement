@@ -89,6 +89,7 @@ class ParticipantController extends Controller
                 $q->whereHas('user', function($userQuery) use ($search) {
                     $userQuery->where('first_name', 'like', "%{$search}%")
                               ->orWhere('last_name', 'like', "%{$search}%")
+                              ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
                               ->orWhere('email', 'like', "%{$search}%")
                               ->orWhere('organization_institution', 'like', "%{$search}%");
                 })
@@ -579,8 +580,8 @@ class ParticipantController extends Controller
             'room_types_count' => $roomTypes->count()
         ]);
         
-        // Determine if the current user is an admin/superadmin viewing someone else's profile
-        $isAdminViewing = (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')) && 
+        // Determine if the current user is an admin/superadmin/organizer viewing someone else's profile
+        $isAdminViewing = (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('organizer')) && 
                          auth()->id() !== $participant->user_id;
         
         if ($isAdminViewing) {
@@ -598,8 +599,8 @@ class ParticipantController extends Controller
         // Check if user has permission to edit participants
         $user = Auth::user();
         
-        // Only admins and super admins can edit participants
-        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+        // Anyone with participants.edit permission can edit participants
+        if (!$user->hasPermission('participants.edit')) {
             abort(403, 'You do not have permission to edit participants.');
         }
         
@@ -615,13 +616,14 @@ class ParticipantController extends Controller
         // Check if user has permission to update participants
         $user = Auth::user();
         
-        // Only admins and super admins can update participants
-        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+        // Anyone with participants.edit permission can update participants
+        if (!$user->hasPermission('participants.edit')) {
             abort(403, 'You do not have permission to update participants.');
         }
         
-        // Check if this is a personal info update (participant updating their own profile)
-        $isPersonalUpdate = !$user->hasRole('admin') && !$user->hasRole('superadmin');
+        // Check if this is a personal info update (participant updating their own profile without edit permissions)
+        // Since we now require participants.edit permission to even hit this route, this will be false for admins/organizers.
+        $isPersonalUpdate = !$user->hasPermission('participants.edit');
         
         if ($isPersonalUpdate) {
             // Personal info update - only validate personal fields
@@ -657,6 +659,7 @@ class ParticipantController extends Controller
                 'last_name' => 'required|string|max:50',
                 'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
             // Enhanced participant fields
+            'pronoun' => 'nullable|in:he_him,she_her,they_them',
             'gender' => 'nullable|in:male,female,prefer_not_to_say',
             'contact_no' => 'nullable|string|max:20',
             'whatsapp_no' => 'nullable|string|max:20',
@@ -683,9 +686,9 @@ class ParticipantController extends Controller
                 'other_contact_type' => 'nullable|in:whatsapp,telegram,signal',
                 'other_contact_no' => 'nullable|string|max:50',
                 'preferred_topic' => 'nullable|string',
-                'linkedin_link' => 'nullable|url',
-                'twitter_link' => 'nullable|url',
-                'facebook_link' => 'nullable|url',
+                'linkedin_link' => 'nullable|string',
+                'twitter_link' => 'nullable|string',
+                'facebook_link' => 'nullable|string',
                 'has_valid_passport' => 'nullable|in:0,1',
                 'had_visa_issue_bd' => 'nullable|in:0,1',
                 'visa_issue_explanation' => 'nullable|string',
@@ -728,12 +731,40 @@ class ParticipantController extends Controller
                 'first_name' => 'required|string|max:50',
                 'last_name' => 'required|string|max:50',
                 'email' => 'required|email|max:255|unique:users,email,' . $participant->user_id,
-                // Allow admin to edit participant user country and basic profile fields
-                'country' => 'nullable|string|max:100',
+                // Enhanced participant fields
+                'pronoun' => 'nullable|in:he_him,she_her,they_them',
+                'gender' => 'nullable|in:male,female,prefer_not_to_say',
                 'contact_no' => 'nullable|string|max:20',
                 'whatsapp_no' => 'nullable|string|max:20',
+                'messaging_type' => 'nullable|in:whatsapp,signal,telegram',
+                'messaging_number' => 'nullable|string|max:20',
+                'country' => 'nullable|string|max:100',
+                'date_of_birth' => 'nullable|date',
+                'address' => 'nullable|string|max:500',
+                'field_of_work_study' => 'nullable|string|max:255',
+                'designation' => 'nullable|string|max:255',
+                'organization_institution' => 'nullable|string|max:255',
+                'is_student' => 'nullable|boolean',
+                'year' => 'nullable|in:honors_final_year,masters',
+                'department_name' => 'nullable|string|max:255',
+                'institution_name' => 'nullable|string|max:255',
+                'home_district' => 'nullable|string|max:100',
+                'how_found_bobc' => 'nullable|in:social_media,bobc_cgs_website,friend_teacher_department,traditional_media,other',
+                'attended_previous_bobc' => 'nullable|boolean',
                 'dietary_requirements' => 'nullable|string|max:50',
                 'dietary_requirements_other' => 'nullable|string|max:100',
+                // Media fields (if participant type is press)
+                'media_type' => 'nullable|in:print,television,online_portal',
+                // Speaker fields (if participant type is presenter)
+                'other_contact_type' => 'nullable|in:whatsapp,telegram,signal',
+                'other_contact_no' => 'nullable|string|max:50',
+                'preferred_topic' => 'nullable|string',
+                'linkedin_link' => 'nullable|string',
+                'twitter_link' => 'nullable|string',
+                'facebook_link' => 'nullable|string',
+                'has_valid_passport' => 'nullable|in:0,1',
+                'had_visa_issue_bd' => 'nullable|in:0,1',
+                'visa_issue_explanation' => 'nullable|string',
             ]);
         }
 
@@ -765,6 +796,7 @@ class ParticipantController extends Controller
                 'last_name' => $userValidated['last_name'],
                 'email' => $userValidated['email'],
                 // Enhanced participant fields
+                'pronoun' => $userValidated['pronoun'] ?? null,
                 'gender' => $userValidated['gender'] ?? null,
                 'contact_no' => $userValidated['contact_no'] ?? null,
                 'whatsapp_no' => $userValidated['whatsapp_no'] ?? null,
@@ -806,9 +838,38 @@ class ParticipantController extends Controller
                     'first_name' => $userValidated['first_name'],
                     'last_name' => $userValidated['last_name'],
                     'email' => $userValidated['email'],
-                    'country' => $userValidated['country'] ?? $user->country,
-                    'contact_no' => $userValidated['contact_no'] ?? $user->contact_no,
-                    'whatsapp_no' => $userValidated['whatsapp_no'] ?? $user->whatsapp_no,
+                    // Enhanced participant fields
+                    'pronoun' => $userValidated['pronoun'] ?? null,
+                    'gender' => $userValidated['gender'] ?? null,
+                    'contact_no' => $userValidated['contact_no'] ?? null,
+                    'whatsapp_no' => $userValidated['whatsapp_no'] ?? null,
+                    'messaging_type' => $userValidated['messaging_type'] ?? null,
+                    'messaging_number' => $userValidated['messaging_number'] ?? null,
+                    'country' => $userValidated['country'] ?? null,
+                    'date_of_birth' => $userValidated['date_of_birth'] ?? null,
+                    'address' => $userValidated['address'] ?? null,
+                    'field_of_work_study' => $userValidated['field_of_work_study'] ?? null,
+                    'designation' => $userValidated['designation'] ?? null,
+                    'organization_institution' => $userValidated['organization_institution'] ?? null,
+                    'is_student' => $userValidated['is_student'] ?? null,
+                    'year' => $userValidated['year'] ?? null,
+                    'department_name' => $userValidated['department_name'] ?? null,
+                    'institution_name' => $userValidated['institution_name'] ?? null,
+                    'home_district' => $userValidated['home_district'] ?? null,
+                    'how_found_bobc' => $userValidated['how_found_bobc'] ?? null,
+                    'attended_previous_bobc' => $userValidated['attended_previous_bobc'] ?? null,
+                    // Media fields
+                    'media_type' => $userValidated['media_type'] ?? null,
+                    // Speaker fields
+                    'other_contact_type' => $userValidated['other_contact_type'] ?? null,
+                    'other_contact_no' => $userValidated['other_contact_no'] ?? null,
+                    'preferred_topic' => $userValidated['preferred_topic'] ?? null,
+                    'linkedin_link' => $userValidated['linkedin_link'] ?? null,
+                    'twitter_link' => $userValidated['twitter_link'] ?? null,
+                    'facebook_link' => $userValidated['facebook_link'] ?? null,
+                    'has_valid_passport' => $userValidated['has_valid_passport'] ?? null,
+                    'had_visa_issue_bd' => $userValidated['had_visa_issue_bd'] ?? null,
+                    'visa_issue_explanation' => $userValidated['visa_issue_explanation'] ?? null,
                     'dietary_requirements' => $userValidated['dietary_requirements'] ?? null,
                     'dietary_requirements_other' => $userValidated['dietary_requirements_other'] ?? null,
                 ]);
@@ -820,9 +881,38 @@ class ParticipantController extends Controller
                         'first_name' => $userValidated['first_name'],
                         'last_name' => $userValidated['last_name'],
                         'email' => $userValidated['email'],
-                        'country' => $userValidated['country'] ?? $user->country,
-                        'contact_no' => $userValidated['contact_no'] ?? $user->contact_no,
-                        'whatsapp_no' => $userValidated['whatsapp_no'] ?? $user->whatsapp_no,
+                        // Enhanced participant fields
+                        'pronoun' => $userValidated['pronoun'] ?? null,
+                        'gender' => $userValidated['gender'] ?? null,
+                        'contact_no' => $userValidated['contact_no'] ?? null,
+                        'whatsapp_no' => $userValidated['whatsapp_no'] ?? null,
+                        'messaging_type' => $userValidated['messaging_type'] ?? null,
+                        'messaging_number' => $userValidated['messaging_number'] ?? null,
+                        'country' => $userValidated['country'] ?? null,
+                        'date_of_birth' => $userValidated['date_of_birth'] ?? null,
+                        'address' => $userValidated['address'] ?? null,
+                        'field_of_work_study' => $userValidated['field_of_work_study'] ?? null,
+                        'designation' => $userValidated['designation'] ?? null,
+                        'organization_institution' => $userValidated['organization_institution'] ?? null,
+                        'is_student' => $userValidated['is_student'] ?? null,
+                        'year' => $userValidated['year'] ?? null,
+                        'department_name' => $userValidated['department_name'] ?? null,
+                        'institution_name' => $userValidated['institution_name'] ?? null,
+                        'home_district' => $userValidated['home_district'] ?? null,
+                        'how_found_bobc' => $userValidated['how_found_bobc'] ?? null,
+                        'attended_previous_bobc' => $userValidated['attended_previous_bobc'] ?? null,
+                        // Media fields
+                        'media_type' => $userValidated['media_type'] ?? null,
+                        // Speaker fields
+                        'other_contact_type' => $userValidated['other_contact_type'] ?? null,
+                        'other_contact_no' => $userValidated['other_contact_no'] ?? null,
+                        'preferred_topic' => $userValidated['preferred_topic'] ?? null,
+                        'linkedin_link' => $userValidated['linkedin_link'] ?? null,
+                        'twitter_link' => $userValidated['twitter_link'] ?? null,
+                        'facebook_link' => $userValidated['facebook_link'] ?? null,
+                        'has_valid_passport' => $userValidated['has_valid_passport'] ?? null,
+                        'had_visa_issue_bd' => $userValidated['had_visa_issue_bd'] ?? null,
+                        'visa_issue_explanation' => $userValidated['visa_issue_explanation'] ?? null,
                         'dietary_requirements' => $userValidated['dietary_requirements'] ?? null,
                         'dietary_requirements_other' => $userValidated['dietary_requirements_other'] ?? null,
                     ]);

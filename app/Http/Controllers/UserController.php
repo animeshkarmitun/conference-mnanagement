@@ -78,7 +78,7 @@ class UserController extends Controller
         // Apply role filter
         if (!empty($roleFilter) && $roleFilter !== 'all') {
             $query->whereHas('roles', function ($q) use ($roleFilter) {
-                $q->where('id', $roleFilter);
+                $q->where('roles.id', $roleFilter);
             });
         }
 

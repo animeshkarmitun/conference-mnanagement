@@ -258,17 +258,17 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="mb-4">
                         <label for="linkedin_link" class="block text-sm font-medium text-gray-700">LinkedIn Link (Optional)</label>
-                        <input type="url" name="linkedin_link" id="linkedin_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('linkedin_link', $participant->user->linkedin_link) }}">
+                        <input type="text" name="linkedin_link" id="linkedin_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('linkedin_link', $participant->user->linkedin_link) }}">
                         @error('linkedin_link')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div class="mb-4">
                         <label for="twitter_link" class="block text-sm font-medium text-gray-700">Twitter Link (Optional)</label>
-                        <input type="url" name="twitter_link" id="twitter_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('twitter_link', $participant->user->twitter_link) }}">
+                        <input type="text" name="twitter_link" id="twitter_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('twitter_link', $participant->user->twitter_link) }}">
                         @error('twitter_link')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div class="mb-4">
                         <label for="facebook_link" class="block text-sm font-medium text-gray-700">Facebook Link (Optional)</label>
-                        <input type="url" name="facebook_link" id="facebook_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('facebook_link', $participant->user->facebook_link) }}">
+                        <input type="text" name="facebook_link" id="facebook_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500" value="{{ old('facebook_link', $participant->user->facebook_link) }}">
                         @error('facebook_link')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                 </div>

@@ -150,6 +150,36 @@ Route::get('/clear-cache', function() {
     ]);
 });
 
+// Storage link route
+Route::get('/storage-link', function () {
+    $source = storage_path('app/public');
+    $destination = public_path('storage');
+
+    try {
+        // Since symlinks are disabled on this server, we have configured filesystems.php 
+        // to write directly to public/storage instead.
+        // This script will copy any existing files over to the new location.
+        
+        if (!\File::exists($destination)) {
+            \File::makeDirectory($destination, 0755, true);
+        }
+
+        if (\File::exists($source)) {
+            \File::copyDirectory($source, $destination);
+        }
+
+        return response()->json([
+            'message' => 'Files migrated successfully! Your application is now configured to write uploaded files directly to public/storage without needing symlinks.',
+            'time' => now()
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error migrating files: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'role.redirect'])->name('dashboard');
 Route::get('/role-dashboard', [\App\Http\Controllers\RoleBasedDashboardController::class, 'index'])->middleware(['auth'])->name('role-dashboard');
 Route::get('/participant-dashboard', [\App\Http\Controllers\ParticipantDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('participant-dashboard');
@@ -421,8 +451,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/participants/{participant}/comments', [\App\Http\Controllers\ParticipantController::class, 'storeComment'])->name('participants.comments.store');
     Route::delete('/participants/{participant}/comments/{comment}', [\App\Http\Controllers\ParticipantController::class, 'destroyComment'])->name('participants.comments.destroy');
     
-    // Admin-only participant routes
-    Route::middleware('admin.access')->group(function () {
+    // Participant edit routes
+    Route::middleware('permission:participants.edit')->group(function () {
         Route::get('/participants/{participant}/edit', [\App\Http\Controllers\ParticipantController::class, 'edit'])->name('participants.edit');
         Route::put('/participants/{participant}', [\App\Http\Controllers\ParticipantController::class, 'update'])->name('participants.update');
     });
